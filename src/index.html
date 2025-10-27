@@ -205,16 +205,45 @@
                 <!-- Game Paused Message Container -->
                 <div id="pausedMessageContainer"></div>
                 
+                <!-- Remaining Moves Section -->
+                <div id="remainingMovesContainer" class="box-container info-box">
+                    <h4>Remaining Moves:</h4>
+                    <span id="remainingMovesCount">0</span>
+                </div>
+                    
                 <!-- Timer Container -->
                 <div class="timer-container">
-                    <canvas id="timerCanvas" class="timer-canvas" width="100" height="100"></canvas>
-                    <!-- The pause button will be added dynamically inside the timer-container -->
+                    <div class="timer-cap"></div>
+                    <div class="timer-body">
+                        <!-- Circle 1: Container (background ring) -->
+                        <div class="timer-container-ring"></div>
+                        
+                        <!-- Circle 2: Progress (animated ring) -->
+                        <div class="timer-progress-ring"></div>
+                        
+                        <!-- Circle 3: Block (static ring on top of progress) -->
+                        <div class="timer-block-ring"></div>
+                        
+                        <!-- Timer Text -->
+                        <span class="timer-text">30s</span>
+                    </div>
                 </div>
+
+
+
                 <!-- Roll Button -->
                 <button id="rollButton" class="button button-roll">Roll Dice</button>
+
                 <!-- Sidebar for player list -->
                 <ul id="gamePlayerList"></ul>
+
+                <!-- Game Log Section -->
+                <div id="gameLogContainer" class="box-container log-box">
+                    <h4>Game Log</h4>
+                    <div id="gameLog" class="log-content"></div>
+                </div>
             </div>
+
             <div id="gameBoardContainer" class="board-container">
                 <div class="board-wrapper">
                     <div class="board-content" id="gameBoardContent">

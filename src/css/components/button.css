@@ -114,24 +114,36 @@
   
   /* Pause Button Styles */
   .button-pause {
-    /* Styles as defined earlier */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: transparent;
-    border: none;
-    color: var(--text-color);
-    font-size: 30px;
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: background-color 0.2s ease, opacity 0.2s ease;
-    z-index: 2;
-    opacity: 0.8;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      background-color: transparent;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 3;
+      color: var(--text-color);
+      cursor: pointer;
   }
-  
+
+  .timer-container:hover .button-pause {
+      opacity: 1;
+      pointer-events: auto;
+  }
+
+  .button-pause svg {
+      width: 24px;
+      height: 24px;
+      pointer-events: none;
+  }
   .button-pause:hover  {
     background-color: rgba(0, 0, 0, 0.1);
     opacity: 1;

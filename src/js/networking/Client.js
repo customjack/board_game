@@ -3,6 +3,7 @@
 import BasePeer from './BasePeer';
 import Player from '../models/Player';
 import GameState from '../models/GameState';
+import StateDelta from '../utils/StateDelta';
 
 export default class Client extends BasePeer {
     constructor(originalName, hostId, eventHandler) {
@@ -88,8 +89,12 @@ export default class Client extends BasePeer {
         switch (data.type) {
             case 'connectionPackage':
                 this.handleConnectionPackage(data.gameState);
+                break;
             case 'gameState':
                 this.handleGameStateUpdate(data.gameState);
+                break;
+            case 'gameStateDelta':
+                this.handleGameStateDelta(data.delta);
                 break;
             case 'kick':
                 this.handleKick();
@@ -102,6 +107,7 @@ export default class Client extends BasePeer {
                 break;
             case 'addPlayerRejected':
                 this.handleAddPlayerRejected(data.reason);
+                break;
             // Handle other data types...
             default:
                 console.log('Unknown data type:', data.type);
@@ -121,7 +127,46 @@ export default class Client extends BasePeer {
     handleGameStateUpdate(gameStateData) {
         this.gameState = GameState.fromJSON(gameStateData, this.eventHandler.factoryManager);  // Sync local game state with the host's state
         //console.log('Game state updated:', gameStateData);
-        this.eventHandler.updateGameState(); 
+        this.eventHandler.updateGameState();
+    }
+
+    handleGameStateDelta(delta) {
+        try {
+            // Get current state as JSON
+            const currentStateJSON = this.gameState.toJSON();
+
+            // Check if delta can be safely applied
+            if (!StateDelta.canApplyDelta(currentStateJSON, delta)) {
+                console.warn('Delta version mismatch. Requesting full state from host.');
+                this.requestFullState();
+                return;
+            }
+
+            // Apply delta to current state
+            const updatedStateJSON = StateDelta.applyDelta(currentStateJSON, delta);
+
+            // Reconstruct GameState from the updated JSON
+            this.gameState = GameState.fromJSON(updatedStateJSON, this.eventHandler.factoryManager);
+
+            console.log(`Delta applied successfully. Version: ${this.gameState.getVersion()}`);
+            this.eventHandler.updateGameState();
+        } catch (error) {
+            console.error('Error applying delta:', error);
+            console.warn('Requesting full state from host due to delta application error.');
+            this.requestFullState();
+        }
+    }
+
+    /**
+     * Request full state from host when delta can't be applied
+     */
+    requestFullState() {
+        if (this.conn && this.conn.open) {
+            this.conn.send({
+                type: 'requestFullState',
+                reason: 'delta_sync_failed'
+            });
+        }
     }
 
     handleKick() {

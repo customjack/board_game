@@ -87,8 +87,7 @@ export default class Player {
      * @returns {number} The result of the roll.
      */
     rollDice(min = 1, max = 6, distributionFn = null) {
-        return this.rollEngine.roll(3, 3, distributionFn);
-        //return this.rollEngine.roll(min, max, distributionFn);
+        return this.rollEngine.roll(min, max, distributionFn);
     }
 
     /**

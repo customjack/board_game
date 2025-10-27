@@ -22,6 +22,25 @@ export default class GameState {
 
         // Initialize the SharedRandomNumberGenerator with the seed
         this.randomGenerator = randomGenerator;
+
+        // Version tracking for delta updates
+        this._version = 0;
+        this._timestamp = Date.now();
+    }
+
+    /**
+     * Increment the state version (called when state changes)
+     */
+    incrementVersion() {
+        this._version++;
+        this._timestamp = Date.now();
+    }
+
+    /**
+     * Get the current version
+     */
+    getVersion() {
+        return this._version;
     }
 
     // Start the game by setting the game phase to IN_GAME
@@ -46,22 +65,25 @@ export default class GameState {
     }
 
     // Add a player to the game
-    addPlayer(player) {
-        player.setTurnsTaken(this.getTurnNumber() - 1); // Ensure they don't get a bunch of turns when they first join.
-        this.players.push(player);
-    }
+    // Can accept either a Player instance or parameters to create a new player
+    addPlayer(peerIdOrPlayer, nickname = null, isHost = false, playerId = null) {
+        let player;
 
-    addPlayer(peerId, nickname, isHost = false, playerId = null) {
-        // Create a new Player instance and initialize it
-        const player = new Player(peerId, nickname, this.factoryManager, isHost, playerId);
+        // Check if first argument is already a Player instance
+        if (peerIdOrPlayer instanceof Player) {
+            player = peerIdOrPlayer;
+        } else {
+            // Create a new Player instance from parameters
+            player = new Player(peerIdOrPlayer, nickname, this.factoryManager, isHost, playerId);
+        }
 
-        // Ensure the player doesn't get extra turns upon joining
+        // Ensure they don't get extra turns when they first join
         player.setTurnsTaken(this.getTurnNumber() - 1);
 
         // Add the player to the game state
         this.players.push(player);
-        
-        return player; //It is otherwise tedious to get the player you just created
+
+        return player;
     }
 
     // Remove a player from the game
@@ -76,7 +98,7 @@ export default class GameState {
 
     // Get a player by their playerId (returns exactly one player)
     getPlayerByPlayerId(playerId) {
-        return player = this.players.find(player => player.playerId === playerId);
+        return this.players.find(player => player.playerId === playerId);
     }
 
     // Get a list of players by their peerId (returns an array of players)
@@ -247,7 +269,9 @@ export default class GameState {
             turnPhase: this.turnPhase,
             gamePhase: this.gamePhase,
             settings: this.settings.toJSON(),
-            randomGenerator: this.randomGenerator.toJSON() // Serialize the random generator
+            randomGenerator: this.randomGenerator.toJSON(), // Serialize the random generator
+            _version: this._version,
+            _timestamp: this._timestamp
         };
     }
 
@@ -257,12 +281,16 @@ export default class GameState {
         const players = json.players.map(playerData => Player.fromJSON(playerData, factoryManager));
         const settings = Settings.fromJSON(json.settings);
         const randomGenerator = SharedRandomNumberGenerator.fromJSON(json.randomGenerator);
-        const gameState = new GameState(board, factoryManager, players, settings, randomGenerator); 
+        const gameState = new GameState(board, factoryManager, players, settings, randomGenerator);
 
         gameState.remainingMoves = json.remainingMoves;
         gameState.turnPhase = json.turnPhase;
         gameState.gamePhase = json.gamePhase;
-        
+
+        // Restore version tracking
+        gameState._version = json._version || 0;
+        gameState._timestamp = json._timestamp || Date.now();
+
         return gameState;
     }
 }

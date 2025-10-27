@@ -4,11 +4,15 @@ import BasePeer from './BasePeer';
 import Player from '../models/Player';
 import GameState from '../models/GameState'
 import GamePhases from '../enums/GamePhases';
+import StateDelta from '../utils/StateDelta';
 
 export default class Host extends BasePeer {
     constructor(originalName, eventHandler) {
         super(eventHandler);
         this.originalName = originalName;
+
+        // Store the previous game state for delta calculation
+        this.previousGameStateJSON = null;
     }
 
     async init() {
@@ -33,8 +37,12 @@ export default class Host extends BasePeer {
 
     handleConnection(conn) {
         console.log('New connection from', conn.peer);
+
+        // Mark that this connection supports delta updates
+        conn.supportsDelta = true;
+
         this.connections.push(conn);
-        // Send a one-time connection package
+        // Send a one-time connection package (always full state)
         this.sendConnectionPackage(conn);
         conn.on('data', (data) => this.handleData(conn, data));
         conn.on('close', () => this.handleDisconnection(conn.peer));
@@ -58,9 +66,12 @@ export default class Host extends BasePeer {
         //Effectively sets the gamestate to a copy (not a reference)
         //The client has to do similar to rebuild it's gamestate,
         //so this is to make the host and client have similar behavior
+
+        // Increment version before serializing
+        newGameState.incrementVersion();
+
         const newGameStateJSON = newGameState.toJSON();
         this.gameState = GameState.fromJSON(newGameStateJSON, this.eventHandler.factoryManager);
-
 
         this.broadcastGameState();
         this.eventHandler.updateGameState();
@@ -84,10 +95,19 @@ export default class Host extends BasePeer {
             case 'proposeAddPlayer':
                 this.handleClientAddPlayer(conn, data.player);
                 break;
+            case 'requestFullState':
+                this.handleRequestFullState(conn, data.reason);
+                break;
             // Handle other data types...
             default:
                 console.log('Unknown data type:', data.type);
         }
+    }
+
+    handleRequestFullState(conn, reason) {
+        console.log(`Client ${conn.peer} requested full state. Reason: ${reason}`);
+        // Send the full game state to this specific client
+        this.sendGameState(conn);
     }
 
     handleProposedGameState(conn, proposedGameStateData) {
@@ -204,10 +224,45 @@ export default class Host extends BasePeer {
 
     broadcastGameState() {
         const gameStateData = this.gameState.toJSON();
+
+        // Calculate delta if we have a previous state
+        let delta = null;
+        let useDelta = false;
+
+        if (this.previousGameStateJSON) {
+            delta = StateDelta.createGameStateDelta(this.previousGameStateJSON, gameStateData);
+            const stats = StateDelta.getSizeStats(gameStateData, delta);
+
+            // Use delta only if it's significantly smaller (< 50% of full state)
+            useDelta = stats.worthIt;
+
+            if (useDelta) {
+                console.log(`Using delta update (${stats.savingsPercent}% smaller): ${stats.deltaSize} bytes vs ${stats.fullSize} bytes`);
+            }
+        }
+
+        // Broadcast to all connections
         this.connections.forEach(conn => {
-            conn.send({ type: 'gameState', gameState: gameStateData });
+            if (useDelta && conn.supportsDelta) {
+                // Send delta update to clients that support it
+                conn.send({
+                    type: 'gameStateDelta',
+                    delta: delta,
+                    fullState: null // Full state not included in delta messages
+                });
+            } else {
+                // Send full state to new clients or when delta isn't beneficial
+                conn.send({
+                    type: 'gameState',
+                    gameState: gameStateData
+                });
+            }
         });
-        //console.log("Broadcasted gamestate:", gameStateData);
+
+        // Store current state for next delta calculation
+        this.previousGameStateJSON = gameStateData;
+
+        //console.log("Broadcasted gamestate:", useDelta ? delta : gameStateData);
     }
 
     broadcastStartGame() {

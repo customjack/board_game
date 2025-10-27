@@ -15,24 +15,27 @@ export default class TimerManager {
      * Initializes the timer manager.
      * @param {Function} onTimerEndCallback - Function to call when the timer ends.
      * @param {Function} pauseCallback - Function to call when the pause button is clicked.
+     * @param {boolean} timerDisabled - Whether the timer is disabled, showing the infinity symbol instead.
      */
     init(onTimerEndCallback, pauseCallback = null) {
-        if (!this.gameState.settings.isTurnTimerEnabled()) {
-            //console.log("Turn timer is disabled. Timer will not init.");
-            return;
-        }
+        // Initialize the animation with the appropriate settings
         this.onTimerEndCallback = onTimerEndCallback;
-        this.animation.init(pauseCallback);
-        this.createPausedMessage();
 
-        // Initially hide the "Game Paused" message
-        this.hidePausedMessage();
+        // If the timer is disabled, show the infinity symbol and no pause button
+        if (!this.gameState.settings.isTurnTimerEnabled()) {
+            this.animation.init(null, true); // Just show the infinity symbol
+        } else {
+            this.animation.init(pauseCallback);
+            this.createPausedMessage();
+            this.hidePausedMessage();
+        }
     }
 
     /**
      * Starts the timer if enabled in the settings.
      */
     startTimer() {
+        console.log("Calling startTimer");
         if (!this.gameState.settings.isTurnTimerEnabled()) {
             //console.log("Turn timer is disabled. Timer will not start.");
             return;

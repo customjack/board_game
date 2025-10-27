@@ -29,7 +29,7 @@ export default class GameEngine {
         this.eventBus = eventBus;
         this.proposeGameState = proposeGameState;
         this.registryManager = registryManager;
-        this.factoryManager = factoryManager; // Initialize FactoryManager
+        this.factoryManager = factoryManager;
         this.isHost = isHost;
 
         // Dynamically populated game events

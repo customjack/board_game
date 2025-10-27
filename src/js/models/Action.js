@@ -40,7 +40,6 @@ export default class Action {
     // Map action types to their corresponding handlers
     getHandler() {
         const handlers = {
-            [ActionTypes.CODE]: this.handleCode.bind(this),
             [ActionTypes.PROMPT_ALL_PLAYERS]: this.handlePromptAllPlayers.bind(this),
             [ActionTypes.PROMPT_CURRENT_PLAYER]: this.handlePromptCurrentPlayer.bind(this),
             [ActionTypes.SET_PLAYER_STATE]: this.handleSetPlayerState.bind(this),
@@ -53,13 +52,6 @@ export default class Action {
     }
 
     // Individual handlers
-    handleCode(gameEngine) {
-        if (this.payload) {
-            eval(this.payload);
-        } else {
-            console.warn('No payload provided for CODE action.');
-        }
-    }
 
     handlePromptAllPlayers(gameEngine, postExecutionCallback) {
         const { payload } = this;

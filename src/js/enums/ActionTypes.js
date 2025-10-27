@@ -5,7 +5,6 @@ const ActionTypes = Object.freeze({
     DISPLACE_PLAYER: 'DISPLACE_PLAYER',
     APPLY_EFFECT: 'APPLY_EFFECT',
     SET_PLAYER_SPACE: 'SET_PLAYER_SPACE',
-    CODE: 'CODE',
     CUSTOM: 'CUSTOM',
 });
 

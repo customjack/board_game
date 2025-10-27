@@ -50,7 +50,6 @@ export default class ClientEventHandler extends BaseEventHandler {
             this.factoryManager,
             false  // isHost = false
         );
-        this.gameEngine.init();
 
         this.showLobbyPage();
     }
@@ -69,6 +68,7 @@ export default class ClientEventHandler extends BaseEventHandler {
 
     showGamePage() {
         console.log('Client is switching to game page...');
+        this.gameEngine.init();
         this.showPage("gamePage");
         this.playerListManager.setListElement(document.getElementById('gamePlayerList'));
         this.boardManager.setBoardContainer(document.getElementById('gameBoardContent'));

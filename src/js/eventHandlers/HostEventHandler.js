@@ -143,7 +143,6 @@ export default class HostEventHandler extends BaseEventHandler {
             this.factoryManager,
             true  // isHost = true
         );
-        this.gameEngine.init();
 
         this.showPage("lobbyPage");
         this.displayLobbyControls();
@@ -173,6 +172,7 @@ export default class HostEventHandler extends BaseEventHandler {
         if (this.peer) {
             this.peer.broadcastStartGame();
         }
+        this.gameEngine.init();
         this.showPage("gamePage");
         this.playerListManager.setListElement(document.getElementById('gamePlayerList'));
         this.boardManager.setBoardContainer(document.getElementById('gameBoardContent'));
@@ -257,7 +257,6 @@ export default class HostEventHandler extends BaseEventHandler {
     }
 
     onSettingsChanged() {
-        console.log("Called");
         this.settingsManager.updateGameStateFromInputs(this.peer.gameState);
         this.peer.broadcastGameState();
         this.updateAddPlayerButton();

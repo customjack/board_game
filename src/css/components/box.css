@@ -2,16 +2,17 @@
 
 /* General Box Container */
 .box-container {
-    padding: calc(var(--spacing-unit) * 1.5); /* Reduced padding */
+    padding: calc(var(--spacing-unit) * 1.5);
     background-color: var(--background-box);
     border: 1px solid var(--border-color);
-    border-radius: 10px; /* Slightly smaller border radius */
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transform-origin: top;
 }
 
-.box-container:hover {
-    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+/* Optional animation class triggered via JavaScript */
+.flip-animate {
+    animation: flip-down 0.3s ease-out;
 }
 
 /* Invite Code Box */
@@ -19,82 +20,124 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 20px; /* Reduced padding */
+    padding: 10px 20px;
     background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-    border-radius: 10px; /* Smaller border radius */
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     border: 1px solid transparent;
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    transform-origin: top;
 }
 
-.invite-code-box:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-/* Glassmorphism for invite code content */
+/* Invite Code Content - Glassmorphism Style */
 .invite-code-box-content {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.2); /* Slightly stronger background */
-    padding: 10px 20px; /* Reduced padding */
-    border-radius: 40px; /* Smaller pill shape */
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
-    backdrop-filter: blur(8px); /* Reduced blur */
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 40px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.03);
+    backdrop-filter: blur(8px);
     margin-bottom: 10px;
 }
 
 /* Invite Code Text */
 #inviteCode {
-    font-size: 1.25rem; /* Reduced font size */
+    font-size: 1.25rem;
     font-weight: bold;
-    letter-spacing: 1.5px; /* Reduced letter spacing */
+    letter-spacing: 1.5px;
     color: var(--text-color-light);
     font-family: 'Courier New', Courier, monospace;
     text-align: center;
 }
 
-/* Combined Section */
+/* Combined Section Layout */
 .combined-section {
     display: flex;
     justify-content: space-between;
-    background-color: var(--background-box); /* Theme-specific background */
+    background-color: var(--background-box);
     border-radius: 10px;
     padding: calc(var(--spacing-unit) * 2);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Standard box shadow */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     width: 100%;
-    gap: calc(var(--spacing-unit) * 2); /* Add gap between the settings and player list */
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    gap: calc(var(--spacing-unit) * 2);
+    transform-origin: top;
 }
 
-
-/* Compact Settings */
+/* Compact Settings Section */
 .compact-settings {
     flex: 1;
     padding: calc(var(--spacing-unit) * 2);
-    border-right: 3px solid var(--border-color); /* Theme-aware border */
+    border-right: 3px solid var(--border-color);
     text-align: left;
-    background-color: var(--background-sidebar); /* Theme-aware background */
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    background-color: var(--background-sidebar);
 }
-
 
 /* Compact Player List Section */
 .compact-player-list {
     flex: 2;
     padding: calc(var(--spacing-unit) * 2);
-    background-color: var(--background-box); /* Theme-specific background */
+    background-color: var(--background-box);
     border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .compact-player-list h3 {
     margin: 0 0 calc(var(--spacing-unit) * 1) 0;
     font-size: 1.2em;
-    color: var(--text-color); /* Ensure it follows the theme’s text color */
+    color: var(--text-color);
 }
 
+/* Info Box */
+.info-box {
+    text-align: center;
+    font-weight: bold;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
 
+/* Log Box */
+.log-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    max-height: 200px;
+    overflow-y: auto;
+}
 
+.log-box h4,
+.info-box h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
 
+/* Log Content */
+.log-content {
+    flex-grow: 1;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--text-color-light);
+    overflow-y: auto;
+    max-height: 160px;
+}
+
+/* Disable animation for static info/log boxes */
+.box-container.info-box,
+.box-container.log-box {
+    animation: none;
+}
+
+/* Flip-down animation keyframes */
+@keyframes flip-down {
+    0% {
+        transform: scaleY(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}

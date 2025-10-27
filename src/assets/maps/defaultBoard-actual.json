@@ -1,0 +1,1638 @@
+{
+  "metadata": {
+    "name": "Drinking Board Game",
+    "author": "Jack Carlton",
+    "description": "Game to drink with your friends while playing",
+    "createdDate": "2024-10-28T12:00:00Z"
+  },
+  "spaces": [
+    {
+      "id": 1,
+      "name": "Start",
+      "type": "start",
+      "events": [],
+      "visualDetails": {
+        "x": 50,
+        "y": 50,
+        "size": 60,
+        "color": "#00ff00",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 2,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Take a Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_ENTER"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Welcome to the game! Take a drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 150,
+        "y": 50,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 3,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Truth or Dare",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Truth or Dare someone of your choice. If they do not comply they must drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 250,
+        "y": 50,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 4,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Random Drinks",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "You must take {{RANDOM_NUMBER(1,3)}} drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 350,
+        "y": 50,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 5,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Never Have I Ever",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Never have I ever! All players participate; drink if you lose!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 450,
+        "y": 50,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 6,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Waterfall",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Waterfall! The current player starts drinking, and everyone else follows in order."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 550,
+        "y": 50,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 7,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Make a Rule",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Make a rule! The current player makes a rule that everyone must follow or else they drink."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 650,
+        "y": 50,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 8,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Hand Out Drinks",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Hand out {{RANDOM_NUMBER(1,3)}} drinks to other players!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 750,
+        "y": 50,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 9,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Move Back 2 Spaces",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "You move back 2 spaces!"
+            }
+          }
+        },
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": -2
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 750,
+        "y": 150,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 10,
+          "drawConnection": true
+        },
+        {
+          "targetId": 18,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Rhyme Time",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Rhyme Time! Everyone has to rhyme with the word chosen by the current player."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 650,
+        "y": 150,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 11,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "All Girls Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "All girls drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 550,
+        "y": 150,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 12,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "All Boys Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "All boys drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 450,
+        "y": 150,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 13,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Tell a Joke",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Tell a joke! Everyone who laughs drinks. If no one laughs, you drink."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 350,
+        "y": 150,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 14,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Categories",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Categories! Name a category and people go around saying something in that category. First person who repeats or can't think of something drinks."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 250,
+        "y": 150,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 15,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Two Truths and a Lie",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Two Truths and a Lie! Everyone guesses the lie. Whoever is wrong drinks."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 150,
+        "y": 150,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 16,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Pick a Drinking Buddy",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Pick a drinking buddy! This player drinks whenever you drink for the rest of the game."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 50,
+        "y": 150,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 17,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Finish Your Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Finish your drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 50,
+        "y": 250,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 25,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Rhyme Time",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Rhyme Time! Everyone has to rhyme with the word {{RANDOM_WORD}}."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 750,
+        "y": 250,
+        "size": 60,
+        "color": "#ffcccc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 19,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "name": "Finish Your Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Finish your drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 650,
+        "y": 250,
+        "size": 60,
+        "color": "#ffcccc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 20,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Safe Space",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Safe Space! You are safe from drinking this round."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 550,
+        "y": 250,
+        "size": 60,
+        "color": "#ccffcc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 21,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Finish Your Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Finish your drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 450,
+        "y": 250,
+        "size": 60,
+        "color": "#ffcccc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 22,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Safe Space",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Safe Space! You are safe from drinking this round."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 350,
+        "y": 250,
+        "size": 60,
+        "color": "#ccffcc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 23,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Finish Your Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Finish your drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 250,
+        "y": 250,
+        "size": 60,
+        "color": "#ffcccc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 24,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "name": "Hand Out Drinks",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Hand out {{RANDOM_NUMBER(1,5)}} drinks to other players!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 150,
+        "y": 250,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 25,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "name": "Go to Hell",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "You have been teleported to space 100!"
+            }
+          }
+        },
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "SET_PLAYER_SPACE",
+            "payload": {
+              "spaceId": 100
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 50,
+        "y": 350,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 26,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "name": "Safe Space",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Safe Space! You are safe from drinking this round."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 150,
+        "y": 350,
+        "size": 60,
+        "color": "#ccffcc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 27,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "name": "Oldest Drinks",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "The oldest player drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 250,
+        "y": 350,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 28,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "name": "Youngest Drinks",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "The youngest player drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 350,
+        "y": 350,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 29,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "name": "All Guys Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "All guys drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 450,
+        "y": 350,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 30,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "name": "All Girls Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "All girls drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 550,
+        "y": 350,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 31,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "name": "Read Last Text or Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Read your last text message aloud or drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 650,
+        "y": 350,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 32,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "name": "Everyone Drinks",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Everyone drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 750,
+        "y": 350,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 33,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "name": "Make a Rule",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Make a rule! Everyone must follow it or drink."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 750,
+        "y": 450,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 34,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "name": "Comment on Instagram",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Comment on the first post on your Instagram or drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 650,
+        "y": 450,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 35,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "name": "Didn't Vote Drinks",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Anyone who didn't vote in the last election drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 550,
+        "y": 450,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 36,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "name": "Move Forward 1",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Move forward 1 space!"
+            }
+          }
+        },
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": 1
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 450,
+        "y": 450,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 37,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "name": "Waterfall",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Waterfall! The current player starts drinking, and everyone else follows in order."
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 350,
+        "y": 450,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 38,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "name": "Move Back 5",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Move back 5 spaces!"
+            }
+          }
+        },
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": -5
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 250,
+        "y": 450,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 39,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "name": "Finish Your Drink",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Finish your drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 150,
+        "y": 450,
+        "size": 60,
+        "color": "#ffeecc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 40,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "name": "End",
+      "type": "end",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "SET_PLAYER_STATE",
+            "payload": {
+              "state": "COMPLETED_GAME"
+            }
+          }
+        },
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Congratulations! You have finished the game, now finish your drink!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 50,
+        "y": 450,
+        "size": 60,
+        "color": "#ffffcc",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": []
+    },
+    {
+      "id": 100,
+      "name": "Pay for your sins",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Take {{RANDOM_NUMBER(2,5)}} drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 850,
+        "y": 50,
+        "size": 60,
+        "color": "#ff0000",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 101,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "name": "Pay for your sins",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Take {{RANDOM_NUMBER(2,5)}} drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 950,
+        "y": 50,
+        "size": 60,
+        "color": "#ff0000",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 102,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "name": "Pay for your sins",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Take {{RANDOM_NUMBER(2,5)}} drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 1050,
+        "y": 50,
+        "size": 60,
+        "color": "#ff0000",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 103,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "name": "Pay for your sins",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "Take {{RANDOM_NUMBER(2,5)}} drinks!"
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 1050,
+        "y": 150,
+        "size": 60,
+        "color": "#ff0000",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 104,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "name": "Get out of Hell",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "You have been teleported to space 26!"
+            }
+          }
+        },
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "SET_PLAYER_SPACE",
+            "payload": {
+              "spaceId": 26
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 950,
+        "y": 150,
+        "size": 60,
+        "color": "#ff0000",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 105,
+          "drawConnection": true
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "name": "Get out of Hell",
+      "type": "action",
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_CURRENT_PLAYER",
+            "payload": {
+              "message": "You have been teleported to space 26!"
+            }
+          }
+        },
+        {
+          "trigger": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "SET_PLAYER_SPACE",
+            "payload": {
+              "spaceId": 26
+            }
+          }
+        }
+      ],
+      "visualDetails": {
+        "x": 850,
+        "y": 150,
+        "size": 60,
+        "color": "#ff0000",
+        "textColor": "#000000",
+        "font": "12px Arial",
+        "textAlign": "center",
+        "textBaseline": "middle"
+      },
+      "connections": [
+        {
+          "targetId": 100,
+          "drawConnection": true
+        }
+      ]
+    }
+  ]
+}
