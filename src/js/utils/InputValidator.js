@@ -99,8 +99,16 @@ export default class InputValidator {
             return false;
         }
 
-        // PeerJS IDs are alphanumeric strings, typically 16-36 characters
-        const peerIdRegex = /^[a-zA-Z0-9]{8,36}$/;
+        // PeerJS IDs can be alphanumeric with hyphens/underscores
+        // Length varies but typically 8-100 characters
+        // Just ensure it's not empty, not too long, and doesn't contain dangerous characters
+        if (peerId.length < 1 || peerId.length > 200) {
+            return false;
+        }
+
+        // Allow alphanumeric, hyphens, underscores, and dots (common in PeerJS IDs)
+        // Disallow special characters that could be used for injection
+        const peerIdRegex = /^[a-zA-Z0-9_.\-]+$/;
         return peerIdRegex.test(peerId);
     }
 
