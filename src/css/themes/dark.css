@@ -40,6 +40,13 @@
 
   --highlight-glow: rgba(144, 238, 144, 0.8);
   --highlight-glow-rgb: 144, 238, 144;
+
+  /* Board Rendering - Dark Theme */
+  --board-connection-color: #888888;
+  --board-arrow-color: #888888;
+  --board-space-border-color: #333333;
+  --board-space-border-width: 1px;
+  --board-default-text-color: #d0d0d0;
 }
 
 /* Additional styles for dark theme */

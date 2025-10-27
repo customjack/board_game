@@ -63,5 +63,14 @@
     /* Highlight */
     --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
     --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
   }
   

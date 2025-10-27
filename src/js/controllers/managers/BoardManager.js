@@ -1,11 +1,19 @@
 // BoardManager.js
 
 import Board from '../../models/Board.js';
+import BoardRenderConfig from '../../rendering/BoardRenderConfig.js';
+import ConnectionRenderer from '../../rendering/ConnectionRenderer.js';
+import SpaceRenderer from '../../rendering/SpaceRenderer.js';
 
 export default class BoardManager {
     constructor() {
         this.board = null;
         this.boardContainer = document.getElementById('lobbyBoardContent'); // Assuming a container div for the board
+
+        // Initialize rendering components
+        this.renderConfig = new BoardRenderConfig();
+        this.connectionRenderer = new ConnectionRenderer(this.renderConfig);
+        this.spaceRenderer = new SpaceRenderer(this.renderConfig);
     }
 
     /**
@@ -99,41 +107,25 @@ export default class BoardManager {
             }
         });
 
+        // Reinitialize render config to pick up theme changes
+        this.renderConfig = BoardRenderConfig.fromBoardMetadata(this.board.metadata);
+        this.connectionRenderer = new ConnectionRenderer(this.renderConfig);
+        this.spaceRenderer = new SpaceRenderer(this.renderConfig);
+
         // Draw connections between spaces using HTML elements
         this.drawConnections();
 
-        // Create HTML elements for each space
+        // Create HTML elements for each space using the renderer
         this.board.spaces.forEach(space => {
-            const spaceElement = document.createElement('div');
-            spaceElement.classList.add('board-space');
-            spaceElement.id = `space-${space.id}`; // Assign an ID to the space
-
-            // Set the position and size based on visualDetails
-            const { x = 0, y = 0, size = 60, color = '#000000', textColor = '#000000' } = space.visualDetails;
-            spaceElement.style.position = 'absolute';
-            spaceElement.style.left = `${x - size / 2}px`;  // Center the element horizontally
-            spaceElement.style.top = `${y - size / 2}px`;   // Center the element vertically
-            spaceElement.style.width = `${size}px`;
-            spaceElement.style.height = `${size}px`;
-            spaceElement.style.backgroundColor = color;
-            spaceElement.style.borderRadius = '50%';  // Makes the element circular
-            spaceElement.style.display = 'flex';
-            spaceElement.style.alignItems = 'center';
-            spaceElement.style.justifyContent = 'center';
-            spaceElement.style.color = textColor;
-            spaceElement.style.cursor = 'pointer';
-            spaceElement.style.zIndex = "2";  // Make sure spaces are above the connections
-            spaceElement.innerText = space.name;
-
-            // Add a click listener for interaction
-            spaceElement.addEventListener('click', () => this.handleSpaceClick(space));
-
-            // Append the space to the board container
-            this.boardContainer.appendChild(spaceElement);
+            this.spaceRenderer.render(
+                space,
+                this.boardContainer,
+                (clickedSpace) => this.handleSpaceClick(clickedSpace)
+            );
         });
     }
 
-    // Draw connections between spaces using HTML elements
+    // Draw connections between spaces using the connection renderer
     drawConnections() {
         // Keep track of drawn connections to avoid duplicates
         const drawnConnections = new Set();
@@ -143,103 +135,22 @@ export default class BoardManager {
                 const targetSpace = connection.target;
 
                 if (targetSpace && (connection.drawConnection === undefined || connection.drawConnection === true)) {
-                    const connectionKey = `${Math.min(space.id, targetSpace.id)}-${Math.max(space.id, targetSpace.id)}`;
+                    // Check if we should draw this connection (avoid duplicates)
+                    if (ConnectionRenderer.shouldDrawConnection(space, targetSpace, drawnConnections)) {
+                        // Check if bidirectional
+                        const isBidirectional = ConnectionRenderer.isBidirectional(space, targetSpace);
 
-                    if (!drawnConnections.has(connectionKey)) {
-                        const { x: startX, y: startY } = space.visualDetails;
-                        const { x: endX, y: endY } = targetSpace.visualDetails;
-
-                        // Check for bidirectional connection
-                        const reverseConnection = targetSpace.connections.find(conn => conn.target.id === space.id);
-                        const isBidirectional = !!reverseConnection;
-
-                        if (isBidirectional) {
-                            // Draw single line with two arrows
-                            this.drawBidirectionalConnection(startX, startY, endX, endY);
-                        } else {
-                            // Draw a single directional connection
-                            this.drawConnectionWithArrow(startX, startY, endX, endY);
-                        }
-
-                        drawnConnections.add(connectionKey);
+                        // Render the connection using the renderer
+                        this.connectionRenderer.render(
+                            space,
+                            targetSpace,
+                            this.boardContainer,
+                            isBidirectional
+                        );
                     }
                 }
             });
         });
-    }
-
-    // Helper function to draw a single directional connection with an arrow
-    drawConnectionWithArrow(x1, y1, x2, y2) {
-        // Draw the line
-        this.drawLine(x1, y1, x2, y2);
-
-        // Draw the arrowhead at 2/3 along the line towards the target
-        const arrowPos = this.getPointAlongLine(x1, y1, x2, y2, 0.5);
-        this.drawArrowhead(arrowPos.x, arrowPos.y, x1, y1, x2, y2);
-    }
-
-    // Helper function to draw a bidirectional connection with two arrows
-    drawBidirectionalConnection(x1, y1, x2, y2) {
-        // Draw the line
-        this.drawLine(x1, y1, x2, y2);
-
-        // Draw the first arrowhead at 2/3 along the line towards the target
-        const arrowPos1 = this.getPointAlongLine(x1, y1, x2, y2, 0.55);
-        this.drawArrowhead(arrowPos1.x, arrowPos1.y, x1, y1, x2, y2);
-
-        // Draw the second arrowhead at 2/3 along the line towards the start
-        const arrowPos2 = this.getPointAlongLine(x2, y2, x1, y1, 0.55);
-        this.drawArrowhead(arrowPos2.x, arrowPos2.y, x2, y2, x1, y1);
-    }
-
-    // Function to draw a line between two points using an HTML element
-    drawLine(x1, y1, x2, y2) {
-        const length = Math.hypot(x2 - x1, y2 - y1);
-        const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-
-        const line = document.createElement('div');
-        line.classList.add('connection-line');
-        line.style.position = 'absolute';
-        line.style.left = `${x1}px`;
-        line.style.top = `${y1}px`;
-        line.style.width = `${length}px`;
-        line.style.height = '2px'; // Line thickness
-        line.style.backgroundColor = 'black';
-        line.style.transformOrigin = '0 0';
-        line.style.transform = `rotate(${angle}deg)`;
-        line.style.zIndex = "1"; // Ensure lines are behind spaces
-
-        this.boardContainer.appendChild(line);
-    }
-
-    // Function to draw an arrowhead at a given position
-    drawArrowhead(x, y, x1, y1, x2, y2) {
-        const angle = Math.atan2(y2 - y1, x2 - x1) - Math.PI/2;
-
-        const arrowSize = 10; // Size of the arrowhead
-
-        const arrow = document.createElement('div');
-        arrow.classList.add('arrowhead');
-        arrow.style.position = 'absolute';
-        arrow.style.left = `${x - arrowSize / 2}px`;
-        arrow.style.top = `${y - arrowSize / 2}px`;
-        arrow.style.width = '0';
-        arrow.style.height = '0';
-        arrow.style.borderLeft = `${arrowSize / 2}px solid transparent`;
-        arrow.style.borderRight = `${arrowSize / 2}px solid transparent`;
-        arrow.style.borderTop = `${arrowSize}px solid black`;
-        arrow.style.transform = `rotate(${angle}rad)`;
-        arrow.style.transformOrigin = 'center center';
-        arrow.style.zIndex = "1"; // Ensure arrows are behind spaces
-
-        this.boardContainer.appendChild(arrow);
-    }
-
-    // Helper function to get a point along a line at a given percentage
-    getPointAlongLine(x1, y1, x2, y2, percentage) {
-        const x = x1 + (x2 - x1) * percentage;
-        const y = y1 + (y2 - y1) * percentage;
-        return { x, y };
     }
 
     // Handle space click interactions
@@ -251,9 +162,9 @@ export default class BoardManager {
     // Highlight specific spaces
     highlightSpaces(spaces) {
         spaces.forEach(space => {
-            const spaceElement = document.getElementById(`space-${space.id}`);
+            const spaceElement = SpaceRenderer.getSpaceElement(space.id);
             if (spaceElement) {
-                spaceElement.classList.add('highlight');
+                this.spaceRenderer.highlight(spaceElement);
             }
         });
     }
@@ -262,7 +173,7 @@ export default class BoardManager {
     removeHighlightFromAll() {
         const highlightedElements = this.boardContainer.querySelectorAll('.highlight');
         highlightedElements.forEach(element => {
-            element.classList.remove('highlight');
+            this.spaceRenderer.removeHighlight(element);
         });
     }
 }
