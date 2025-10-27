@@ -139,8 +139,26 @@ export default class StateDelta {
     static canApplyDelta(baseState, delta) {
         // If delta has version info, check version compatibility
         if (delta._version !== undefined && baseState._version !== undefined) {
-            // Delta should be exactly one version ahead
-            return delta._version === baseState._version + 1;
+            // Delta should be ahead of current state (allows catching up after missed updates)
+            // But not too far ahead (more than 10 versions suggests desync)
+            const versionDiff = delta._version - baseState._version;
+
+            if (versionDiff === 1) {
+                // Perfect - exactly one version ahead
+                return true;
+            } else if (versionDiff > 1 && versionDiff <= 10) {
+                // Client is behind but not too far - allow catch-up
+                console.log(`Delta version skip detected (${versionDiff} versions ahead), applying anyway`);
+                return true;
+            } else if (versionDiff <= 0) {
+                // Old or duplicate delta - skip it
+                console.log(`Skipping old/duplicate delta (version ${delta._version} vs current ${baseState._version})`);
+                return false;
+            } else {
+                // Too far ahead - likely desync
+                console.warn(`Large version gap detected (${versionDiff} versions), requesting full state`);
+                return false;
+            }
         }
 
         // If no versioning, assume it's safe
