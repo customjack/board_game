@@ -5,6 +5,7 @@ import Player from '../models/Player';
 import GameState from '../models/GameState'
 import GamePhases from '../enums/GamePhases';
 import StateDelta from '../utils/StateDelta';
+import InputValidator from '../utils/InputValidator';
 
 export default class Host extends BasePeer {
     constructor(originalName, eventHandler) {
@@ -137,6 +138,16 @@ export default class Host extends BasePeer {
     handleJoin(conn, data) {
         const players = data.players;
 
+        // Validate players array
+        if (!Array.isArray(players) || players.length === 0) {
+            conn.send({
+                type: 'joinRejected',
+                reason: 'Invalid join request: No players provided.',
+            });
+            console.log('Join request rejected: No players provided');
+            return;
+        }
+
         const totalPlayersCount = this.gameState.players.length;
         const playersToAddCount = players.length;
 
@@ -149,29 +160,54 @@ export default class Host extends BasePeer {
             return;
         }
 
+        // Track if any player failed validation
+        let validationFailed = false;
+
         players.forEach(playerData => {
-            // Check if playerData contains the necessary properties
-            if (!playerData.peerId || !playerData.nickname) {
+            // Validate player data
+            const validation = InputValidator.validatePlayerData(playerData);
+            if (!validation.isValid) {
                 conn.send({
                     type: 'joinRejected',
-                    reason: 'Invalid player data. Both peerId and nickname are required.',
+                    reason: `Invalid player data: ${validation.errors.join(', ')}`,
                 });
-                console.log('Join request rejected due to missing player data:', playerData);
-                return; // Skip the current player and continue processing other players
+                console.log('Join request rejected due to invalid player data:', validation.errors);
+                validationFailed = true;
+                return;
             }
-    
-            // Add the player to the game state if data is valid
-            this.addPlayer(playerData.peerId, playerData.nickname);
+
+            // Sanitize nickname
+            const nicknameValidation = InputValidator.validateNickname(playerData.nickname);
+            const sanitizedNickname = nicknameValidation.sanitized;
+
+            // Add the player to the game state with sanitized data
+            this.addPlayer(playerData.peerId, sanitizedNickname);
         });
 
-        this.broadcastGameState();
+        if (!validationFailed) {
+            this.broadcastGameState();
+        }
     }
 
     handleNameChange(playerId, newName) {
-        console.log("recieved name change");
+        console.log("received name change");
+
+        // Validate player ID
+        if (!InputValidator.validatePlayerId(playerId)) {
+            console.warn('Invalid player ID format in name change request');
+            return;
+        }
+
+        // Validate and sanitize new name
+        const nicknameValidation = InputValidator.validateNickname(newName);
+        if (!nicknameValidation.isValid) {
+            console.warn('Invalid nickname in name change request:', nicknameValidation.error);
+            return;
+        }
+
         const player = this.gameState.players.find((p) => p.playerId === playerId);
         if (player) {
-            player.nickname = newName;
+            player.nickname = nicknameValidation.sanitized;
             this.updateAndBroadcastGameState(this.gameState);
         }
     }
@@ -183,6 +219,30 @@ export default class Host extends BasePeer {
 
     handleClientAddPlayer(conn, newPlayerData) {
         const peerId = conn.peer;
+
+        // Validate player data
+        const validation = InputValidator.validatePlayerData(newPlayerData);
+        if (!validation.isValid) {
+            conn.send({
+                type: 'addPlayerRejected',
+                reason: `Invalid player data: ${validation.errors.join(', ')}`,
+                player: newPlayerData
+            });
+            console.log('Add player rejected due to invalid data:', validation.errors);
+            return;
+        }
+
+        // Check rate limiting (max 5 players added per minute per client)
+        if (!InputValidator.checkRateLimit(`addPlayer:${peerId}`, 5, 60000)) {
+            conn.send({
+                type: 'addPlayerRejected',
+                reason: 'Too many player addition requests. Please wait a moment.',
+                player: newPlayerData
+            });
+            console.log(`Player addition rate limited for peerId ${peerId}`);
+            return;
+        }
+
         const clientPlayersCount = this.gameState.players.filter(player => player.peerId === peerId).length;
         const totalPlayersCount = this.gameState.players.length;
 
@@ -206,7 +266,9 @@ export default class Host extends BasePeer {
             return;
         }
 
-        const newPlayer = this.addPlayer(newPlayerData.peerId, newPlayerData.nickname);
+        // Sanitize nickname before adding
+        const nicknameValidation = InputValidator.validateNickname(newPlayerData.nickname);
+        const newPlayer = this.addPlayer(newPlayerData.peerId, nicknameValidation.sanitized);
         this.broadcastGameState();
         console.log(`Player added successfully for peerId ${peerId}. Player ID: ${newPlayer.playerId}`);
     }

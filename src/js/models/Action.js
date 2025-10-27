@@ -2,6 +2,7 @@ import ActionTypes from '../enums/ActionTypes';
 import PlayerStates from '../enums/PlayerStates';
 import TurnPhases from '../enums/TurnPhases';
 import { processStringToEnum } from '../utils/helpers';
+import InputValidator from '../utils/InputValidator';
 
 export default class Action {
     constructor(type, payload) {
@@ -55,27 +56,30 @@ export default class Action {
 
     handlePromptAllPlayers(gameEngine, postExecutionCallback) {
         const { payload } = this;
-    
+
         if (payload?.message && gameEngine.peerId) {
             // Get the PlaceholderRegistry from the game engine
             const placeholderRegistry = gameEngine.registryManager.getRegistry('placeholderRegistry');
-    
+
             if (placeholderRegistry) {
                 // Temporarily add the CURRENT_PLAYER_NAME placeholder if needed
                 placeholderRegistry.register('CURRENT_PLAYER_NAME', (gameEngine) => {
                     const currentPlayer = gameEngine.gameState.getCurrentPlayer();
                     return currentPlayer ? currentPlayer.nickname : 'Unknown Player';
                 });
-    
+
                 // Create a copy of payload.message for processing
                 let processed_message = payload.message;
-    
+
                 // Replace placeholders in the message and pass gameEngine as context
                 processed_message = placeholderRegistry.replacePlaceholders(processed_message, gameEngine);
-    
+
+                // Sanitize the message to prevent XSS attacks
+                processed_message = InputValidator.sanitizeMessage(processed_message);
+
                 // After message editing, unregister CURRENT_PLAYER_NAME to prevent future use
                 placeholderRegistry.unregister('CURRENT_PLAYER_NAME');
-    
+
                 console.log(`Prompting all players: ${processed_message}`);
                 gameEngine.showPromptModal(processed_message, postExecutionCallback);
             }
@@ -86,31 +90,34 @@ export default class Action {
     
     handlePromptCurrentPlayer(gameEngine, postExecutionCallback) {
         const { payload } = this;
-    
+
         if (payload?.message && gameEngine.peerId) {
             const currentPlayer = gameEngine.gameState.getCurrentPlayer();
-            
+
             // Get the PlaceholderRegistry from the game engine
             const placeholderRegistry = gameEngine.registryManager.getRegistry('placeholderRegistry');
-            
+
             if (placeholderRegistry) {
                 // Temporarily add the CURRENT_PLAYER_NAME placeholder if needed
                 placeholderRegistry.register('CURRENT_PLAYER_NAME', (gameEngine) => {
                     const currentPlayer = gameEngine.gameState.getCurrentPlayer();
                     return currentPlayer ? currentPlayer.nickname : 'Unknown Player';
                 });
-    
+
                 // Create a copy of payload.message for processing
                 let processed_message = payload.message;
-    
+
                 // Replace placeholders in the message and pass gameEngine as context
                 processed_message = placeholderRegistry.replacePlaceholders(processed_message, gameEngine);
-    
+
+                // Sanitize the message to prevent XSS attacks
+                processed_message = InputValidator.sanitizeMessage(processed_message);
+
                 // After message editing, unregister CURRENT_PLAYER_NAME to prevent future use
                 placeholderRegistry.unregister('CURRENT_PLAYER_NAME');
-    
+
                 console.log(`Prompting ${currentPlayer.nickname}: ${processed_message}`);
-    
+
                 if (currentPlayer.peerId === gameEngine.peerId) {
                     gameEngine.showPromptModal(processed_message, postExecutionCallback);
                 }
