@@ -1,6 +1,10 @@
 import BaseEventHandler from './BaseEventHandler';
 import Client from '../networking/Client';
-import GameEngine from '../controllers/GameEngine';
+import GameEngineFactory from '../engines/GameEngineFactory.js';
+import ParticleAnimation from '../animations/ParticleAnimation.js';
+import RollButtonManager from '../controllers/managers/RollButtonManager.js';
+import TimerManager from '../controllers/managers/TimerManager.js';
+import TimerAnimation from '../animations/TimerAnimation.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
     constructor(registryManager,pluginManager,factoryManager, eventBus) {
@@ -41,15 +45,24 @@ export default class ClientEventHandler extends BaseEventHandler {
         await this.peer.init();
         this.pluginManager.setPeer(this.peer.peer); //This isn't pretty but it passes the PeerJS instance
 
-        this.gameEngine = new GameEngine(
-            this.peer.gameState,
-            this.peer.peer.id,
-            (proposedGameState) => this.peer.proposeGameState(proposedGameState),
-            this.eventBus,
-            this.registryManager,
-            this.factoryManager,
-            false  // isHost = false
-        );
+        // Create UI managers
+        const particleAnimation = new ParticleAnimation();
+        const rollButtonManager = new RollButtonManager(particleAnimation);
+        const timerAnimation = new TimerAnimation(false); // isHost = false
+        const timerManager = new TimerManager(timerAnimation, this.peer.gameState);
+
+        // Create game engine using factory
+        this.gameEngine = GameEngineFactory.create({
+            gameState: this.peer.gameState,
+            peerId: this.peer.peer.id,
+            proposeGameState: (proposedGameState) => this.peer.proposeGameState(proposedGameState),
+            eventBus: this.eventBus,
+            registryManager: this.registryManager,
+            factoryManager: this.factoryManager,
+            isHost: false,
+            rollButtonManager: rollButtonManager,
+            timerManager: timerManager
+        });
 
         this.showLobbyPage();
     }

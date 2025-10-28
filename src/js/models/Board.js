@@ -7,7 +7,14 @@ export default class Board {
             name: metadata.name || "Default Board",
             author: metadata.author || "Unknown",
             description: metadata.description || "",
-            createdDate: metadata.createdDate || new Date().toISOString()
+            createdDate: metadata.createdDate || new Date().toISOString(),
+            // Game engine configuration
+            gameEngine: metadata.gameEngine || {
+                type: "turn-based", // Default engine type
+                config: {} // Engine-specific configuration
+            },
+            // Board rendering configuration (optional overrides)
+            renderConfig: metadata.renderConfig || {}
         };
     }
 

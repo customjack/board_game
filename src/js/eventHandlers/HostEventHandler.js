@@ -1,6 +1,10 @@
 import BaseEventHandler from './BaseEventHandler';
 import Host from '../networking/Host';
-import GameEngine from '../controllers/GameEngine';
+import GameEngineFactory from '../engines/GameEngineFactory.js';
+import ParticleAnimation from '../animations/ParticleAnimation.js';
+import RollButtonManager from '../controllers/managers/RollButtonManager.js';
+import TimerManager from '../controllers/managers/TimerManager.js';
+import TimerAnimation from '../animations/TimerAnimation.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager,pluginManager,factoryManager, eventBus) {
@@ -134,15 +138,24 @@ export default class HostEventHandler extends BaseEventHandler {
         await this.peer.init();
         this.pluginManager.setPeer(this.peer.peer); //This isn't pretty but it passes the PeerJS instances
 
-        this.gameEngine = new GameEngine(
-            this.peer.gameState,
-            this.peer.peer.id,
-            (proposedGameState) => this.peer.updateAndBroadcastGameState(proposedGameState),
-            this.eventBus,
-            this.registryManager,
-            this.factoryManager,
-            true  // isHost = true
-        );
+        // Create UI managers
+        const particleAnimation = new ParticleAnimation();
+        const rollButtonManager = new RollButtonManager(particleAnimation);
+        const timerAnimation = new TimerAnimation(true); // isHost = true
+        const timerManager = new TimerManager(timerAnimation, this.peer.gameState);
+
+        // Create game engine using factory
+        this.gameEngine = GameEngineFactory.create({
+            gameState: this.peer.gameState,
+            peerId: this.peer.peer.id,
+            proposeGameState: (proposedGameState) => this.peer.updateAndBroadcastGameState(proposedGameState),
+            eventBus: this.eventBus,
+            registryManager: this.registryManager,
+            factoryManager: this.factoryManager,
+            isHost: true,
+            rollButtonManager: rollButtonManager,
+            timerManager: timerManager
+        });
 
         this.showPage("lobbyPage");
         this.displayLobbyControls();
