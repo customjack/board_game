@@ -426,11 +426,35 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      * @param {Function} callback - Callback when dismissed
      */
     showPromptModal(message, callback) {
-        this.uiController.showGamePrompt('Game Event', message).then(() => {
-            if (this.isClientTurn() && callback) {
-                callback();
-            }
-        });
+        const modal = document.getElementById('gamePromptModal');
+        const modalMessage = document.getElementById('gamePromptModalMessage');
+        const dismissButton = document.getElementById('gamePromptModalDismissButton');
+
+        modalMessage.textContent = message;  // Set the message in the modal
+
+        // Show the modal
+        modal.style.display = 'block';
+
+        // Only show the dismiss button if it's the client's turn
+        if (this.isClientTurn()) {
+            dismissButton.style.display = 'inline-block'; // Show the dismiss button
+
+            // Remove old listener if exists
+            const newButton = dismissButton.cloneNode(true);
+            dismissButton.parentNode.replaceChild(newButton, dismissButton);
+
+            newButton.onclick = () => {
+                // Close the modal for all players
+                modal.style.display = 'none';
+
+                // Call the callback and update the game state
+                if (callback) {
+                    callback();
+                }
+            };
+        } else {
+            dismissButton.style.display = 'none'; // Hide the dismiss button if it's not the client's turn
+        }
     }
 
     /**
