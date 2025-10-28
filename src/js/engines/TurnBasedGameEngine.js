@@ -204,20 +204,24 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         const currentPlayer = this.turnManager.getCurrentPlayer();
         console.log(`Processing events for ${currentPlayer.nickname}'s move.`);
 
-        // Determine triggered events
-        const triggeredEvents = this.eventProcessor.determineTriggeredEvents(this.peerId);
-
-        if (triggeredEvents.length === 0) {
-            // No events to process
-            this.eventProcessor.resetAllEvents();
-            if (this.isClientTurn()) {
-                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
-            }
-        } else {
-            if (this.isClientTurn()) {
-                // Start processing events
-                this.eventProcessor.startProcessing(triggeredEvents);
+        if (this.isClientTurn()) {
+            // Check if we're already processing events
+            if (this.eventProcessor.hasEventsToProcess()) {
+                // Continue with next event in queue
                 this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
+            } else {
+                // Start new event processing cycle
+                const triggeredEvents = this.eventProcessor.determineTriggeredEvents(this.peerId);
+
+                if (triggeredEvents.length === 0) {
+                    // No events to process
+                    this.eventProcessor.resetAllEvents();
+                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
+                } else {
+                    // Start processing events
+                    this.eventProcessor.startProcessing(triggeredEvents);
+                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
+                }
             }
         }
     }
@@ -228,6 +232,9 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
 
         if (!eventWithSpace) {
             console.warn('No event to process in PROCESSING_EVENT phase');
+            // No more events, finish processing
+            this.eventProcessor.finishProcessing();
+            this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
             return;
         }
 
@@ -244,10 +251,15 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         });
 
         // Execute the event action
+        // The action's callback will advance to the next event
         gameEvent.executeAction(this, true);
 
-        // Note: The executed action MUST call changePhase back to PROCESSING_EVENTS
-        // This is handled by the event's completeActionCallback
+        // Advance to next event after execution
+        // Note: This happens immediately, but the callback in GameEvent.js will handle the phase change
+        this.eventProcessor.advanceToNextEvent();
+
+        // Note: The executed action's callback will call changePhase back to PROCESSING_EVENTS
+        // This is handled by the event's completeActionCallback in GameEvent.js
     }
 
     handlePlayerChoosingDestination() {
