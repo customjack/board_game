@@ -204,39 +204,39 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         const currentPlayer = this.turnManager.getCurrentPlayer();
         console.log(`Processing events for ${currentPlayer.nickname}'s move.`);
 
-        if (this.isClientTurn()) {
-            // Check if we're already processing events
-            if (this.eventProcessor.hasEventsToProcess()) {
-                // Continue with next event in queue
-                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
-            } else {
-                // Start new event processing cycle
-                const triggeredEvents = this.eventProcessor.determineTriggeredEvents(this.peerId);
+        // Re-determine triggered events each time (matches old GameEngine behavior)
+        // This automatically excludes completed events since their state changed
+        const triggeredEvents = this.gameState.determineTriggeredEvents(this.eventBus, this.peerId);
 
-                if (triggeredEvents.length === 0) {
-                    // No events to process
-                    this.eventProcessor.resetAllEvents();
-                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
-                } else {
-                    // Start processing events
-                    this.eventProcessor.startProcessing(triggeredEvents);
-                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
-                }
+        if (triggeredEvents.length === 0) {
+            // No events to process, reset all events and move on
+            this.gameState.resetEvents();
+            if (this.isClientTurn()) {
+                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
+            }
+        } else {
+            if (this.isClientTurn()) {
+                // Transition to process the first event
+                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
             }
         }
     }
 
     handleProcessingEvent() {
-        // Get the next event to process
-        const eventWithSpace = this.eventProcessor.getNextEvent();
+        // Re-determine triggered events (same as old GameEngine approach)
+        // This is called each time we process an event, and gets the current list
+        const triggeredEvents = this.gameState.determineTriggeredEvents(this.eventBus, this.peerId);
 
-        if (!eventWithSpace) {
-            console.warn('No event to process in PROCESSING_EVENT phase');
-            // No more events, finish processing
-            this.eventProcessor.finishProcessing();
+        if (triggeredEvents.length === 0) {
+            // No more events to process
+            console.log('No more events to process');
+            this.gameState.resetEvents();
             this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
             return;
         }
+
+        // Get the first event (matches old GameEngine behavior)
+        const eventWithSpace = triggeredEvents[0];
 
         // Store for Action.js compatibility (it expects gameEngine.gameEventWithSpace.space)
         this.gameEventWithSpace = eventWithSpace;
@@ -251,15 +251,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         });
 
         // Execute the event action
-        // The action's callback will advance to the next event
         gameEvent.executeAction(this, true);
 
-        // Advance to next event after execution
-        // Note: This happens immediately, but the callback in GameEvent.js will handle the phase change
-        this.eventProcessor.advanceToNextEvent();
-
         // Note: The executed action's callback will call changePhase back to PROCESSING_EVENTS
-        // This is handled by the event's completeActionCallback in GameEvent.js
+        // At that point, the event's state will be COMPLETED_ACTION and won't appear in triggered events anymore
     }
 
     handlePlayerChoosingDestination() {
