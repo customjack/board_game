@@ -4,6 +4,7 @@ import Board from '../../models/Board.js';
 import BoardRenderConfig from '../../rendering/BoardRenderConfig.js';
 import ConnectionRenderer from '../../rendering/ConnectionRenderer.js';
 import SpaceRenderer from '../../rendering/SpaceRenderer.js';
+import BoardSchemaValidator from '../../utils/BoardSchemaValidator.js';
 
 export default class BoardManager {
     constructor() {
@@ -55,6 +56,15 @@ export default class BoardManager {
             const boardData = await response.json();
             console.log("Default board data loaded:", boardData);
 
+            // Validate board data
+            const validation = BoardSchemaValidator.validateDetailed(boardData);
+            if (!validation.valid) {
+                console.warn("Default board validation warnings:", validation.errors);
+                // Don't throw - allow loading but warn
+            } else {
+                console.log("Board validation passed:", validation.summary);
+            }
+
             // Create the Board object from JSON
             this.board = Board.fromJSON(boardData);
             console.log("Board object created:", this.board);
@@ -74,6 +84,17 @@ export default class BoardManager {
         if (file && file.type === 'application/json') {
             const text = await this.readFile(file);
             const boardData = JSON.parse(text);
+
+            // Validate board data before loading
+            const validation = BoardSchemaValidator.validateDetailed(boardData);
+            if (!validation.valid) {
+                const errorMsg = `Board validation failed:\n${validation.errors.join('\n')}`;
+                console.error(errorMsg);
+                throw new Error(errorMsg);
+            }
+
+            console.log("Board validation passed:", validation.summary);
+
             const board = Board.fromJSON(boardData);
             this.setBoard(board);
             this.drawBoard();
