@@ -231,6 +231,9 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             return;
         }
 
+        // Store for Action.js compatibility (it expects gameEngine.gameEventWithSpace.space)
+        this.gameEventWithSpace = eventWithSpace;
+
         const { event: gameEvent, space: eventSpace } = eventWithSpace;
 
         // Emit event triggering
