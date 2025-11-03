@@ -2,6 +2,7 @@ import PlayerListManager from '../controllers/managers/PlayerListManager';
 import BoardManager from '../controllers/managers/BoardManager';
 import PieceManager from '../controllers/managers/PieceManager';
 import SettingsManager from '../controllers/managers/SettingsManager';
+import GameLogManager from '../controllers/managers/GameLogManager';
 
 export default class BaseEventHandler {
     constructor(isHost, registryManager, pluginManager, factoryManager, eventBus) {
@@ -21,6 +22,7 @@ export default class BaseEventHandler {
         this.pieceManager = null;
         this.settingsManager = null;
         this.playerListManager = null;
+        this.gameLogManager = null;
 
         this.peer = null; // This will be either client or host depending on the role
     }
@@ -43,6 +45,11 @@ export default class BaseEventHandler {
             peerId,
             hostPeerId
         );
+
+        if (!this.gameLogManager) {
+            this.gameLogManager = new GameLogManager(this.eventBus);
+        }
+        this.gameLogManager.init();
     }
 
     setupEventListeners() {

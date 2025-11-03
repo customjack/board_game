@@ -36,7 +36,6 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             },
             config.uiController || {}
         );
-
         // Register phase handlers
         this.registerPhaseHandlers();
     }
@@ -157,16 +156,35 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         this.emitEvent('changeTurn', { gameState: this.gameState });
 
         const currentPlayer = this.turnManager.getCurrentPlayer();
+        if (!currentPlayer) {
+            console.warn('No current player available during handleChangeTurn.');
+            return;
+        }
+
         console.log(`Current Player State: ${currentPlayer.getState()},
                     Nickname: ${currentPlayer.nickname},
                     Player ID: ${currentPlayer.playerId},
                     Effects: ${currentPlayer.effects.length},
                     Turns Taken: ${currentPlayer.turnsTaken}`);
 
+        this.logPlayerAction(currentPlayer, `is up next with state ${currentPlayer.getState()}.`, {
+            type: 'turn-start',
+            metadata: { effects: currentPlayer.effects.length }
+        });
+
+        const shouldSkipTurn = [PlayerStates.COMPLETED_GAME, PlayerStates.SKIPPING_TURN,
+            PlayerStates.SPECTATING, PlayerStates.DISCONNECTED].includes(currentPlayer.getState());
+
+        if (shouldSkipTurn) {
+            this.logPlayerAction(currentPlayer, 'is being skipped this turn.', {
+                type: 'turn-skip',
+                metadata: { reason: currentPlayer.getState() }
+            });
+        }
+
         if (this.isClientTurn()) {
             // Check if player should be skipped
-            if ([PlayerStates.COMPLETED_GAME, PlayerStates.SKIPPING_TURN,
-                 PlayerStates.SPECTATING, PlayerStates.DISCONNECTED].includes(currentPlayer.getState())) {
+            if (shouldSkipTurn) {
                 this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
             } else {
                 this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 });
@@ -180,8 +198,15 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         // Start timer for all players
         this.uiController.startTimer();
 
+        const currentPlayer = this.turnManager.getCurrentPlayer();
+        if (currentPlayer) {
+            this.logPlayerAction(currentPlayer, 'started their turn.', {
+                type: 'turn-start'
+            });
+        }
+
         if (this.isClientTurn()) {
-            console.log(`It's your turn, ${this.turnManager.getCurrentPlayer().nickname}!`);
+            console.log(`It's your turn, ${currentPlayer.nickname}!`);
             this.changePhase({ newTurnPhase: TurnPhases.WAITING_FOR_MOVE, delay: 0 });
         }
     }
@@ -189,10 +214,11 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     handleWaitingForMove() {
         this.emitEvent('waitingForMove', { gameState: this.gameState });
 
+        const currentPlayer = this.turnManager.getCurrentPlayer();
         if (this.isClientTurn()) {
             this.uiController.activateRollButton();
         } else {
-            console.log(`Waiting for ${this.turnManager.getCurrentPlayer().nickname} to take their turn.`);
+            console.log(`Waiting for ${currentPlayer?.nickname ?? 'player'} to take their turn.`);
             this.uiController.deactivateRollButton();
         }
     }
@@ -207,6 +233,14 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         // Re-determine triggered events each time (matches old GameEngine behavior)
         // This automatically excludes completed events since their state changed
         const triggeredEvents = this.gameState.determineTriggeredEvents(this.eventBus, this.peerId);
+        if (currentPlayer) {
+            this.logPlayerAction(currentPlayer, triggeredEvents.length === 0
+                ? 'did not trigger any events.'
+                : `triggered ${triggeredEvents.length} event(s).`, {
+                type: 'event-processing',
+                metadata: { triggeredEventCount: triggeredEvents.length }
+            });
+        }
 
         if (triggeredEvents.length === 0) {
             // No events to process, reset all events and move on
@@ -267,6 +301,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
 
         console.log(`${currentPlayer.nickname} is choosing a destination...`);
         console.log(`${currentPlayer.nickname} has multiple choices to move to: ${targetSpaces.map(space => space.id).join(', ')}`);
+        this.logPlayerAction(currentPlayer, 'is choosing their destination.', {
+            type: 'movement-choice',
+            metadata: { options: targetSpaces.map(space => space.id) }
+        });
 
         if (this.isClientTurn()) {
             this.waitForChoice(currentPlayer, targetSpaces);
@@ -299,8 +337,17 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
 
         if (allCompletedGame) {
             console.log("All players completed the game. Ending the game.");
+            this.log('All players have completed the game.', { type: 'system' });
             this.changePhase({ newGamePhase: GamePhases.GAME_ENDED, newTurnPhase: TurnPhases.CHANGE_TURN, delay: 0 });
             return;
+        }
+
+        const currentPlayer = this.turnManager.getCurrentPlayer();
+        if (currentPlayer) {
+            this.logPlayerAction(currentPlayer, 'ended their turn.', {
+                type: 'turn-end',
+                metadata: { remainingMoves: this.gameState.remainingMoves }
+            });
         }
 
         if (this.isClientTurn()) {
@@ -312,8 +359,15 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
 
     handleTimerEnd() {
         if (this.isClientTurn()) {
-            console.log(`Time's up for ${this.turnManager.getCurrentPlayer().nickname}! Ending turn.`);
+            const player = this.turnManager.getCurrentPlayer();
+            console.log(`Time's up for ${player.nickname}! Ending turn.`);
             this.emitEvent('timerEnded', { gameState: this.gameState });
+            if (player) {
+                this.logPlayerAction(player, 'ran out of time.', {
+                    type: 'timer',
+                    metadata: { turnTimer: this.gameState.settings.turnTimer }
+                });
+            }
 
             this.uiController.deactivateRollButton();
             this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
@@ -330,6 +384,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         const currentPlayer = this.turnManager.getCurrentPlayer();
         const rollResult = currentPlayer.rollDice();
         console.log(`${currentPlayer.nickname} rolled a ${rollResult}`);
+        this.logPlayerAction(currentPlayer, `rolled a ${rollResult}.`, {
+            type: 'dice-roll',
+            metadata: { result: rollResult }
+        });
 
         this.uiController.deactivateRollButton();
         return rollResult;
@@ -358,12 +416,20 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (connections.length === 0) {
             // No where to move
             this.gameState.setRemainingMoves(0);
+            this.logPlayerAction(currentPlayer, 'cannot move from their current space.', {
+                type: 'movement',
+                metadata: { spaceId: currentSpaceId, reason: 'no-connections' }
+            });
             this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
         } else if (connections.length === 1) {
             // Auto-move to only connection
             const targetSpace = connections[0].target;
             this.gameState.movePlayer(targetSpace.id);
             console.log(`${currentPlayer.nickname} moved to space ${targetSpace.id}`);
+            this.logPlayerAction(currentPlayer, `moved to ${targetSpace.name || targetSpace.id}.`, {
+                type: 'movement',
+                metadata: { spaceId: targetSpace.id }
+            });
             this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
         } else {
             // Multiple choices - let player choose
@@ -385,6 +451,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             // Move player to selected space
             this.gameState.movePlayer(selectedSpace.id);
             console.log(`${currentPlayer.nickname} chose to move to space ${selectedSpace.id}`);
+            this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
+                type: 'movement',
+                metadata: { spaceId: selectedSpace.id, selected: true }
+            });
 
             // Transition back to processing events
             this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
@@ -401,11 +471,13 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             this.uiController.deactivateRollButton();
             this.emitEvent('gamePaused', { gameState: this.gameState });
             console.log('Game paused.');
+            this.log('Game paused', { type: 'system' });
         } else if (this.gameState.gamePhase === GamePhases.PAUSED) {
             this.changePhase({ newGamePhase: GamePhases.IN_GAME, delay: 0 });
             this.uiController.resumeTimer();
             this.emitEvent('gameResumed', { gameState: this.gameState });
             console.log('Game resumed.');
+            this.log('Game resumed', { type: 'system' });
         }
     }
 

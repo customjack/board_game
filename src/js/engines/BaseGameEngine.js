@@ -30,6 +30,7 @@ export default class BaseGameEngine {
         this.registryManager = dependencies.registryManager;
         this.factoryManager = dependencies.factoryManager;
         this.isHost = dependencies.isHost;
+        this.gameLogManager = dependencies.gameLogManager || null;
 
         // Configuration
         this.config = config;
@@ -116,6 +117,51 @@ export default class BaseGameEngine {
                 engineType: this.getEngineType()
             });
         }
+    }
+
+    /**
+     * Write a generic entry to the shared game log (if available).
+     * @param {string} message - Message content.
+     * @param {Object} details - Additional metadata for the entry.
+     * @returns {Object|null} The log entry or null if log manager unavailable.
+     */
+    log(message, details = {}) {
+        if (!this.gameLogManager) return null;
+        return this.gameLogManager.log(message, {
+            source: details.source ?? this.getEngineType(),
+            turnNumber: details.turnNumber ?? this.gameState?.getTurnNumber?.(),
+            ...details
+        });
+    }
+
+    /**
+     * Convenience helper for logging player actions.
+     * @param {Object|string} player - Player instance or identifier.
+     * @param {string} message - Message content.
+     * @param {Object} details - Additional metadata.
+     * @returns {Object|null} The log entry or null if unavailable.
+     */
+    logPlayerAction(player, message, details = {}) {
+        if (!this.gameLogManager) return null;
+        return this.gameLogManager.logPlayerAction(player, message, {
+            source: details.source ?? this.getEngineType(),
+            turnNumber: details.turnNumber ?? this.gameState?.getTurnNumber?.(),
+            phase: details.phase ?? this.gameState?.turnPhase,
+            ...details
+        });
+    }
+
+    /**
+     * Create a reusable logger function from the shared manager.
+     * @param {string} source - Identifier for the logger.
+     * @param {Object} defaultDetails - Optional default metadata.
+     * @returns {Function} Logger function or noop.
+     */
+    getLogChannel(source, defaultDetails = {}) {
+        if (!this.gameLogManager) {
+            return () => null;
+        }
+        return this.gameLogManager.createLogger(source, defaultDetails);
     }
 
     /**

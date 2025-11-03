@@ -61,7 +61,8 @@ export default class ClientEventHandler extends BaseEventHandler {
             factoryManager: this.factoryManager,
             isHost: false,
             rollButtonManager: rollButtonManager,
-            timerManager: timerManager
+            timerManager: timerManager,
+            gameLogManager: this.gameLogManager
         });
 
         this.showLobbyPage();
@@ -85,6 +86,9 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.showPage("gamePage");
         this.playerListManager.setListElement(document.getElementById('gamePlayerList'));
         this.boardManager.setBoardContainer(document.getElementById('gameBoardContent'));
+        this.gameLogManager?.init();
+        this.gameLogManager?.clear();
+        this.gameLogManager?.log('Game started', { type: 'system', source: 'ui' });
 
         this.updateGameState(true); //force update
     }
