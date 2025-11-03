@@ -190,7 +190,6 @@ export default class HostEventHandler extends BaseEventHandler {
         this.showPage("gamePage");
         this.playerListManager.setListElement(document.getElementById('gamePlayerList'));
         this.boardManager.setBoardContainer(document.getElementById('gameBoardContent'));
-        this.gameLogManager?.init();
         this.gameLogManager?.clear();
         this.gameLogManager?.log('Game started', { type: 'system', source: 'ui' });
 

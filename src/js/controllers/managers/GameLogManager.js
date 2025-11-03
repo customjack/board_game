@@ -40,16 +40,24 @@ export default class GameLogManager {
      * @param {HTMLElement|string} containerOrId - Element instance or element id.
      */
     init(containerOrId = null) {
-        const target = containerOrId || this.config.containerId;
+        const target = containerOrId !== null ? containerOrId : this.config.containerId;
 
+        let resolvedContainer = null;
         if (typeof target === 'string') {
-            this.container = document.getElementById(target) || null;
-        } else {
-            this.container = target;
+            resolvedContainer = document.getElementById(target) || null;
+        } else if (target) {
+            resolvedContainer = target;
         }
 
-        if (this.container && typeof this.container.innerHTML === 'undefined') {
-            this.container.innerHTML = '';
+        if (resolvedContainer) {
+            this.container = resolvedContainer;
+            if (typeof this.container.innerHTML === 'undefined') {
+                this.container = null;
+            } else {
+                this.container.innerHTML = '';
+            }
+        } else if (!this.container) {
+            console.warn('GameLogManager: container not found for', target);
         }
 
         this.render();
