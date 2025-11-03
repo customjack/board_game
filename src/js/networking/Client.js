@@ -11,6 +11,10 @@ export default class Client extends BasePeer {
         this.originalName = originalName;
         this.hostId = hostId;
         this.conn = null;
+        this.heartbeatInterval = null;
+        this.heartbeatTimeout = null;
+        this.heartbeatIntervalMs = 10000; // 10 seconds
+        this.heartbeatTimeoutMs = 25000;  // consider connection lost if no response within 25s
     }
 
     async init() {
@@ -75,6 +79,7 @@ export default class Client extends BasePeer {
 
     handleOpenConnection() {
         console.log('Connected to host');
+        this.startHeartbeat();
         const playersJSON = this.ownedPlayers.map(player => player.toJSON());
         this.conn.send({
             type: 'join',
@@ -95,6 +100,12 @@ export default class Client extends BasePeer {
                 break;
             case 'gameStateDelta':
                 this.handleGameStateDelta(data.delta);
+                break;
+            case 'heartbeat':
+                this.sendHeartbeatAck();
+                break;
+            case 'heartbeatAck':
+                this.markHeartbeatReceived();
                 break;
             case 'kick':
                 this.handleKick();
@@ -184,16 +195,68 @@ export default class Client extends BasePeer {
     }
 
     handleDisconnection() {
+        this.stopHeartbeat();
         alert('Disconnected from the host.');
         location.reload();
     }
 
     handleConnectionError(err) {
+        this.stopHeartbeat();
         alert('Connection error: ' + err);
         location.reload();
     }
 
     handleAddPlayerRejected(reason) {
         alert(reason);
+    }
+
+    startHeartbeat() {
+        this.stopHeartbeat();
+        this.markHeartbeatReceived();
+        this.heartbeatInterval = setInterval(() => {
+            if (this.conn && this.conn.open) {
+                this.conn.send({ type: 'heartbeat', timestamp: Date.now() });
+                this.scheduleHeartbeatTimeout();
+            }
+        }, this.heartbeatIntervalMs);
+    }
+
+    stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
+        if (this.heartbeatTimeout) {
+            clearTimeout(this.heartbeatTimeout);
+            this.heartbeatTimeout = null;
+        }
+    }
+
+    markHeartbeatReceived() {
+        if (this.heartbeatTimeout) {
+            clearTimeout(this.heartbeatTimeout);
+            this.heartbeatTimeout = null;
+        }
+    }
+
+    scheduleHeartbeatTimeout() {
+        if (this.heartbeatTimeout) {
+            clearTimeout(this.heartbeatTimeout);
+        }
+        this.heartbeatTimeout = setTimeout(() => {
+            console.warn('Heartbeat timeout - attempting to reconnect to host.');
+            this.stopHeartbeat();
+            if (this.conn) {
+                this.conn.close();
+            }
+            this.connectToHost();
+        }, this.heartbeatTimeoutMs);
+    }
+
+    sendHeartbeatAck() {
+        if (this.conn && this.conn.open) {
+            this.conn.send({ type: 'heartbeatAck', timestamp: Date.now() });
+        }
+        this.markHeartbeatReceived();
     }
 }

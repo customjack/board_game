@@ -14,6 +14,7 @@ export default class Host extends BasePeer {
 
         // Store the previous game state for delta calculation
         this.previousGameStateJSON = null;
+        this.connectionHeartbeatIntervalMs = 10000;
     }
 
     async init() {
@@ -47,6 +48,17 @@ export default class Host extends BasePeer {
         this.sendConnectionPackage(conn);
         conn.on('data', (data) => this.handleData(conn, data));
         conn.on('close', () => this.handleDisconnection(conn.peer));
+
+        conn.__heartbeatInterval = setInterval(() => {
+            if (conn.open) {
+                conn.send({ type: 'heartbeat', timestamp: Date.now() });
+            } else {
+                if (conn.__heartbeatInterval) {
+                    clearInterval(conn.__heartbeatInterval);
+                    conn.__heartbeatInterval = null;
+                }
+            }
+        }, this.connectionHeartbeatIntervalMs);
     }
 
     sendGameState(conn) {
@@ -98,6 +110,12 @@ export default class Host extends BasePeer {
                 break;
             case 'requestFullState':
                 this.handleRequestFullState(conn, data.reason);
+                break;
+            case 'heartbeat':
+                this.handleHeartbeat(conn);
+                break;
+            case 'heartbeatAck':
+                // No-op, acknowledgement received
                 break;
             // Handle other data types...
             default:
@@ -275,6 +293,14 @@ export default class Host extends BasePeer {
 
     handleDisconnection(peerId) {
         console.log(`Connection closed with ${peerId}`);
+        const connectionIndex = this.connections.findIndex((conn) => conn.peer === peerId);
+        if (connectionIndex !== -1) {
+            const [conn] = this.connections.splice(connectionIndex, 1);
+            if (conn.__heartbeatInterval) {
+                clearInterval(conn.__heartbeatInterval);
+                conn.__heartbeatInterval = null;
+            }
+        }
         this.removePeer(peerId);
         this.broadcastGameState();
     }
@@ -334,6 +360,12 @@ export default class Host extends BasePeer {
         this.connections.forEach((conn) => {
             conn.send({ type: 'startGame' });
         });
+    }
+
+    handleHeartbeat(conn) {
+        if (conn && conn.open) {
+            conn.send({ type: 'heartbeatAck', timestamp: Date.now() });
+        }
     }
 
     kickPlayer(peerId) {
