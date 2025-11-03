@@ -5,12 +5,15 @@ export default class GameLogDockController {
         this.eventBus = eventBus;
         this.config = {
             dockId: config.dockId || 'gameLogDock',
+            dockBodyId: config.dockBodyId || 'gameLogBody',
             toggleId: config.toggleId || 'toggleGameLogButton'
         };
 
         this.dock = null;
+        this.dockBody = null;
         this.toggleButton = null;
-        this.visible = false;
+        this.pageVisible = false;
+        this.collapsed = false;
         this.boundToggle = this.toggle.bind(this);
 
         this.onPageChanged = this.onPageChanged.bind(this);
@@ -19,12 +22,14 @@ export default class GameLogDockController {
 
     init() {
         this.dock = document.getElementById(this.config.dockId);
+        this.dockBody = document.getElementById(this.config.dockBodyId);
         this.toggleButton = document.getElementById(this.config.toggleId);
 
-        if (!this.dock) return;
+        if (!this.dock || !this.dockBody) return;
 
         this.toggleButton?.addEventListener('click', this.boundToggle);
-        this.syncState(false);
+        this.applyPageVisibility();
+        this.applyCollapse(false);
     }
 
     destroy() {
@@ -34,26 +39,37 @@ export default class GameLogDockController {
 
     onPageChanged({ pageId }) {
         const shouldShow = pageId === 'gamePage';
-        if (shouldShow !== this.visible) {
-            this.visible = shouldShow;
-            this.syncState(true);
+        if (shouldShow !== this.pageVisible) {
+            this.pageVisible = shouldShow;
+            this.applyPageVisibility();
+            if (!shouldShow) {
+                this.collapsed = false;
+                this.applyCollapse(false);
+            }
         }
     }
 
     toggle() {
-        this.visible = !this.visible;
-        this.syncState(true);
+        if (!this.pageVisible) return;
+        this.collapsed = !this.collapsed;
+        this.applyCollapse(true);
     }
 
-    syncState(animate) {
+    applyPageVisibility() {
         if (!this.dock) return;
-        this.dock.setAttribute('data-visible', String(this.visible));
+        this.dock.setAttribute('data-page-visible', String(this.pageVisible));
+    }
+
+    applyCollapse(animate) {
+        if (!this.dockBody) return;
+        this.dockBody.setAttribute('data-collapsed', String(this.collapsed));
+
         if (this.toggleButton) {
-            this.toggleButton.textContent = this.visible ? 'Hide' : 'Show';
-            this.toggleButton.setAttribute('aria-expanded', String(this.visible));
+            this.toggleButton.textContent = this.collapsed ? 'Show' : 'Hide';
+            this.toggleButton.setAttribute('aria-expanded', String(!this.collapsed));
         }
 
-        if (animate && this.visible) {
+        if (animate && !this.collapsed) {
             requestAnimationFrameSafe(() => {
                 this.dock.classList.add('game-log-highlight');
                 setTimeout(() => this.dock?.classList.remove('game-log-highlight'), 300);

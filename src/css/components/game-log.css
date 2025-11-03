@@ -1,26 +1,20 @@
 .game-log-dock {
     width: min(1080px, 95%);
     margin: 1.5rem auto 0;
-    background: var(--surface-elevation-2, rgba(12, 13, 21, 0.85));
+    background: var(--background-box);
     border-radius: 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(12px);
-    padding: 0.5rem 0.75rem 0.75rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+    padding: 0.6rem 1rem 0.9rem;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    transition: max-height 0.25s ease, opacity 0.2s ease;
-    max-height: 280px;
-    opacity: 1;
+    gap: 0.55rem;
+    color: var(--text-color);
+    transition: opacity 0.2s ease;
 }
 
-.game-log-dock[data-visible="false"] {
-    max-height: 0;
-    opacity: 0;
-    padding: 0;
-    margin-top: 0;
-    overflow: hidden;
+.game-log-dock[data-page-visible="false"] {
+    display: none;
 }
 
 .game-log-header {
@@ -31,7 +25,7 @@
     font-size: 0.95rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--text-color, #ffffff);
+    color: inherit;
 }
 
 .game-log-title {
@@ -42,9 +36,9 @@
 
 .game-log-toggle {
     border: none;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-color-light, #f1f1f1);
-    padding: 0.25rem 0.65rem;
+    background: var(--color-primary);
+    color: var(--text-color-light);
+    padding: 0.2rem 0.75rem;
     border-radius: 0.45rem;
     font-size: 0.75rem;
     letter-spacing: 0.08em;
@@ -55,16 +49,30 @@
 
 .game-log-toggle:hover,
 .game-log-toggle:focus {
-    background: rgba(255, 255, 255, 0.16);
+    background: var(--color-primary-hover);
     outline: none;
+}
+
+.game-log-body {
+    transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.2s ease;
+    max-height: 220px;
+    opacity: 1;
+}
+
+.game-log-body[data-collapsed="true"] {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .game-log-content {
     max-height: 180px;
     overflow-y: auto;
     border-radius: 0.6rem;
-    background: linear-gradient(135deg, rgba(12, 18, 28, 0.6), rgba(22, 28, 42, 0.6));
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--background-body);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem;
 }
 
 .game-log-highlight {
@@ -73,10 +81,10 @@
 
 @keyframes game-log-pulse {
     0% {
-        box-shadow: 0 0 0 rgba(255, 255, 255, 0.25);
+        box-shadow: 0 0 0 var(--highlight-glow);
     }
     100% {
-        box-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+        box-shadow: 0 0 18px var(--highlight-glow);
     }
 }
 
@@ -86,7 +94,7 @@
         margin-top: 1rem;
     }
 
-    .game-log-content {
+    .game-log-body[data-collapsed="false"] .game-log-content {
         max-height: 140px;
     }
 }

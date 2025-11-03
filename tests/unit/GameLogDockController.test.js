@@ -21,6 +21,7 @@ describe('GameLogDockController', () => {
   let eventBus;
   let controller;
   let dock;
+  let dockBody;
   let toggle;
 
   beforeEach(() => {
@@ -32,6 +33,9 @@ describe('GameLogDockController', () => {
         add: jest.fn(),
         remove: jest.fn(),
       },
+    };
+    dockBody = {
+      setAttribute: jest.fn(),
     };
     toggle = {
       addEventListener: jest.fn((_, cb) => {
@@ -45,6 +49,7 @@ describe('GameLogDockController', () => {
 
     document.getElementById = jest.fn((id) => {
       if (id === 'gameLogDock') return dock;
+      if (id === 'gameLogBody') return dockBody;
       if (id === 'toggleGameLogButton') return toggle;
       return null;
     });
@@ -58,14 +63,15 @@ describe('GameLogDockController', () => {
   });
 
   test('initial state is hidden', () => {
-    expect(dock.setAttribute).toHaveBeenCalledWith('data-visible', 'false');
-    expect(toggle.textContent).toBe('Show');
+    expect(dock.setAttribute).toHaveBeenCalledWith('data-page-visible', 'false');
+    expect(dockBody.setAttribute).toHaveBeenCalledWith('data-collapsed', 'false');
+    expect(toggle.textContent).toBe('Hide');
   });
 
   test('shows dock when game page is active', () => {
     eventBus.emit('pageChanged', { pageId: 'gamePage' });
 
-    expect(dock.setAttribute).toHaveBeenLastCalledWith('data-visible', 'true');
+    expect(dock.setAttribute).toHaveBeenLastCalledWith('data-page-visible', 'true');
     expect(toggle.textContent).toBe('Hide');
   });
 
@@ -73,11 +79,11 @@ describe('GameLogDockController', () => {
     eventBus.emit('pageChanged', { pageId: 'gamePage' });
 
     toggle.handler(); // Hide
-    expect(dock.setAttribute).toHaveBeenLastCalledWith('data-visible', 'false');
+    expect(dockBody.setAttribute).toHaveBeenLastCalledWith('data-collapsed', 'true');
     expect(toggle.textContent).toBe('Show');
 
     toggle.handler(); // Show again
-    expect(dock.setAttribute).toHaveBeenLastCalledWith('data-visible', 'true');
+    expect(dockBody.setAttribute).toHaveBeenLastCalledWith('data-collapsed', 'false');
     expect(toggle.textContent).toBe('Hide');
   });
 });
