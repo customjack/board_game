@@ -76,6 +76,7 @@ export default class RollButtonManager {
      * Activates the roll button, making it clickable with animation.
      */
     activate() {
+        if (!this.rollButton) return;
         this.rollButton.classList.add('active');
         this.rollButton.style.cursor = 'pointer';
         this.rollButton.disabled = false; // Enable the button
@@ -85,6 +86,7 @@ export default class RollButtonManager {
      * Deactivates the roll button, making it unclickable and changing its appearance.
      */
     deactivate() {
+        if (!this.rollButton) return;
         this.rollButton.classList.remove('active');
         this.rollButton.style.cursor = 'not-allowed';
         this.rollButton.disabled = true; // Disable the button to prevent clicks

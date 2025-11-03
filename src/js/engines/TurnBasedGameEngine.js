@@ -15,6 +15,7 @@ import UIController from './components/UIController.js';
 import TurnPhases from '../enums/TurnPhases.js';
 import GamePhases from '../enums/GamePhases.js';
 import PlayerStates from '../enums/PlayerStates.js';
+import GameLogDockController from '../controllers/GameLogDockController.js';
 
 export default class TurnBasedGameEngine extends BaseGameEngine {
     /**
@@ -42,6 +43,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             },
             config.uiController || {}
         );
+        this.gameLogDockController = new GameLogDockController(this.eventBus);
         // Register phase handlers
         this.registerPhaseHandlers();
 
@@ -82,6 +84,8 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             onPauseToggle: () => this.togglePauseGame()
         });
 
+        this.gameLogDockController.init();
+
         this.initialized = true;
         this.running = false;
     }
@@ -109,8 +113,9 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         }
 
         const hasTurnPhase = currentTurnPhase !== undefined && currentTurnPhase !== null;
+        const shouldHandleTurnPhase = hasTurnPhase && [GamePhases.IN_GAME, GamePhases.PAUSED].includes(currentGamePhase);
 
-        if (hasTurnPhase && (gamePhaseChanged || turnPhaseChanged)) {
+        if (shouldHandleTurnPhase && (gamePhaseChanged || turnPhaseChanged)) {
             this.phaseStateMachine.transitionTurnPhase(currentTurnPhase, { gameState: this.gameState });
         }
     }
@@ -130,6 +135,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      */
     cleanup() {
         this.uiController.cleanup();
+        this.gameLogDockController.destroy();
         this.running = false;
         this.initialized = false;
     }
