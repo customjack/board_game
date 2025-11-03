@@ -15,6 +15,7 @@ import UIController from './components/UIController.js';
 import TurnPhases from '../enums/TurnPhases.js';
 import GamePhases from '../enums/GamePhases.js';
 import PlayerStates from '../enums/PlayerStates.js';
+import ActionTypes from '../enums/ActionTypes.js';
 import GameLogDockController from '../controllers/GameLogDockController.js';
 
 export default class TurnBasedGameEngine extends BaseGameEngine {
@@ -186,27 +187,8 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             console.warn('No current player available during handleChangeTurn.');
             return;
         }
-
-        console.log(`Current Player State: ${currentPlayer.getState()},
-                    Nickname: ${currentPlayer.nickname},
-                    Player ID: ${currentPlayer.playerId},
-                    Effects: ${currentPlayer.effects.length},
-                    Turns Taken: ${currentPlayer.turnsTaken}`);
-
-        this.logPlayerAction(currentPlayer, `is up next with state ${currentPlayer.getState()}.`, {
-            type: 'turn-start',
-            metadata: { effects: currentPlayer.effects.length }
-        });
-
         const shouldSkipTurn = [PlayerStates.COMPLETED_GAME, PlayerStates.SKIPPING_TURN,
             PlayerStates.SPECTATING, PlayerStates.DISCONNECTED].includes(currentPlayer.getState());
-
-        if (shouldSkipTurn) {
-            this.logPlayerAction(currentPlayer, 'is being skipped this turn.', {
-                type: 'turn-skip',
-                metadata: { reason: currentPlayer.getState() }
-            });
-        }
 
         if (this.isClientTurn()) {
             // Check if player should be skipped
@@ -225,11 +207,6 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         this.uiController.startTimer();
 
         const currentPlayer = this.turnManager.getCurrentPlayer();
-        if (currentPlayer) {
-            this.logPlayerAction(currentPlayer, 'started their turn.', {
-                type: 'turn-start'
-            });
-        }
 
         if (this.isClientTurn()) {
             console.log(`It's your turn, ${currentPlayer.nickname}!`);
@@ -253,20 +230,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         // Close any open modals
         this.uiController.hideAllModals();
 
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-        console.log(`Processing events for ${currentPlayer.nickname}'s move.`);
-
         // Re-determine triggered events each time (matches old GameEngine behavior)
         // This automatically excludes completed events since their state changed
         const triggeredEvents = this.gameState.determineTriggeredEvents(this.eventBus, this.peerId);
-        if (currentPlayer) {
-            this.logPlayerAction(currentPlayer, triggeredEvents.length === 0
-                ? 'did not trigger any events.'
-                : `triggered ${triggeredEvents.length} event(s).`, {
-                type: 'event-processing',
-                metadata: { triggeredEventCount: triggeredEvents.length }
-            });
-        }
+        const currentPlayer = this.turnManager.getCurrentPlayer();
 
         if (triggeredEvents.length === 0) {
             // No events to process, reset all events and move on
@@ -275,6 +242,13 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
                 this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
             }
         } else {
+            triggeredEvents.forEach(({ event, space }) => {
+                const description = this.describeTriggeredEvent(event, space);
+                this.logPlayerAction(currentPlayer, description, {
+                    type: 'event-processing',
+                    metadata: { spaceId: space?.id, actionType: event?.action?.type }
+                });
+            });
             if (this.isClientTurn()) {
                 // Transition to process the first event
                 this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
@@ -327,10 +301,6 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
 
         console.log(`${currentPlayer.nickname} is choosing a destination...`);
         console.log(`${currentPlayer.nickname} has multiple choices to move to: ${targetSpaces.map(space => space.id).join(', ')}`);
-        this.logPlayerAction(currentPlayer, 'is choosing their destination.', {
-            type: 'movement-choice',
-            metadata: { options: targetSpaces.map(space => space.id) }
-        });
 
         if (this.isClientTurn()) {
             this.waitForChoice(currentPlayer, targetSpaces);
@@ -485,6 +455,61 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             // Transition back to processing events
             this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
         });
+    }
+
+    describeTriggeredEvent(event, space) {
+        const spaceLabel = space?.name || space?.id || 'a space';
+        const action = event?.action;
+        if (!action) {
+            return `triggered an event on ${spaceLabel}`;
+        }
+
+        const actionType = action.type;
+        switch (actionType) {
+            case ActionTypes.PROMPT_ALL_PLAYERS:
+            case ActionTypes.PROMPT_CURRENT_PLAYER: {
+                const message = action.payload?.message;
+                if (message) {
+                    return `triggered a prompt on ${spaceLabel}: "${this.truncateMessage(message)}"`;
+                }
+                return `triggered a prompt on ${spaceLabel}`;
+            }
+            case ActionTypes.DISPLACE_PLAYER: {
+                const steps = action.payload?.steps;
+                if (typeof steps === 'number' && steps !== 0) {
+                    const absSteps = Math.abs(steps);
+                    const stepLabel = `space${absSteps === 1 ? '' : 's'}`;
+                    return steps > 0
+                        ? `triggered a move forward ${absSteps} ${stepLabel} on ${spaceLabel}`
+                        : `triggered a move back ${absSteps} ${stepLabel} on ${spaceLabel}`;
+                }
+                return `triggered a movement effect on ${spaceLabel}`;
+            }
+            case ActionTypes.APPLY_EFFECT:
+                return `triggered a player effect on ${spaceLabel}`;
+            case ActionTypes.SET_PLAYER_STATE: {
+                const state = action.payload?.state;
+                return state
+                    ? `triggered a state change to ${state}`
+                    : `triggered a state change`;
+            }
+            case ActionTypes.SET_PLAYER_SPACE: {
+                const target = action.payload?.spaceId;
+                return target
+                    ? `triggered a teleport to ${target}`
+                    : `triggered a teleport event`;
+            }
+            case ActionTypes.CUSTOM:
+                return `triggered a custom event on ${spaceLabel}`;
+            default:
+                return `triggered an event (${actionType}) on ${spaceLabel}`;
+        }
+    }
+
+    truncateMessage(message, limit = 60) {
+        if (typeof message !== 'string') return '';
+        if (message.length <= limit) return message;
+        return `${message.slice(0, limit - 1)}…`;
     }
 
     /**
