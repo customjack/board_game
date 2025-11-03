@@ -140,6 +140,9 @@ export default class GameLogManager {
     clear() {
         this.entries = [];
         this.render();
+        if (this.container && typeof this.container.scrollTop === 'number') {
+            this.container.scrollTop = 0;
+        }
     }
 
     /**

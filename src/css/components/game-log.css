@@ -10,6 +10,17 @@
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+    max-height: 280px;
+    opacity: 1;
+}
+
+.game-log-dock[data-visible="false"] {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    margin-top: 0;
+    overflow: hidden;
 }
 
 .game-log-header {
@@ -27,6 +38,25 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+}
+
+.game-log-toggle {
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-color-light, #f1f1f1);
+    padding: 0.25rem 0.65rem;
+    border-radius: 0.45rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.game-log-toggle:hover,
+.game-log-toggle:focus {
+    background: rgba(255, 255, 255, 0.16);
+    outline: none;
 }
 
 .game-log-content {

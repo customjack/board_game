@@ -249,9 +249,12 @@
         </div>
     </div>
 
-    <div id="gameLogDock" class="game-log-dock">
+    <div id="gameLogDock" class="game-log-dock" data-visible="false">
         <div class="game-log-header">
             <span class="game-log-title">Game Log</span>
+            <button id="toggleGameLogButton" class="game-log-toggle" aria-expanded="true" aria-controls="gameLog">
+                Hide
+            </button>
         </div>
         <div id="gameLog" class="game-log-content"></div>
     </div>

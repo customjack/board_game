@@ -10,6 +10,7 @@ import RollButtonManager from './managers/RollButtonManager';
 import TimerManager from './managers/TimerManager';
 import TimerAnimation from '../animations/TimerAnimation';
 import PauseButtonManager from './managers/PauseButtonManager';
+import GameLogDockController from './GameLogDockController.js';
 
 
 export default class GameEngine {
@@ -43,6 +44,8 @@ export default class GameEngine {
         // Initialize the timer manager with the TimerAnimation and gameState
         const timerAnimation = new TimerAnimation(this.isHost);
         this.timerManager = new TimerManager(timerAnimation, this.gameState);
+
+        this.gameLogDockController = new GameLogDockController(this.eventBus);
 
         // Bind state handlers for game phases
         this.stateHandlers = {
@@ -80,6 +83,8 @@ export default class GameEngine {
             () => this.handleTimerEnd(),
             this.isHost ? () => this.togglePauseGame() : null // Pause callback only for host
         );
+
+        this.gameLogDockController.init();
     }
 
     // Main method to update the game state
