@@ -185,6 +185,8 @@ export default class GameLogManager {
         if (!this.container || typeof this.container.innerHTML === 'undefined') return;
 
         const html = this.entries
+            .slice()
+            .reverse()
             .map(entry => this.formatEntryHtml(entry))
             .join('');
 

@@ -39,6 +39,13 @@ describe('GameLogManager', () => {
     expect(entries[2].message).toBe('Fourth');
   });
 
+  test('renders newest entries at the top of the container', () => {
+    manager.log('Older');
+    manager.log('Newer');
+
+    expect(container.innerHTML.indexOf('Newer')).toBeLessThan(container.innerHTML.indexOf('Older'));
+  });
+
   test('createLogger applies default metadata', () => {
     const logger = manager.createLogger('test-source', { type: 'custom' });
     const entry = logger('Logged via channel', { metadata: { flag: true } });
