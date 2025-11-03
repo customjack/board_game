@@ -49,7 +49,7 @@ export default class BaseEventHandler {
         if (!this.gameLogManager) {
             this.gameLogManager = new GameLogManager(this.eventBus);
         }
-        this.gameLogManager.init();
+        this.gameLogManager.init('gameLogContainer');
     }
 
     setupEventListeners() {

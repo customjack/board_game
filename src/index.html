@@ -237,6 +237,8 @@
                 <!-- Sidebar for player list -->
                 <ul id="gamePlayerList"></ul>
 
+                <button id="openGameLogButton" class="button button-secondary">Game Log</button>
+
             </div>
 
             <div id="gameBoardContainer" class="board-container">
@@ -249,15 +251,13 @@
         </div>
     </div>
 
-    <div id="gameLogDock" class="game-log-dock box-container" data-page-visible="false">
-        <div class="game-log-header">
-            <span class="game-log-title">Game Log</span>
-            <button id="toggleGameLogButton" class="game-log-toggle" aria-expanded="true" aria-controls="gameLog">
-                Hide
-            </button>
-        </div>
-        <div id="gameLogBody" class="game-log-body" data-collapsed="false">
-            <div id="gameLog" class="game-log-content"></div>
+    <div id="gameLogModal" class="modal">
+        <div class="modal-content game-log-modal">
+            <div class="game-log-modal-header">
+                <h3>Game Log</h3>
+                <button id="closeGameLogButton" class="button button-secondary">Close</button>
+            </div>
+            <div id="gameLogContainer" class="game-log-modal-content"></div>
         </div>
     </div>
 

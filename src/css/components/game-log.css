@@ -1,95 +1,88 @@
-.game-log-dock {
-    width: min(1080px, 95%);
-    margin: 1.5rem auto 0;
+.game-log-modal {
+    width: min(90vw, 520px);
+    max-height: 80vh;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    color: var(--text-color);
-    transition: opacity 0.2s ease;
+    gap: calc(var(--spacing-unit) * 1.25);
+    padding: calc(var(--spacing-unit) * 2);
+    background: var(--background-box);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
 }
 
-.game-log-dock[data-page-visible="false"] {
-    display: none;
-}
-
-.game-log-header {
+.game-log-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-weight: 600;
-    font-size: 0.95rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: inherit;
-}
-
-.game-log-title {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-
-.game-log-toggle {
-    border: 1px solid var(--border-color);
-    background: var(--background-body);
+    gap: calc(var(--spacing-unit) * 1);
     color: var(--text-color);
-    padding: 0.15rem 0.65rem;
-    border-radius: 0.35rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.2s ease;
 }
 
-.game-log-toggle:hover,
-.game-log-toggle:focus {
-    background: var(--background-sidebar);
-    outline: none;
+.game-log-modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
 }
 
-.game-log-body {
-    transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.2s ease;
-    max-height: 220px;
-    opacity: 1;
-}
-
-.game-log-body[data-collapsed="true"] {
-    max-height: 0;
-    opacity: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-.game-log-content {
-    max-height: 180px;
+.game-log-modal-content {
+    flex: 1;
     overflow-y: auto;
     background: var(--background-sidebar);
     border: 1px solid var(--border-color);
-    border-radius: 0.35rem;
-    padding: 0.4rem;
+    border-radius: 0.5rem;
+    padding: calc(var(--spacing-unit) * 1.25);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 1.25);
 }
 
-.game-log-highlight {
-    animation: game-log-pulse 0.3s ease;
+.log-entry {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.4);
+    padding: calc(var(--spacing-unit) * 0.5) 0;
+    border-bottom: 1px solid var(--border-color);
 }
 
-@keyframes game-log-pulse {
-    0% {
-        box-shadow: 0 0 0 var(--highlight-glow);
-    }
-    100% {
-        box-shadow: 0 0 18px var(--highlight-glow);
-    }
+.log-entry:last-child {
+    border-bottom: none;
 }
 
-@media (max-width: 960px) {
-    .game-log-dock {
-        width: 98%;
-        margin-top: 1rem;
+.log-entry-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing-unit) * 0.75);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--label-color);
+}
+
+.log-entry-header .log-header-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.log-entry-header .log-header-separator {
+    opacity: 0.4;
+}
+
+.log-entry-message {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: var(--text-color);
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .game-log-modal {
+        width: 95vw;
+        padding: calc(var(--spacing-unit) * 1.5);
     }
 
-    .game-log-body[data-collapsed="false"] .game-log-content {
-        max-height: 140px;
+    .game-log-modal-content {
+        padding: calc(var(--spacing-unit) * 1);
     }
 }

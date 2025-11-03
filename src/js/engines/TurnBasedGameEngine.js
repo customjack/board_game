@@ -16,7 +16,7 @@ import TurnPhases from '../enums/TurnPhases.js';
 import GamePhases from '../enums/GamePhases.js';
 import PlayerStates from '../enums/PlayerStates.js';
 import ActionTypes from '../enums/ActionTypes.js';
-import GameLogDockController from '../controllers/GameLogDockController.js';
+import GameLogModalController from '../controllers/GameLogModalController.js';
 
 export default class TurnBasedGameEngine extends BaseGameEngine {
     /**
@@ -44,7 +44,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             },
             config.uiController || {}
         );
-        this.gameLogDockController = new GameLogDockController(this.eventBus);
+        this.gameLogModalController = new GameLogModalController(this.eventBus);
         // Register phase handlers
         this.registerPhaseHandlers();
 
@@ -85,7 +85,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             onPauseToggle: () => this.togglePauseGame()
         });
 
-        this.gameLogDockController.init();
+        this.gameLogModalController.init();
 
         this.initialized = true;
         this.running = false;
@@ -136,7 +136,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      */
     cleanup() {
         this.uiController.cleanup();
-        this.gameLogDockController.destroy();
+        this.gameLogModalController.destroy();
         this.running = false;
         this.initialized = false;
     }

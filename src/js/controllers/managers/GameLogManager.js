@@ -220,22 +220,64 @@ export default class GameLogManager {
      */
     formatEntryHtml(entry) {
         const time = new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const parts = [
-            `<span class="log-time">[${this.escapeHtml(time)}]</span>`
+
+        const headerItems = [
+            `<span class="log-header-item log-time">${this.escapeHtml(time)}</span>`
         ];
 
         if (entry.playerName) {
-            parts.push(`<span class="log-player">${this.escapeHtml(entry.playerName)}</span>`);
+            headerItems.push(`<span class="log-header-item log-player">${this.escapeHtml(entry.playerName)}</span>`);
         } else if (entry.playerId) {
-            parts.push(`<span class="log-player">Player ${this.escapeHtml(entry.playerId)}</span>`);
+            headerItems.push(`<span class="log-header-item log-player">Player ${this.escapeHtml(entry.playerId)}</span>`);
         }
 
-        parts.push(`<span class="log-message">${this.escapeHtml(entry.message)}</span>`);
-
-        if (entry.source) {
-            parts.push(`<span class="log-source">${this.escapeHtml(entry.source)}</span>`);
+        const typeLabel = this.getTypeLabel(entry.type);
+        if (typeLabel) {
+            headerItems.push(`<span class="log-header-item log-type">${this.escapeHtml(typeLabel)}</span>`);
         }
 
-        return `<div class="log-entry log-entry-${this.escapeHtml(entry.type)}">${parts.join(' ')}</div>`;
+        const headerHtml = headerItems
+            .filter(Boolean)
+            .join('<span class="log-header-separator">•</span>');
+
+        const message = this.escapeHtml(entry.message || '');
+        const className = this.escapeClass(entry.type);
+
+        return `
+            <div class="log-entry log-entry-${className}">
+                <div class="log-entry-header">${headerHtml}</div>
+                <div class="log-entry-message">${message}</div>
+            </div>
+        `.trim();
+    }
+
+    getTypeLabel(type) {
+        if (!type) return '';
+        const map = {
+            info: 'Info',
+            'dice-roll': 'Dice Roll',
+            'event-processing': 'Event',
+            'movement': 'Movement',
+            'movement-choice': 'Movement',
+            'turn-start': 'Turn',
+            'turn-end': 'Turn',
+            'turn-skip': 'Turn',
+            timer: 'Timer',
+            system: 'System'
+        };
+
+        if (map[type]) {
+            return map[type];
+        }
+
+        return type
+            .split(/[-_\s]+/)
+            .map(fragment => fragment.charAt(0).toUpperCase() + fragment.slice(1))
+            .join(' ');
+    }
+
+    escapeClass(value) {
+        if (!value) return 'info';
+        return value.toString().replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
     }
 }
