@@ -1,14 +1,9 @@
 .game-log-dock {
     width: min(1080px, 95%);
     margin: 1.5rem auto 0;
-    background: var(--background-box);
-    border-radius: 0.85rem;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
-    padding: 0.6rem 1rem 0.9rem;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.4rem;
     color: var(--text-color);
     transition: opacity 0.2s ease;
 }
@@ -35,11 +30,11 @@
 }
 
 .game-log-toggle {
-    border: none;
-    background: var(--color-primary);
-    color: var(--text-color-light);
-    padding: 0.2rem 0.75rem;
-    border-radius: 0.45rem;
+    border: 1px solid var(--border-color);
+    background: var(--background-body);
+    color: var(--text-color);
+    padding: 0.15rem 0.65rem;
+    border-radius: 0.35rem;
     font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -49,7 +44,7 @@
 
 .game-log-toggle:hover,
 .game-log-toggle:focus {
-    background: var(--color-primary-hover);
+    background: var(--background-sidebar);
     outline: none;
 }
 
@@ -69,10 +64,10 @@
 .game-log-content {
     max-height: 180px;
     overflow-y: auto;
-    border-radius: 0.6rem;
-    background: var(--background-body);
+    background: var(--background-sidebar);
     border: 1px solid var(--border-color);
-    padding: 0.6rem;
+    border-radius: 0.35rem;
+    padding: 0.4rem;
 }
 
 .game-log-highlight {
