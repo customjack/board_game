@@ -191,6 +191,10 @@ export default class GameLogManager {
             .join('');
 
         this.container.innerHTML = html;
+
+        if (typeof this.container.scrollTop === 'number') {
+            this.container.scrollTop = 0;
+        }
     }
 
     /**

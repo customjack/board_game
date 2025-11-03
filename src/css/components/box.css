@@ -114,22 +114,6 @@
     color: var(--text-color);
 }
 
-/* Log Content */
-.log-content {
-    flex-grow: 1;
-    font-size: 0.9rem;
-    line-height: 1.4;
-    color: var(--text-color-light);
-    overflow-y: auto;
-    max-height: 160px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 0.65rem;
-}
-
 /* Disable animation for static info/log boxes */
 .box-container.info-box,
 .box-container.log-box {

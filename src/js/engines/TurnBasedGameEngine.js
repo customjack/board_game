@@ -26,7 +26,13 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         super(dependencies, config);
 
         // Initialize components
-        this.phaseStateMachine = new PhaseStateMachine(this.eventBus);
+        this.phaseStateMachine = new PhaseStateMachine(
+            {
+                gamePhases: Object.values(GamePhases),
+                turnPhases: Object.values(TurnPhases)
+            },
+            this.eventBus
+        );
         this.turnManager = new TurnManager(this.gameState, config.turnManager || {});
         this.eventProcessor = new EventProcessor(this.gameState, this.eventBus, config.eventProcessor || {});
         this.uiController = new UIController(
@@ -38,6 +44,9 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         );
         // Register phase handlers
         this.registerPhaseHandlers();
+
+        // Initialize state machine without committing to a phase so first update triggers transitions
+        this.phaseStateMachine.init(null, null);
     }
 
     /**
@@ -89,8 +98,21 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         this.eventProcessor.gameState = gameState;
         this.uiController.updateFromGameState(gameState, this.peerId);
 
-        // Handle game phase
-        this.phaseStateMachine.handleGamePhase(this.gameState.gamePhase, { gameState });
+        const currentGamePhase = this.gameState.gamePhase;
+        const currentTurnPhase = this.gameState.turnPhase;
+
+        const gamePhaseChanged = !this.phaseStateMachine.isInGamePhase(currentGamePhase);
+        const turnPhaseChanged = !this.phaseStateMachine.isInTurnPhase(currentTurnPhase);
+
+        if (gamePhaseChanged) {
+            this.phaseStateMachine.transitionGamePhase(currentGamePhase, { gameState: this.gameState });
+        }
+
+        const hasTurnPhase = currentTurnPhase !== undefined && currentTurnPhase !== null;
+
+        if (hasTurnPhase && (gamePhaseChanged || turnPhaseChanged)) {
+            this.phaseStateMachine.transitionTurnPhase(currentTurnPhase, { gameState: this.gameState });
+        }
     }
 
     /**
@@ -133,8 +155,6 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         this.enactAllEffects();
         // Resume timer if paused
         this.uiController.resumeTimer();
-        // Handle current turn phase
-        this.phaseStateMachine.handleTurnPhase(this.gameState.turnPhase, { gameState: this.gameState });
     }
 
     handlePaused() {
