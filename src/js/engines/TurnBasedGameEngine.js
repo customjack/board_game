@@ -113,7 +113,23 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (this.timer) {
             this.timer.stopTimer();
         } else if (this.uiController) {
-            this.stopTimer();
+            this.uiController.stopTimer();
+        }
+    }
+
+    pauseTimer() {
+        if (this.timer) {
+            this.timer.pauseTimer();
+        } else if (this.uiController) {
+            this.pauseTimer();
+        }
+    }
+
+    resumeTimer() {
+        if (this.timer) {
+            this.timer.resumeTimer();
+        } else if (this.uiController) {
+            this.resumeTimer();
         }
     }
 
@@ -121,7 +137,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (this.remainingMoves) {
             this.remainingMoves.show();
         } else if (this.uiController) {
-            this.showRemainingMoves();
+            this.uiController.showRemainingMoves();
         }
     }
 
@@ -287,13 +303,13 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         // Enact all player effects before handling turn phases
         this.enactAllEffects();
         // Resume timer if paused
-        this.uiController.resumeTimer();
+        this.resumeTimer();
         // Show remaining moves counter
         this.showRemainingMoves();
     }
 
     handlePaused() {
-        this.uiController.pauseTimer();
+        this.pauseTimer();
         this.deactivateRollButton();
         console.log('Game is currently paused.');
     }
@@ -649,14 +665,14 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     togglePauseGame() {
         if (this.gameState.gamePhase === GamePhases.IN_GAME) {
             this.changePhase({ newGamePhase: GamePhases.PAUSED, delay: 0 });
-            this.uiController.pauseTimer();
+            this.pauseTimer();
             this.deactivateRollButton();
             this.emitEvent('gamePaused', { gameState: this.gameState });
             console.log('Game paused.');
             this.log('Game paused', { type: 'system' });
         } else if (this.gameState.gamePhase === GamePhases.PAUSED) {
             this.changePhase({ newGamePhase: GamePhases.IN_GAME, delay: 0 });
-            this.uiController.resumeTimer();
+            this.resumeTimer();
             this.emitEvent('gameResumed', { gameState: this.gameState });
             console.log('Game resumed.');
             this.log('Game resumed', { type: 'system' });

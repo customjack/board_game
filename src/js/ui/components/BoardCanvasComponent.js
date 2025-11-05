@@ -230,10 +230,9 @@ export default class BoardCanvasComponent extends BaseUIComponent {
             });
         });
 
-        // Render spaces
+        // Render spaces - SpaceRenderer appends to container directly
         this.board.spaces.forEach(space => {
-            const spaceElement = this.spaceRenderer.render(space);
-            svg.appendChild(spaceElement);
+            this.spaceRenderer.render(space, svg);
         });
 
         this.container.appendChild(svg);
