@@ -89,7 +89,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (this.rollButton) {
             this.rollButton.activate();
         } else if (this.uiController) {
-            this.activateRollButton();
+            this.uiController.activateRollButton();
         }
     }
 
@@ -97,7 +97,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (this.rollButton) {
             this.rollButton.deactivate();
         } else if (this.uiController) {
-            this.deactivateRollButton();
+            this.uiController.deactivateRollButton();
         }
     }
 
@@ -105,7 +105,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (this.timer) {
             this.timer.startTimer();
         } else if (this.uiController) {
-            this.startTimer();
+            this.uiController.startTimer();
         }
     }
 
@@ -121,7 +121,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (this.timer) {
             this.timer.pauseTimer();
         } else if (this.uiController) {
-            this.pauseTimer();
+            this.uiController.pauseTimer();
         }
     }
 
@@ -129,7 +129,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (this.timer) {
             this.timer.resumeTimer();
         } else if (this.uiController) {
-            this.resumeTimer();
+            this.uiController.resumeTimer();
         }
     }
 
