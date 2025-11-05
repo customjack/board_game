@@ -5,6 +5,33 @@ export default class ExamplePlugin extends Plugin {
         // Plugin initialization logic
         console.log('Example Plugin initialized!', { eventBus, registryManager, factoryManager});
 
+        // Example: Register custom engine components
+        // Plugins can register custom implementations of engine components
+
+        // Register a custom phase state machine
+        // const phaseStateMachineFactory = factoryManager.getFactory('PhaseStateMachineFactory');
+        // phaseStateMachineFactory.register('custom', CustomPhaseStateMachine);
+
+        // Register a custom turn manager
+        // const turnManagerFactory = factoryManager.getFactory('TurnManagerFactory');
+        // turnManagerFactory.register('custom', CustomTurnManager);
+
+        // Register a custom event processor
+        // const eventProcessorFactory = factoryManager.getFactory('EventProcessorFactory');
+        // eventProcessorFactory.register('custom', CustomEventProcessor);
+
+        // Register a custom UI controller
+        // const uiControllerFactory = factoryManager.getFactory('UIControllerFactory');
+        // uiControllerFactory.register('custom', CustomUIController);
+
+        // Register custom game engines
+        // import GameEngineFactory from '../engines/GameEngineFactory.js';
+        // GameEngineFactory.register('realtime', RealtimeGameEngine);
+
+        // Register custom player effects
+        // const effectFactory = factoryManager.getFactory('EffectFactory');
+        // effectFactory.register('CustomEffect', CustomEffect);
+
         // Listen for game state updates
         eventBus.on('settingsUpdated', this.handleSettingsUpdate.bind(this));
         eventBus.on('boardUpdated', this.handleBoardUpdate.bind(this));

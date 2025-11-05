@@ -13,6 +13,10 @@ import PluginManager from './pluginManagement/PluginManager';
 import FactoryManager from './factories/FactoryManager';
 import EffectFactory from './factories/EffectFactory';
 import SkipTurnEffect from './models/PlayerEffects/SkipTurnEffect';
+import PhaseStateMachineFactory from './factories/PhaseStateMachineFactory';
+import TurnManagerFactory from './factories/TurnManagerFactory';
+import EventProcessorFactory from './factories/EventProcessorFactory';
+import UIControllerFactory from './factories/UIControllerFactory';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
 
@@ -96,6 +100,19 @@ function initializeFactories() {
 
     // Register effects in the EffectFactory
     effectFactory.register('SkipTurnEffect', SkipTurnEffect);
+
+    // Create and add engine component factories
+    const phaseStateMachineFactory = new PhaseStateMachineFactory();
+    factoryManager.registerFactory('PhaseStateMachineFactory', phaseStateMachineFactory);
+
+    const turnManagerFactory = new TurnManagerFactory();
+    factoryManager.registerFactory('TurnManagerFactory', turnManagerFactory);
+
+    const eventProcessorFactory = new EventProcessorFactory();
+    factoryManager.registerFactory('EventProcessorFactory', eventProcessorFactory);
+
+    const uiControllerFactory = new UIControllerFactory();
+    factoryManager.registerFactory('UIControllerFactory', uiControllerFactory);
 
     return factoryManager;
 }

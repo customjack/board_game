@@ -8,10 +8,6 @@
  * - Effects are applied each turn
  */
 import BaseGameEngine from './BaseGameEngine.js';
-import PhaseStateMachine from './components/PhaseStateMachine.js';
-import TurnManager from './components/TurnManager.js';
-import EventProcessor from './components/EventProcessor.js';
-import UIController from './components/UIController.js';
 import TurnPhases from '../enums/TurnPhases.js';
 import GamePhases from '../enums/GamePhases.js';
 import PlayerStates from '../enums/PlayerStates.js';
@@ -27,24 +23,48 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     constructor(dependencies, config = {}) {
         super(dependencies, config);
 
-        // Initialize components
-        this.phaseStateMachine = new PhaseStateMachine(
+        // Get factories from factoryManager
+        const phaseStateMachineFactory = this.factoryManager.getFactory('PhaseStateMachineFactory');
+        const turnManagerFactory = this.factoryManager.getFactory('TurnManagerFactory');
+        const eventProcessorFactory = this.factoryManager.getFactory('EventProcessorFactory');
+        const uiControllerFactory = this.factoryManager.getFactory('UIControllerFactory');
+
+        // Initialize components using factories
+        this.phaseStateMachine = phaseStateMachineFactory.create(
             {
-                gamePhases: Object.values(GamePhases),
-                turnPhases: Object.values(TurnPhases)
+                type: config.phaseStateMachine?.type || 'default',
+                phases: {
+                    gamePhases: Object.values(GamePhases),
+                    turnPhases: Object.values(TurnPhases)
+                }
             },
             this.eventBus
         );
-        this.turnManager = new TurnManager(this.gameState, config.turnManager || {});
-        this.eventProcessor = new EventProcessor(this.gameState, this.eventBus, config.eventProcessor || {});
-        this.uiController = new UIController(
+
+        this.turnManager = turnManagerFactory.create(
+            config.turnManager?.type || 'default',
+            this.gameState,
+            config.turnManager || {}
+        );
+
+        this.eventProcessor = eventProcessorFactory.create(
+            config.eventProcessor?.type || 'default',
+            this.gameState,
+            this.eventBus,
+            config.eventProcessor || {}
+        );
+
+        this.uiController = uiControllerFactory.create(
+            config.uiController?.type || 'default',
             {
                 rollButtonManager: dependencies.rollButtonManager,
                 timerManager: dependencies.timerManager
             },
             config.uiController || {}
         );
+
         this.gameLogPopupController = new GameLogPopupController(this.eventBus);
+
         // Register phase handlers
         this.registerPhaseHandlers();
 
