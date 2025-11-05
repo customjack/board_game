@@ -160,8 +160,20 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     hideAllModals() {
         if (this.uiController) {
             this.uiController.hideAllModals();
+        } else {
+            // When using UISystem, manually hide modal DOM elements
+            const modals = [
+                document.getElementById('gamePromptModal'),
+                document.getElementById('choiceModal'),
+                document.getElementById('notificationModal')
+            ];
+
+            modals.forEach(modal => {
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            });
         }
-        // UISystem doesn't have modals yet, only game log
     }
 
     updateUIFromGameState(gameState, peerId) {

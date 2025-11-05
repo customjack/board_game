@@ -27,6 +27,9 @@ export default class Host extends BasePeer {
         this.setupUI();
         this.addPlayer(id, this.originalName, true);
 
+        // Update UI with initial game state (including board)
+        this.eventHandler.updateGameState(true);
+
         // Set up event listeners
         this.peer.on('connection', (conn) => this.handleConnection(conn));
     }
