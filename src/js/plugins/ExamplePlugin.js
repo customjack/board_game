@@ -25,7 +25,7 @@ export default class ExamplePlugin extends Plugin {
         // uiControllerFactory.register('custom', CustomUIController);
 
         // Register custom game engines
-        // import GameEngineFactory from '../engines/GameEngineFactory.js';
+        // import GameEngineFactory from '../factories/GameEngineFactory.js';
         // GameEngineFactory.register('realtime', RealtimeGameEngine);
 
         // Register custom player effects

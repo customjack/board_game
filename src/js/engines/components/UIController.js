@@ -421,6 +421,10 @@ export default class UIController {
      * @param {number} moves - Number of remaining moves
      */
     updateRemainingMoves(moves) {
+        // Try to get element if not cached (handles late initialization)
+        if (!this.elements.remainingMovesCount) {
+            this.elements.remainingMovesCount = document.getElementById('remainingMovesCount');
+        }
         if (this.elements.remainingMovesCount) {
             this.elements.remainingMovesCount.textContent = moves;
         }
@@ -430,6 +434,10 @@ export default class UIController {
      * Show the remaining moves container
      */
     showRemainingMoves() {
+        // Try to get element if not cached (handles late initialization)
+        if (!this.elements.remainingMovesContainer) {
+            this.elements.remainingMovesContainer = document.getElementById('remainingMovesContainer');
+        }
         if (this.elements.remainingMovesContainer) {
             this.elements.remainingMovesContainer.style.display = '';
         }
@@ -439,6 +447,10 @@ export default class UIController {
      * Hide the remaining moves container
      */
     hideRemainingMoves() {
+        // Try to get element if not cached (handles late initialization)
+        if (!this.elements.remainingMovesContainer) {
+            this.elements.remainingMovesContainer = document.getElementById('remainingMovesContainer');
+        }
         if (this.elements.remainingMovesContainer) {
             this.elements.remainingMovesContainer.style.display = 'none';
         }

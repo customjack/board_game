@@ -1,6 +1,6 @@
 import BaseEventHandler from './BaseEventHandler';
 import Client from '../networking/Client';
-import GameEngineFactory from '../engines/GameEngineFactory.js';
+import GameEngineFactory from '../factories/GameEngineFactory.js';
 import ParticleAnimation from '../animations/ParticleAnimation.js';
 import RollButtonManager from '../controllers/managers/RollButtonManager.js';
 import TimerManager from '../controllers/managers/TimerManager.js';
