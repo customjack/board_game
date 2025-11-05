@@ -87,6 +87,16 @@ export default class BoardCanvasComponent extends BaseUIComponent {
     update(gameState, context = {}) {
         if (!this.initialized) return;
 
+        // Refresh container reference if needed (handles late DOM initialization)
+        if (!this.container) {
+            this.container = this.getElement(this.currentContainerId, false);
+        }
+
+        // Don't render if container doesn't exist yet
+        if (!this.container) {
+            return;
+        }
+
         // Check if board changed
         if (gameState.board && this.shouldUpdate(gameState.board)) {
             this.setBoard(gameState.board);

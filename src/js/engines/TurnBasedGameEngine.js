@@ -54,22 +54,107 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             config.eventProcessor || {}
         );
 
-        this.uiController = uiControllerFactory.create(
-            config.uiController?.type || 'default',
-            {
-                rollButtonManager: dependencies.rollButtonManager,
-                timerManager: dependencies.timerManager
-            },
-            config.uiController || {}
-        );
-
-        this.gameLogPopupController = new GameLogPopupController(this.eventBus);
+        // Support both new UISystem and legacy manager approach
+        if (dependencies.uiSystem) {
+            // New modular approach
+            this.uiSystem = dependencies.uiSystem;
+            this.rollButton = this.uiSystem.getComponent('rollButton');
+            this.timer = this.uiSystem.getComponent('timer');
+            this.remainingMoves = this.uiSystem.getComponent('remainingMoves');
+            this.gameLog = this.uiSystem.getComponent('gameLog');
+        } else {
+            // Legacy approach (backwards compatibility)
+            this.uiController = uiControllerFactory.create(
+                config.uiController?.type || 'default',
+                {
+                    rollButtonManager: dependencies.rollButtonManager,
+                    timerManager: dependencies.timerManager
+                },
+                config.uiController || {}
+            );
+            this.gameLogPopupController = new GameLogPopupController(this.eventBus);
+        }
 
         // Register phase handlers
         this.registerPhaseHandlers();
 
         // Initialize state machine without committing to a phase so first update triggers transitions
         this.phaseStateMachine.init(null, null);
+    }
+
+    // ===== UI Abstraction Methods =====
+    // These methods work with both UISystem (new) and UIController (legacy)
+
+    activateRollButton() {
+        if (this.rollButton) {
+            this.rollButton.activate();
+        } else if (this.uiController) {
+            this.activateRollButton();
+        }
+    }
+
+    deactivateRollButton() {
+        if (this.rollButton) {
+            this.rollButton.deactivate();
+        } else if (this.uiController) {
+            this.deactivateRollButton();
+        }
+    }
+
+    startTimer() {
+        if (this.timer) {
+            this.timer.startTimer();
+        } else if (this.uiController) {
+            this.startTimer();
+        }
+    }
+
+    stopTimer() {
+        if (this.timer) {
+            this.timer.stopTimer();
+        } else if (this.uiController) {
+            this.stopTimer();
+        }
+    }
+
+    showRemainingMoves() {
+        if (this.remainingMoves) {
+            this.remainingMoves.show();
+        } else if (this.uiController) {
+            this.showRemainingMoves();
+        }
+    }
+
+    hideRemainingMoves() {
+        if (this.remainingMoves) {
+            this.remainingMoves.hide();
+        } else if (this.uiController) {
+            this.uiController.hideRemainingMoves();
+        }
+    }
+
+    updateRemainingMoves(moves) {
+        if (this.remainingMoves) {
+            this.remainingMoves.updateMoves(moves);
+        } else if (this.uiController) {
+            this.uiController.updateRemainingMoves(moves);
+        }
+    }
+
+    hideAllModals() {
+        if (this.uiController) {
+            this.uiController.hideAllModals();
+        }
+        // UISystem doesn't have modals yet, only game log
+    }
+
+    updateUIFromGameState(gameState, peerId) {
+        if (this.uiSystem) {
+            // UISystem handles this internally via components
+            // Nothing needed here as it's handled by BaseEventHandler
+        } else if (this.uiController) {
+            this.uiController.updateFromGameState(gameState, peerId);
+        }
     }
 
     /**
@@ -98,14 +183,34 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      */
     init() {
         // Initialize UI with callbacks
-        this.uiController.init({
-            onRollDice: () => this.rollDiceForCurrentPlayer(),
-            onRollComplete: (result) => this.handleAfterDiceRoll(result),
-            onTimerEnd: () => this.handleTimerEnd(),
-            onPauseToggle: () => this.togglePauseGame()
-        });
+        if (this.uiSystem) {
+            // New modular approach
+            if (this.rollButton) {
+                this.rollButton.init({
+                    onRollDice: () => this.rollDiceForCurrentPlayer(),
+                    onRollComplete: (result) => this.handleAfterDiceRoll(result)
+                });
+            }
+            if (this.timer) {
+                this.timer.init({
+                    onTimerEnd: () => this.handleTimerEnd(),
+                    onPauseToggle: () => this.handlePauseToggle()
+                });
+            }
+            if (this.gameLog) {
+                this.gameLog.init();
+            }
+        } else {
+            // Legacy approach
+            this.uiController.init({
+                onRollDice: () => this.rollDiceForCurrentPlayer(),
+                onRollComplete: (result) => this.handleAfterDiceRoll(result),
+                onTimerEnd: () => this.handleTimerEnd(),
+                onPauseToggle: () => this.togglePauseGame()
+            });
 
-        this.gameLogPopupController.init();
+            this.gameLogPopupController.init();
+        }
 
         this.initialized = true;
         this.running = false;
@@ -121,7 +226,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         // Update components
         this.turnManager.gameState = gameState;
         this.eventProcessor.gameState = gameState;
-        this.uiController.updateFromGameState(gameState, this.peerId);
+        this.updateUIFromGameState(gameState, this.peerId);
 
         const currentGamePhase = this.gameState.gamePhase;
         const currentTurnPhase = this.gameState.turnPhase;
@@ -174,7 +279,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     handleInLobby() {
         console.log('Game is in the lobby phase.');
         this.running = false;
-        this.uiController.hideRemainingMoves();
+        this.hideRemainingMoves();
     }
 
     handleInGame() {
@@ -184,20 +289,20 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         // Resume timer if paused
         this.uiController.resumeTimer();
         // Show remaining moves counter
-        this.uiController.showRemainingMoves();
+        this.showRemainingMoves();
     }
 
     handlePaused() {
         this.uiController.pauseTimer();
-        this.uiController.deactivateRollButton();
+        this.deactivateRollButton();
         console.log('Game is currently paused.');
     }
 
     handleGameEnded() {
         this.running = false;
-        this.uiController.stopTimer();
-        this.uiController.deactivateRollButton();
-        this.uiController.hideRemainingMoves();
+        this.stopTimer();
+        this.deactivateRollButton();
+        this.hideRemainingMoves();
         console.log('Game has ended.');
     }
 
@@ -243,16 +348,16 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
 
         const currentPlayer = this.turnManager.getCurrentPlayer();
         if (this.isClientTurn()) {
-            this.uiController.activateRollButton();
+            this.activateRollButton();
         } else {
             console.log(`Waiting for ${currentPlayer?.nickname ?? 'player'} to take their turn.`);
-            this.uiController.deactivateRollButton();
+            this.deactivateRollButton();
         }
     }
 
     handleProcessingEvents() {
         // Close any open modals
-        this.uiController.hideAllModals();
+        this.hideAllModals();
 
         // Re-determine triggered events each time (matches old GameEngine behavior)
         // This automatically excludes completed events since their state changed
@@ -348,7 +453,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         this.emitEvent('turnEnded', { gameState: this.gameState });
 
         // Stop timer
-        this.uiController.stopTimer();
+        this.stopTimer();
 
         // Check if all players completed the game
         const allCompletedGame = this.gameState.players.every(
@@ -389,7 +494,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
                 });
             }
 
-            this.uiController.deactivateRollButton();
+            this.deactivateRollButton();
             this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
         }
     }
@@ -409,7 +514,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             metadata: { result: rollResult }
         });
 
-        this.uiController.deactivateRollButton();
+        this.deactivateRollButton();
         return rollResult;
     }
 
@@ -419,7 +524,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      */
     handleAfterDiceRoll(rollResult) {
         this.gameState.setRemainingMoves(rollResult);
-        this.uiController.updateRemainingMoves(rollResult);
+        this.updateRemainingMoves(rollResult);
         this.emitEvent('playerRoll', { gameState: this.gameState });
         this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
     }
@@ -437,7 +542,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (connections.length === 0) {
             // No where to move
             this.gameState.setRemainingMoves(0);
-            this.uiController.updateRemainingMoves(0);
+            this.updateRemainingMoves(0);
             this.logPlayerAction(currentPlayer, 'cannot move from their current space.', {
                 type: 'movement',
                 metadata: { spaceId: currentSpaceId, reason: 'no-connections' }
@@ -545,7 +650,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (this.gameState.gamePhase === GamePhases.IN_GAME) {
             this.changePhase({ newGamePhase: GamePhases.PAUSED, delay: 0 });
             this.uiController.pauseTimer();
-            this.uiController.deactivateRollButton();
+            this.deactivateRollButton();
             this.emitEvent('gamePaused', { gameState: this.gameState });
             console.log('Game paused.');
             this.log('Game paused', { type: 'system' });

@@ -2,8 +2,6 @@ import BaseEventHandler from './BaseEventHandler';
 import Host from '../networking/Host';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
 import ParticleAnimation from '../animations/ParticleAnimation.js';
-import RollButtonManager from '../controllers/managers/RollButtonManager.js';
-import TimerManager from '../controllers/managers/TimerManager.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
 
 export default class HostEventHandler extends BaseEventHandler {

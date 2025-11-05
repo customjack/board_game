@@ -64,8 +64,10 @@ export default class GameEngineFactory {
      * @param {RegistryManager} dependencies.registryManager - Registry manager
      * @param {FactoryManager} dependencies.factoryManager - Factory manager
      * @param {boolean} dependencies.isHost - Whether this peer is the host
-     * @param {RollButtonManager} dependencies.rollButtonManager - Roll button manager
-     * @param {TimerManager} dependencies.timerManager - Timer manager
+     * @param {UISystem} dependencies.uiSystem - UI system (new modular approach)
+     * @param {RollButtonManager} dependencies.rollButtonManager - Roll button manager (legacy, deprecated)
+     * @param {TimerManager} dependencies.timerManager - Timer manager (legacy, deprecated)
+     * @param {GameLogManager} dependencies.gameLogManager - Game log manager (legacy, deprecated)
      * @param {Object} config - Engine configuration
      * @param {string} config.type - Engine type (defaults to 'turn-based')
      * @param {Object} config.engineConfig - Engine-specific configuration

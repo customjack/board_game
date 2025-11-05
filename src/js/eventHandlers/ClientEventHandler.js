@@ -2,8 +2,6 @@ import BaseEventHandler from './BaseEventHandler';
 import Client from '../networking/Client';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
 import ParticleAnimation from '../animations/ParticleAnimation.js';
-import RollButtonManager from '../controllers/managers/RollButtonManager.js';
-import TimerManager from '../controllers/managers/TimerManager.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
@@ -45,11 +43,21 @@ export default class ClientEventHandler extends BaseEventHandler {
         await this.peer.init();
         this.pluginManager.setPeer(this.peer.peer); //This isn't pretty but it passes the PeerJS instance
 
-        // Create UI managers
+        // Create animations for UI components
         const particleAnimation = new ParticleAnimation();
-        const rollButtonManager = new RollButtonManager(particleAnimation);
         const timerAnimation = new TimerAnimation(false); // isHost = false
-        const timerManager = new TimerManager(timerAnimation, this.peer.gameState);
+
+        // Configure UI components
+        const rollButton = this.uiSystem.getComponent('rollButton');
+        if (rollButton) {
+            rollButton.setAnimation(particleAnimation);
+        }
+
+        const timer = this.uiSystem.getComponent('timer');
+        if (timer) {
+            timer.animation = timerAnimation;
+            timer.gameState = this.peer.gameState;
+        }
 
         // Create game engine using factory
         this.gameEngine = GameEngineFactory.create({
@@ -60,9 +68,7 @@ export default class ClientEventHandler extends BaseEventHandler {
             registryManager: this.registryManager,
             factoryManager: this.factoryManager,
             isHost: false,
-            rollButtonManager: rollButtonManager,
-            timerManager: timerManager,
-            gameLogManager: this.gameLogManager
+            uiSystem: this.uiSystem
         });
 
         this.showLobbyPage();
@@ -84,10 +90,13 @@ export default class ClientEventHandler extends BaseEventHandler {
         console.log('Client is switching to game page...');
         this.gameEngine.init();
         this.showPage("gamePage");
-        this.playerListManager.setListElement(document.getElementById('gamePlayerList'));
-        this.boardManager.setBoardContainer(document.getElementById('gameBoardContent'));
-        this.gameLogManager?.clear();
-        this.gameLogManager?.log('Game started', { type: 'system', source: 'ui' });
+
+        // Switch UI context to game page
+        this.uiSystem.switchContext('game');
+
+        // Clear and log game start
+        this.uiSystem.gameLogManager?.clear();
+        this.uiSystem.gameLogManager?.log('Game started', { type: 'system', source: 'ui' });
 
         this.updateGameState(true); //force update
     }
