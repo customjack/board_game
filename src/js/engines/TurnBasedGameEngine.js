@@ -276,8 +276,12 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      * Clean up engine resources
      */
     cleanup() {
-        this.uiController.cleanup();
-        this.gameLogPopupController.destroy();
+        if (this.uiSystem) {
+            // UI components are managed by UISystem
+        } else if (this.uiController) {
+            this.uiController.cleanup();
+            this.gameLogPopupController.destroy();
+        }
         this.running = false;
         this.initialized = false;
     }
@@ -349,7 +353,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         this.emitEvent('beginTurn', { gameState: this.gameState });
 
         // Start timer for all players
-        this.uiController.startTimer();
+        this.startTimer();
 
         const currentPlayer = this.turnManager.getCurrentPlayer();
 
@@ -586,22 +590,38 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      * @param {Array} targetSpaces - Available spaces to move to
      */
     waitForChoice(currentPlayer, targetSpaces) {
-        // Highlight possible target spaces
-        this.uiController.highlightSpaces(targetSpaces);
+        // TODO: Implement board interaction in UISystem
+        // For now, use legacy uiController if available
+        if (this.uiController) {
+            // Highlight possible target spaces
+            this.uiController.highlightSpaces(targetSpaces);
 
-        // Setup click handlers
-        const handlers = this.uiController.setupSpaceClickHandlers(targetSpaces, (selectedSpace) => {
-            // Move player to selected space
-            this.gameState.movePlayer(selectedSpace.id);
-            console.log(`${currentPlayer.nickname} chose to move to space ${selectedSpace.id}`);
-            this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
-                type: 'movement',
-                metadata: { spaceId: selectedSpace.id, selected: true }
+            // Setup click handlers
+            const handlers = this.uiController.setupSpaceClickHandlers(targetSpaces, (selectedSpace) => {
+                // Move player to selected space
+                this.gameState.movePlayer(selectedSpace.id);
+                console.log(`${currentPlayer.nickname} chose to move to space ${selectedSpace.id}`);
+                this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
+                    type: 'movement',
+                    metadata: { spaceId: selectedSpace.id, selected: true }
+                });
+
+                // Transition back to processing events
+                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
             });
-
-            // Transition back to processing events
-            this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-        });
+        } else {
+            console.warn('Board interaction not yet implemented in UISystem - auto-selecting first space');
+            // Auto-select first space as fallback
+            if (targetSpaces.length > 0) {
+                const selectedSpace = targetSpaces[0];
+                this.gameState.movePlayer(selectedSpace.id);
+                this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
+                    type: 'movement',
+                    metadata: { spaceId: selectedSpace.id, selected: true }
+                });
+                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
+            }
+        }
     }
 
     describeTriggeredEvent(event, space) {
