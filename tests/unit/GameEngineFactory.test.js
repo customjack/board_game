@@ -1,4 +1,4 @@
-import GameEngineFactory from '../../src/js/engines/GameEngineFactory.js';
+import GameEngineFactory from '../../src/js/factories/GameEngineFactory.js';
 import TurnBasedGameEngine from '../../src/js/engines/TurnBasedGameEngine.js';
 
 jest.mock('../../src/js/engines/TurnBasedGameEngine.js');

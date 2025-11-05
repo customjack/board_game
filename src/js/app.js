@@ -17,6 +17,7 @@ import PhaseStateMachineFactory from './factories/PhaseStateMachineFactory';
 import TurnManagerFactory from './factories/TurnManagerFactory';
 import EventProcessorFactory from './factories/EventProcessorFactory';
 import UIControllerFactory from './factories/UIControllerFactory';
+import UIComponentFactory from './factories/UIComponentFactory';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
 
@@ -113,6 +114,9 @@ function initializeFactories() {
 
     const uiControllerFactory = new UIControllerFactory();
     factoryManager.registerFactory('UIControllerFactory', uiControllerFactory);
+
+    const uiComponentFactory = new UIComponentFactory();
+    factoryManager.registerFactory('UIComponentFactory', uiComponentFactory);
 
     return factoryManager;
 }

@@ -24,6 +24,12 @@ export default class ExamplePlugin extends Plugin {
         // const uiControllerFactory = factoryManager.getFactory('UIControllerFactory');
         // uiControllerFactory.register('custom', CustomUIController);
 
+        // Register custom UI components
+        // const uiComponentFactory = factoryManager.getFactory('UIComponentFactory');
+        // uiComponentFactory.register('CustomPlayerList', CustomPlayerListComponent);
+        // uiComponentFactory.register('CustomTimer', CustomTimerComponent);
+        // uiComponentFactory.register('CustomGameLog', CustomGameLogComponent);
+
         // Register custom game engines
         // import GameEngineFactory from '../factories/GameEngineFactory.js';
         // GameEngineFactory.register('realtime', RealtimeGameEngine);
