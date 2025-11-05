@@ -56,11 +56,10 @@ export default class HostEventHandler extends BaseEventHandler {
                 const file = event.target.files[0];
                 if (file) {
                     try {
-                        await this.boardManager.loadBoardFromFile(file);
-                        this.peer.gameState.board = this.boardManager.board;
+                        await this.uiSystem.loadBoardFromFile(file);
+                        this.peer.gameState.board = this.uiSystem.getActiveBoard().board;
                         this.peer.broadcastGameState(); // Broadcast after loading the board
-                        this.updateGameBoard(true);
-                        this.updatePieces(true);
+                        this.updateGameState(true);
 
                         // Reset the file input so it can be triggered again if the same file is selected
                         event.target.value = ''; // Clear the file input field
@@ -138,11 +137,21 @@ export default class HostEventHandler extends BaseEventHandler {
         await this.peer.init();
         this.pluginManager.setPeer(this.peer.peer); //This isn't pretty but it passes the PeerJS instances
 
-        // Create UI managers
+        // Create animations for UI components
         const particleAnimation = new ParticleAnimation();
-        const rollButtonManager = new RollButtonManager(particleAnimation);
         const timerAnimation = new TimerAnimation(true); // isHost = true
-        const timerManager = new TimerManager(timerAnimation, this.peer.gameState);
+
+        // Configure UI components
+        const rollButton = this.uiSystem.getComponent('rollButton');
+        if (rollButton) {
+            rollButton.setAnimation(particleAnimation);
+        }
+
+        const timer = this.uiSystem.getComponent('timer');
+        if (timer) {
+            timer.animation = timerAnimation;
+            timer.gameState = this.peer.gameState;
+        }
 
         // Create game engine using factory
         this.gameEngine = GameEngineFactory.create({
@@ -153,9 +162,7 @@ export default class HostEventHandler extends BaseEventHandler {
             registryManager: this.registryManager,
             factoryManager: this.factoryManager,
             isHost: true,
-            rollButtonManager: rollButtonManager,
-            timerManager: timerManager,
-            gameLogManager: this.gameLogManager
+            uiSystem: this.uiSystem
         });
 
         this.showPage("lobbyPage");
@@ -188,10 +195,13 @@ export default class HostEventHandler extends BaseEventHandler {
         }
         this.gameEngine.init();
         this.showPage("gamePage");
-        this.playerListManager.setListElement(document.getElementById('gamePlayerList'));
-        this.boardManager.setBoardContainer(document.getElementById('gameBoardContent'));
-        this.gameLogManager?.clear();
-        this.gameLogManager?.log('Game started', { type: 'system', source: 'ui' });
+
+        // Switch UI context to game page
+        this.uiSystem.switchContext('game');
+
+        // Clear and log game start
+        this.uiSystem.gameLogManager?.clear();
+        this.uiSystem.gameLogManager?.log('Game started', { type: 'system', source: 'ui' });
 
         this.updateGameState(true); //force update
     }

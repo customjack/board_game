@@ -1,8 +1,6 @@
-import PlayerListManager from '../controllers/managers/PlayerListManager';
-import BoardManager from '../controllers/managers/BoardManager';
+import UISystem from '../ui/UISystem.js';
 import PieceManager from '../controllers/managers/PieceManager';
 import SettingsManager from '../controllers/managers/SettingsManager';
-import GameLogManager from '../controllers/managers/GameLogManager';
 
 export default class BaseEventHandler {
     constructor(isHost, registryManager, pluginManager, factoryManager, eventBus) {
@@ -17,12 +15,12 @@ export default class BaseEventHandler {
         this.inviteCode = document.getElementById('inviteCode');
         this.copyMessage = document.getElementById('copyMessage');
 
-        // Managers will be initialized later when the lobby is connected
-        this.boardManager = null;
+        // UI System - replaces old manager pattern
+        this.uiSystem = null;
+
+        // Remaining managers (to be componentized later)
         this.pieceManager = null;
         this.settingsManager = null;
-        this.playerListManager = null;
-        this.gameLogManager = null;
 
         this.peer = null; // This will be either client or host depending on the role
     }
@@ -35,21 +33,19 @@ export default class BaseEventHandler {
         this.peerId = peerId;
         this.hostPeerId = hostPeerId;
 
-        // Initialize shared managers
-        this.boardManager = new BoardManager();
+        // Initialize UI System
+        this.uiSystem = new UISystem({
+            eventBus: this.eventBus,
+            factoryManager: this.factoryManager,
+            isHost: this.isHost,
+            peerId: peerId,
+            hostPeerId: hostPeerId
+        });
+        this.uiSystem.init();
+
+        // Initialize remaining managers
         this.pieceManager = new PieceManager();
         this.settingsManager = new SettingsManager(this.isHost);
-        this.playerListManager = new PlayerListManager(
-            document.getElementById('lobbyPlayerList'),
-            this.isHost,
-            peerId,
-            hostPeerId
-        );
-
-        if (!this.gameLogManager) {
-            this.gameLogManager = new GameLogManager(this.eventBus);
-        }
-        this.gameLogManager.init('gameLogContainer');
     }
 
     setupEventListeners() {
@@ -101,58 +97,32 @@ export default class BaseEventHandler {
     }
 
     updateGameState(forceUpdate = false) {
-        this.updateSettings(forceUpdate);
-        this.updateGameBoard(forceUpdate);
-        this.updatePieces(forceUpdate);
-        this.updatePlayerList(forceUpdate);
-
-        if (this.gameEngine) {
-            this.gameEngine.updateGameState(this.peer?.gameState);
-            this.eventBus.emit('gameStateUpdated', { gamestate: this.peer?.gameState });
-        }
-    }
-
-    updateSettings(forceUpdate = false) {
         const gameState = this.peer?.gameState;
         if (!gameState) return;
+
+        // Update settings
         if (forceUpdate || this.settingsManager.shouldUpdateSettings(gameState.settings)) {
             this.settingsManager.updateSettings(gameState);
             this.updateAddPlayerButton();
             this.eventBus.emit('settingsUpdated', { gamestate: gameState });
         }
-    }
 
-    updateGameBoard(forceUpdate = false) {
-        const gameState = this.peer?.gameState;
-        if (!gameState) return;
-
-        if (forceUpdate || this.boardManager.shouldUpdateBoard(gameState.board)) {
-            this.boardManager.setBoard(gameState.board);
-            this.boardManager.drawBoard();
-            this.updatePieces(true);
-            this.eventBus.emit('boardUpdated', { gamestate: gameState });
-        }
-    }
-
-    updatePieces(forceUpdate = false) {
-        const gameState = this.peer?.gameState;
-        if (!gameState) return;
-
+        // Update pieces
         if (forceUpdate || this.pieceManager.shouldUpdatePieces(gameState.players)) {
             this.pieceManager.updatePieces(gameState);
             this.eventBus.emit('piecesUpdated', { gamestate: gameState });
         }
-    }
 
-    updatePlayerList(forceUpdate = false) {
-        const gameState = this.peer?.gameState;
-        if (!gameState) return;
+        // Update UI components through UISystem
+        this.uiSystem.updateFromGameState(gameState);
 
-        if (forceUpdate || this.playerListManager.shouldUpdatePlayers(gameState)) {
-            this.playerListManager.setGameState(gameState);
-            this.addPlayerListListeners();
-            this.updateAddPlayerButton();
-            this.eventBus.emit('piecesUpdated', { gamestate: gameState });
+        // Add player list listeners after update
+        this.addPlayerListListeners();
+
+        // Update game engine
+        if (this.gameEngine) {
+            this.gameEngine.updateGameState(gameState);
+            this.eventBus.emit('gameStateUpdated', { gamestate: gameState });
         }
     }
 
