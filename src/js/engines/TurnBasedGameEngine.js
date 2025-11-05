@@ -174,6 +174,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     handleInLobby() {
         console.log('Game is in the lobby phase.');
         this.running = false;
+        this.uiController.hideRemainingMoves();
     }
 
     handleInGame() {
@@ -182,6 +183,8 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         this.enactAllEffects();
         // Resume timer if paused
         this.uiController.resumeTimer();
+        // Show remaining moves counter
+        this.uiController.showRemainingMoves();
     }
 
     handlePaused() {
@@ -194,6 +197,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         this.running = false;
         this.uiController.stopTimer();
         this.uiController.deactivateRollButton();
+        this.uiController.hideRemainingMoves();
         console.log('Game has ended.');
     }
 
@@ -415,6 +419,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      */
     handleAfterDiceRoll(rollResult) {
         this.gameState.setRemainingMoves(rollResult);
+        this.uiController.updateRemainingMoves(rollResult);
         this.emitEvent('playerRoll', { gameState: this.gameState });
         this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
     }
@@ -432,6 +437,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         if (connections.length === 0) {
             // No where to move
             this.gameState.setRemainingMoves(0);
+            this.uiController.updateRemainingMoves(0);
             this.logPlayerAction(currentPlayer, 'cannot move from their current space.', {
                 type: 'movement',
                 metadata: { spaceId: currentSpaceId, reason: 'no-connections' }

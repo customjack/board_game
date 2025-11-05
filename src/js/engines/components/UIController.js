@@ -45,6 +45,12 @@ export default class UIController {
 
         // Callbacks
         this.callbacks = new Map();
+
+        // UI element references
+        this.elements = {
+            remainingMovesCount: null,
+            remainingMovesContainer: null
+        };
     }
 
     /**
@@ -59,6 +65,10 @@ export default class UIController {
         this.modals.gamePrompt = document.getElementById('gamePromptModal');
         this.modals.choice = document.getElementById('choiceModal');
         this.modals.notification = document.getElementById('notificationModal');
+
+        // Initialize UI element references
+        this.elements.remainingMovesCount = document.getElementById('remainingMovesCount');
+        this.elements.remainingMovesContainer = document.getElementById('remainingMovesContainer');
 
         // Initialize managers if they exist
         if (this.rollButtonManager) {
@@ -404,6 +414,36 @@ export default class UIController {
         });
     }
 
+    // ===== Remaining Moves Methods =====
+
+    /**
+     * Update the remaining moves display
+     * @param {number} moves - Number of remaining moves
+     */
+    updateRemainingMoves(moves) {
+        if (this.elements.remainingMovesCount) {
+            this.elements.remainingMovesCount.textContent = moves;
+        }
+    }
+
+    /**
+     * Show the remaining moves container
+     */
+    showRemainingMoves() {
+        if (this.elements.remainingMovesContainer) {
+            this.elements.remainingMovesContainer.style.display = '';
+        }
+    }
+
+    /**
+     * Hide the remaining moves container
+     */
+    hideRemainingMoves() {
+        if (this.elements.remainingMovesContainer) {
+            this.elements.remainingMovesContainer.style.display = 'none';
+        }
+    }
+
     // ===== State Synchronization =====
 
     /**
@@ -415,6 +455,9 @@ export default class UIController {
         // Update roll button based on turn phase and current player
         const currentPlayer = gameState.getCurrentPlayer();
         const isClientTurn = currentPlayer && currentPlayer.peerId === peerId;
+
+        // Update remaining moves display
+        this.updateRemainingMoves(gameState.remainingMoves);
 
         // This should be called by the game engine based on phase
         // but we can provide helper logic here
