@@ -87,6 +87,12 @@ export default class GameLogManager {
             metadata: details.metadata ? { ...details.metadata } : undefined
         };
 
+        // Filter out movement entries - only keep events
+        if (entry.type === 'movement' || entry.type === 'movement-choice') {
+            // Skip movement entries entirely
+            return entry;
+        }
+
         this.entries.push(entry);
         if (this.entries.length > this.config.maxEntries) {
             this.entries.splice(0, this.entries.length - this.config.maxEntries);
@@ -229,14 +235,19 @@ export default class GameLogManager {
     formatEntryHtml(entry) {
         const time = new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        const headerItems = [
-            `<span class="log-header-item log-time">${this.escapeHtml(time)}</span>`
-        ];
+        const headerItems = [];
+
+        // Add turn number first if available
+        if (entry.turnNumber != null && entry.turnNumber >= 0) {
+            headerItems.push(`<span class="log-header-item log-turn-number">T${entry.turnNumber}</span>`);
+        }
+
+        headerItems.push(`<span class="log-header-item log-time">${this.escapeHtml(time)}</span>`);
 
         if (entry.playerName) {
             headerItems.push(`<span class="log-header-item log-player">${this.escapeHtml(entry.playerName)}</span>`);
         } else if (entry.playerId) {
-            headerItems.push(`<span class="log-header-item log-player">Player ${this.escapeHtml(entry.playerId)}</span>`);
+            headerItems.push(`<span class="log-header-item log-player">P${this.escapeHtml(entry.playerId)}</span>`);
         }
 
         const typeLabel = this.getTypeLabel(entry.type);

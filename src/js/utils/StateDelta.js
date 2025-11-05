@@ -146,13 +146,23 @@ export default class StateDelta {
             if (versionDiff === 1) {
                 // Perfect - exactly one version ahead
                 return true;
+            } else if (versionDiff === 0) {
+                // Same version - this can happen during rapid phase transitions
+                // Check if delta has actual changes via timestamp
+                if (delta._timestamp && baseState._timestamp && delta._timestamp > baseState._timestamp) {
+                    // Newer timestamp, apply it
+                    return true;
+                }
+                // Same version and timestamp - skip duplicate
+                console.log(`Skipping duplicate delta (version ${delta._version}, same timestamp)`);
+                return false;
             } else if (versionDiff > 1 && versionDiff <= 10) {
                 // Client is behind but not too far - allow catch-up
                 console.log(`Delta version skip detected (${versionDiff} versions ahead), applying anyway`);
                 return true;
-            } else if (versionDiff <= 0) {
-                // Old or duplicate delta - skip it
-                console.log(`Skipping old/duplicate delta (version ${delta._version} vs current ${baseState._version})`);
+            } else if (versionDiff < 0) {
+                // Old delta - skip it
+                console.log(`Skipping old delta (version ${delta._version} vs current ${baseState._version})`);
                 return false;
             } else {
                 // Too far ahead - likely desync

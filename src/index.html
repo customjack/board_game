@@ -204,32 +204,30 @@
             <div id="gameSidebar" class="game-sidebar">
                 <!-- Game Paused Message Container -->
                 <div id="pausedMessageContainer"></div>
-                
+
                 <!-- Remaining Moves Section -->
                 <div id="remainingMovesContainer" class="box-container info-box">
                     <h4>Remaining Moves:</h4>
                     <span id="remainingMovesCount">0</span>
                 </div>
-                    
+
                 <!-- Timer Container -->
                 <div class="timer-container">
                     <div class="timer-cap"></div>
                     <div class="timer-body">
                         <!-- Circle 1: Container (background ring) -->
                         <div class="timer-container-ring"></div>
-                        
+
                         <!-- Circle 2: Progress (animated ring) -->
                         <div class="timer-progress-ring"></div>
-                        
+
                         <!-- Circle 3: Block (static ring on top of progress) -->
                         <div class="timer-block-ring"></div>
-                        
+
                         <!-- Timer Text -->
                         <span class="timer-text">30s</span>
                     </div>
                 </div>
-
-
 
                 <!-- Roll Button -->
                 <button id="rollButton" class="button button-roll">Roll Dice</button>
@@ -237,7 +235,10 @@
                 <!-- Sidebar for player list -->
                 <ul id="gamePlayerList"></ul>
 
-                <button id="openGameLogButton" class="button button-secondary">Game Log</button>
+                <!-- Action Buttons Group -->
+                <div class="sidebar-button-group">
+                    <button id="openGameLogButton" class="button button-secondary">Game Log</button>
+                </div>
 
             </div>
 
@@ -251,14 +252,12 @@
         </div>
     </div>
 
-    <div id="gameLogModal" class="modal">
-        <div class="modal-content game-log-modal">
-            <div class="game-log-modal-header">
-                <h3>Game Log</h3>
-                <button id="closeGameLogButton" class="button button-secondary">Close</button>
-            </div>
-            <div id="gameLogContainer" class="game-log-modal-content"></div>
+    <div id="gameLogPopup" class="game-log-popup">
+        <div class="game-log-popup-header" id="gameLogPopupHeader">
+            <h3>Game Log</h3>
+            <button id="closeGameLogButton" class="button button-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">✕</button>
         </div>
+        <div id="gameLogContainer" class="game-log-popup-content"></div>
     </div>
 
     <!-- Game prompt Modal Structure -->

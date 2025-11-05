@@ -123,3 +123,17 @@
     margin-top: 0;
     margin-bottom: var(--spacing-unit);
 }
+
+/* Sidebar Button Group */
+.sidebar-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.5);
+    margin-top: auto;
+    padding-top: calc(var(--spacing-unit) * 1);
+}
+
+.sidebar-button-group .button {
+    width: 100%;
+    font-size: 0.9rem;
+}

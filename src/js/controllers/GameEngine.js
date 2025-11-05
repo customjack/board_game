@@ -10,7 +10,7 @@ import RollButtonManager from './managers/RollButtonManager';
 import TimerManager from './managers/TimerManager';
 import TimerAnimation from '../animations/TimerAnimation';
 import PauseButtonManager from './managers/PauseButtonManager';
-import GameLogModalController from './GameLogModalController.js';
+import GameLogPopupController from './GameLogPopupController.js';
 
 
 export default class GameEngine {
@@ -45,7 +45,7 @@ export default class GameEngine {
         const timerAnimation = new TimerAnimation(this.isHost);
         this.timerManager = new TimerManager(timerAnimation, this.gameState);
 
-        this.gameLogModalController = new GameLogModalController(this.eventBus);
+        this.gameLogPopupController = new GameLogPopupController(this.eventBus);
 
         // Bind state handlers for game phases
         this.stateHandlers = {
@@ -84,7 +84,7 @@ export default class GameEngine {
             this.isHost ? () => this.togglePauseGame() : null // Pause callback only for host
         );
 
-        this.gameLogModalController.init();
+        this.gameLogPopupController.init();
     }
 
     // Main method to update the game state
