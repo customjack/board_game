@@ -48,19 +48,37 @@ export default class Client extends BasePeer {
         this.handlers.forEach(handler => handler.register());
     }
 
-    async init() {
+    async init(progressTracker = null) {
         console.log("Initializing Client...");
-        const id = await this.initPeer();  // Get the id from initPeer()
-        console.log("Peer connection open with ID:", id);
-        this.eventHandler.initManagers(id,this.hostId);
 
-        await this.initializeGameState();
+        // OPTIMIZATION: Parallelize PeerJS connection and board loading
+        console.log('[Performance] Starting parallel initialization...');
+        const parallelStart = performance.now();
+
+        const [id] = await Promise.all([
+            this.initPeer(),
+            this.initializeGameState()
+        ]);
+
+        const parallelEnd = performance.now();
+        console.log(`[Performance] Parallel init completed in ${(parallelEnd - parallelStart).toFixed(0)}ms`);
+
+        if (progressTracker) progressTracker.nextStage();
+
+        console.log("Peer connection open with ID:", id);
+
+        const managersStart = performance.now();
+        this.eventHandler.initManagers(id, this.hostId);
+        console.log(`[Performance] Managers initialized in ${(performance.now() - managersStart).toFixed(0)}ms`);
+
+        if (progressTracker) progressTracker.nextStage();
 
         this.addPlayer(id, this.originalName);
 
         // Update UI with initial game state (including board)
         this.eventHandler.updateGameState(true);
 
+        if (progressTracker) progressTracker.nextStage('Connecting to host...');
         this.connectToHost();
     }
 

@@ -1,0 +1,58 @@
+/* Loading Bar Styles */
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing-unit) * 1.5);
+    padding: calc(var(--spacing-unit) * 2);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-progress-container {
+    width: 100%;
+    height: 8px;
+    background: var(--background-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 4px;
+    transition: width 0.3s ease-out;
+    width: 0%;
+}
+
+.loading-message {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    text-align: center;
+}
+
+.loading-details {
+    font-size: 0.85rem;
+    color: var(--label-color);
+    text-align: center;
+    font-family: monospace;
+}

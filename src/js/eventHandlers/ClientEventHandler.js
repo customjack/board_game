@@ -7,6 +7,8 @@ import ModalUtil from '../utils/ModalUtil.js';
 import UIBinder from './UIBinder.js';
 import ActionRegistry from './ActionRegistry.js';
 import { CLIENT_UI_BINDINGS } from '../config/ui-bindings.js';
+import LoadingProgressTracker, { LOADING_STAGES } from '../utils/LoadingProgressTracker.js';
+import LoadingBar from '../ui/LoadingBar.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus) {
@@ -78,13 +80,28 @@ export default class ClientEventHandler extends BaseEventHandler {
         }
         this.showPage("loadingPage");
 
+        // Initialize loading progress tracking
+        const loadingBar = new LoadingBar('loadingPage');
+        const progressTracker = new LoadingProgressTracker(LOADING_STAGES.CLIENT);
+
+        progressTracker.onProgress((data) => {
+            loadingBar.update(data);
+            console.log(`[Loading] ${data.message} (${data.percent}%)`);
+        });
+
+        progressTracker.start();
+
         this.peer = new Client(playerName, gameCode, this);
-        await this.peer.init();
-        this.pluginManager.setPeer(this.peer.peer); //This isn't pretty but it passes the PeerJS instance
+        await this.peer.init(progressTracker);
+        this.pluginManager.setPeer(this.peer.peer);
+
+        progressTracker.nextStage();
 
         // Create animations for UI components
+        const animStart = performance.now();
         const particleAnimation = new ParticleAnimation();
-        const timerAnimation = new TimerAnimation(false); // isHost = false
+        const timerAnimation = new TimerAnimation(false);
+        console.log(`[Performance] Animations created in ${(performance.now() - animStart).toFixed(0)}ms`);
 
         // Configure UI components
         const rollButton = this.uiSystem.getComponent('rollButton');
@@ -99,6 +116,7 @@ export default class ClientEventHandler extends BaseEventHandler {
         }
 
         // Create game engine using factory
+        const engineStart = performance.now();
         this.gameEngine = GameEngineFactory.create({
             gameState: this.peer.gameState,
             peerId: this.peer.peer.id,
@@ -110,6 +128,10 @@ export default class ClientEventHandler extends BaseEventHandler {
             uiSystem: this.uiSystem,
             gameLogManager: this.uiSystem.gameLogManager
         });
+        console.log(`[Performance] Game engine created in ${(performance.now() - engineStart).toFixed(0)}ms`);
+
+        progressTracker.nextStage();
+        progressTracker.complete();
 
         this.showLobbyPage();
     }

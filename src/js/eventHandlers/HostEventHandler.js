@@ -7,6 +7,8 @@ import ModalUtil from '../utils/ModalUtil.js';
 import UIBinder from './UIBinder.js';
 import ActionRegistry from './ActionRegistry.js';
 import { HOST_UI_BINDINGS } from '../config/ui-bindings.js';
+import LoadingProgressTracker, { LOADING_STAGES } from '../utils/LoadingProgressTracker.js';
+import LoadingBar from '../ui/LoadingBar.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus) {
@@ -138,20 +140,35 @@ export default class HostEventHandler extends BaseEventHandler {
         const hostNameInput = document.getElementById('hostNameInput');
         const hostName = hostNameInput.value.trim();
         if (!hostName) {
-            alert('Please enter your name.');
+            await ModalUtil.alert('Please enter your name.');
             return;
         }
 
         document.getElementById('startHostButton').disabled = true;
         this.showPage("loadingPage");
 
+        // Initialize loading progress tracking
+        const loadingBar = new LoadingBar('loadingPage');
+        const progressTracker = new LoadingProgressTracker(LOADING_STAGES.HOST);
+
+        progressTracker.onProgress((data) => {
+            loadingBar.update(data);
+            console.log(`[Loading] ${data.message} (${data.percent}%)`);
+        });
+
+        progressTracker.start();
+
         this.peer = new Host(hostName, this);
-        await this.peer.init();
-        this.pluginManager.setPeer(this.peer.peer); //This isn't pretty but it passes the PeerJS instances
+        await this.peer.init(progressTracker);
+        this.pluginManager.setPeer(this.peer.peer);
+
+        progressTracker.nextStage();
 
         // Create animations for UI components
+        const animStart = performance.now();
         const particleAnimation = new ParticleAnimation();
-        const timerAnimation = new TimerAnimation(true); // isHost = true
+        const timerAnimation = new TimerAnimation(true);
+        console.log(`[Performance] Animations created in ${(performance.now() - animStart).toFixed(0)}ms`);
 
         // Configure UI components
         const rollButton = this.uiSystem.getComponent('rollButton');
@@ -166,6 +183,7 @@ export default class HostEventHandler extends BaseEventHandler {
         }
 
         // Create game engine using factory
+        const engineStart = performance.now();
         this.gameEngine = GameEngineFactory.create({
             gameState: this.peer.gameState,
             peerId: this.peer.peer.id,
@@ -177,6 +195,10 @@ export default class HostEventHandler extends BaseEventHandler {
             uiSystem: this.uiSystem,
             gameLogManager: this.uiSystem.gameLogManager
         });
+        console.log(`[Performance] Game engine created in ${(performance.now() - engineStart).toFixed(0)}ms`);
+
+        progressTracker.nextStage();
+        progressTracker.complete();
 
         this.showPage("lobbyPage");
         this.displayLobbyControls();
