@@ -6,6 +6,8 @@
  */
 
 export default class ModalUtil {
+    static activeModal = null;
+
     /**
      * Show an alert modal
      * @param {string} message - Message to display
@@ -13,6 +15,11 @@ export default class ModalUtil {
      * @returns {Promise<void>} Resolves when modal is closed
      */
     static alert(message, title = 'Notice') {
+        // Prevent multiple modals
+        if (this.activeModal) {
+            return Promise.resolve();
+        }
+
         return new Promise((resolve) => {
             const modal = this.createModal({
                 title,
@@ -33,6 +40,11 @@ export default class ModalUtil {
      * @returns {Promise<boolean>} Resolves to true if confirmed, false if canceled
      */
     static confirm(message, title = 'Confirm') {
+        // Prevent multiple modals
+        if (this.activeModal) {
+            return Promise.resolve(false);
+        }
+
         return new Promise((resolve) => {
             const modal = this.createModal({
                 title,
@@ -55,6 +67,11 @@ export default class ModalUtil {
      * @returns {Promise<string|null>} Resolves to input value if submitted, null if canceled
      */
     static prompt(message, defaultValue = '', title = 'Input') {
+        // Prevent multiple modals
+        if (this.activeModal) {
+            return Promise.resolve(null);
+        }
+
         return new Promise((resolve) => {
             const modal = this.createModal({
                 title,
@@ -151,6 +168,7 @@ export default class ModalUtil {
      * @param {HTMLElement} modal - Modal element to show
      */
     static showModal(modal) {
+        this.activeModal = modal;
         document.body.appendChild(modal);
 
         // Click outside to close (optional - disabled for now to prevent accidental closes)
@@ -170,5 +188,6 @@ export default class ModalUtil {
         if (modal.parentNode) {
             modal.parentNode.removeChild(modal);
         }
+        this.activeModal = null;
     }
 }

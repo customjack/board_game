@@ -192,11 +192,15 @@ export default class HostEventHandler extends BaseEventHandler {
         if (this.peer) {
             this.peer.broadcastStartGame();
         }
-        this.gameEngine.init();
+
+        // Show game page first so DOM elements are available
         this.showPage("gamePage");
 
         // Switch UI context to game page
         this.uiSystem.switchContext('game');
+
+        // Initialize game engine after page is shown
+        this.gameEngine.init();
 
         // Clear and log game start
         this.uiSystem.gameLogManager?.clear();

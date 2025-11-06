@@ -89,11 +89,15 @@ export default class ClientEventHandler extends BaseEventHandler {
 
     showGamePage() {
         console.log('Client is switching to game page...');
-        this.gameEngine.init();
+
+        // Show game page first so DOM elements are available
         this.showPage("gamePage");
 
         // Switch UI context to game page
         this.uiSystem.switchContext('game');
+
+        // Initialize game engine after page is shown
+        this.gameEngine.init();
 
         // Clear and log game start
         this.uiSystem.gameLogManager?.clear();
@@ -151,12 +155,13 @@ export default class ClientEventHandler extends BaseEventHandler {
         if (player) {
             const newName = await ModalUtil.prompt('Enter new name:', player.nickname, 'Edit Player Name');
             if (newName && newName.trim() !== '') {
-                player.nickname = newName;
+                // Send name change to host - host will broadcast the update
                 this.peer.conn.send({
                     type: 'nameChange',
                     playerId: playerId,
-                    newName,
+                    newName: newName.trim(),
                 });
+                // Note: Don't update locally - wait for host broadcast to ensure consistency
             }
         }
     }

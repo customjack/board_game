@@ -1,6 +1,7 @@
 import UISystem from '../ui/UISystem.js';
 import PieceManager from '../controllers/managers/PieceManager';
 import SettingsManager from '../controllers/managers/SettingsManager';
+import ModalUtil from '../utils/ModalUtil.js';
 
 export default class BaseEventHandler {
     constructor(isHost, registryManager, pluginManager, factoryManager, eventBus) {
@@ -85,13 +86,13 @@ export default class BaseEventHandler {
         }, 2000);
     }
 
-    leaveGame() {
-        alert('You have left the game.');
+    async leaveGame() {
+        await ModalUtil.alert('You have left the game.');
         location.reload();
     }
 
-    handlePeerError(err) {
-        alert('An error occurred: ' + err);
+    async handlePeerError(err) {
+        await ModalUtil.alert('An error occurred: ' + err);
         this.showPage("homePage");
         location.reload();
     }
