@@ -1,13 +1,20 @@
-import BaseEventHandler from './BaseEventHandler';
-import Host from '../networking/Host';
+import BaseEventHandler from './BaseEventHandler.js';
+import Host from '../networking/Host.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
 import ParticleAnimation from '../animations/ParticleAnimation.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
 import ModalUtil from '../utils/ModalUtil.js';
+import UIBinder from './UIBinder.js';
+import ActionRegistry from './ActionRegistry.js';
+import { HOST_UI_BINDINGS } from '../config/ui-bindings.js';
 
 export default class HostEventHandler extends BaseEventHandler {
-    constructor(registryManager,pluginManager,factoryManager, eventBus) {
-        super(true, registryManager,pluginManager,factoryManager, eventBus);  // Initialize as host (isHost = true), peerId and hostPeerId will be set later
+    constructor(registryManager, pluginManager, factoryManager, eventBus) {
+        super(true, registryManager, pluginManager, factoryManager, eventBus);
+
+        // Initialize UI systems
+        this.uiBinder = new UIBinder(HOST_UI_BINDINGS);
+        this.actionRegistry = new ActionRegistry();
     }
 
     init() {
@@ -17,105 +24,111 @@ export default class HostEventHandler extends BaseEventHandler {
 
     setupEventListeners() {
         super.setupEventListeners();
-    
-        // Ensure all necessary DOM elements exist before registering listeners
-        const startHostButton = document.getElementById('startHostButton');
-        const copyInviteCodeButton = document.getElementById('copyInviteCodeButton');
-        const closeGameButton = document.getElementById('closeGameButton');
-        const startGameButton = document.getElementById('startGameButton');
-        const addPlayerButton = document.getElementById('addPlayerButton');
-        const uploadBoardButton = document.getElementById('uploadBoardButton');
-        const fileInput = document.getElementById('boardFileInput');
-        const uploadPluginButton = document.getElementById('uploadPluginButton');
-        const pluginFileInput = document.getElementById('pluginFileInput');
-    
-        // Retrieve input elements from the SettingsManager
-        const playerLimitPerPeerInput = document.getElementById('playerLimitPerPeerHost');
-        const totalPlayerLimitInput = document.getElementById('totalPlayerLimitHost');
-        const turnTimerInput = document.getElementById('turnTimerHost');
-        const moveDelayInput = document.getElementById('moveDelayHost');
-        const turnTimerEnabledCheckbox = document.getElementById('turnTimerEnabledHost');
-    
-        // Register listeners via ListenerRegistry if elements are defined
-        if (startHostButton)
-            this.listenerRegistry.registerListener('startHostButton', 'click', () => this.startHostGame());
-        if (copyInviteCodeButton)
-            this.listenerRegistry.registerListener('copyInviteCodeButton', 'click', () => this.copyInviteCode());
-        if (closeGameButton)
-            this.listenerRegistry.registerListener('closeGameButton', 'click', () => this.closeGame());
-        if (startGameButton)
-            this.listenerRegistry.registerListener('startGameButton', 'click', () => this.startGame());
-        if (addPlayerButton)
-            this.listenerRegistry.registerListener('addPlayerButton', 'click', () => this.addPlayer());
-        if (uploadBoardButton && fileInput) {
-            this.listenerRegistry.registerListener('uploadBoardButton', 'click', () => fileInput.click());
-    
-            // Register the file input change event listener
+
+        // Initialize UI binder (cache all elements)
+        this.uiBinder.initialize();
+
+        // Setup actions
+        this.setupActions();
+
+        // Bind all actions at once
+        this.actionRegistry.bindAll(this.listenerRegistry, this.uiBinder);
+
+        // Setup input bindings
+        this.setupInputBindings();
+    }
+
+    /**
+     * Setup actions using ActionRegistry
+     */
+    setupActions() {
+        // Main game control actions
+        this.actionRegistry.register('startHost', () => this.startHostGame(), {
+            elementId: 'startHostButton',
+            description: 'Start hosting a game'
+        });
+
+        this.actionRegistry.register('copyInvite', () => this.copyInviteCode(), {
+            elementId: 'copyInviteCodeButton',
+            description: 'Copy invite code to clipboard'
+        });
+
+        this.actionRegistry.register('closeGame', () => this.closeGame(), {
+            elementId: 'closeGameButton',
+            description: 'Close the game'
+        });
+
+        this.actionRegistry.register('startGame', () => this.startGame(), {
+            elementId: 'startGameButton',
+            description: 'Start the game'
+        });
+
+        this.actionRegistry.register('addPlayer', () => this.addPlayer(), {
+            elementId: 'addPlayerButton',
+            description: 'Add a new player'
+        });
+
+        // Board upload action
+        const boardFileInput = this.uiBinder.getInput('boardFileInput');
+        if (boardFileInput) {
+            this.actionRegistry.register('uploadBoard', () => boardFileInput.click(), {
+                elementId: 'uploadBoardButton',
+                description: 'Upload custom board'
+            });
+
+            // Handle board file selection
             this.listenerRegistry.registerListener('boardFileInput', 'change', async (event) => {
                 const file = event.target.files[0];
                 if (file) {
                     try {
                         await this.uiSystem.loadBoardFromFile(file);
                         this.peer.gameState.board = this.uiSystem.getActiveBoard().board;
-                        this.peer.broadcastGameState(); // Broadcast after loading the board
+                        this.peer.broadcastGameState();
                         this.updateGameState(true);
-
-                        // Reset the file input so it can be triggered again if the same file is selected
-                        event.target.value = ''; // Clear the file input field
+                        event.target.value = '';
                     } catch (error) {
-                        alert(`Error loading board file: ${error.message}`);
+                        await ModalUtil.alert(`Error loading board file: ${error.message}`);
                     }
                 }
             });
-
         }
 
-        // Plugin upload handling
-        if (uploadPluginButton && pluginFileInput) {
-            this.listenerRegistry.registerListener('uploadPluginButton', 'click', () => pluginFileInput.click());
+        // Plugin upload action
+        const pluginFileInput = this.uiBinder.getInput('pluginFileInput');
+        if (pluginFileInput) {
+            this.actionRegistry.register('uploadPlugin', () => pluginFileInput.click(), {
+                elementId: 'uploadPluginButton',
+                description: 'Upload plugin'
+            });
 
-            // Register the file input change event listener for plugins
+            // Handle plugin file selection
             this.listenerRegistry.registerListener('pluginFileInput', 'change', async (event) => {
                 const file = event.target.files[0];
                 if (file) {
                     try {
                         await this.pluginManager.initializePluginFromFile(file);
-                        alert('Plugin uploaded and initialized successfully!');
+                        await ModalUtil.alert('Plugin uploaded and initialized successfully!');
                     } catch (error) {
-                        alert(`Error loading plugin: ${error.message}`);
+                        await ModalUtil.alert(`Error loading plugin: ${error.message}`);
                     }
                 }
             });
         }
-    
-        // Helper function to add multiple event listeners for settings
-        const addDelayedSettingsListener = (inputElement, eventHandler) => {
-            if (inputElement) {
-                this.listenerRegistry.registerListener(inputElement.id, 'change', eventHandler);
-                this.listenerRegistry.registerListener(inputElement.id, 'blur', eventHandler);
-                this.listenerRegistry.registerListener(inputElement.id, 'keydown', (event) => {
-                    if (event.key === 'Enter') {
-                        inputElement.blur(); // Trigger blur event
-                        eventHandler();
-                    }
-                });
-            }
-        };
-    
-        // Register delayed event listeners for settings inputs
-        if (playerLimitPerPeerInput) {
-            addDelayedSettingsListener(playerLimitPerPeerInput, () => this.onSettingsChanged());
-        }
-        if (totalPlayerLimitInput) {
-            addDelayedSettingsListener(totalPlayerLimitInput, () => this.onSettingsChanged());
-        }
-        if (turnTimerInput) {
-            addDelayedSettingsListener(turnTimerInput, () => this.onSettingsChanged());
-        }
-        if (moveDelayInput) {
-            addDelayedSettingsListener(moveDelayInput, () => this.onSettingsChanged());
-        }
-        if (turnTimerEnabledCheckbox) {
+    }
+
+    /**
+     * Setup input bindings using UIBinder
+     */
+    setupInputBindings() {
+        // Settings inputs
+        this.uiBinder.bindInput('playerLimitPerPeer', () => this.onSettingsChanged());
+        this.uiBinder.bindInput('totalPlayerLimit', () => this.onSettingsChanged());
+        this.uiBinder.bindInput('turnTimer', () => this.onSettingsChanged());
+        this.uiBinder.bindInput('moveDelay', () => this.onSettingsChanged());
+
+        // Turn timer enabled checkbox
+        const turnTimerCheckbox = this.uiBinder.getInput('turnTimerEnabled');
+        if (turnTimerCheckbox) {
             this.listenerRegistry.registerListener('turnTimerEnabledHost', 'change', () => this.onSettingsChanged());
         }
     }
