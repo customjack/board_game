@@ -1,13 +1,20 @@
-import BaseEventHandler from './BaseEventHandler';
-import Client from '../networking/Client';
+import BaseEventHandler from './BaseEventHandler.js';
+import Client from '../networking/Client.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
 import ParticleAnimation from '../animations/ParticleAnimation.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
 import ModalUtil from '../utils/ModalUtil.js';
+import UIBinder from './UIBinder.js';
+import ActionRegistry from './ActionRegistry.js';
+import { CLIENT_UI_BINDINGS } from '../config/ui-bindings.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
-    constructor(registryManager,pluginManager,factoryManager, eventBus) {
-        super(false, registryManager,pluginManager,factoryManager, eventBus);
+    constructor(registryManager, pluginManager, factoryManager, eventBus) {
+        super(false, registryManager, pluginManager, factoryManager, eventBus);
+
+        // Initialize UI systems
+        this.uiBinder = new UIBinder(CLIENT_UI_BINDINGS);
+        this.actionRegistry = new ActionRegistry();
     }
 
     init() {
@@ -18,11 +25,39 @@ export default class ClientEventHandler extends BaseEventHandler {
     setupEventListeners() {
         super.setupEventListeners();
 
-        // Register listeners via ListenerRegistry
-        this.listenerRegistry.registerListener('startJoinButton', 'click', () => this.startJoinGame());
-        this.listenerRegistry.registerListener('copyInviteCodeButton', 'click', () => this.copyInviteCode());
-        this.listenerRegistry.registerListener('leaveGameButton', 'click', () => this.leaveGame());
-        this.listenerRegistry.registerListener('addPlayerButton', 'click', () => this.addNewOwnedPlayer());
+        // Initialize UI binder (cache all elements)
+        this.uiBinder.initialize();
+
+        // Setup actions
+        this.setupActions();
+
+        // Bind all actions at once
+        this.actionRegistry.bindAll(this.listenerRegistry, this.uiBinder);
+    }
+
+    /**
+     * Setup actions using ActionRegistry
+     */
+    setupActions() {
+        this.actionRegistry.register('joinGame', () => this.startJoinGame(), {
+            elementId: 'startJoinButton',
+            description: 'Join game'
+        });
+
+        this.actionRegistry.register('copyInvite', () => this.copyInviteCode(), {
+            elementId: 'copyInviteCodeButton',
+            description: 'Copy invite code to clipboard'
+        });
+
+        this.actionRegistry.register('leaveGame', () => this.leaveGame(), {
+            elementId: 'leaveGameButton',
+            description: 'Leave game'
+        });
+
+        this.actionRegistry.register('addPlayer', () => this.addNewOwnedPlayer(), {
+            elementId: 'addPlayerButton',
+            description: 'Add a new player'
+        });
     }
 
     async startJoinGame() {
@@ -33,11 +68,14 @@ export default class ClientEventHandler extends BaseEventHandler {
         const gameCode = gameCodeInput.value.trim();
 
         if (!playerName || !gameCode) {
-            alert('Please enter your name and a valid game code.');
+            await ModalUtil.alert('Please enter your name and a valid game code.');
             return;
         }
 
-        document.getElementById('startJoinButton').disabled = true;
+        const startJoinButton = this.uiBinder.getButton('joinGame') || document.getElementById('startJoinButton');
+        if (startJoinButton) {
+            startJoinButton.disabled = true;
+        }
         this.showPage("loadingPage");
 
         this.peer = new Client(playerName, gameCode, this);
