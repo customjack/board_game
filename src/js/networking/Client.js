@@ -1,10 +1,12 @@
 // Client.js
 
-import BasePeer from './BasePeer';
-import Player from '../models/Player';
-import GameState from '../models/GameState';
-import StateDelta from '../utils/StateDelta';
+import BasePeer from './BasePeer.js';
 import ModalUtil from '../utils/ModalUtil.js';
+import NetworkProtocol from './protocol/NetworkProtocol.js';
+import { MessageTypes } from './protocol/MessageTypes.js';
+import GameStateHandler from './handlers/GameStateHandler.js';
+import PlayerHandler from './handlers/PlayerHandler.js';
+import ConnectionHandler from './handlers/ConnectionHandler.js';
 
 export default class Client extends BasePeer {
     constructor(originalName, hostId, eventHandler) {
@@ -16,6 +18,34 @@ export default class Client extends BasePeer {
         this.heartbeatTimeout = null;
         this.heartbeatIntervalMs = 10000; // 10 seconds
         this.heartbeatTimeoutMs = 25000;  // consider connection lost if no response within 25s
+
+        // Initialize protocol and handlers
+        this.protocol = new NetworkProtocol({
+            validateMessages: true,
+            logMessages: false
+        });
+        this.initializeHandlers();
+    }
+
+    /**
+     * Initialize message handlers
+     */
+    initializeHandlers() {
+        const context = {
+            peer: this,
+            eventBus: this.eventHandler?.eventBus,
+            factoryManager: this.eventHandler?.factoryManager
+        };
+
+        // Register all handler plugins
+        this.handlers = [
+            new GameStateHandler(this.protocol, context),
+            new PlayerHandler(this.protocol, context),
+            new ConnectionHandler(this.protocol, context)
+        ];
+
+        // Register each handler
+        this.handlers.forEach(handler => handler.register());
     }
 
     async init() {
@@ -58,7 +88,7 @@ export default class Client extends BasePeer {
 
         // Propose to the host to add the new player
         this.conn.send({
-            type: 'proposeAddPlayer',
+            type: MessageTypes.PROPOSE_ADD_PLAYER,
             player: {
                 peerId: this.peer.id,
                 nickname: playerName
@@ -73,7 +103,7 @@ export default class Client extends BasePeer {
         // Only propose if connected to host
         if (this.conn && this.conn.open) {
             this.conn.send({
-                type: 'proposeGameState',
+                type: MessageTypes.PROPOSE_GAME_STATE,
                 gameState: proposedGameState.toJSON(),
             });
         } else {
@@ -86,7 +116,7 @@ export default class Client extends BasePeer {
         this.startHeartbeat();
         const playersJSON = this.ownedPlayers.map(player => player.toJSON());
         this.conn.send({
-            type: 'join',
+            type: MessageTypes.JOIN,
             peerId: this.peer.id,
             players: playersJSON,
         });
@@ -94,119 +124,11 @@ export default class Client extends BasePeer {
     }
 
     handleData(data) {
-        // Handle incoming data from the host
-        switch (data.type) {
-            case 'connectionPackage':
-                this.handleConnectionPackage(data.gameState);
-                break;
-            case 'gameState':
-                this.handleGameStateUpdate(data.gameState);
-                break;
-            case 'gameStateDelta':
-                this.handleGameStateDelta(data.delta);
-                break;
-            case 'heartbeat':
-                this.sendHeartbeatAck();
-                break;
-            case 'heartbeatAck':
-                this.markHeartbeatReceived();
-                break;
-            case 'kick':
-                this.handleKick();
-                break;
-            case 'joinRejected':
-                this.handleJoinRejected(data.reason);
-                break;
-            case 'startGame':
-                this.handleStartGame();
-                break;
-            case 'addPlayerRejected':
-                this.handleAddPlayerRejected(data.reason);
-                break;
-            // Handle other data types...
-            default:
-                console.log('Unknown data type:', data.type);
-        }
-    }
-
-    handleConnectionPackage(gameStateData) {
-        this.gameState = GameState.fromJSON(gameStateData, this.eventHandler.factoryManager);  // Sync local game state with the host's state
-
-        // Refresh ownedPlayers to reference new Player objects
-        this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
-
-        console.log('Game state updated:', this.gameState);
-        if(this.gameState.isGameStarted()) {
-            this.eventHandler.showGamePage();
-        } else {
-            this.eventHandler.showLobbyPage();
-        }
-    }
-
-    handleGameStateUpdate(gameStateData) {
-        this.gameState = GameState.fromJSON(gameStateData, this.eventHandler.factoryManager);  // Sync local game state with the host's state
-
-        // Refresh ownedPlayers to reference new Player objects
-        this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
-
-        //console.log('Game state updated:', gameStateData);
-        this.eventHandler.updateGameState();
-    }
-
-    handleGameStateDelta(delta) {
-        try {
-            // Get current state as JSON
-            const currentStateJSON = this.gameState.toJSON();
-
-            // Check if delta can be safely applied
-            if (!StateDelta.canApplyDelta(currentStateJSON, delta)) {
-                console.warn('Delta version mismatch. Requesting full state from host.');
-                this.requestFullState();
-                return;
-            }
-
-            // Apply delta to current state
-            const updatedStateJSON = StateDelta.applyDelta(currentStateJSON, delta);
-
-            // Reconstruct GameState from the updated JSON
-            this.gameState = GameState.fromJSON(updatedStateJSON, this.eventHandler.factoryManager);
-
-            // Refresh ownedPlayers to reference new Player objects
-            this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
-
-            console.log(`Delta applied successfully. Version: ${this.gameState.getVersion()}`);
-            this.eventHandler.updateGameState();
-        } catch (error) {
-            console.error('Error applying delta:', error);
-            console.warn('Requesting full state from host due to delta application error.');
-            this.requestFullState();
-        }
-    }
-
-    /**
-     * Request full state from host when delta can't be applied
-     */
-    requestFullState() {
-        if (this.conn && this.conn.open) {
-            this.conn.send({
-                type: 'requestFullState',
-                reason: 'delta_sync_failed'
-            });
-        }
-    }
-
-    async handleKick() {
-        await ModalUtil.alert('You have been kicked from the game.');
-        location.reload();
-    }
-
-    async handleJoinRejected(reason) {
-        await ModalUtil.alert(`Join request rejected: ${reason}`);
-        location.reload();
-    }
-
-    handleStartGame() {
-        this.eventHandler.showGamePage();
+        // Route message through protocol system
+        this.protocol.handleMessage(data, {
+            connection: this.conn,
+            peer: this
+        });
     }
 
     async handleDisconnection() {
@@ -221,16 +143,12 @@ export default class Client extends BasePeer {
         location.reload();
     }
 
-    async handleAddPlayerRejected(reason) {
-        await ModalUtil.alert(reason);
-    }
-
     startHeartbeat() {
         this.stopHeartbeat();
         this.markHeartbeatReceived();
         this.heartbeatInterval = setInterval(() => {
             if (this.conn && this.conn.open) {
-                this.conn.send({ type: 'heartbeat', timestamp: Date.now() });
+                this.conn.send({ type: MessageTypes.HEARTBEAT, timestamp: Date.now() });
                 this.scheduleHeartbeatTimeout();
             }
         }, this.heartbeatIntervalMs);
@@ -270,7 +188,7 @@ export default class Client extends BasePeer {
 
     sendHeartbeatAck() {
         if (this.conn && this.conn.open) {
-            this.conn.send({ type: 'heartbeatAck', timestamp: Date.now() });
+            this.conn.send({ type: MessageTypes.HEARTBEAT_ACK, timestamp: Date.now() });
         }
         this.markHeartbeatReceived();
     }

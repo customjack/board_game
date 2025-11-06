@@ -1,12 +1,14 @@
 // Host.js
 
-import BasePeer from './BasePeer';
-import Player from '../models/Player';
-import GameState from '../models/GameState'
-import GamePhases from '../enums/GamePhases';
-import StateDelta from '../utils/StateDelta';
-import InputValidator from '../utils/InputValidator';
+import BasePeer from './BasePeer.js';
+import GameState from '../models/GameState.js';
+import StateDelta from '../utils/StateDelta.js';
 import ModalUtil from '../utils/ModalUtil.js';
+import NetworkProtocol from './protocol/NetworkProtocol.js';
+import { MessageTypes } from './protocol/MessageTypes.js';
+import GameStateHandler from './handlers/GameStateHandler.js';
+import PlayerHandler from './handlers/PlayerHandler.js';
+import ConnectionHandler from './handlers/ConnectionHandler.js';
 
 export default class Host extends BasePeer {
     constructor(originalName, eventHandler) {
@@ -16,6 +18,34 @@ export default class Host extends BasePeer {
         // Store the previous game state for delta calculation
         this.previousGameStateJSON = null;
         this.connectionHeartbeatIntervalMs = 10000;
+
+        // Initialize protocol and handlers
+        this.protocol = new NetworkProtocol({
+            validateMessages: true,
+            logMessages: false
+        });
+        this.initializeHandlers();
+    }
+
+    /**
+     * Initialize message handlers
+     */
+    initializeHandlers() {
+        const context = {
+            peer: this,
+            eventBus: this.eventHandler?.eventBus,
+            factoryManager: this.eventHandler?.factoryManager
+        };
+
+        // Register all handler plugins
+        this.handlers = [
+            new GameStateHandler(this.protocol, context),
+            new PlayerHandler(this.protocol, context),
+            new ConnectionHandler(this.protocol, context)
+        ];
+
+        // Register each handler
+        this.handlers.forEach(handler => handler.register());
     }
 
     async init() {
@@ -55,7 +85,7 @@ export default class Host extends BasePeer {
 
         conn.__heartbeatInterval = setInterval(() => {
             if (conn.open) {
-                conn.send({ type: 'heartbeat', timestamp: Date.now() });
+                conn.send({ type: MessageTypes.HEARTBEAT, timestamp: Date.now() });
             } else {
                 if (conn.__heartbeatInterval) {
                     clearInterval(conn.__heartbeatInterval);
@@ -68,14 +98,14 @@ export default class Host extends BasePeer {
     sendGameState(conn) {
         if (this.gameState) {
             const gameStateData = this.gameState.toJSON();
-            conn.send({ type: 'gameState', gameState: gameStateData });
+            conn.send({ type: MessageTypes.GAME_STATE, gameState: gameStateData });
         }
     }
 
     sendConnectionPackage(conn) {
         if (this.gameState) {
             const gameStateData = this.gameState.toJSON();
-            conn.send({ type: 'connectionPackage', gameState: gameStateData });
+            conn.send({ type: MessageTypes.CONNECTION_PACKAGE, gameState: gameStateData });
         }
     }
 
@@ -98,209 +128,13 @@ export default class Host extends BasePeer {
     }
 
     handleData(conn, data) {
-        // Handle incoming data from clients
-        switch (data.type) {
-            case 'proposeGameState':
-                this.handleProposedGameState(conn, data.gameState);
-                break;
-            case 'join':
-                this.handleJoin(conn, data);
-                break;
-            case 'nameChange':
-                this.handleNameChange(data.playerId, data.newName);
-                break;
-            case 'removePlayer':
-                this.handleClientRemovePlayer(data.playerId);
-                break;
-            case 'proposeAddPlayer':
-                this.handleClientAddPlayer(conn, data.player);
-                break;
-            case 'requestFullState':
-                this.handleRequestFullState(conn, data.reason);
-                break;
-            case 'heartbeat':
-                this.handleHeartbeat(conn);
-                break;
-            case 'heartbeatAck':
-                // No-op, acknowledgement received
-                break;
-            // Handle other data types...
-            default:
-                console.log('Unknown data type:', data.type);
-        }
-    }
-
-    handleRequestFullState(conn, reason) {
-        console.log(`Client ${conn.peer} requested full state. Reason: ${reason}`);
-        // Send the full game state to this specific client
-        this.sendGameState(conn);
-    }
-
-    handleProposedGameState(conn, proposedGameStateData) {
-        const proposedGameState = GameState.fromJSON(proposedGameStateData, this.eventHandler.factoryManager);
-
-        // Validate the proposed game state
-        if (this.validateProposedGameState(conn.peer, proposedGameState)) {
-            // Broadcast the new game state and do work to update on the client side
-            // All clients should also do their work to update client side
-            this.gameState = proposedGameState;
-
-            // Refresh ownedPlayers to reference new Player objects
-            this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
-
-            this.broadcastGameState();
-            this.eventHandler.updateGameState();
-        } else {
-            console.error('Invalid game state proposed by peer:', conn.peer);
-            this.sendGameState(conn); //Send them the corrected game state
-        }
-    }
-
-    validateProposedGameState(peerId, proposedGameState) {
-        if (this.gameState.gamePhase === GamePhases.PAUSED && proposedGameState.gamePhase !== GamePhases.PAUSED) {
-            return false;
-        }
-
-        return true;
-    }
-
-    handleJoin(conn, data) {
-        const players = data.players;
-
-        // Validate players array
-        if (!Array.isArray(players) || players.length === 0) {
-            conn.send({
-                type: 'joinRejected',
-                reason: 'Invalid join request: No players provided.',
-            });
-            console.log('Join request rejected: No players provided');
-            return;
-        }
-
-        const totalPlayersCount = this.gameState.players.length;
-        const playersToAddCount = players.length;
-
-        if (totalPlayersCount + playersToAddCount > this.gameState.settings.playerLimit) {
-            conn.send({
-                type: 'joinRejected',
-                reason: `Lobby is full. The maximum player limit of ${this.gameState.settings.playerLimit} has been reached.`,
-            });
-            console.log(`Join request rejected. Player limit of ${this.gameState.settings.playerLimit} reached.`);
-            return;
-        }
-
-        // Track if any player failed validation
-        let validationFailed = false;
-
-        players.forEach(playerData => {
-            // Validate player data
-            const validation = InputValidator.validatePlayerData(playerData);
-            if (!validation.isValid) {
-                conn.send({
-                    type: 'joinRejected',
-                    reason: `Invalid player data: ${validation.errors.join(', ')}`,
-                });
-                console.log('Join request rejected due to invalid player data:', validation.errors);
-                validationFailed = true;
-                return;
-            }
-
-            // Sanitize nickname
-            const nicknameValidation = InputValidator.validateNickname(playerData.nickname);
-            const sanitizedNickname = nicknameValidation.sanitized;
-
-            // Add the player to the game state with sanitized data
-            this.addPlayer(playerData.peerId, sanitizedNickname);
+        // Route message through protocol system
+        this.protocol.handleMessage(data, {
+            connection: conn,
+            peer: this
         });
-
-        if (!validationFailed) {
-            this.broadcastGameState();
-        }
     }
 
-    handleNameChange(playerId, newName) {
-        console.log("received name change");
-
-        // Validate player ID
-        if (!InputValidator.validatePlayerId(playerId)) {
-            console.warn('Invalid player ID format in name change request');
-            return;
-        }
-
-        // Validate and sanitize new name
-        const nicknameValidation = InputValidator.validateNickname(newName);
-        if (!nicknameValidation.isValid) {
-            console.warn('Invalid nickname in name change request:', nicknameValidation.error);
-            return;
-        }
-
-        const player = this.gameState.players.find((p) => p.playerId === playerId);
-        if (player) {
-            player.nickname = nicknameValidation.sanitized;
-            this.updateAndBroadcastGameState(this.gameState);
-        }
-    }
-
-    handleClientRemovePlayer(playerId) {
-        this.removePlayer(playerId);
-        this.broadcastGameState();
-    }
-
-    handleClientAddPlayer(conn, newPlayerData) {
-        const peerId = conn.peer;
-
-        // Validate player data
-        const validation = InputValidator.validatePlayerData(newPlayerData);
-        if (!validation.isValid) {
-            conn.send({
-                type: 'addPlayerRejected',
-                reason: `Invalid player data: ${validation.errors.join(', ')}`,
-                player: newPlayerData
-            });
-            console.log('Add player rejected due to invalid data:', validation.errors);
-            return;
-        }
-
-        // Check rate limiting (max 5 players added per minute per client)
-        if (!InputValidator.checkRateLimit(`addPlayer:${peerId}`, 5, 60000)) {
-            conn.send({
-                type: 'addPlayerRejected',
-                reason: 'Too many player addition requests. Please wait a moment.',
-                player: newPlayerData
-            });
-            console.log(`Player addition rate limited for peerId ${peerId}`);
-            return;
-        }
-
-        const clientPlayersCount = this.gameState.players.filter(player => player.peerId === peerId).length;
-        const totalPlayersCount = this.gameState.players.length;
-
-        if (clientPlayersCount >= this.gameState.settings.playerLimitPerPeer) {
-            conn.send({
-                type: 'addPlayerRejected',
-                reason: `Local player limit reached for your client. You can only create up to ${this.gameState.settings.playerLimitPerPeer} players.`,
-                player: newPlayerData
-            });
-            console.log(`Player addition rejected for peerId ${peerId} due to player limit.`);
-            return;
-        }
-
-        if (totalPlayersCount >= this.gameState.settings.playerLimit) {
-            conn.send({
-                type: 'addPlayerRejected',
-                reason: `Total player limit reached. The game can only have up to ${this.gameState.settings.playerLimit} players.`,
-                player: newPlayerData
-            });
-            console.log(`Player addition rejected for peerId ${peerId} due to total player limit.`);
-            return;
-        }
-
-        // Sanitize nickname before adding
-        const nicknameValidation = InputValidator.validateNickname(newPlayerData.nickname);
-        const newPlayer = this.addPlayer(newPlayerData.peerId, nicknameValidation.sanitized);
-        this.broadcastGameState();
-        console.log(`Player added successfully for peerId ${peerId}. Player ID: ${newPlayer.playerId}`);
-    }
 
     handleDisconnection(peerId) {
         console.log(`Connection closed with ${peerId}`);
@@ -345,14 +179,14 @@ export default class Host extends BasePeer {
             if (useDelta && conn.supportsDelta) {
                 // Send delta update to clients that support it
                 conn.send({
-                    type: 'gameStateDelta',
+                    type: MessageTypes.GAME_STATE_DELTA,
                     delta: delta,
                     fullState: null // Full state not included in delta messages
                 });
             } else {
                 // Send full state to new clients or when delta isn't beneficial
                 conn.send({
-                    type: 'gameState',
+                    type: MessageTypes.GAME_STATE,
                     gameState: gameStateData
                 });
             }
@@ -369,21 +203,15 @@ export default class Host extends BasePeer {
         this.broadcastGameState();
         console.log('Sending start game signal to all clients...');
         this.connections.forEach((conn) => {
-            conn.send({ type: 'startGame' });
+            conn.send({ type: MessageTypes.START_GAME });
         });
-    }
-
-    handleHeartbeat(conn) {
-        if (conn && conn.open) {
-            conn.send({ type: 'heartbeatAck', timestamp: Date.now() });
-        }
     }
 
     kickPlayer(peerId) {
         console.log(`Kicking player with peerId: ${peerId}`);
         const connection = this.connections.find((conn) => conn.peer === peerId);
         if (connection) {
-            connection.send({ type: 'kick' });
+            connection.send({ type: MessageTypes.KICK });
             connection.close();
             this.removePeer(peerId);
             this.broadcastGameState();
