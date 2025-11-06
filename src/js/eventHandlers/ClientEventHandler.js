@@ -172,4 +172,24 @@ export default class ClientEventHandler extends BaseEventHandler {
             this.peer.addNewOwnedPlayer(newName);
         }
     }
+
+    async removePlayer(playerId) {
+        const playerIndex = this.peer.ownedPlayers.findIndex((p) => p.playerId === playerId);
+
+        if (playerIndex !== -1) {
+            if (this.peer.ownedPlayers.length === 1) {
+                await ModalUtil.alert('You have removed your last player. Leaving the game.');
+                this.leaveGame();
+            } else {
+                // Send remove request to host
+                this.peer.conn.send({
+                    type: 'removePlayer',
+                    playerId: playerId
+                });
+                // Note: Don't remove locally - wait for host broadcast
+            }
+        } else {
+            await ModalUtil.alert('Player not found.');
+        }
+    }
 }
