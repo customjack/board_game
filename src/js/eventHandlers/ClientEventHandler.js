@@ -3,6 +3,7 @@ import Client from '../networking/Client';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
 import ParticleAnimation from '../animations/ParticleAnimation.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
+import ModalUtil from '../utils/ModalUtil.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
     constructor(registryManager,pluginManager,factoryManager, eventBus) {
@@ -145,11 +146,11 @@ export default class ClientEventHandler extends BaseEventHandler {
     
     
 
-    editPlayerName(playerId) {
+    async editPlayerName(playerId) {
         const player = this.peer.ownedPlayers.find((p) => p.playerId === playerId);
         if (player) {
-            const newName = prompt('Enter new name:', player.nickname);
-            if (newName) {
+            const newName = await ModalUtil.prompt('Enter new name:', player.nickname, 'Edit Player Name');
+            if (newName && newName.trim() !== '') {
                 player.nickname = newName;
                 this.peer.conn.send({
                     type: 'nameChange',
@@ -160,8 +161,8 @@ export default class ClientEventHandler extends BaseEventHandler {
         }
     }
 
-    addNewOwnedPlayer() {
-        const newName = prompt('Enter a new player name:');
+    async addNewOwnedPlayer() {
+        const newName = await ModalUtil.prompt('Enter a new player name:', '', 'Add Player');
         if (newName && newName.trim() !== "") {
             this.peer.addNewOwnedPlayer(newName);
         }

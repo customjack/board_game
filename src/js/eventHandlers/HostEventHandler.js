@@ -3,6 +3,7 @@ import Host from '../networking/Host';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
 import ParticleAnimation from '../animations/ParticleAnimation.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
+import ModalUtil from '../utils/ModalUtil.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager,pluginManager,factoryManager, eventBus) {
@@ -231,21 +232,24 @@ export default class HostEventHandler extends BaseEventHandler {
     }
     
 
-    confirmAndKickPlayer(playerId) {
+    async confirmAndKickPlayer(playerId) {
         const player = this.peer.gameState.players.find((p) => p.playerId === playerId);
-        if (
-            player &&
-            confirm(`Are you sure you want to kick ${player.nickname}? This will disconnect all players associated with this player's client.`)
-        ) {
-            this.peer.kickPlayer(player.peerId);
+        if (player) {
+            const confirmed = await ModalUtil.confirm(
+                `Are you sure you want to kick ${player.nickname}? This will disconnect all players associated with this player's client.`,
+                'Kick Player'
+            );
+            if (confirmed) {
+                this.peer.kickPlayer(player.peerId);
+            }
         }
     }
 
-    editPlayerName(playerId) {
+    async editPlayerName(playerId) {
         const player = this.peer.ownedPlayers.find((p) => p.playerId === playerId);
         if (player) {
-            const newName = prompt('Enter new name:', player.nickname);
-            if (newName) {
+            const newName = await ModalUtil.prompt('Enter new name:', player.nickname, 'Edit Player Name');
+            if (newName && newName.trim() !== '') {
                 player.nickname = newName;
                 this.updateGameState();
                 this.peer.broadcastGameState();
@@ -253,12 +257,12 @@ export default class HostEventHandler extends BaseEventHandler {
         }
     }
 
-    removePlayer(playerId) {
+    async removePlayer(playerId) {
         const playerIndex = this.peer.ownedPlayers.findIndex((p) => p.playerId === playerId);
 
         if (playerIndex !== -1) {
             if (this.peer.ownedPlayers.length === 1) {
-                alert('You have removed your last player. Leaving the game.');
+                await ModalUtil.alert('You have removed your last player. Leaving the game.');
                 this.leaveGame();
             } else {
                 const removedPlayer = this.peer.ownedPlayers.splice(playerIndex, 1)[0];
@@ -269,12 +273,12 @@ export default class HostEventHandler extends BaseEventHandler {
                 this.updateAddPlayerButton();
             }
         } else {
-            alert('Player not found.');
+            await ModalUtil.alert('Player not found.');
         }
     }
 
-    addPlayer() {
-        const newName = prompt('Enter a new player name:');
+    async addPlayer() {
+        const newName = await ModalUtil.prompt('Enter a new player name:', '', 'Add Player');
         if (newName && newName.trim() !== "") {
             this.peer.addNewOwnedPlayer(newName.trim());
         }
