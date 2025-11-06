@@ -48,8 +48,8 @@ export default class UISystem {
         // Game log manager (still needed for now)
         this.gameLogManager = null;
 
-        // Current page context
-        this.currentPage = null;
+        // Current page context (default to lobby)
+        this.currentPage = 'lobby';
     }
 
     /**

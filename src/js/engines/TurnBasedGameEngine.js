@@ -13,6 +13,7 @@ import GamePhases from '../enums/GamePhases.js';
 import PlayerStates from '../enums/PlayerStates.js';
 import ActionTypes from '../enums/ActionTypes.js';
 import GameLogPopupController from '../controllers/GameLogPopupController.js';
+import { getVisibleElementById } from '../utils/helpers.js';
 
 export default class TurnBasedGameEngine extends BaseGameEngine {
     /**
@@ -22,6 +23,8 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      */
     constructor(dependencies, config = {}) {
         super(dependencies, config);
+
+        this.activeSpaceChoice = null;
 
         // Get factories from factoryManager
         const phaseStateMachineFactory = this.factoryManager.getFactory('PhaseStateMachineFactory');
@@ -62,6 +65,8 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             this.timer = this.uiSystem.getComponent('timer');
             this.remainingMoves = this.uiSystem.getComponent('remainingMoves');
             this.gameLog = this.uiSystem.getComponent('gameLog');
+            // Still need popup controller for the button
+            this.gameLogPopupController = new GameLogPopupController(this.eventBus);
         } else {
             // Legacy approach (backwards compatibility)
             this.uiController = uiControllerFactory.create(
@@ -228,6 +233,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             if (this.gameLog) {
                 this.gameLog.init();
             }
+            // Init popup controller for the button
+            if (this.gameLogPopupController) {
+                this.gameLogPopupController.init();
+            }
         } else {
             // Legacy approach
             this.uiController.init({
@@ -288,6 +297,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      * Clean up engine resources
      */
     cleanup() {
+        this.cleanupActiveSpaceChoice();
         if (this.uiSystem) {
             // UI components are managed by UISystem
         } else if (this.uiController) {
@@ -388,6 +398,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     }
 
     handleProcessingEvents() {
+        this.cleanupActiveSpaceChoice();
         // Close any open modals
         this.hideAllModals();
 
@@ -469,6 +480,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     }
 
     handleProcessingMove() {
+        this.cleanupActiveSpaceChoice();
         this.emitEvent('processingMove', { gameState: this.gameState });
 
         if (this.isClientTurn()) {
@@ -481,6 +493,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     }
 
     handleEndTurn() {
+        this.cleanupActiveSpaceChoice();
         console.log(`Ending turn for ${this.turnManager.getCurrentPlayer().nickname}.`);
         this.emitEvent('turnEnded', { gameState: this.gameState });
 
@@ -602,38 +615,90 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      * @param {Array} targetSpaces - Available spaces to move to
      */
     waitForChoice(currentPlayer, targetSpaces) {
-        // TODO: Implement board interaction in UISystem
-        // For now, use legacy uiController if available
         if (this.uiController) {
-            // Highlight possible target spaces
+            // Legacy UI controller path
             this.uiController.highlightSpaces(targetSpaces);
-
-            // Setup click handlers
-            const handlers = this.uiController.setupSpaceClickHandlers(targetSpaces, (selectedSpace) => {
-                // Move player to selected space
+            this.uiController.setupSpaceClickHandlers(targetSpaces, (selectedSpace) => {
                 this.gameState.movePlayer(selectedSpace.id);
                 console.log(`${currentPlayer.nickname} chose to move to space ${selectedSpace.id}`);
                 this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
                     type: 'movement',
                     metadata: { spaceId: selectedSpace.id, selected: true }
                 });
-
-                // Transition back to processing events
                 this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
             });
-        } else {
-            console.warn('Board interaction not yet implemented in UISystem - auto-selecting first space');
-            // Auto-select first space as fallback
-            if (targetSpaces.length > 0) {
-                const selectedSpace = targetSpaces[0];
-                this.gameState.movePlayer(selectedSpace.id);
-                this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
-                    type: 'movement',
-                    metadata: { spaceId: selectedSpace.id, selected: true }
-                });
-                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-            }
+            return;
         }
+
+        if (this.uiSystem) {
+            this.cleanupActiveSpaceChoice();
+
+            const handlers = new Map();
+            const uniqueSpaces = Array.from(new Map(targetSpaces.map(space => [space.id, space])).values());
+
+            uniqueSpaces.forEach(space => {
+                const spaceElement = getVisibleElementById(`space-${space.id}`);
+                if (!spaceElement) {
+                    console.warn(`No visible element found for space ${space.id}`);
+                    return;
+                }
+
+                spaceElement.classList.add('highlight');
+
+                const handler = () => {
+                    this.cleanupActiveSpaceChoice();
+                    this.gameState.movePlayer(space.id);
+                    console.log(`${currentPlayer.nickname} chose to move to space ${space.id}`);
+                    this.logPlayerAction(currentPlayer, `moved to ${space.name || space.id}.`, {
+                        type: 'movement',
+                        metadata: { spaceId: space.id, selected: true }
+                    });
+                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
+                };
+
+                spaceElement.addEventListener('click', handler);
+                handlers.set(space.id, { element: spaceElement, handler });
+            });
+
+            this.activeSpaceChoice = {
+                spaces: uniqueSpaces,
+                handlers
+            };
+            return;
+        }
+
+        console.warn('Board interaction not available - auto-selecting first space');
+        if (targetSpaces.length > 0) {
+            const selectedSpace = targetSpaces[0];
+            this.gameState.movePlayer(selectedSpace.id);
+            this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
+                type: 'movement',
+                metadata: { spaceId: selectedSpace.id, selected: true }
+            });
+            this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
+        }
+    }
+
+    cleanupActiveSpaceChoice() {
+        if (!this.activeSpaceChoice) {
+            return;
+        }
+
+        const { spaces = [], handlers = new Map() } = this.activeSpaceChoice;
+
+        spaces.forEach(space => {
+            const entry = handlers.get(space.id);
+            if (entry?.element && entry.handler) {
+                entry.element.removeEventListener('click', entry.handler);
+            }
+
+            const element = getVisibleElementById(`space-${space.id}`);
+            if (element) {
+                element.classList.remove('highlight');
+            }
+        });
+
+        this.activeSpaceChoice = null;
     }
 
     describeTriggeredEvent(event, space) {

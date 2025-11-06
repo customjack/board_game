@@ -62,6 +62,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
     setBoard(newBoard) {
         // Deep copy using toJSON/fromJSON
         this.board = Board.fromJSON(newBoard.toJSON());
+        this.updateRenderersFromBoard();
         this.emit('boardChanged', { board: this.board });
     }
 
@@ -126,6 +127,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
 
             // Create board object
             this.board = Board.fromJSON(boardData);
+            this.updateRenderersFromBoard();
             console.log('Board object created:', this.board);
 
             this.render();
@@ -163,6 +165,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
 
             // Create and set board
             this.board = Board.fromJSON(boardData);
+            this.updateRenderersFromBoard();
             this.render();
             this.emit('boardLoaded', { board: this.board, source: 'file' });
         } catch (error) {
@@ -208,34 +211,48 @@ export default class BoardCanvasComponent extends BaseUIComponent {
         // Clear existing content
         this.container.innerHTML = '';
 
-        // Create SVG canvas
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('id', 'boardSVG');
-        svg.setAttribute('width', '100%');
-        svg.setAttribute('height', '100%');
-        svg.setAttribute('viewBox', '0 0 800 600');
+        // Create HTML render surface so spaces remain interactive
+        const renderSurface = document.createElement('div');
+        renderSurface.classList.add('board-render-surface');
+        renderSurface.style.position = 'relative';
+        renderSurface.style.width = '100%';
+        renderSurface.style.height = '100%';
+        renderSurface.style.pointerEvents = 'auto';
+
+        this.container.appendChild(renderSurface);
 
         // Render connections first (so they appear behind spaces)
+        const drawnConnections = new Set();
         this.board.spaces.forEach(space => {
             space.connections.forEach(connection => {
-                const targetSpace = this.board.getSpace(connection.target);
-                if (targetSpace) {
-                    const connectionElement = this.connectionRenderer.render(
-                        space,
-                        targetSpace,
-                        connection
-                    );
-                    svg.appendChild(connectionElement);
+                if (connection.drawConnection === false) {
+                    return;
                 }
+
+                const targetSpace = connection.target || this.board.getSpace(connection.targetId);
+                if (!targetSpace) {
+                    return;
+                }
+
+                if (!ConnectionRenderer.shouldDrawConnection(space, targetSpace, drawnConnections)) {
+                    return;
+                }
+
+                const isBidirectional = ConnectionRenderer.isBidirectional(space, targetSpace);
+                this.connectionRenderer.render(
+                    space,
+                    targetSpace,
+                    renderSurface,
+                    isBidirectional
+                );
             });
         });
 
         // Render spaces - SpaceRenderer appends to container directly
         this.board.spaces.forEach(space => {
-            this.spaceRenderer.render(space, svg);
+            this.spaceRenderer.render(space, renderSurface, (clickedSpace) => this.handleSpaceClick(clickedSpace));
         });
 
-        this.container.appendChild(svg);
         this.emit('boardRendered', { spaceCount: this.board.spaces.length });
     }
 
@@ -245,6 +262,32 @@ export default class BoardCanvasComponent extends BaseUIComponent {
      */
     getBoard() {
         return this.board;
+    }
+
+    /**
+     * Update render configuration and helper renderers based on current board metadata
+     */
+    updateRenderersFromBoard() {
+        if (!this.board) {
+            return;
+        }
+
+        this.renderConfig = BoardRenderConfig.fromBoardMetadata(this.board.metadata);
+        this.connectionRenderer = new ConnectionRenderer(this.renderConfig);
+        this.spaceRenderer = new SpaceRenderer(this.renderConfig);
+    }
+
+    /**
+     * Handle general space clicks (logging/debugging)
+     * @param {Space} space - Clicked space
+     */
+    handleSpaceClick(space) {
+        if (!space) {
+            return;
+        }
+
+        console.log(`Space clicked: ${space.name || 'Unnamed'} (id: ${space.id}, type: ${space.type})`, space);
+        this.emit('spaceClicked', { space });
     }
 
     /**

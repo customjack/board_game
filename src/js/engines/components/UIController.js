@@ -1,3 +1,5 @@
+import { getVisibleElementById } from '../../utils/helpers.js';
+
 /**
  * UIController - Manages UI elements and their interactions
  *
@@ -357,7 +359,7 @@ export default class UIController {
      */
     highlightSpaces(spaces) {
         spaces.forEach(space => {
-            const spaceElement = document.getElementById(`space-${space.id}`);
+            const spaceElement = getVisibleElementById(`space-${space.id}`);
             if (spaceElement) {
                 spaceElement.classList.add('highlight');
             }
@@ -383,7 +385,7 @@ export default class UIController {
         const clickHandlers = new Map();
 
         spaces.forEach(space => {
-            const spaceElement = document.getElementById(`space-${space.id}`);
+            const spaceElement = getVisibleElementById(`space-${space.id}`);
             if (spaceElement) {
                 const handler = () => {
                     this.removeAllHighlights();
@@ -406,9 +408,13 @@ export default class UIController {
      */
     removeSpaceClickHandlers(spaces, clickHandlers) {
         spaces.forEach(space => {
-            const spaceElement = document.getElementById(`space-${space.id}`);
             const handler = clickHandlers.get(space.id);
-            if (spaceElement && handler) {
+            if (!handler) {
+                return;
+            }
+
+            const spaceElement = getVisibleElementById(`space-${space.id}`);
+            if (spaceElement) {
                 spaceElement.removeEventListener('click', handler);
             }
         });

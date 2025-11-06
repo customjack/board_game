@@ -11,6 +11,7 @@ import TimerManager from './managers/TimerManager';
 import TimerAnimation from '../animations/TimerAnimation';
 import PauseButtonManager from './managers/PauseButtonManager';
 import GameLogPopupController from './GameLogPopupController.js';
+import { getVisibleElementById } from '../utils/helpers.js';
 
 
 export default class GameEngine {
@@ -354,7 +355,7 @@ export default class GameEngine {
         this.gameState.board.highlightSpaces(targetSpaces);
 
         // Track handlers so they can be removed
-        const handlers = {};
+        const handlers = new Map();
 
         // Helper to create a unique handler for each space
         const createClickHandler = (space) => {
@@ -371,17 +372,26 @@ export default class GameEngine {
         
                 // Remove click listeners from all target spaces
                 targetSpaces.forEach(targetSpace => {
-                    const spaceElement = document.getElementById(`space-${targetSpace.id}`);
-                    spaceElement.removeEventListener('click', handlers[targetSpace.id]);
+                    const handlerEntry = handlers.get(targetSpace.id);
+                    if (handlerEntry?.element) {
+                        handlerEntry.element.removeEventListener('click', handlerEntry.handler);
+                    }
                 });
+
+                handlers.clear();
             };
         };
 
         // Add click listeners to target spaces
         targetSpaces.forEach(targetSpace => {
-            const spaceElement = document.getElementById(`space-${targetSpace.id}`);
+            const spaceElement = getVisibleElementById(`space-${targetSpace.id}`);
+            if (!spaceElement) {
+                console.warn(`No visible space element found for space ${targetSpace.id}`);
+                return;
+            }
+
             const handler = createClickHandler(targetSpace);
-            handlers[targetSpace.id] = handler; // Save handler reference for removal
+            handlers.set(targetSpace.id, { element: spaceElement, handler });
             spaceElement.addEventListener('click', handler);
         });
     }

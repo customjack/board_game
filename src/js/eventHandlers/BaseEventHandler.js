@@ -107,14 +107,16 @@ export default class BaseEventHandler {
             this.eventBus.emit('settingsUpdated', { gamestate: gameState });
         }
 
-        // Update pieces
-        if (forceUpdate || this.pieceManager.shouldUpdatePieces(gameState.players)) {
-            this.pieceManager.updatePieces(gameState);
+        const shouldRefreshPieces = forceUpdate || this.pieceManager.shouldUpdatePieces(gameState.players);
+
+        // Update UI components through UISystem before manipulating DOM-dependent managers
+        this.uiSystem.updateFromGameState(gameState);
+
+        // Always refresh pieces after the board has been rendered so DOM stays in sync
+        this.pieceManager.updatePieces(gameState);
+        if (shouldRefreshPieces) {
             this.eventBus.emit('piecesUpdated', { gamestate: gameState });
         }
-
-        // Update UI components through UISystem
-        this.uiSystem.updateFromGameState(gameState);
 
         // Add player list listeners after update
         this.addPlayerListListeners();

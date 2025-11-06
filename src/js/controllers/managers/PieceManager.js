@@ -1,5 +1,6 @@
 import Piece from '../../models/Piece';
 import Player from '../../models/Player';
+import { getVisibleElementById } from '../../utils/helpers.js';
 
 export default class PieceManager {
     constructor() {
@@ -149,11 +150,11 @@ export default class PieceManager {
     renderAllPieces(playersPerSpace) {
         this.pieces.forEach(piece => {
             const spaceId = piece.player.currentSpaceId;
-            const spaceElement = document.getElementById(`space-${spaceId}`);  // Get space element from the DOM
+            const spaceElement = getVisibleElementById(`space-${spaceId}`);
 
             if (spaceElement) {
                 // Get the list of playerIds on this space
-                const playersOnSpace = playersPerSpace[spaceId];
+                const playersOnSpace = playersPerSpace[spaceId] || [];
                 const totalPiecesAtSpace = playersOnSpace.length;
                 const indexAtSpace = playersOnSpace.indexOf(piece.player.playerId);  // Get the index of this player at the space
 

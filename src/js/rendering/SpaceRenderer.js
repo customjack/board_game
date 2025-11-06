@@ -1,3 +1,5 @@
+import { getVisibleElementById } from '../utils/helpers.js';
+
 /**
  * SpaceRenderer - Handles rendering of board spaces
  *
@@ -97,6 +99,6 @@ export default class SpaceRenderer {
      * @returns {HTMLElement|null} Space element or null if not found
      */
     static getSpaceElement(spaceId) {
-        return document.getElementById(`space-${spaceId}`);
+        return getVisibleElementById(`space-${spaceId}`);
     }
 }

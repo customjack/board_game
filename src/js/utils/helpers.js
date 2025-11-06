@@ -174,3 +174,55 @@ export function processStringToEnum(str) {
 export function generateRandomSeed() {
     return Math.random().toString(36).slice(2, 11);
 }
+
+/**
+ * Determine whether an element is visible to the user.
+ * @param {HTMLElement} element - Element to check.
+ * @returns {boolean} True if the element is visible on screen.
+ */
+function isElementVisible(element) {
+    if (!element) return false;
+
+    if (typeof window === 'undefined' || typeof window.getComputedStyle !== 'function') {
+        return true;
+    }
+
+    if (element.getClientRects().length === 0) {
+        return false;
+    }
+
+    const style = window.getComputedStyle(element);
+    if (!style) {
+        return true;
+    }
+
+    if (style.visibility === 'hidden' || style.display === 'none') {
+        return false;
+    }
+
+    const opacity = parseFloat(style.opacity);
+    return !Number.isNaN(opacity) ? opacity > 0 : true;
+}
+
+/**
+ * Get the first visible element for a given ID, falling back to the first match.
+ * Handles scenarios where multiple elements share the same ID (e.g. lobby/game boards).
+ * @param {string} id - Element ID to search for.
+ * @returns {HTMLElement|null} The visible element if found, otherwise the first match or null.
+ */
+export function getVisibleElementById(id) {
+    if (!id) return null;
+
+    const candidates = document.querySelectorAll(`[id="${id}"]`);
+    if (candidates.length === 0) {
+        return null;
+    }
+
+    for (const element of candidates) {
+        if (isElementVisible(element)) {
+            return element;
+        }
+    }
+
+    return candidates[0];
+}

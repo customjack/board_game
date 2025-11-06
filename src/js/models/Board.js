@@ -1,4 +1,5 @@
 import Space from './Space';
+import { getVisibleElementById } from '../utils/helpers.js';
 
 export default class Board {
     constructor(spaces = [], metadata = {}) {
@@ -31,7 +32,7 @@ export default class Board {
     // Highlight specific spaces
     highlightSpaces(spaces) {
         spaces.forEach(space => {
-            const spaceElement = document.getElementById(`space-${space.id}`);
+            const spaceElement = getVisibleElementById(`space-${space.id}`);
             if (spaceElement) {
                 spaceElement.classList.add('highlight');
             }
@@ -41,7 +42,7 @@ export default class Board {
     // Remove highlight from all spaces
     removeHighlightFromSpaces(spaces) {
         spaces.forEach(space => {
-            const spaceElement = document.getElementById(`space-${space.id}`);
+            const spaceElement = getVisibleElementById(`space-${space.id}`);
             if (spaceElement) {
                 spaceElement.classList.remove('highlight');
             }
