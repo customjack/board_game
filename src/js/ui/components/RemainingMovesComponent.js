@@ -51,7 +51,7 @@ export default class RemainingMovesComponent extends BaseUIComponent {
         this.updateMoves(moves);
 
         // Show/hide based on game state
-        if (gameState.gameStarted && !gameState.gameEnded) {
+        if (gameState.isGameStarted() && !gameState.isGameEnded()) {
             this.show();
         } else {
             this.hide();
