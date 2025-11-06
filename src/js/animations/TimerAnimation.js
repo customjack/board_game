@@ -137,8 +137,6 @@ export default class TimerAnimation extends Animation {
     }
 
     updateTimerDisplay() {
-        console.log("Updating timer display with remaining time:", this.remainingTime);
-        console.log("Current duration:", this.duration);
         if (this.duration === "infinity") {
             this.timerText.textContent = '∞';
             this.progressRing.style.opacity = '1';

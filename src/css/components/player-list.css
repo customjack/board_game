@@ -85,6 +85,14 @@
   margin-bottom: calc(var(--spacing-unit) * 1); /* Add spacing between items */
 }
 
+/* Game player list - scrollable with flex */
+#gamePlayerList {
+  flex: 1; /* Take available space in flex container */
+  overflow-y: auto; /* Scroll when content exceeds height */
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  min-height: 0; /* Allow flex shrinking */
+}
+
 /* Badges */
 .host-badge,
 .you-badge {

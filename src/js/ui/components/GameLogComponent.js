@@ -21,6 +21,7 @@ export default class GameLogComponent extends BaseUIComponent {
         this.gameLogManager = config.gameLogManager || null;
         this.header = null;
         this.closeButton = null;
+        this.openButton = null;
         this.logContainer = null;
 
         // Drag state
@@ -37,6 +38,7 @@ export default class GameLogComponent extends BaseUIComponent {
         this.drag = this.drag.bind(this);
         this.dragEnd = this.dragEnd.bind(this);
         this.handleClose = this.handleClose.bind(this);
+        this.handleOpen = this.handleOpen.bind(this);
     }
 
     /**
@@ -53,6 +55,7 @@ export default class GameLogComponent extends BaseUIComponent {
         // Get sub-elements
         this.header = this.getElement('gameLogPopupHeader');
         this.closeButton = this.getElement('closeGameLogButton');
+        this.openButton = this.getElement('openGameLogButton');
         this.logContainer = this.getElement('gameLogContainer');
 
         // Setup drag functionality
@@ -64,6 +67,11 @@ export default class GameLogComponent extends BaseUIComponent {
         // Setup close button
         if (this.closeButton) {
             this.addEventListener(this.closeButton, 'click', this.handleClose);
+        }
+
+        // Setup open button
+        if (this.openButton) {
+            this.addEventListener(this.openButton, 'click', this.handleOpen);
         }
 
         // Hide by default
@@ -140,7 +148,15 @@ export default class GameLogComponent extends BaseUIComponent {
      * @param {HTMLElement} el - Element to transform
      */
     setTranslate(xPos, yPos, el) {
-        el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
+        el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+    }
+
+    /**
+     * Handle open button click
+     */
+    handleOpen() {
+        this.show();
+        this.emit('gameLogOpened');
     }
 
     /**
@@ -172,27 +188,28 @@ export default class GameLogComponent extends BaseUIComponent {
         // Clear existing entries
         this.logContainer.innerHTML = '';
 
-        // Get entries from game log manager
+        // Get entries from game log manager and reverse (newest first)
         const entries = this.gameLogManager.getEntries();
+        const reversedEntries = entries.slice().reverse();
 
         // Render each entry
-        entries.forEach(entry => {
+        reversedEntries.forEach(entry => {
             const entryHtml = this.gameLogManager.formatEntryHtml(entry);
             const entryElement = document.createElement('div');
             entryElement.innerHTML = entryHtml;
             this.logContainer.appendChild(entryElement.firstChild);
         });
 
-        // Scroll to bottom
-        this.scrollToBottom();
+        // Scroll to top (newest entries)
+        this.scrollToTop();
     }
 
     /**
-     * Scroll log to bottom
+     * Scroll log to top (where newest entries are)
      */
-    scrollToBottom() {
+    scrollToTop() {
         if (this.logContainer) {
-            this.logContainer.scrollTop = this.logContainer.scrollHeight;
+            this.logContainer.scrollTop = 0;
         }
     }
 
@@ -234,7 +251,7 @@ export default class GameLogComponent extends BaseUIComponent {
         this.currentX = 0;
         this.currentY = 0;
         if (this.container) {
-            this.container.style.transform = 'translate(-50%, -50%)';
+            this.container.style.transform = '';
         }
     }
 

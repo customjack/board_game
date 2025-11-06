@@ -69,7 +69,8 @@ export default class ClientEventHandler extends BaseEventHandler {
             registryManager: this.registryManager,
             factoryManager: this.factoryManager,
             isHost: false,
-            uiSystem: this.uiSystem
+            uiSystem: this.uiSystem,
+            gameLogManager: this.uiSystem.gameLogManager
         });
 
         this.showLobbyPage();

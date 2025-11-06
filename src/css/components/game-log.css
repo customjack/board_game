@@ -15,9 +15,11 @@
     border-radius: 0.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 1000;
+    /* Center using margins instead of transform so resize works from bottom-right */
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    margin-top: -200px; /* Half of initial height */
+    margin-left: -160px; /* Half of initial width */
     resize: both;
     overflow: hidden;
 }

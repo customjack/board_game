@@ -161,7 +161,8 @@ export default class HostEventHandler extends BaseEventHandler {
             registryManager: this.registryManager,
             factoryManager: this.factoryManager,
             isHost: true,
-            uiSystem: this.uiSystem
+            uiSystem: this.uiSystem,
+            gameLogManager: this.uiSystem.gameLogManager
         });
 
         this.showPage("lobbyPage");

@@ -6,6 +6,7 @@ import GameState from '../models/GameState'
 import GamePhases from '../enums/GamePhases';
 import StateDelta from '../utils/StateDelta';
 import InputValidator from '../utils/InputValidator';
+import ModalUtil from '../utils/ModalUtil.js';
 
 export default class Host extends BasePeer {
     constructor(originalName, eventHandler) {
@@ -89,6 +90,9 @@ export default class Host extends BasePeer {
         const newGameStateJSON = newGameState.toJSON();
         this.gameState = GameState.fromJSON(newGameStateJSON, this.eventHandler.factoryManager);
 
+        // Refresh ownedPlayers to reference new Player objects
+        this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
+
         this.broadcastGameState();
         this.eventHandler.updateGameState();
     }
@@ -140,6 +144,10 @@ export default class Host extends BasePeer {
             // Broadcast the new game state and do work to update on the client side
             // All clients should also do their work to update client side
             this.gameState = proposedGameState;
+
+            // Refresh ownedPlayers to reference new Player objects
+            this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
+
             this.broadcastGameState();
             this.eventHandler.updateGameState();
         } else {
@@ -382,16 +390,16 @@ export default class Host extends BasePeer {
         }
     }
 
-    addNewOwnedPlayer(playerName) {
+    async addNewOwnedPlayer(playerName) {
         const totalPlayers = this.gameState.players.length;
         if (totalPlayers >= this.gameState.settings.playerLimit) {
-            alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimit} players has been reached.`);
+            await ModalUtil.alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimit} players has been reached.`);
             return;
         }
 
         const totalOwnedPlayers = this.ownedPlayers.length;
         if (totalOwnedPlayers >= this.gameState.settings.playerLimitPerPeer) {
-            alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimitPerPeer} players for this peer has been reached.`);
+            await ModalUtil.alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimitPerPeer} players for this peer has been reached.`);
             return;
         }
 

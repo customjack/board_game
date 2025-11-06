@@ -51,6 +51,23 @@
   }
 }
 
+/* Game Sidebar */
+.game-sidebar {
+  background-color: var(--background-sidebar);
+  width: 250px;
+  padding: calc(var(--spacing-unit) * 2);
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .game-sidebar {
+    width: 100%;
+  }
+}
+
 /* Board Container */
 .board-container {
   position: relative;

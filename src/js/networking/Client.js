@@ -4,6 +4,7 @@ import BasePeer from './BasePeer';
 import Player from '../models/Player';
 import GameState from '../models/GameState';
 import StateDelta from '../utils/StateDelta';
+import ModalUtil from '../utils/ModalUtil.js';
 
 export default class Client extends BasePeer {
     constructor(originalName, hostId, eventHandler) {
@@ -42,16 +43,16 @@ export default class Client extends BasePeer {
         this.conn.on('error', (err) => this.handleConnectionError(err));
     }
 
-    addNewOwnedPlayer(playerName) {
+    async addNewOwnedPlayer(playerName) {
         const totalPlayers = this.gameState.players.length;
         if (totalPlayers >= this.gameState.settings.playerLimit) {
-            alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimit} players has been reached.`);
+            await ModalUtil.alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimit} players has been reached.`);
             return;
         }
 
         const totalOwnedPlayers = this.ownedPlayers.length;
         if (totalOwnedPlayers >= this.gameState.settings.playerLimitPerPeer) {
-            alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimitPerPeer} players for this peer has been reached.`);
+            await ModalUtil.alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimitPerPeer} players for this peer has been reached.`);
             return;
         }
 
@@ -130,6 +131,10 @@ export default class Client extends BasePeer {
 
     handleConnectionPackage(gameStateData) {
         this.gameState = GameState.fromJSON(gameStateData, this.eventHandler.factoryManager);  // Sync local game state with the host's state
+
+        // Refresh ownedPlayers to reference new Player objects
+        this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
+
         console.log('Game state updated:', this.gameState);
         if(this.gameState.isGameStarted()) {
             this.eventHandler.showGamePage();
@@ -140,6 +145,10 @@ export default class Client extends BasePeer {
 
     handleGameStateUpdate(gameStateData) {
         this.gameState = GameState.fromJSON(gameStateData, this.eventHandler.factoryManager);  // Sync local game state with the host's state
+
+        // Refresh ownedPlayers to reference new Player objects
+        this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
+
         //console.log('Game state updated:', gameStateData);
         this.eventHandler.updateGameState();
     }
@@ -162,6 +171,9 @@ export default class Client extends BasePeer {
             // Reconstruct GameState from the updated JSON
             this.gameState = GameState.fromJSON(updatedStateJSON, this.eventHandler.factoryManager);
 
+            // Refresh ownedPlayers to reference new Player objects
+            this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
+
             console.log(`Delta applied successfully. Version: ${this.gameState.getVersion()}`);
             this.eventHandler.updateGameState();
         } catch (error) {
@@ -183,13 +195,13 @@ export default class Client extends BasePeer {
         }
     }
 
-    handleKick() {
-        alert('You have been kicked from the game.');
+    async handleKick() {
+        await ModalUtil.alert('You have been kicked from the game.');
         location.reload();
     }
 
-    handleJoinRejected(reason) {
-        alert(`Join request rejected: ${reason}`);
+    async handleJoinRejected(reason) {
+        await ModalUtil.alert(`Join request rejected: ${reason}`);
         location.reload();
     }
 
@@ -197,20 +209,20 @@ export default class Client extends BasePeer {
         this.eventHandler.showGamePage();
     }
 
-    handleDisconnection() {
+    async handleDisconnection() {
         this.stopHeartbeat();
-        alert('Disconnected from the host.');
+        await ModalUtil.alert('Disconnected from the host.');
         location.reload();
     }
 
-    handleConnectionError(err) {
+    async handleConnectionError(err) {
         this.stopHeartbeat();
-        alert('Connection error: ' + err);
+        await ModalUtil.alert('Connection error: ' + err);
         location.reload();
     }
 
-    handleAddPlayerRejected(reason) {
-        alert(reason);
+    async handleAddPlayerRejected(reason) {
+        await ModalUtil.alert(reason);
     }
 
     startHeartbeat() {

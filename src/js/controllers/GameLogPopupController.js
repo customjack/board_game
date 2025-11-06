@@ -41,6 +41,12 @@ export default class GameLogPopupController {
         this.header = document.getElementById(this.config.headerId);
 
         if (!this.popup || !this.openButton || !this.closeButton || !this.header) {
+            console.warn('GameLogPopupController: Missing elements', {
+                popup: !!this.popup,
+                openButton: !!this.openButton,
+                closeButton: !!this.closeButton,
+                header: !!this.header
+            });
             return;
         }
 
@@ -53,7 +59,11 @@ export default class GameLogPopupController {
 
         this.eventBus?.on('pageChanged', this.onPageChanged);
 
-        this.applyPageVisibility(false);
+        // Check if we're already on the game page
+        const gamePage = document.getElementById('gamePage');
+        const isGamePageVisible = gamePage && gamePage.style.display !== 'none';
+
+        this.applyPageVisibility(isGamePageVisible);
         this.close(false);
     }
 
@@ -82,7 +92,7 @@ export default class GameLogPopupController {
     applyPageVisibility(visible) {
         this.pageVisible = visible;
         if (this.openButton) {
-            this.openButton.style.display = visible ? '' : 'none';
+            this.openButton.style.display = visible ? 'block' : 'none';
         }
     }
 
@@ -162,6 +172,6 @@ export default class GameLogPopupController {
 
     setTranslate(xPos, yPos, el) {
         if (!el) return;
-        el.style.transform = `translate(calc(-50% + ${xPos}px), calc(-50% + ${yPos}px))`;
+        el.style.transform = `translate(${xPos}px, ${yPos}px)`;
     }
 }
