@@ -5,13 +5,13 @@
  * click handling, and animation coordination
  */
 import BaseUIComponent from '../BaseUIComponent.js';
-import { getPersonalSettings } from '../../app.js';
 
 export default class RollButtonComponent extends BaseUIComponent {
     /**
      * Create a roll button component
      * @param {Object} config - Component configuration
      * @param {FactoryManager} config.factoryManager - Factory manager for creating animations
+     * @param {PersonalSettings} config.personalSettings - Personal settings for animation selection
      */
     constructor(config = {}) {
         super({
@@ -21,6 +21,7 @@ export default class RollButtonComponent extends BaseUIComponent {
         });
 
         this.factoryManager = config.factoryManager || null;
+        this.personalSettings = config.personalSettings || null;
         this.onRollDiceCallback = null;
         this.onRollCompleteCallback = null;
         this.active = false;
@@ -122,8 +123,7 @@ export default class RollButtonComponent extends BaseUIComponent {
         }
 
         // Get selected animation type from personal settings
-        const personalSettings = getPersonalSettings();
-        const animationType = personalSettings?.getRollAnimation() || 'dice-roll';
+        const animationType = this.personalSettings?.getRollAnimation() || 'dice-roll';
 
         console.log(`[RollButtonComponent] Creating animation: ${animationType}`);
 

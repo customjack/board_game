@@ -1,7 +1,6 @@
 import BaseEventHandler from './BaseEventHandler.js';
 import Client from '../networking/Client.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
-import ParticleAnimation from '../animations/ParticleAnimation.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
 import ModalUtil from '../utils/ModalUtil.js';
 import UIBinder from './UIBinder.js';
@@ -11,8 +10,8 @@ import LoadingProgressTracker, { LOADING_STAGES } from '../utils/LoadingProgress
 import LoadingBar from '../ui/LoadingBar.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
-    constructor(registryManager, pluginManager, factoryManager, eventBus) {
-        super(false, registryManager, pluginManager, factoryManager, eventBus);
+    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
+        super(false, registryManager, pluginManager, factoryManager, eventBus, personalSettings);
 
         // Initialize UI systems
         this.uiBinder = new UIBinder(CLIENT_UI_BINDINGS);
@@ -99,16 +98,10 @@ export default class ClientEventHandler extends BaseEventHandler {
 
         // Create animations for UI components
         const animStart = performance.now();
-        const particleAnimation = new ParticleAnimation();
         const timerAnimation = new TimerAnimation(false);
         console.log(`[Performance] Animations created in ${(performance.now() - animStart).toFixed(0)}ms`);
 
         // Configure UI components
-        const rollButton = this.uiSystem.getComponent('rollButton');
-        if (rollButton) {
-            rollButton.setAnimation(particleAnimation);
-        }
-
         const timer = this.uiSystem.getComponent('timer');
         if (timer) {
             timer.animation = timerAnimation;

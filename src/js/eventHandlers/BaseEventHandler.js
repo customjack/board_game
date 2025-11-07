@@ -4,13 +4,14 @@ import SettingsManager from '../controllers/managers/SettingsManager';
 import ModalUtil from '../utils/ModalUtil.js';
 
 export default class BaseEventHandler {
-    constructor(isHost, registryManager, pluginManager, factoryManager, eventBus) {
+    constructor(isHost, registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
         this.registryManager = registryManager;
         this.pageRegistry = registryManager.getPageRegistry();
         this.listenerRegistry = registryManager.getListenerRegistry();
         this.pluginManager = pluginManager;
         this.factoryManager = factoryManager;
         this.eventBus = eventBus;
+        this.personalSettings = personalSettings;
         this.isHost = isHost;
 
         this.inviteCode = document.getElementById('inviteCode');
@@ -38,6 +39,7 @@ export default class BaseEventHandler {
         this.uiSystem = new UISystem({
             eventBus: this.eventBus,
             factoryManager: this.factoryManager,
+            personalSettings: this.personalSettings,
             isHost: this.isHost,
             peerId: peerId,
             hostPeerId: hostPeerId

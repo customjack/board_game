@@ -19,6 +19,7 @@ export default class UISystem {
      * @param {Object} config - Configuration
      * @param {EventBus} config.eventBus - Event bus instance
      * @param {FactoryManager} config.factoryManager - Factory manager for plugin extensibility
+     * @param {PersonalSettings} config.personalSettings - Personal settings instance
      * @param {boolean} config.isHost - Whether current user is host
      * @param {string} config.peerId - Current user's peer ID
      * @param {string} config.hostPeerId - Host's peer ID
@@ -26,6 +27,7 @@ export default class UISystem {
     constructor(config = {}) {
         this.eventBus = config.eventBus;
         this.factoryManager = config.factoryManager;
+        this.personalSettings = config.personalSettings;
         this.isHost = config.isHost || false;
         this.peerId = config.peerId || null;
         this.hostPeerId = config.hostPeerId || null;
@@ -132,11 +134,13 @@ export default class UISystem {
         this.components.rollButton = uiComponentFactory
             ? uiComponentFactory.create('RollButtonComponent', {
                 eventBus: this.eventBus,
-                factoryManager: this.factoryManager
+                factoryManager: this.factoryManager,
+                personalSettings: this.personalSettings
             })
             : new RollButtonComponent({
                 eventBus: this.eventBus,
-                factoryManager: this.factoryManager
+                factoryManager: this.factoryManager,
+                personalSettings: this.personalSettings
             });
 
         // Create timer component

@@ -22,22 +22,11 @@ import AnimationFactory from './factories/AnimationFactory';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
 
-// Global personal settings instance
-let globalPersonalSettings = null;
-
-/**
- * Get the global personal settings instance
- * @returns {PersonalSettings} Personal settings instance
- */
-export function getPersonalSettings() {
-    return globalPersonalSettings;
-}
-
 // Initialize personal settings
 function initializePersonalSettings(factoryManager) {
-    globalPersonalSettings = new PersonalSettings();
-    const personalSettingsMenu = new PersonalSettingsMenu('settingsModal', globalPersonalSettings, factoryManager);
-    return { personalSettings: globalPersonalSettings, personalSettingsMenu };
+    const personalSettings = new PersonalSettings();
+    const personalSettingsMenu = new PersonalSettingsMenu('settingsModal', personalSettings, factoryManager);
+    return { personalSettings, personalSettingsMenu };
 }
 
 // Initialize registries and registry manager
@@ -141,6 +130,7 @@ function registerListeners(
     listenerRegistry,
     windowListenerRegistry,
     personalSettingsMenu,
+    personalSettings,
     registryManager,
     pluginManager,
     factoryManager,
@@ -155,7 +145,8 @@ function registerListeners(
             registryManager,
             pluginManager,
             factoryManager,
-            eventBus
+            eventBus,
+            personalSettings
         );
         hostEventHandler.init();
     });
@@ -169,7 +160,8 @@ function registerListeners(
             registryManager,
             pluginManager,
             factoryManager,
-            eventBus
+            eventBus,
+            personalSettings
         );
         clientEventHandler.init();
     });
@@ -196,7 +188,7 @@ function initializeApp() {
     const factoryManager = initializeFactories();
 
     // Personal settings
-    const { personalSettingsMenu } = initializePersonalSettings(factoryManager);
+    const { personalSettings, personalSettingsMenu } = initializePersonalSettings(factoryManager);
 
     // Registries and manager
     const { registryManager, pageRegistry, listenerRegistry, windowListenerRegistry, placeholderRegistry } =
@@ -215,6 +207,7 @@ function initializeApp() {
         listenerRegistry,
         windowListenerRegistry,
         personalSettingsMenu,
+        personalSettings,
         registryManager,
         pluginManager,
         factoryManager,
