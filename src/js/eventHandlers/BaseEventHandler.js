@@ -132,13 +132,39 @@ export default class BaseEventHandler {
     updateAddPlayerButton() {
         const addPlayerButton = document.getElementById('addPlayerButton');
 
+        // Early return if button doesn't exist
+        if (!addPlayerButton) return;
+
         const gameState = this.peer?.gameState;
         const playerLimitPerPeer = gameState?.settings?.playerLimitPerPeer;
         const totalPlayerLimit = gameState?.settings?.playerLimit;
         const ownedPlayers = this.peer?.ownedPlayers;
         const allPlayers = gameState?.players;
 
-        if (ownedPlayers.length < playerLimitPerPeer && allPlayers.length < totalPlayerLimit) {
+        // Check all required data exists and has valid values
+        if (!ownedPlayers || !allPlayers ||
+            playerLimitPerPeer === undefined || playerLimitPerPeer === null ||
+            totalPlayerLimit === undefined || totalPlayerLimit === null) {
+            console.log('[AddPlayerButton] Hiding - missing data:', {
+                hasOwnedPlayers: !!ownedPlayers,
+                hasAllPlayers: !!allPlayers,
+                playerLimitPerPeer,
+                totalPlayerLimit
+            });
+            addPlayerButton.style.display = 'none';
+            return;
+        }
+
+        // Show button only if both limits allow adding more players
+        const shouldShow = ownedPlayers.length < playerLimitPerPeer && allPlayers.length < totalPlayerLimit;
+        console.log('[AddPlayerButton]', shouldShow ? 'Showing' : 'Hiding', {
+            ownedPlayersCount: ownedPlayers.length,
+            playerLimitPerPeer,
+            allPlayersCount: allPlayers.length,
+            totalPlayerLimit
+        });
+
+        if (shouldShow) {
             addPlayerButton.style.display = 'block';
         } else {
             addPlayerButton.style.display = 'none';

@@ -95,8 +95,14 @@ export default class Host extends BasePeer {
         conn.supportsDelta = true;
 
         this.connections.push(conn);
-        // Send a one-time connection package (always full state)
-        this.sendConnectionPackage(conn);
+
+        // Wait for connection to be fully open before sending data
+        conn.on('open', () => {
+            console.log(`Connection with ${conn.peer} is now open`);
+            // Send a one-time connection package (always full state)
+            this.sendConnectionPackage(conn);
+        });
+
         conn.on('data', (data) => this.handleData(conn, data));
         conn.on('close', () => this.handleDisconnection(conn.peer));
 

@@ -68,10 +68,27 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         const peer = this.getPeer();
         const factoryManager = this.getFactoryManager();
 
+        // Store current owned players before updating game state
+        const previousOwnedPlayers = peer.ownedPlayers || [];
+
         peer.gameState = GameState.fromJSON(message.gameState, factoryManager);
-        peer.ownedPlayers = peer.gameState.getPlayersByPeerId(peer.peer.id);
+
+        // Try to get owned players from the new game state
+        const ownedPlayersFromState = peer.gameState.getPlayersByPeerId(peer.peer.id);
 
         console.log('Game state updated from connection package');
+        console.log(`[ConnectionPackage] Owned players: ${previousOwnedPlayers.length} -> ${ownedPlayersFromState.length}`);
+
+        // If we had local players but the new game state doesn't include them,
+        // it means our JOIN request hasn't been processed yet. Keep the previous references.
+        // They will be properly updated when the host sends GAME_STATE after processing JOIN.
+        if (previousOwnedPlayers.length > 0 && ownedPlayersFromState.length === 0) {
+            console.log('[ConnectionPackage] Preserving local player references (JOIN not processed yet)');
+            peer.ownedPlayers = previousOwnedPlayers;
+        } else {
+            // Normal case: update owned players from game state
+            peer.ownedPlayers = ownedPlayersFromState;
+        }
 
         if (peer.gameState.isGameStarted()) {
             peer.eventHandler.showGamePage();

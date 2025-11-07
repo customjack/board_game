@@ -19,6 +19,8 @@
 @import 'components/toggle-switch.css';
 @import 'components/game-timer.css';
 @import 'components/game-log.css';
+@import 'components/loading-bar.css';
+@import 'components/board-controls.css';
 
 @import 'animations.css';
 

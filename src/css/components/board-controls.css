@@ -1,0 +1,102 @@
+/* Board Camera Controls */
+
+.board-controls {
+    position: absolute;
+    top: calc(var(--spacing-unit) * 2);
+    right: calc(var(--spacing-unit) * 2);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.5);
+    z-index: 100;
+}
+
+.board-control-btn {
+    background: var(--background-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.board-control-btn:hover {
+    background: var(--primary-color);
+    color: var(--button-text-color);
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.board-control-btn:active {
+    transform: scale(0.95);
+}
+
+.board-control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.board-control-btn.recenter {
+    font-size: 1rem;
+}
+
+/* Zoom level indicator */
+.board-zoom-indicator {
+    position: absolute;
+    top: calc(var(--spacing-unit) * 2);
+    left: calc(var(--spacing-unit) * 2);
+    background: var(--background-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1);
+    font-size: 0.85rem;
+    color: var(--label-color);
+    font-family: monospace;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+}
+
+/* Panning hint */
+.board-pan-hint {
+    position: absolute;
+    bottom: calc(var(--spacing-unit) * 2);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--background-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1.5);
+    font-size: 0.85rem;
+    color: var(--label-color);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.board-pan-hint.show {
+    opacity: 1;
+}
+
+/* Canvas cursor states */
+.board-canvas {
+    cursor: default;
+}
+
+.board-canvas.panning {
+    cursor: grabbing;
+}
+
+.board-canvas.can-pan {
+    cursor: grab;
+}

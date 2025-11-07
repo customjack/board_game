@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeerJS Connection Test</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+        }
+        .error { color: #ff0000; border-color: #ff0000; }
+        .success { color: #00ff00; border-color: #00ff00; }
+        .warning { color: #ffaa00; border-color: #ffaa00; }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #00cc00; }
+        .log {
+            background: #000;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>PeerJS Connection Speed Test</h1>
+    <p>This isolated test will verify if PeerJS cloud servers are the bottleneck.</p>
+
+    <button onclick="testDefaultServer()">Test Default Cloud Server</button>
+    <button onclick="testCustomSTUN()">Test with Custom STUN</button>
+    <button onclick="clearLog()">Clear Log</button>
+
+    <div id="status" class="status">Ready to test...</div>
+    <div class="log" id="log"></div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script>
+        let testPeer = null;
+        let startTime = 0;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = startTime ? `[+${(performance.now() - startTime).toFixed(0)}ms]` : '[0ms]';
+            const color = type === 'error' ? '#ff0000' : type === 'success' ? '#00ff00' : type === 'warning' ? '#ffaa00' : '#aaa';
+            logDiv.innerHTML += `<div style="color: ${color}">${time} ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function cleanup() {
+            if (testPeer) {
+                testPeer.destroy();
+                testPeer = null;
+            }
+        }
+
+        async function testDefaultServer() {
+            cleanup();
+            clearLog();
+
+            log('=== Testing DEFAULT PeerJS Cloud Server ===');
+            log('Configuration: No config (uses cloud.peerjs.com)');
+
+            startTime = performance.now();
+            updateStatus('Connecting to default cloud server...', 'warning');
+
+            try {
+                testPeer = new Peer();
+
+                // Set timeout warning
+                const warningTimeout = setTimeout(() => {
+                    const elapsed = performance.now() - startTime;
+                    log(`⚠️ WARNING: Connection taking unusually long (${elapsed.toFixed(0)}ms)`, 'warning');
+                    updateStatus(`Still connecting... ${elapsed.toFixed(0)}ms elapsed`, 'warning');
+                }, 5000);
+
+                // Set error timeout
+                const errorTimeout = setTimeout(() => {
+                    const elapsed = performance.now() - startTime;
+                    log(`❌ ERROR: Connection timeout (${elapsed.toFixed(0)}ms)`, 'error');
+                    updateStatus(`Connection timeout after ${elapsed.toFixed(0)}ms`, 'error');
+                    cleanup();
+                }, 30000);
+
+                testPeer.on('open', (id) => {
+                    clearTimeout(warningTimeout);
+                    clearTimeout(errorTimeout);
+                    const elapsed = performance.now() - startTime;
+
+                    let verdict = '';
+                    if (elapsed < 1000) verdict = '✓ EXCELLENT';
+                    else if (elapsed < 3000) verdict = '✓ GOOD';
+                    else if (elapsed < 5000) verdict = '⚠️ SLOW';
+                    else if (elapsed < 30000) verdict = '⚠️ VERY SLOW';
+                    else verdict = '❌ UNACCEPTABLE';
+
+                    log(`${verdict} - Connected in ${elapsed.toFixed(0)}ms`, elapsed < 5000 ? 'success' : 'warning');
+                    log(`Peer ID: ${id}`);
+                    updateStatus(`Connected in ${elapsed.toFixed(0)}ms - ${verdict}`, elapsed < 5000 ? 'success' : 'warning');
+
+                    if (elapsed > 5000) {
+                        log('', 'warning');
+                        log('DIAGNOSIS: PeerJS cloud server is SLOW.', 'warning');
+                        log('SOLUTION: Use a local PeerServer for development.', 'warning');
+                        log('Run: npm install -g peer && peerjs --port 9000', 'warning');
+                    }
+                });
+
+                testPeer.on('error', (err) => {
+                    clearTimeout(warningTimeout);
+                    clearTimeout(errorTimeout);
+                    const elapsed = performance.now() - startTime;
+                    log(`❌ ERROR after ${elapsed.toFixed(0)}ms: ${err}`, 'error');
+                    updateStatus(`Error: ${err}`, 'error');
+                });
+
+            } catch (err) {
+                log(`❌ EXCEPTION: ${err}`, 'error');
+                updateStatus(`Exception: ${err}`, 'error');
+            }
+        }
+
+        async function testCustomSTUN() {
+            cleanup();
+            clearLog();
+
+            log('=== Testing with Custom STUN Servers ===');
+            log('Configuration: Google STUN servers + optimized settings');
+
+            startTime = performance.now();
+            updateStatus('Connecting with optimized config...', 'warning');
+
+            const config = {
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' }
+                    ],
+                    iceTransportPolicy: 'all',
+                    iceCandidatePoolSize: 10
+                },
+                debug: 2
+            };
+
+            log('Using ICE servers: ' + config.config.iceServers.map(s => s.urls).join(', '));
+
+            try {
+                testPeer = new Peer(config);
+
+                const warningTimeout = setTimeout(() => {
+                    const elapsed = performance.now() - startTime;
+                    log(`⚠️ WARNING: Connection taking unusually long (${elapsed.toFixed(0)}ms)`, 'warning');
+                    updateStatus(`Still connecting... ${elapsed.toFixed(0)}ms elapsed`, 'warning');
+                }, 5000);
+
+                const errorTimeout = setTimeout(() => {
+                    const elapsed = performance.now() - startTime;
+                    log(`❌ ERROR: Connection timeout (${elapsed.toFixed(0)}ms)`, 'error');
+                    updateStatus(`Connection timeout after ${elapsed.toFixed(0)}ms`, 'error');
+                    cleanup();
+                }, 30000);
+
+                testPeer.on('open', (id) => {
+                    clearTimeout(warningTimeout);
+                    clearTimeout(errorTimeout);
+                    const elapsed = performance.now() - startTime;
+
+                    let verdict = '';
+                    if (elapsed < 1000) verdict = '✓ EXCELLENT';
+                    else if (elapsed < 3000) verdict = '✓ GOOD';
+                    else if (elapsed < 5000) verdict = '⚠️ SLOW';
+                    else if (elapsed < 30000) verdict = '⚠️ VERY SLOW';
+                    else verdict = '❌ UNACCEPTABLE';
+
+                    log(`${verdict} - Connected in ${elapsed.toFixed(0)}ms`, elapsed < 5000 ? 'success' : 'warning');
+                    log(`Peer ID: ${id}`);
+                    updateStatus(`Connected in ${elapsed.toFixed(0)}ms - ${verdict}`, elapsed < 5000 ? 'success' : 'warning');
+
+                    if (elapsed > 5000) {
+                        log('', 'warning');
+                        log('DIAGNOSIS: Even with optimized STUN, connection is SLOW.', 'warning');
+                        log('This confirms the PeerJS signaling server is the bottleneck.', 'warning');
+                        log('SOLUTION: Use a local PeerServer for development.', 'warning');
+                        log('Run: npm install -g peer && peerjs --port 9000', 'warning');
+                    }
+                });
+
+                testPeer.on('error', (err) => {
+                    clearTimeout(warningTimeout);
+                    clearTimeout(errorTimeout);
+                    const elapsed = performance.now() - startTime;
+                    log(`❌ ERROR after ${elapsed.toFixed(0)}ms: ${err}`, 'error');
+                    updateStatus(`Error: ${err}`, 'error');
+                });
+
+            } catch (err) {
+                log(`❌ EXCEPTION: ${err}`, 'error');
+                updateStatus(`Exception: ${err}`, 'error');
+            }
+        }
+
+        // Auto-run test on load
+        window.addEventListener('load', () => {
+            log('Page loaded. Click a button to test PeerJS connection speed.');
+        });
+    </script>
+</body>
+</html>

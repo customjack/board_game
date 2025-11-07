@@ -3,6 +3,7 @@
 import Peer from 'peerjs';
 import GameState from '../models/GameState';
 import BoardManager from '../controllers/managers/BoardManager';
+import { PEER_CONFIG, getPerformanceLabel, PERFORMANCE_THRESHOLDS } from './NetworkConfig.js';
 
 export default class BasePeer {
     constructor(eventHandler) {
@@ -15,14 +16,43 @@ export default class BasePeer {
     }
 
     async initPeer() {
-        this.peer = new Peer();
+        console.log('[Network] Initializing PeerJS connection...');
+        console.log('[Network] Using ICE servers:', PEER_CONFIG.config.iceServers.map(s => s.urls).join(', '));
+
+        const startTime = performance.now();
+
+        // Create peer with optimized configuration
+        this.peer = new Peer(PEER_CONFIG);
+
         return new Promise((resolve, reject) => {
+            // Set up timeout to detect slow connections
+            const timeoutId = setTimeout(() => {
+                const elapsed = performance.now() - startTime;
+                console.warn(`[Network] PeerJS connection is taking unusually long: ${elapsed.toFixed(0)}ms`);
+                console.warn('[Network] This may indicate issues with the signaling server.');
+                console.warn('[Network] Consider setting up a local PeerServer for faster connections.');
+            }, PERFORMANCE_THRESHOLDS.PEER_INIT_WARNING);
+
             this.peer.on('open', (id) => {
-                console.log('Peer ID:', id);
+                clearTimeout(timeoutId);
+                const elapsed = performance.now() - startTime;
+                const perfLabel = getPerformanceLabel(elapsed);
+
+                console.log(`[Network] ✓ Peer connection established [${perfLabel}]: ${elapsed.toFixed(0)}ms`);
+                console.log('[Network] Peer ID:', id);
+
+                if (perfLabel === 'SLOW' || perfLabel === 'WARNING' || perfLabel === 'ERROR') {
+                    console.warn(`[Network] Connection took ${elapsed.toFixed(0)}ms - consider using a local PeerServer`);
+                    console.warn('[Network] See NetworkConfig.js for setup instructions');
+                }
+
                 resolve(id);
             });
+
             this.peer.on('error', (err) => {
-                console.error('Peer error:', err);
+                clearTimeout(timeoutId);
+                const elapsed = performance.now() - startTime;
+                console.error(`[Network] Peer error after ${elapsed.toFixed(0)}ms:`, err);
                 this.eventHandler.handlePeerError(err);
                 reject(err);
             });

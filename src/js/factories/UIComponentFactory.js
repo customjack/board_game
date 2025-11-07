@@ -10,6 +10,7 @@ import RollButtonComponent from '../ui/components/RollButtonComponent.js';
 import TimerComponent from '../ui/components/TimerComponent.js';
 import GameLogComponent from '../ui/components/GameLogComponent.js';
 import BoardCanvasComponent from '../ui/components/BoardCanvasComponent.js';
+import { globalLogger } from '../utils/CompactLogger.js';
 
 export default class UIComponentFactory {
     constructor() {
@@ -22,6 +23,9 @@ export default class UIComponentFactory {
         this.register('TimerComponent', TimerComponent);
         this.register('GameLogComponent', GameLogComponent);
         this.register('BoardCanvasComponent', BoardCanvasComponent);
+
+        // Flush UI component registrations
+        globalLogger.flush('UI component');
     }
 
     /**
@@ -39,7 +43,7 @@ export default class UIComponentFactory {
         }
 
         this.registry.set(type, ComponentClass);
-        console.log(`Registered UI component type: ${type}`);
+        globalLogger.add('UI component', type);
     }
 
     /**

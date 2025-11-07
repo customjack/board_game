@@ -219,6 +219,8 @@ The `renderConfig` object allows you to customize board appearance. These overri
 ```json
 {
   "renderConfig": {
+    "backgroundImage": "assets/images/board-background.png",
+    "backgroundColor": "#f0f0f0",
     "connectionColor": "#333333",
     "connectionThickness": 2,
     "arrowColor": "#333333",
@@ -238,6 +240,8 @@ The `renderConfig` object allows you to customize board appearance. These overri
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `backgroundImage` | string (URL) | null | Path to background image (scales to fit board) |
+| `backgroundColor` | string (color) | Theme default | Fallback color if no image |
 | `connectionColor` | string (color) | Theme default | Color of connection lines |
 | `connectionThickness` | number | 2 | Thickness of connection lines (px) |
 | `arrowColor` | string (color) | Theme default | Color of arrows |
@@ -245,6 +249,12 @@ The `renderConfig` object allows you to customize board appearance. These overri
 | `arrowPositionSingle` | number | 0.85 | Arrow position for one-way (0-1) |
 | `arrowPositionBidirectional` | number | 0.5 | Arrow position for two-way (0-1) |
 | `spaceDefaults` | object | See below | Default space styling |
+
+**Background Image Notes:**
+- Image will scale to fit the board dimensions while maintaining aspect ratio
+- Supports PNG, JPG, GIF formats
+- Relative paths are resolved from the board JSON location
+- Use transparent PNGs for custom shapes
 
 **Note:** If not specified, render config values fall back to CSS theme variables.
 

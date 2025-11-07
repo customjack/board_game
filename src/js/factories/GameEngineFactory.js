@@ -5,6 +5,7 @@
  * can specify different engine types and configurations.
  */
 import TurnBasedGameEngine from '../engines/TurnBasedGameEngine.js';
+import { globalLogger } from '../utils/CompactLogger.js';
 
 export default class GameEngineFactory {
     // Registry of available engine types
@@ -25,7 +26,7 @@ export default class GameEngineFactory {
         }
 
         this.engineRegistry.set(type, EngineClass);
-        console.log(`Registered game engine type: ${type}`);
+        globalLogger.add('game engine', type);
     }
 
     /**
@@ -201,6 +202,7 @@ export default class GameEngineFactory {
 
 // Register default engine types
 GameEngineFactory.register('turn-based', TurnBasedGameEngine);
+globalLogger.flush('game engine');
 
 // Export for use in other modules
 export { GameEngineFactory };
