@@ -22,11 +22,22 @@ import AnimationFactory from './factories/AnimationFactory';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
 
+// Global personal settings instance
+let globalPersonalSettings = null;
+
+/**
+ * Get the global personal settings instance
+ * @returns {PersonalSettings} Personal settings instance
+ */
+export function getPersonalSettings() {
+    return globalPersonalSettings;
+}
+
 // Initialize personal settings
 function initializePersonalSettings(factoryManager) {
-    const personalSettings = new PersonalSettings();
-    const personalSettingsMenu = new PersonalSettingsMenu('settingsModal', personalSettings, factoryManager);
-    return { personalSettings, personalSettingsMenu };
+    globalPersonalSettings = new PersonalSettings();
+    const personalSettingsMenu = new PersonalSettingsMenu('settingsModal', globalPersonalSettings, factoryManager);
+    return { personalSettings: globalPersonalSettings, personalSettingsMenu };
 }
 
 // Initialize registries and registry manager

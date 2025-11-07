@@ -5,12 +5,13 @@
  * click handling, and animation coordination
  */
 import BaseUIComponent from '../BaseUIComponent.js';
+import { getPersonalSettings } from '../../app.js';
 
 export default class RollButtonComponent extends BaseUIComponent {
     /**
      * Create a roll button component
      * @param {Object} config - Component configuration
-     * @param {Animation} config.animation - Animation to play on roll
+     * @param {FactoryManager} config.factoryManager - Factory manager for creating animations
      */
     constructor(config = {}) {
         super({
@@ -19,7 +20,7 @@ export default class RollButtonComponent extends BaseUIComponent {
             ...config
         });
 
-        this.animation = config.animation || null;
+        this.factoryManager = config.factoryManager || null;
         this.onRollDiceCallback = null;
         this.onRollCompleteCallback = null;
         this.active = false;
@@ -80,9 +81,12 @@ export default class RollButtonComponent extends BaseUIComponent {
         // Emit event
         this.emit('diceRolled', { result: rollResult });
 
+        // Get animation from factory using current personal settings
+        const animation = this.getAnimation();
+
         // Play animation if available
-        if (this.animation) {
-            this.animation.start(
+        if (animation) {
+            animation.start(
                 { resultText: rollResult.toString() },
                 () => {
                     // Animation complete
@@ -98,6 +102,37 @@ export default class RollButtonComponent extends BaseUIComponent {
                 this.onRollCompleteCallback(rollResult);
             }
             this.emit('rollComplete', { result: rollResult });
+        }
+    }
+
+    /**
+     * Get animation instance based on current personal settings
+     * @returns {Animation|null} Animation instance or null
+     */
+    getAnimation() {
+        if (!this.factoryManager) {
+            console.warn('[RollButtonComponent] No factory manager available');
+            return null;
+        }
+
+        const animationFactory = this.factoryManager.getFactory('AnimationFactory');
+        if (!animationFactory) {
+            console.warn('[RollButtonComponent] AnimationFactory not found');
+            return null;
+        }
+
+        // Get selected animation type from personal settings
+        const personalSettings = getPersonalSettings();
+        const animationType = personalSettings?.getRollAnimation() || 'dice-roll';
+
+        console.log(`[RollButtonComponent] Creating animation: ${animationType}`);
+
+        // Create and return animation
+        try {
+            return animationFactory.create(animationType);
+        } catch (error) {
+            console.error('[RollButtonComponent] Failed to create animation:', error);
+            return null;
         }
     }
 
@@ -149,14 +184,6 @@ export default class RollButtonComponent extends BaseUIComponent {
     }
 
     /**
-     * Set animation
-     * @param {Animation} animation - Animation instance
-     */
-    setAnimation(animation) {
-        this.animation = animation;
-    }
-
-    /**
      * Register callbacks
      * @param {Object} callbacks - Callback functions
      */
@@ -177,7 +204,7 @@ export default class RollButtonComponent extends BaseUIComponent {
         return {
             ...super.getState(),
             active: this.active,
-            hasAnimation: !!this.animation,
+            hasFactoryManager: !!this.factoryManager,
             hasRollCallback: !!this.onRollDiceCallback,
             hasCompleteCallback: !!this.onRollCompleteCallback
         };
@@ -188,7 +215,6 @@ export default class RollButtonComponent extends BaseUIComponent {
      */
     cleanup() {
         this.deactivate();
-        this.animation = null;
         this.onRollDiceCallback = null;
         this.onRollCompleteCallback = null;
         super.cleanup();

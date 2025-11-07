@@ -131,10 +131,12 @@ export default class UISystem {
         // Create roll button component
         this.components.rollButton = uiComponentFactory
             ? uiComponentFactory.create('RollButtonComponent', {
-                eventBus: this.eventBus
+                eventBus: this.eventBus,
+                factoryManager: this.factoryManager
             })
             : new RollButtonComponent({
-                eventBus: this.eventBus
+                eventBus: this.eventBus,
+                factoryManager: this.factoryManager
             });
 
         // Create timer component
