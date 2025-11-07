@@ -7,6 +7,7 @@ import { MessageTypes } from './protocol/MessageTypes.js';
 import GameStateHandler from './handlers/GameStateHandler.js';
 import PlayerHandler from './handlers/PlayerHandler.js';
 import ConnectionHandler from './handlers/ConnectionHandler.js';
+import ConnectionStatusManager from './ConnectionStatusManager.js';
 
 export default class Client extends BasePeer {
     constructor(originalName, hostId, eventHandler) {
@@ -18,6 +19,9 @@ export default class Client extends BasePeer {
         this.heartbeatTimeout = null;
         this.heartbeatIntervalMs = 10000; // 10 seconds
         this.heartbeatTimeoutMs = 25000;  // consider connection lost if no response within 25s
+
+        // Connection status manager for reconnection
+        this.connectionStatusManager = null;
 
         // Initialize protocol and handlers
         this.protocol = new NetworkProtocol({
@@ -131,6 +135,12 @@ export default class Client extends BasePeer {
 
     handleOpenConnection() {
         console.log('Connected to host');
+
+        // Initialize connection status manager
+        if (!this.connectionStatusManager) {
+            this.connectionStatusManager = new ConnectionStatusManager(this);
+        }
+
         this.startHeartbeat();
         const playersJSON = this.ownedPlayers.map(player => player.toJSON());
         this.conn.send({
@@ -187,6 +197,11 @@ export default class Client extends BasePeer {
         if (this.heartbeatTimeout) {
             clearTimeout(this.heartbeatTimeout);
             this.heartbeatTimeout = null;
+        }
+
+        // Notify connection status manager
+        if (this.connectionStatusManager) {
+            this.connectionStatusManager.markHeartbeatReceived();
         }
     }
 
