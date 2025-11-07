@@ -9,6 +9,7 @@ import BoardRenderConfig from '../../rendering/BoardRenderConfig.js';
 import ConnectionRenderer from '../../rendering/ConnectionRenderer.js';
 import SpaceRenderer from '../../rendering/SpaceRenderer.js';
 import BoardSchemaValidator from '../../utils/BoardSchemaValidator.js';
+import BoardViewport from '../BoardViewport.js';
 
 export default class BoardCanvasComponent extends BaseUIComponent {
     /**
@@ -28,6 +29,9 @@ export default class BoardCanvasComponent extends BaseUIComponent {
         this.renderConfig = new BoardRenderConfig();
         this.connectionRenderer = new ConnectionRenderer(this.renderConfig);
         this.spaceRenderer = new SpaceRenderer(this.renderConfig);
+
+        // Viewport for panning/zooming
+        this.viewport = null;
 
         // Track container element ID for switching contexts
         this.currentContainerId = config.containerElementId || 'lobbyBoardContent';
@@ -211,15 +215,35 @@ export default class BoardCanvasComponent extends BaseUIComponent {
         // Clear existing content
         this.container.innerHTML = '';
 
+        // Initialize viewport if not already done
+        if (!this.viewport) {
+            this.viewport = new BoardViewport(this.container);
+        }
+
         // Create HTML render surface so spaces remain interactive
         const renderSurface = document.createElement('div');
         renderSurface.classList.add('board-render-surface');
         renderSurface.style.position = 'relative';
-        renderSurface.style.width = '100%';
-        renderSurface.style.height = '100%';
+        renderSurface.style.width = 'fit-content';
+        renderSurface.style.height = 'fit-content';
         renderSurface.style.pointerEvents = 'auto';
 
+        // Add custom background if specified in board metadata
+        const bgImage = this.board.metadata?.renderConfig?.backgroundImage;
+        const bgColor = this.board.metadata?.renderConfig?.backgroundColor;
+
+        if (bgImage) {
+            renderSurface.style.backgroundImage = `url(${bgImage})`;
+            renderSurface.style.backgroundSize = 'cover';
+            renderSurface.style.backgroundPosition = 'center';
+            renderSurface.style.backgroundRepeat = 'no-repeat';
+        }
+        if (bgColor) {
+            renderSurface.style.backgroundColor = bgColor;
+        }
+
         this.container.appendChild(renderSurface);
+        this.viewport.setBoardSurface(renderSurface);
 
         // Render connections first (so they appear behind spaces)
         const drawnConnections = new Set();
