@@ -102,8 +102,8 @@ export default class PersonalSettingsMenu extends BaseMenu {
         // Add animations as options
         animations.forEach(anim => {
             const option = document.createElement('option');
-            option.value = anim.type;
-            option.textContent = anim.metadata.displayName;
+            option.value = anim.value;
+            option.textContent = anim.label;
             this.rollAnimationSelect.appendChild(option);
         });
     }
