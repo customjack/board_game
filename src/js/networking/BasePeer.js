@@ -17,11 +17,10 @@ export default class BasePeer {
 
     async initPeer() {
         console.log('[Network] Initializing PeerJS connection...');
-        console.log('[Network] Using ICE servers:', PEER_CONFIG.config.iceServers.map(s => s.urls).join(', '));
 
         const startTime = performance.now();
 
-        // Create peer with optimized configuration
+        // Create peer with configuration
         this.peer = new Peer(PEER_CONFIG);
 
         return new Promise((resolve, reject) => {

@@ -9,12 +9,14 @@ export default class PersonalSettings {
             this.soundVolume = savedSettings.soundVolume;
             this.showTips = savedSettings.showTips;
             this.autoRoll = savedSettings.autoRoll;
+            this.rollAnimation = savedSettings.rollAnimation || 'dice-roll'; // Default if not set
         } else {
             // Default settings if nothing is saved
             this.theme = 'light';
             this.soundVolume = 1.0;
             this.showTips = true;
             this.autoRoll = false;
+            this.rollAnimation = 'dice-roll'; // Default animation
         }
     }
 
@@ -58,6 +60,16 @@ export default class PersonalSettings {
         this.saveToLocalStorage();
     }
 
+    // Getter and Setter for roll animation
+    getRollAnimation() {
+        return this.rollAnimation;
+    }
+
+    setRollAnimation(animationType) {
+        this.rollAnimation = animationType;
+        this.saveToLocalStorage();
+    }
+
     // Convert the settings object to JSON format
     toJSON() {
         return {
@@ -65,6 +77,7 @@ export default class PersonalSettings {
             soundVolume: this.soundVolume,
             showTips: this.showTips,
             autoRoll: this.autoRoll,
+            rollAnimation: this.rollAnimation,
         };
     }
 
@@ -75,6 +88,7 @@ export default class PersonalSettings {
         settings.soundVolume = json.soundVolume;
         settings.showTips = json.showTips;
         settings.autoRoll = json.autoRoll;
+        settings.rollAnimation = json.rollAnimation || 'dice-roll';
         return settings;
     }
 

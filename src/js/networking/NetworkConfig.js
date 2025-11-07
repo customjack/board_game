@@ -1,32 +1,19 @@
 /**
  * NetworkConfig - PeerJS connection configuration
  *
- * Optimized for fast local network connections and reliable public connections
+ * Basic configuration that relies on PeerJS library defaults for ICE servers
+ * and connection negotiation. This allows the library to handle updates
+ * to STUN/TURN servers automatically.
  *
- * Key optimizations:
- * - Custom ICE servers for faster WebRTC negotiation
- * - Reduced timeouts for quicker failure detection
+ * Key features:
+ * - Uses default PeerJS cloud server and ICE configuration
  * - Debug mode for development troubleshooting
+ * - Standard timeouts and retry settings
  */
 
 export const PEER_CONFIG = {
     // PeerJS server configuration
-    // Using default cloud PeerServer but with optimized settings
-    config: {
-        // ICE servers for WebRTC connection establishment
-        iceServers: [
-            // Google's public STUN servers (faster than defaults)
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun3.l.google.com:19302' },
-            { urls: 'stun:stun4.l.google.com:19302' }
-        ],
-        // Faster ICE gathering
-        iceTransportPolicy: 'all',
-        // Prioritize UDP for lower latency
-        iceCandidatePoolSize: 10
-    },
+    // Using default cloud PeerServer with default settings
 
     // Enable debug logging in development
     debug: process.env.NODE_ENV === 'development' ? 2 : 0,

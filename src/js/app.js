@@ -18,13 +18,14 @@ import TurnManagerFactory from './factories/TurnManagerFactory';
 import EventProcessorFactory from './factories/EventProcessorFactory';
 import UIControllerFactory from './factories/UIControllerFactory';
 import UIComponentFactory from './factories/UIComponentFactory';
+import AnimationFactory from './factories/AnimationFactory';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
 
 // Initialize personal settings
-function initializePersonalSettings() {
+function initializePersonalSettings(factoryManager) {
     const personalSettings = new PersonalSettings();
-    const personalSettingsMenu = new PersonalSettingsMenu('settingsModal', personalSettings);
+    const personalSettingsMenu = new PersonalSettingsMenu('settingsModal', personalSettings, factoryManager);
     return { personalSettings, personalSettingsMenu };
 }
 
@@ -118,6 +119,9 @@ function initializeFactories() {
     const uiComponentFactory = new UIComponentFactory();
     factoryManager.registerFactory('UIComponentFactory', uiComponentFactory);
 
+    const animationFactory = new AnimationFactory();
+    factoryManager.registerFactory('AnimationFactory', animationFactory);
+
     return factoryManager;
 }
 
@@ -177,15 +181,15 @@ function registerListeners(
 
 // Main application initialization function
 function initializeApp() {
+    // Factories and manager (initialized first so we can pass to PersonalSettingsMenu)
+    const factoryManager = initializeFactories();
+
     // Personal settings
-    const { personalSettingsMenu } = initializePersonalSettings();
+    const { personalSettingsMenu } = initializePersonalSettings(factoryManager);
 
     // Registries and manager
     const { registryManager, pageRegistry, listenerRegistry, windowListenerRegistry, placeholderRegistry } =
         initializeRegistryManager();
-
-    // Factories and manager
-    const factoryManager = initializeFactories();
 
     // Register pages and placeholders
     registerPages(pageRegistry);
