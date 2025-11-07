@@ -15,6 +15,7 @@ import { globalLogger } from '../utils/CompactLogger.js';
 import ParticleAnimation from '../animations/ParticleAnimation.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
 import DiceRollAnimation from '../animations/DiceRollAnimation.js';
+import SlotMachineAnimation from '../animations/SlotMachineAnimation.js';
 
 export default class AnimationFactory {
     constructor() {
@@ -37,6 +38,14 @@ export default class AnimationFactory {
             duration: 1500,
             preview: 'Classic dice tumbling animation',
             isDefault: true
+        });
+
+        this.register('slot-machine', SlotMachineAnimation, {
+            displayName: 'Slot Machine',
+            description: 'Numbers scroll like a slot machine reel',
+            category: 'roll',
+            duration: 1500,
+            preview: 'Vegas-style slot machine rolling'
         });
 
         this.register('timer', TimerAnimation, {

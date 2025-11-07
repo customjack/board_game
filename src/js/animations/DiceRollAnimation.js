@@ -121,17 +121,21 @@ export default class DiceRollAnimation extends Animation {
         const y = this.diceY - this.bounceHeight;
         const size = this.diceSize;
 
+        // Draw static shadow first (not affected by rotation/translation)
+        ctx.save();
+        ctx.globalAlpha = 0.3 * (1 - this.bounceHeight / 100); // Fade as dice goes up
+        ctx.fillStyle = '#000';
+        const shadowY = this.diceY + size / 2;
+        ctx.fillRect(x - size / 2, shadowY, size, 10);
+        ctx.restore();
+
+        // Draw dice
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(this.rotation);
 
         // Draw dice cube with 3D effect
         this.drawDiceFace(0, 0, size);
-
-        // Draw shadow
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = '#000';
-        ctx.fillRect(-size / 2, size / 2 + this.bounceHeight / 2, size, 10);
 
         ctx.restore();
     }
@@ -142,6 +146,15 @@ export default class DiceRollAnimation extends Animation {
         const y = this.diceY - this.bounceHeight;
         const size = this.diceSize;
 
+        // Draw static shadow
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#000';
+        const shadowY = this.diceY + size / 2;
+        ctx.fillRect(x - size / 2, shadowY, size, 10);
+        ctx.restore();
+
+        // Draw dice
         ctx.save();
         ctx.translate(x, y);
 
@@ -154,11 +167,6 @@ export default class DiceRollAnimation extends Animation {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.resultText, 0, 0);
-
-        // Draw shadow
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = '#000';
-        ctx.fillRect(-size / 2, size / 2 + this.bounceHeight / 2, size, 10);
 
         ctx.restore();
     }
