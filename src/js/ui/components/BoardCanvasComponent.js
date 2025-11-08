@@ -212,7 +212,11 @@ export default class BoardCanvasComponent extends BaseUIComponent {
             return;
         }
 
-        // Clear existing content
+        // Clear existing content but preserve viewport controls by recreating viewport each render
+        if (this.viewport) {
+            this.viewport.destroy();
+            this.viewport = null;
+        }
         this.container.innerHTML = '';
 
         // Initialize viewport if not already done
@@ -318,6 +322,10 @@ export default class BoardCanvasComponent extends BaseUIComponent {
      * Clear the board
      */
     clear() {
+        if (this.viewport) {
+            this.viewport.destroy();
+            this.viewport = null;
+        }
         if (this.container) {
             this.container.innerHTML = '';
         }

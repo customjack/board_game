@@ -64,22 +64,34 @@
     <div id="hostPage" style="display: none;">
         <h2>Host Game</h2>
         <div class="input-group">
-            <label for="hostNameInput">Enter Your Name:</label>
-            <input class="input" id="hostNameInput" type="text" placeholder="Your Name">
+            <div class="input-field">
+                <label for="hostNameInput">Enter Your Name:</label>
+                <input class="input" id="hostNameInput" type="text" placeholder="Your Name">
+            </div>
         </div>
-        <button id="startHostButton" class="button">Start Game</button>  <!-- Button added below the input -->
+        <div class="button-row">
+            <button id="hostBackButton" class="button button-secondary">Back</button>
+            <button id="startHostButton" class="button">Start Game</button>
+        </div>
     </div>
 
     <!-- Join Game Page -->
     <div id="joinPage" style="display: none;">
         <h2>Join Game</h2>
         <div class="input-group">
-            <label for="joinNameInput">Enter Your Name:</label>
-            <input class="input" id="joinNameInput" type="text" placeholder="Your Name">
-            <label for="joinCodeInput">Enter Game Code:</label>
-            <input class="input" id="joinCodeInput" type="text" placeholder="Game Code">
+            <div class="input-field">
+                <label for="joinNameInput">Enter Your Name:</label>
+                <input class="input" id="joinNameInput" type="text" placeholder="Your Name">
+            </div>
+            <div class="input-field">
+                <label for="joinCodeInput">Enter Game Code:</label>
+                <input class="input" id="joinCodeInput" type="text" placeholder="Game Code">
+            </div>
         </div>
-        <button id="startJoinButton" class="button">Join Game</button>
+        <div class="button-row">
+            <button id="joinBackButton" class="button button-secondary">Back</button>
+            <button id="startJoinButton" class="button">Join Game</button>
+        </div>
     </div>
 
     <!-- Loading Page -->
@@ -277,13 +289,14 @@
     <!-- Game prompt Modal Structure -->
     <div id="gamePromptModal" class="modal">
         <div class="modal-content">
+            <div id="gamePromptModalCountdown" class="modal-countdown"></div>
             <!-- Modal Message -->
             <div id="gamePromptModalMessage" style="font-size: 16px; text-align: center;"></div>
 
             <!-- Dismiss Button with danger class -->
             <button id="gamePromptModalDismissButton" class="button button-danger">
-                Dismiss
-            </button>
+                    Dismiss
+                </button>
         </div>
     </div>
 

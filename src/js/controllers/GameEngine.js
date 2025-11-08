@@ -48,6 +48,7 @@ export default class GameEngine {
 
         this.gameLogPopupController = new GameLogPopupController(this.eventBus);
         this.modalAutoDismissTimer = null;
+        this.modalCountdownInterval = null;
 
         // Bind state handlers for game phases
         this.stateHandlers = {
@@ -458,12 +459,44 @@ export default class GameEngine {
             clearTimeout(this.modalAutoDismissTimer);
             this.modalAutoDismissTimer = null;
         }
+        if (this.modalCountdownInterval) {
+            clearInterval(this.modalCountdownInterval);
+            this.modalCountdownInterval = null;
+        }
+        const countdownEl = document.getElementById('gamePromptModalCountdown');
+        if (countdownEl) {
+            countdownEl.style.display = 'none';
+            countdownEl.textContent = '';
+        }
+    }
+
+    startModalCountdown(countdownEl, durationMs) {
+        if (!countdownEl) return;
+        const endTime = Date.now() + durationMs;
+        countdownEl.style.display = 'block';
+
+        const updateText = () => {
+            const remainingMs = Math.max(0, endTime - Date.now());
+            const remainingSeconds = Math.ceil(remainingMs / 1000);
+            countdownEl.textContent = remainingSeconds > 0
+                ? `Auto-closing in ${remainingSeconds}s`
+                : 'Closing...';
+
+            if (remainingMs <= 0) {
+                clearInterval(this.modalCountdownInterval);
+                this.modalCountdownInterval = null;
+            }
+        };
+
+        updateText();
+        this.modalCountdownInterval = setInterval(updateText, 250);
     }
 
     showPromptModal(message, callback) {
         const modal = document.getElementById('gamePromptModal');
         const modalMessage = document.getElementById('gamePromptModalMessage');
         const dismissButton = document.getElementById('gamePromptModalDismissButton');
+        const countdownEl = document.getElementById('gamePromptModalCountdown');
 
         if (!modal || !modalMessage || !dismissButton) {
             console.warn('Prompt modal elements missing; cannot display prompt.');
@@ -475,6 +508,10 @@ export default class GameEngine {
 
         modalMessage.textContent = message;
         modal.style.display = 'block';
+        if (countdownEl) {
+            countdownEl.style.display = 'none';
+            countdownEl.textContent = '';
+        }
 
         this.clearModalAutoDismissTimer();
 
@@ -490,6 +527,9 @@ export default class GameEngine {
         const closeModal = (shouldResolve = false) => {
             modal.style.display = 'none';
             this.clearModalAutoDismissTimer();
+            if (countdownEl) {
+                countdownEl.style.display = 'none';
+            }
             if (shouldResolve) {
                 resolveOnce();
             }
@@ -497,11 +537,13 @@ export default class GameEngine {
 
         const timeoutSeconds = this.gameState?.settings?.getModalTimeoutSeconds?.() ?? 0;
         if (timeoutSeconds > 0) {
+            const timeoutMs = timeoutSeconds * 1000;
             this.modalAutoDismissTimer = setTimeout(() => {
                 this.modalAutoDismissTimer = null;
                 const shouldResolve = this.isClientTurn();
                 closeModal(shouldResolve);
-            }, timeoutSeconds * 1000);
+            }, timeoutMs);
+            this.startModalCountdown(countdownEl, timeoutMs);
         }
 
         if (this.isClientTurn()) {

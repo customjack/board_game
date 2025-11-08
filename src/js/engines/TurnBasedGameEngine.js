@@ -26,6 +26,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
 
         this.activeSpaceChoice = null;
         this.modalAutoDismissTimer = null;
+        this.modalCountdownInterval = null;
 
         // Get factories from factoryManager
         const phaseStateMachineFactory = this.factoryManager.getFactory('PhaseStateMachineFactory');
@@ -687,6 +688,37 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             clearTimeout(this.modalAutoDismissTimer);
             this.modalAutoDismissTimer = null;
         }
+        if (this.modalCountdownInterval) {
+            clearInterval(this.modalCountdownInterval);
+            this.modalCountdownInterval = null;
+        }
+        const countdownEl = document.getElementById('gamePromptModalCountdown');
+        if (countdownEl) {
+            countdownEl.style.display = 'none';
+            countdownEl.textContent = '';
+        }
+    }
+
+    startModalCountdown(countdownEl, durationMs) {
+        if (!countdownEl) return;
+        const endTime = Date.now() + durationMs;
+        countdownEl.style.display = 'block';
+
+        const updateText = () => {
+            const remainingMs = Math.max(0, endTime - Date.now());
+            const remainingSeconds = Math.ceil(remainingMs / 1000);
+            countdownEl.textContent = remainingSeconds > 0
+                ? `Auto-closing in ${remainingSeconds}s`
+                : 'Closing...';
+
+            if (remainingMs <= 0) {
+                clearInterval(this.modalCountdownInterval);
+                this.modalCountdownInterval = null;
+            }
+        };
+
+        updateText();
+        this.modalCountdownInterval = setInterval(updateText, 250);
     }
 
     cleanupActiveSpaceChoice() {
@@ -813,6 +845,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         const modal = document.getElementById('gamePromptModal');
         const modalMessage = document.getElementById('gamePromptModalMessage');
         const dismissButton = document.getElementById('gamePromptModalDismissButton');
+        const countdownEl = document.getElementById('gamePromptModalCountdown');
 
         if (!modal || !modalMessage || !dismissButton) {
             console.warn('Prompt modal elements missing; cannot display prompt.');
@@ -823,6 +856,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         }
 
         modalMessage.textContent = message;
+        if (countdownEl) {
+            countdownEl.style.display = 'none';
+            countdownEl.textContent = '';
+        }
         modal.style.display = 'block';
 
         this.clearModalAutoDismissTimer();
@@ -839,6 +876,9 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         const closeModal = (shouldResolve = false) => {
             modal.style.display = 'none';
             this.clearModalAutoDismissTimer();
+            if (countdownEl) {
+                countdownEl.style.display = 'none';
+            }
             if (shouldResolve) {
                 resolveOnce();
             }
@@ -852,6 +892,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
                 const shouldResolve = this.isClientTurn();
                 closeModal(shouldResolve);
             }, timeoutMs);
+            this.startModalCountdown(countdownEl, timeoutMs);
         }
 
         if (this.isClientTurn()) {

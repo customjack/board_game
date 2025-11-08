@@ -77,3 +77,13 @@
 .custom-modal .button-secondary:hover {
     background-color: var(--secondary-hover-color, #da190b);
 }
+
+.custom-modal .modal-countdown {
+    display: none;
+    font-size: 0.75rem;
+    color: var(--text-muted-color, #767676);
+    text-align: left;
+    margin-bottom: 8px;
+    font-style: italic;
+    opacity: 0.85;
+}

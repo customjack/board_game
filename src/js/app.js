@@ -136,35 +136,103 @@ function registerListeners(
     factoryManager,
     eventBus
 ) {
-    listenerRegistry.registerListener('hostButton', 'click', () => {
-        const hostButton = document.getElementById('hostButton');
-        hostButton.disabled = true;
+    const pageRegistry = registryManager.getPageRegistry();
+    const hostButton = document.getElementById('hostButton');
+    const joinButton = document.getElementById('joinButton');
+    const startHostButton = document.getElementById('startHostButton');
+    const startJoinButton = document.getElementById('startJoinButton');
+    const hostBackButton = document.getElementById('hostBackButton');
+    const joinBackButton = document.getElementById('joinBackButton');
 
-        pluginManager.setHost(true);
-        const hostEventHandler = new HostEventHandler(
-            registryManager,
-            pluginManager,
-            factoryManager,
-            eventBus,
-            personalSettings
-        );
-        hostEventHandler.init();
+    const resetHomePage = () => {
+        pageRegistry.showPage('homePage');
+        if (hostButton) hostButton.disabled = false;
+        if (joinButton) joinButton.disabled = false;
+    };
+
+    listenerRegistry.registerListener('hostButton', 'click', () => {
+        pageRegistry.showPage('hostPage');
+        if (startHostButton) startHostButton.disabled = false;
+        const hostNameInput = document.getElementById('hostNameInput');
+        if (hostNameInput) hostNameInput.focus();
     });
 
     listenerRegistry.registerListener('joinButton', 'click', () => {
-        const joinButton = document.getElementById('joinButton');
-        joinButton.disabled = true;
-
-        pluginManager.setHost(false);
-        const clientEventHandler = new ClientEventHandler(
-            registryManager,
-            pluginManager,
-            factoryManager,
-            eventBus,
-            personalSettings
-        );
-        clientEventHandler.init();
+        pageRegistry.showPage('joinPage');
+        if (startJoinButton) startJoinButton.disabled = false;
+        const joinNameInput = document.getElementById('joinNameInput');
+        if (joinNameInput) joinNameInput.focus();
     });
+
+    if (hostBackButton) {
+        listenerRegistry.registerListener('hostBackButton', 'click', () => {
+            const hostNameInput = document.getElementById('hostNameInput');
+            if (hostNameInput) hostNameInput.value = '';
+            resetHomePage();
+        });
+    }
+
+    if (joinBackButton) {
+        listenerRegistry.registerListener('joinBackButton', 'click', () => {
+            const joinNameInput = document.getElementById('joinNameInput');
+            const joinCodeInput = document.getElementById('joinCodeInput');
+            if (joinNameInput) joinNameInput.value = '';
+            if (joinCodeInput) joinCodeInput.value = '';
+            resetHomePage();
+        });
+    }
+
+    let hostEventHandlerInstance = null;
+    if (startHostButton) {
+        const handleStartHostClick = async () => {
+            if (hostEventHandlerInstance) {
+                return;
+            }
+            try {
+                pluginManager.setHost(true);
+                hostEventHandlerInstance = new HostEventHandler(
+                    registryManager,
+                    pluginManager,
+                    factoryManager,
+                    eventBus,
+                    personalSettings
+                );
+                hostEventHandlerInstance.init();
+                await hostEventHandlerInstance.startHostGame();
+                startHostButton.removeEventListener('click', handleStartHostClick);
+            } catch (error) {
+                console.error('Failed to start host game:', error);
+                hostEventHandlerInstance = null;
+            }
+        };
+        startHostButton.addEventListener('click', handleStartHostClick);
+    }
+
+    let clientEventHandlerInstance = null;
+    if (startJoinButton) {
+        const handleStartJoinClick = async () => {
+            if (clientEventHandlerInstance) {
+                return;
+            }
+            try {
+                pluginManager.setHost(false);
+                clientEventHandlerInstance = new ClientEventHandler(
+                    registryManager,
+                    pluginManager,
+                    factoryManager,
+                    eventBus,
+                    personalSettings
+                );
+                clientEventHandlerInstance.init();
+                await clientEventHandlerInstance.startJoinGame();
+                startJoinButton.removeEventListener('click', handleStartJoinClick);
+            } catch (error) {
+                console.error('Failed to join game:', error);
+                clientEventHandlerInstance = null;
+            }
+        };
+        startJoinButton.addEventListener('click', handleStartJoinClick);
+    }
 
     listenerRegistry.registerListener('gearButton', 'click', () => {
         personalSettingsMenu.show();
