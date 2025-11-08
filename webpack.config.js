@@ -5,7 +5,10 @@ const webpack = require('webpack');
 const path = require('path');
 require('dotenv').config(); // Load .env file
 
-module.exports = {
+module.exports = (env, argv) => {
+    const isProduction = argv.mode === 'production';
+
+    return {
     entry: './src/js/app.js', // Entry point of your application
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -48,12 +51,14 @@ module.exports = {
             ],
         }), // Copy the assets folder
         new webpack.DefinePlugin({
-            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-            'process.env.PEERJS_HOST': JSON.stringify(process.env.PEERJS_HOST),
-            'process.env.PEERJS_PORT': JSON.stringify(process.env.PEERJS_PORT),
-            'process.env.PEERJS_PATH': JSON.stringify(process.env.PEERJS_PATH),
-            'process.env.PEERJS_KEY': JSON.stringify(process.env.PEERJS_KEY),
-            'process.env.PEERJS_SECURE': JSON.stringify(process.env.PEERJS_SECURE),
+            'process.env': JSON.stringify({
+                NODE_ENV: isProduction ? 'production' : 'development',
+                PEERJS_HOST: process.env.PEERJS_HOST,
+                PEERJS_PORT: process.env.PEERJS_PORT,
+                PEERJS_PATH: process.env.PEERJS_PATH,
+                PEERJS_KEY: process.env.PEERJS_KEY,
+                PEERJS_SECURE: process.env.PEERJS_SECURE,
+            }),
         }),
     ],
     devServer: {
@@ -65,5 +70,6 @@ module.exports = {
         hot: false,          // Disable Hot Module Replacement
         liveReload: true,    // Enable live reloading
     },
-    mode: 'development',
+    mode: isProduction ? 'production' : 'development',
+    };
 };
