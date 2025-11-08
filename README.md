@@ -48,17 +48,44 @@ Follow these instructions to get a copy of the project up and running on your lo
    npm install
    ```
 
+3. **Configure local PeerJS server (recommended for development)**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   The `.env` file is pre-configured for local development. No changes needed!
+
 ### Running the Application
 
-#### Development Mode
+#### Development Mode (Recommended)
 
-To run the application in development mode with live reloading:
+For the best development experience with fast local connections:
 
+**Option 1: Full local setup (recommended)**
 ```bash
-npm run start
+# In terminal 1: Start local PeerJS server
+npm run peerjs:start
+
+# In terminal 2: Start webpack dev server
+npm start
+```
+
+**Option 2: One command (combined)**
+```bash
+npm run dev:full
 ```
 
 Open your browser and navigate to `http://localhost:9000`.
+
+You should see: `[NetworkConfig] Using custom PeerJS server: localhost` in the console.
+
+**Option 3: Without local PeerJS server**
+```bash
+npm start
+```
+
+This uses the default PeerJS cloud server (may be slower or unavailable).
 
 #### Production Build
 
