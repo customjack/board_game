@@ -1,7 +1,9 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin'); // Import copy plugin
+const webpack = require('webpack');
 const path = require('path');
+require('dotenv').config(); // Load .env file
 
 module.exports = {
     entry: './src/js/app.js', // Entry point of your application
@@ -45,6 +47,14 @@ module.exports = {
                 { from: 'src/assets', to: 'assets' }, // Copy assets folder to dist
             ],
         }), // Copy the assets folder
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+            'process.env.PEERJS_HOST': JSON.stringify(process.env.PEERJS_HOST),
+            'process.env.PEERJS_PORT': JSON.stringify(process.env.PEERJS_PORT),
+            'process.env.PEERJS_PATH': JSON.stringify(process.env.PEERJS_PATH),
+            'process.env.PEERJS_KEY': JSON.stringify(process.env.PEERJS_KEY),
+            'process.env.PEERJS_SECURE': JSON.stringify(process.env.PEERJS_SECURE),
+        }),
     ],
     devServer: {
         static: {

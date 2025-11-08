@@ -1,32 +1,76 @@
 /**
  * NetworkConfig - PeerJS connection configuration
  *
- * Basic configuration that relies on PeerJS library defaults for ICE servers
- * and connection negotiation. This allows the library to handle updates
- * to STUN/TURN servers automatically.
+ * Supports custom PeerJS server configuration via environment variables.
+ * Falls back to default PeerJS cloud server if not configured.
  *
- * Key features:
- * - Uses default PeerJS cloud server and ICE configuration
- * - Debug mode for development troubleshooting
- * - Standard timeouts and retry settings
+ * Environment variables:
+ * - PEERJS_HOST: Custom PeerServer host (e.g., 'localhost' or 'myserver.com')
+ * - PEERJS_PORT: Custom PeerServer port (e.g., 9000)
+ * - PEERJS_PATH: Custom PeerServer path (e.g., '/myapp')
+ * - PEERJS_SECURE: Use secure connection (true/false, default: true for production)
+ * - PEERJS_KEY: PeerServer API key (optional)
+ *
+ * Example .env file:
+ * PEERJS_HOST=localhost
+ * PEERJS_PORT=9000
+ * PEERJS_PATH=/peerjs
+ * PEERJS_KEY=peerjs
  */
 
-export const PEER_CONFIG = {
-    // PeerJS server configuration
-    // Using default cloud PeerServer with default settings
+// Build PeerJS configuration from environment variables
+const buildPeerConfig = () => {
+    const config = {
+        // Enable debug logging in development
+        debug: process.env.NODE_ENV === 'development' ? 2 : 0,
 
-    // Enable debug logging in development
-    debug: process.env.NODE_ENV === 'development' ? 2 : 0,
+        // Connection retry settings
+        pingInterval: 5000,  // Ping every 5 seconds (default is 5000)
 
-    // Connection retry settings
-    pingInterval: 5000,  // Ping every 5 seconds (default is 5000)
+        // Serialization format (binary is faster but less debuggable)
+        serialization: 'json',
 
-    // Serialization format (binary is faster but less debuggable)
-    serialization: 'json',
+        // Reliable data channel
+        reliable: true
+    };
 
-    // Reliable data channel
-    reliable: true
+    // Check if custom PeerServer is configured via environment variables
+    const customHost = process.env.PEERJS_HOST;
+    const customPort = process.env.PEERJS_PORT;
+    const customPath = process.env.PEERJS_PATH;
+    const customKey = process.env.PEERJS_KEY;
+    const customSecure = process.env.PEERJS_SECURE;
+
+    if (customHost) {
+        console.log('[NetworkConfig] Using custom PeerJS server:', customHost);
+        config.host = customHost;
+
+        if (customPort) {
+            config.port = parseInt(customPort, 10);
+        }
+
+        if (customPath) {
+            config.path = customPath;
+        }
+
+        if (customKey) {
+            config.key = customKey;
+        }
+
+        // Set secure based on environment variable or default to true for non-localhost
+        if (customSecure !== undefined) {
+            config.secure = customSecure === 'true';
+        } else {
+            config.secure = customHost !== 'localhost' && customHost !== '127.0.0.1';
+        }
+    } else {
+        console.log('[NetworkConfig] Using default PeerJS cloud server');
+    }
+
+    return config;
 };
+
+export const PEER_CONFIG = buildPeerConfig();
 
 /**
  * For self-hosted PeerServer (fastest option for production):
