@@ -133,6 +133,10 @@
                         <label class="settings-label" for="moveDelayHost">Move Delay (milliseconds):</label>
                         <input class="input settings-input" id="moveDelayHost" type="number" value="500" min="100" max="5000">
                     </div>
+                    <div class="settings-row">
+                        <label class="settings-label" for="modalTimeoutHost">Modal Timeout (seconds):</label>
+                        <input class="input settings-input" id="modalTimeoutHost" type="number" value="15" min="0" max="300">
+                    </div>
                     <input type="file" id="pluginFileInput" accept=".js" style="display: none;">
                     <button id="uploadPluginButton">Upload Plugin</button>
                 </div>
@@ -161,6 +165,10 @@
                     <div class="settings-row">
                         <label class="settings-label" for="moveDelayClient">Move Delay (milliseconds):</label>
                         <span class="settings-display" id="moveDelayClient">500</span>
+                    </div>
+                    <div class="settings-row">
+                        <label class="settings-label" for="modalTimeoutClient">Modal Timeout (seconds):</label>
+                        <span class="settings-display" id="modalTimeoutClient">15</span>
                     </div>
                 </div>
                 

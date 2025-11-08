@@ -126,6 +126,7 @@ export default class HostEventHandler extends BaseEventHandler {
         this.uiBinder.bindInput('totalPlayerLimit', () => this.onSettingsChanged());
         this.uiBinder.bindInput('turnTimer', () => this.onSettingsChanged());
         this.uiBinder.bindInput('moveDelay', () => this.onSettingsChanged());
+        this.uiBinder.bindInput('modalTimeout', () => this.onSettingsChanged());
 
         // Turn timer enabled checkbox
         const turnTimerCheckbox = this.uiBinder.getInput('turnTimerEnabled');

@@ -47,6 +47,7 @@ export default class GameEngine {
         this.timerManager = new TimerManager(timerAnimation, this.gameState);
 
         this.gameLogPopupController = new GameLogPopupController(this.eventBus);
+        this.modalAutoDismissTimer = null;
 
         // Bind state handlers for game phases
         this.stateHandlers = {
@@ -452,28 +453,63 @@ export default class GameEngine {
         return currentPlayer.peerId === this.peerId
     }
 
+    clearModalAutoDismissTimer() {
+        if (this.modalAutoDismissTimer) {
+            clearTimeout(this.modalAutoDismissTimer);
+            this.modalAutoDismissTimer = null;
+        }
+    }
+
     showPromptModal(message, callback) {
         const modal = document.getElementById('gamePromptModal');
         const modalMessage = document.getElementById('gamePromptModalMessage');
         const dismissButton = document.getElementById('gamePromptModalDismissButton');
-    
-        modalMessage.textContent = message;  // Set the message in the modal
-    
-        // Show the modal
+
+        if (!modal || !modalMessage || !dismissButton) {
+            console.warn('Prompt modal elements missing; cannot display prompt.');
+            if (typeof callback === 'function' && this.isClientTurn()) {
+                callback();
+            }
+            return;
+        }
+
+        modalMessage.textContent = message;
         modal.style.display = 'block';
-    
-        // Only show the dismiss button if it's the client's turn
+
+        this.clearModalAutoDismissTimer();
+
+        let resolved = false;
+        const resolveOnce = () => {
+            if (resolved) return;
+            resolved = true;
+            if (typeof callback === 'function') {
+                callback();
+            }
+        };
+
+        const closeModal = (shouldResolve = false) => {
+            modal.style.display = 'none';
+            this.clearModalAutoDismissTimer();
+            if (shouldResolve) {
+                resolveOnce();
+            }
+        };
+
+        const timeoutSeconds = this.gameState?.settings?.getModalTimeoutSeconds?.() ?? 0;
+        if (timeoutSeconds > 0) {
+            this.modalAutoDismissTimer = setTimeout(() => {
+                this.modalAutoDismissTimer = null;
+                const shouldResolve = this.isClientTurn();
+                closeModal(shouldResolve);
+            }, timeoutSeconds * 1000);
+        }
+
         if (this.isClientTurn()) {
-            dismissButton.style.display = 'inline-block'; // Show the dismiss button
-            dismissButton.onclick = () => {
-                // Close the modal for all players
-                modal.style.display = 'none';
-    
-                // Call the callback and update the game state
-                callback();           
-            };
+            dismissButton.style.display = 'inline-block';
+            dismissButton.onclick = () => closeModal(true);
         } else {
-            dismissButton.style.display = 'none'; // Hide the dismiss button if it's not the client's turn
+            dismissButton.style.display = 'none';
+            dismissButton.onclick = null;
         }
     }
 

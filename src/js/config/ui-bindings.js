@@ -62,6 +62,16 @@ export const HOST_UI_BINDINGS = {
             },
             sanitizer: (value) => Math.max(0, parseInt(value) || 0)
         },
+        modalTimeout: {
+            elementId: 'modalTimeoutHost',
+            type: 'number',
+            events: ['change', 'blur'],
+            validator: (value) => {
+                const num = parseInt(value);
+                return !isNaN(num) && num >= 0 && num <= 300;
+            },
+            sanitizer: (value) => Math.max(0, Math.min(300, parseInt(value) || 0))
+        },
         turnTimerEnabled: {
             elementId: 'turnTimerEnabledHost',
             type: 'checkbox',
