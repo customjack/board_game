@@ -1,0 +1,290 @@
+/* Settings Modal Styles */
+
+/* Modal backdrop */
+.settings-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+/* Modal container - Fixed size */
+.settings-modal-container {
+  background-color: var(--background-modal, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  width: 900px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Modal header */
+.settings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: calc(var(--spacing-unit) * 2);
+  border-bottom: 2px solid var(--border-color);
+  background-color: var(--background-secondary, #f5f5f5);
+}
+
+.settings-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.settings-modal-header-buttons {
+  display: flex;
+  gap: calc(var(--spacing-unit) * 1);
+  align-items: center;
+}
+
+.settings-modal-apply {
+  padding: calc(var(--spacing-unit) * 0.75) calc(var(--spacing-unit) * 1.5);
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border: 1px solid var(--primary-color, #007bff);
+  transition: all 0.2s ease;
+}
+
+.settings-modal-apply:hover {
+  background-color: var(--primary-hover, #0056b3);
+  border-color: var(--primary-hover, #0056b3);
+}
+
+.settings-modal-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-modal-close {
+  font-size: 28px;
+  line-height: 1;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  transition: all 0.2s ease;
+}
+
+.settings-modal-close:hover {
+  background-color: var(--danger-color, #dc3545);
+  color: white;
+  border-color: var(--danger-color, #dc3545);
+}
+
+/* Modal body (two-column layout) */
+.settings-modal-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left sidebar navigation */
+.settings-modal-sidebar {
+  width: 200px;
+  background-color: var(--background-secondary, #f5f5f5);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  padding: calc(var(--spacing-unit) * 1);
+}
+
+.settings-nav-item {
+  padding: calc(var(--spacing-unit) * 1.25) calc(var(--spacing-unit) * 1.5);
+  margin-bottom: calc(var(--spacing-unit) * 0.5);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.settings-nav-item:hover {
+  background-color: var(--background-hover, rgba(0, 0, 0, 0.05));
+  color: var(--text-color);
+}
+
+.settings-nav-item.active {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  font-weight: 600;
+}
+
+/* Right content area */
+.settings-modal-content {
+  flex: 1;
+  padding: calc(var(--spacing-unit) * 2);
+  overflow-y: auto;
+  background-color: var(--background-modal, #ffffff);
+}
+
+.settings-content-title {
+  margin: 0 0 calc(var(--spacing-unit) * 2) 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+  padding-bottom: calc(var(--spacing-unit) * 1);
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* Settings rows (reuse from settings.css) */
+.settings-modal-content .settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--spacing-unit) * 1.5) 0;
+  gap: calc(var(--spacing-unit) * 2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.settings-modal-content .settings-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-modal-content .settings-label {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-color);
+  cursor: help;
+  user-select: none;
+}
+
+.settings-modal-content .settings-label[title] {
+  border-bottom: 1px dotted var(--border-color);
+}
+
+.settings-modal-content .settings-input {
+  flex: 0 0 auto;
+  min-width: 100px;
+  max-width: 200px;
+}
+
+.settings-modal-content .settings-display {
+  flex: 0 0 auto;
+  min-width: 100px;
+  padding: calc(var(--spacing-unit) * 0.5);
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+  text-align: center;
+}
+
+.settings-modal-content .settings-checkbox-container {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.settings-modal-content .settings-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.settings-modal-content .settings-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .settings-modal-container {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .settings-modal-body {
+    flex-direction: column;
+  }
+
+  .settings-modal-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    max-height: 150px;
+    display: flex;
+    gap: calc(var(--spacing-unit) * 0.5);
+    padding: calc(var(--spacing-unit) * 1);
+  }
+
+  .settings-nav-item {
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
+  .settings-modal-content .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing-unit) * 0.5);
+  }
+
+  .settings-modal-content .settings-label {
+    width: 100%;
+  }
+
+  .settings-modal-content .settings-input,
+  .settings-modal-content .settings-display,
+  .settings-modal-content .settings-checkbox-container {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Range input styling */
+.settings-modal-content input[type="range"].settings-input {
+  min-width: 150px;
+}
+
+/* Select styling */
+.settings-modal-content select.settings-input {
+  min-width: 150px;
+}
+
+/* Custom scrollbar for modal content */
+.settings-modal-content::-webkit-scrollbar,
+.settings-modal-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.settings-modal-content::-webkit-scrollbar-track,
+.settings-modal-sidebar::-webkit-scrollbar-track {
+  background: var(--background-secondary, #f5f5f5);
+  border-radius: 4px;
+}
+
+.settings-modal-content::-webkit-scrollbar-thumb,
+.settings-modal-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-color, #ccc);
+  border-radius: 4px;
+}
+
+.settings-modal-content::-webkit-scrollbar-thumb:hover,
+.settings-modal-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-color-secondary, #999);
+}

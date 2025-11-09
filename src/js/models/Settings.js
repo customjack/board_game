@@ -1,14 +1,66 @@
+/**
+ * Settings Model - Game settings with schema-based defaults
+ *
+ * Refactored to use settings-schema for default values and validation.
+ * Now adding new settings only requires updating the schema!
+ */
+
+import { getDefaultSettings, GAME_SETTINGS_SCHEMA, validateAllSettings } from '../config/settings-schema.js';
+
 export default class Settings {
     /**
-     * Constructs a new Settings instance.
-     * @param {number} playerLimitPerPeer - Limit on the number of players per peer.
-     * @param {number} playerLimit - Limit on the total number of players.
-     * @param {number} turnTimer - The maximum time allowed for each turn (in seconds).
-     * @param {number} moveDelay - The delay between each move (in milliseconds).
-     * @param {boolean} turnTimerEnabled - Whether the turn timer is enabled or not.
-     * @param {number} modalTimeoutSeconds - Seconds before game modals auto-dismiss (0 disables).
+     * Constructs a new Settings instance
+     * Uses schema defaults, but allows overrides via params object
+     * @param {Object} params - Settings parameters (optional)
      */
-    constructor(
+    constructor(params = {}) {
+        // Get default values from schema
+        const defaults = getDefaultSettings();
+
+        // Merge defaults with provided params
+        const mergedSettings = { ...defaults, ...params };
+
+        // Apply all settings from schema
+        GAME_SETTINGS_SCHEMA.forEach(schema => {
+            this[schema.id] = mergedSettings[schema.id];
+        });
+    }
+
+    /**
+     * Method to return the settings in an object format
+     * @returns {Object} The settings serialized as an object
+     */
+    toJSON() {
+        const json = {};
+
+        GAME_SETTINGS_SCHEMA.forEach(schema => {
+            json[schema.id] = this[schema.id];
+        });
+
+        return json;
+    }
+
+    /**
+     * Static method to create a Settings object from a JSON object
+     * @param {Object} json - The JSON object containing the settings data
+     * @returns {Settings} A new Settings instance
+     */
+    static fromJSON(json = {}) {
+        // Validate and use validated values
+        const validation = validateAllSettings(json);
+
+        if (!validation.valid) {
+            console.warn('Settings validation warnings:', validation.errors);
+        }
+
+        return new Settings(validation.settings);
+    }
+
+    /**
+     * Legacy constructor for backwards compatibility
+     * @deprecated Use new Settings(params) instead
+     */
+    static createLegacy(
         playerLimitPerPeer = 1,
         playerLimit = 8,
         turnTimer = 150,
@@ -16,106 +68,148 @@ export default class Settings {
         turnTimerEnabled = false,
         modalTimeoutSeconds = 15
     ) {
-        this.playerLimitPerPeer = playerLimitPerPeer; // Limit the number of players per peer
-        this.playerLimit = playerLimit; // Limit the number of total players
-        this.turnTimer = turnTimer; // Time limit for each player's turn in seconds
-        this.moveDelay = moveDelay; // Delay between individual player moves in milliseconds
-        this.turnTimerEnabled = turnTimerEnabled; // Whether the turn timer is enabled
-        this.modalTimeoutSeconds = modalTimeoutSeconds ?? 15; // Auto-dismiss timeout for in-game modals
+        return new Settings({
+            playerLimitPerPeer,
+            playerLimit,
+            turnTimer,
+            moveDelay,
+            turnTimerEnabled,
+            modalTimeoutSeconds
+        });
     }
 
-    /**
-     * Method to return the settings in an object format.
-     * @returns {Object} The settings serialized as an object.
-     */
-    toJSON() {
-        return {
-            playerLimitPerPeer: this.playerLimitPerPeer,
-            playerLimit: this.playerLimit,
-            turnTimer: this.turnTimer,
-            moveDelay: this.moveDelay,
-            turnTimerEnabled: this.turnTimerEnabled,
-            modalTimeoutSeconds: this.modalTimeoutSeconds,
-        };
-    }
+    // ========================================
+    // Getters and Setters (for IDE autocomplete and backwards compatibility)
+    // ========================================
 
     /**
-     * Static method to create a Settings object from a JSON object.
-     * @param {Object} json - The JSON object containing the settings data.
-     * @returns {Settings} A new Settings instance.
-     */
-    static fromJSON(json = {}) {
-        return new Settings(
-            json.playerLimitPerPeer,
-            json.playerLimit,
-            json.turnTimer,
-            json.moveDelay,
-            json.turnTimerEnabled,
-            json.modalTimeoutSeconds
-        );
-    }
-
-    /**
-     * Sets the turn timer for each player's turn.
-     * @param {number} seconds - The new time limit for each turn in seconds.
-     */
-    setTurnTimer(seconds) {
-        this.turnTimer = seconds;
-    }
-
-    /**
-     * Gets the current turn timer setting.
-     * @returns {number} The time limit for each turn in seconds.
+     * Gets the turn timer value
+     * @returns {number} Turn timer in seconds
      */
     getTurnTimer() {
         return this.turnTimer;
     }
 
     /**
-     * Sets the move delay between individual player moves.
-     * @param {number} milliseconds - The new move delay in milliseconds.
+     * Sets the turn timer for each player's turn
+     * @param {number} seconds - The new time limit for each turn in seconds
      */
-    setMoveDelay(milliseconds) {
-        this.moveDelay = milliseconds;
+    setTurnTimer(seconds) {
+        this.turnTimer = seconds;
     }
 
     /**
-     * Gets the current move delay setting.
-     * @returns {number} The delay between individual player moves in milliseconds.
+     * Gets the move delay value
+     * @returns {number} Move delay in milliseconds
      */
     getMoveDelay() {
         return this.moveDelay;
     }
 
     /**
-     * Enables or disables the turn timer.
-     * @param {boolean} enabled - Whether the turn timer should be enabled.
+     * Sets the move delay between moves
+     * @param {number} milliseconds - The delay in milliseconds
+     */
+    setMoveDelay(milliseconds) {
+        this.moveDelay = milliseconds;
+    }
+
+    /**
+     * Gets the player limit per peer
+     * @returns {number} Max players per peer
+     */
+    getPlayerLimitPerPeer() {
+        return this.playerLimitPerPeer;
+    }
+
+    /**
+     * Sets the player limit per peer
+     * @param {number} limit - Maximum players per peer
+     */
+    setPlayerLimitPerPeer(limit) {
+        this.playerLimitPerPeer = limit;
+    }
+
+    /**
+     * Gets the total player limit
+     * @returns {number} Total player limit
+     */
+    getPlayerLimit() {
+        return this.playerLimit;
+    }
+
+    /**
+     * Sets the total player limit
+     * @param {number} limit - Total player limit
+     */
+    setPlayerLimit(limit) {
+        this.playerLimit = limit;
+    }
+
+    /**
+     * Gets whether turn timer is enabled
+     * @returns {boolean} Turn timer enabled state
+     */
+    getTurnTimerEnabled() {
+        return this.turnTimerEnabled;
+    }
+
+    /**
+     * Sets whether turn timer is enabled
+     * @param {boolean} enabled - Turn timer enabled state
      */
     setTurnTimerEnabled(enabled) {
         this.turnTimerEnabled = enabled;
     }
 
     /**
-     * Checks if the turn timer is enabled.
-     * @returns {boolean} True if the turn timer is enabled, false otherwise.
+     * Gets the modal timeout in seconds
+     * @returns {number} Modal timeout in seconds
      */
-    isTurnTimerEnabled() {
-        return this.turnTimerEnabled;
+    getModalTimeoutSeconds() {
+        return this.modalTimeoutSeconds;
     }
 
     /**
-     * Sets the modal timeout duration.
-     * @param {number} seconds - Timeout in seconds (0 disables auto-dismiss).
+     * Sets the modal auto-dismiss timeout
+     * @param {number} seconds - Timeout in seconds (0 to disable)
      */
     setModalTimeoutSeconds(seconds) {
         this.modalTimeoutSeconds = seconds;
     }
 
     /**
-     * Gets the modal timeout duration in seconds.
-     * @returns {number}
+     * Clone the settings object
+     * @returns {Settings} A new Settings instance with the same values
      */
-    getModalTimeoutSeconds() {
-        return this.modalTimeoutSeconds;
+    clone() {
+        return Settings.fromJSON(this.toJSON());
+    }
+
+    /**
+     * Compare with another Settings object
+     * @param {Settings} other - Settings to compare with
+     * @returns {boolean} True if all settings match
+     */
+    equals(other) {
+        if (!other) return false;
+
+        return GAME_SETTINGS_SCHEMA.every(schema =>
+            this[schema.id] === other[schema.id]
+        );
+    }
+
+    /**
+     * Get a human-readable summary of settings
+     * @returns {string} Summary string
+     */
+    toString() {
+        const parts = [];
+
+        GAME_SETTINGS_SCHEMA.forEach(schema => {
+            parts.push(`${schema.label}: ${this[schema.id]}`);
+        });
+
+        return parts.join(', ');
     }
 }

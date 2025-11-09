@@ -43,7 +43,7 @@ export default class TimerComponent extends BaseUIComponent {
 
         // Initialize animation
         if (this.animation) {
-            if (!this.gameState || !this.gameState.settings.isTurnTimerEnabled()) {
+            if (!this.gameState || !this.gameState.settings.turnTimerEnabled) {
                 // Show infinity symbol if timer disabled
                 this.animation.init(null, true);
             } else {
@@ -59,7 +59,7 @@ export default class TimerComponent extends BaseUIComponent {
      * Start the timer
      */
     startTimer() {
-        if (!this.gameState || !this.gameState.settings.isTurnTimerEnabled()) {
+        if (!this.gameState || !this.gameState.settings.turnTimerEnabled) {
             return; // Timer disabled
         }
 
@@ -100,7 +100,7 @@ export default class TimerComponent extends BaseUIComponent {
      * Pause the timer
      */
     pauseTimer() {
-        if (!this.gameState || !this.gameState.settings.isTurnTimerEnabled()) {
+        if (!this.gameState || !this.gameState.settings.turnTimerEnabled) {
             return;
         }
 
@@ -117,7 +117,7 @@ export default class TimerComponent extends BaseUIComponent {
      * Resume the timer
      */
     resumeTimer() {
-        if (!this.gameState || !this.gameState.settings.isTurnTimerEnabled()) {
+        if (!this.gameState || !this.gameState.settings.turnTimerEnabled) {
             return;
         }
 
@@ -184,7 +184,7 @@ export default class TimerComponent extends BaseUIComponent {
 
         // Update timer enabled status
         if (this.animation) {
-            const timerEnabled = gameState.settings.isTurnTimerEnabled();
+            const timerEnabled = gameState.settings.turnTimerEnabled;
             if (!timerEnabled && this.running) {
                 this.stopTimer();
             }
@@ -218,7 +218,7 @@ export default class TimerComponent extends BaseUIComponent {
             paused: this.paused,
             hasAnimation: !!this.animation,
             hasPausedMessage: !!this.pausedMessage,
-            timerEnabled: this.gameState?.settings?.isTurnTimerEnabled() || false
+            timerEnabled: this.gameState?.settings?.turnTimerEnabled || false
         };
     }
 

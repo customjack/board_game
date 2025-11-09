@@ -18,9 +18,11 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.actionRegistry = new ActionRegistry();
     }
 
-    init() {
-        super.init();
-        this.showPage("joinPage");
+    /**
+     * Client starts on the join page
+     */
+    getInitialPage() {
+        return "joinPage";
     }
 
     setupEventListeners() {
@@ -131,14 +133,17 @@ export default class ClientEventHandler extends BaseEventHandler {
 
     displayLobbyControls() {
         const leaveGameButton = document.getElementById('leaveGameButton');
-        const settingsSection = document.getElementById('settingsSectionClient');
+        const openSettingsButton = document.getElementById('openSettingsButton');
 
-        // Show or hide buttons based on conditions, e.g., game state or player limits
-        if (leaveGameButton) leaveGameButton.style.display = 'inline';
-        if (settingsSection) settingsSection.style.display = 'inline';
+        // Show client-specific buttons
+        if (leaveGameButton) leaveGameButton.style.display = 'block';
+        if (openSettingsButton) openSettingsButton.style.display = 'block';
 
         // Conditionally show or hide the "Add Player" button
         this.updateAddPlayerButton();
+
+        // Add settings button listener
+        this.addSettingsButtonListener();
     }
 
     showGamePage() {
@@ -184,40 +189,29 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.updateAddPlayerButton();
     }
 
-    addPlayerListListeners() { 
-        // Register click listener for edit buttons
-        document.querySelectorAll('.edit-button').forEach((button) => {
-            const playerId = button.getAttribute('data-playerId');
-            this.listenerRegistry.registerListener(button.id, 'click', () => {
-                this.editPlayerName(playerId);
-            });
+    /**
+     * Client implementation: Send name change to host
+     */
+    async applyPlayerNameChange(playerId, _player, newName) {
+        // Send name change to host - host will broadcast the update
+        this.peer.conn.send({
+            type: 'nameChange',
+            playerId: playerId,
+            newName: newName,
         });
-    
-        // Register click listener for remove buttons
-        document.querySelectorAll('.remove-button').forEach((button) => {
-            const playerId = button.getAttribute('data-playerId');
-            this.listenerRegistry.registerListener(button.id, 'click', () => {
-                this.removePlayer(playerId);
-            });
-        });
+        // Note: Don't update locally - wait for host broadcast to ensure consistency
     }
-    
-    
 
-    async editPlayerName(playerId) {
-        const player = this.peer.ownedPlayers.find((p) => p.playerId === playerId);
-        if (player) {
-            const newName = await ModalUtil.prompt('Enter new name:', player.nickname, 'Edit Player Name');
-            if (newName && newName.trim() !== '') {
-                // Send name change to host - host will broadcast the update
-                this.peer.conn.send({
-                    type: 'nameChange',
-                    playerId: playerId,
-                    newName: newName.trim(),
-                });
-                // Note: Don't update locally - wait for host broadcast to ensure consistency
-            }
-        }
+    /**
+     * Client implementation: Send removal request to host
+     */
+    async applyPlayerRemoval(playerId) {
+        // Send remove request to host
+        this.peer.conn.send({
+            type: 'removePlayer',
+            playerId: playerId
+        });
+        // Note: Don't remove locally - wait for host broadcast
     }
 
     async addNewOwnedPlayer() {
@@ -227,23 +221,15 @@ export default class ClientEventHandler extends BaseEventHandler {
         }
     }
 
-    async removePlayer(playerId) {
-        const playerIndex = this.peer.ownedPlayers.findIndex((p) => p.playerId === playerId);
-
-        if (playerIndex !== -1) {
-            if (this.peer.ownedPlayers.length === 1) {
-                await ModalUtil.alert('You have removed your last player. Leaving the game.');
-                this.leaveGame();
-            } else {
-                // Send remove request to host
-                this.peer.conn.send({
-                    type: 'removePlayer',
-                    playerId: playerId
-                });
-                // Note: Don't remove locally - wait for host broadcast
-            }
-        } else {
-            await ModalUtil.alert('Player not found.');
+    /**
+     * Add listener for settings button
+     */
+    addSettingsButtonListener() {
+        const openSettingsButton = document.getElementById('openSettingsButton');
+        if (openSettingsButton) {
+            this.listenerRegistry.registerListener('openSettingsButton', 'click', () => {
+                this.settingsManager.showSettings();
+            });
         }
     }
 }

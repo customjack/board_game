@@ -116,104 +116,48 @@
             <span id="copyMessage" class="toast-message" style="display: none;">Copied!</span>
         </div>
 
+        <!-- Lobby Layout: Split into two sections -->
         <div id="lobbyContainer" class="lobby-container">
-            <!-- Combined Settings and Player List -->
-            <div id="settingsAndPlayersSection" class="combined-section">
-                <!-- Settings Section (Visible to Host Only) -->
-                <div id="settingsSectionHost" class="compact-settings" style="display: none;">
-                    <h3>Game Settings</h3>
-                    <div class="settings-row">
-                        <label class="settings-label" for="playerLimitPerPeerHost">Max Players per Peer:</label>
-                        <input class="input settings-input" id="playerLimitPerPeerHost" type="number" value="1" min="1" max="10">
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="totalPlayerLimitHost">Total Player Limit:</label>
-                        <input class="input settings-input" id="totalPlayerLimitHost" type="number" value="8" min="1" max="100">
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="turnTimerHost">Turn Timer (seconds):</label>
-                        <input class="input settings-input" id="turnTimerHost" type="number" value="30" min="5" max="300">
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="turnTimerEnabledHost">Enable Turn Timer:</label>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="turnTimerEnabledHost">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="moveDelayHost">Move Delay (milliseconds):</label>
-                        <input class="input settings-input" id="moveDelayHost" type="number" value="500" min="100" max="5000">
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="modalTimeoutHost">Modal Timeout (seconds):</label>
-                        <input class="input settings-input" id="modalTimeoutHost" type="number" value="15" min="0" max="300">
-                    </div>
+            <!-- Left Section: Lobby Controls -->
+            <div id="lobbyControlsSection" class="lobby-section-left">
+                <h3>Lobby Controls</h3>
+                <div class="lobby-button-group">
+                    <button id="openSettingsButton" class="button button-primary" style="display: none;">
+                        Settings
+                    </button>
+                    <button id="selectMapButton" class="button button-primary" style="display: none;">
+                        Map Picker
+                    </button>
+                    <button id="uploadPluginButton" class="button button-primary" style="display: none;">
+                        Upload Plugin
+                    </button>
                     <input type="file" id="pluginFileInput" accept=".js" style="display: none;">
-                    <button id="uploadPluginButton">Upload Plugin</button>
+                    <button id="startGameButton" class="button button-primary" style="display: none;">
+                        Start Game
+                    </button>
+                    <button id="closeGameButton" class="button button-danger" style="display: none;">
+                        Close Game
+                    </button>
+                    <button id="leaveGameButton" class="button button-primary" style="display: none;">
+                        Leave Game
+                    </button>
                 </div>
-                
-                <div id="settingsSectionClient" class="compact-settings" style="display: none;">
-                    <h3>Game Settings</h3>
-                    <div class="settings-row">
-                        <label class="settings-label" for="playerLimitPerPeerClient">Max Players per Peer:</label>
-                        <span class="settings-display" id="playerLimitPerPeerDisplayClient">1</span>
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="totalPlayerLimitClient">Total Player Limit:</label>
-                        <span class="settings-display" id="totalPlayerLimitDisplayClient">8</span>
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="turnTimerClient">Turn Timer (seconds):</label>
-                        <span class="settings-display" id="turnTimerClient">30</span>
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="turnTimerEnabledClient">Turn Timer Enabled:</label>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="turnTimerEnabledClient" disabled>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="moveDelayClient">Move Delay (milliseconds):</label>
-                        <span class="settings-display" id="moveDelayClient">500</span>
-                    </div>
-                    <div class="settings-row">
-                        <label class="settings-label" for="modalTimeoutClient">Modal Timeout (seconds):</label>
-                        <span class="settings-display" id="modalTimeoutClient">15</span>
-                    </div>
-                </div>
-                
-                
-        
-                <!-- Player List Section -->
-                <div id="lobbyPlayerListSection" class="compact-player-list">
-                    <h3>Connected Players</h3>
-                    <ul id="lobbyPlayerList"></ul>
-                    <!-- Green "+" button to add players -->
-                    <div class="add-player-container">
-                        <button id="addPlayerButton" class="button">Add Another Local Player</button>
-                    </div>
+            </div>
+
+            <!-- Right Section: Player List -->
+            <div id="lobbyPlayerListSection" class="lobby-section-right">
+                <h3>Connected Players</h3>
+                <ul id="lobbyPlayerList"></ul>
+                <!-- Green "+" button to add players -->
+                <div class="add-player-container">
+                    <button id="addPlayerButton" class="button">Add Another Local Player</button>
                 </div>
             </div>
         </div>
-    
-        
-        <!-- Host: Start Game Button (Visible to Host Only) -->
-        <button id="startGameButton" class="button" style="display: none;">Start Game</button>
-
-        <!-- Host's "Close Game" button (only shown for host) -->
-        <button id="closeGameButton" class="button button-danger" style="display: none;">Close Game</button>
-
-        <!-- Player's "Leave Game" button (only shown for players) -->
-        <button id="leaveGameButton" class="button button-danger" style="display: none;">Leave Game</button>
 
         <!-- Lobby Page Board Preview Section -->
         <div id="boardPreviewSection" style="margin-top: 30px;">
             <h3>Board Preview</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <button id="selectMapButton" class="button" style="display: none;">Map Picker</button>
-            </div>
             <div id="lobbyBoardContainer" class="board-container">
                 <div class="board-wrapper">
                     <div class="board-content" id="lobbyBoardContent">

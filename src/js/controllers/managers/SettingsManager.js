@@ -1,48 +1,93 @@
-import Settings from '../../models/Settings';
+/**
+ * SettingsManager - Manages game settings with schema-based validation
+ *
+ * Refactored to use SettingsModal and settings-schema for
+ * automatic UI generation and validation.
+ */
+
+import Settings from '../../models/Settings.js';
+import SettingsModal from '../../ui/components/SettingsModal.js';
+import { validateAllSettings, GAME_SETTINGS_SCHEMA } from '../../config/settings-schema.js';
 
 export default class SettingsManager {
     constructor(isHost = false) {
         this.isHost = isHost;
         this.currentSettings = null;
-        this.settingsElements = this.initializeInputs();
+        this.settingsModal = null;
+        this.onChangeCallback = null;
     }
 
+    /**
+     * Initialize settings from game state
+     * @param {GameState} gameState - Game state with settings
+     */
     initializeSettings(gameState) {
         this.currentSettings = Settings.fromJSON(gameState.settings.toJSON());
-        this.syncUIWithSettings(this.currentSettings);
+
+        // Initialize modal if not already created
+        if (!this.settingsModal) {
+            this.initializeModal();
+        }
+
+        this.syncModalWithSettings(this.currentSettings);
     }
 
-    initializeInputs() {
-        if (this.isHost) {
-            return {
-                playerLimitPerPeerInput: document.getElementById('playerLimitPerPeerHost'),
-                totalPlayerLimitInput: document.getElementById('totalPlayerLimitHost'),
-                turnTimerInput: document.getElementById('turnTimerHost'),
-                moveDelayInput: document.getElementById('moveDelayHost'),
-                turnTimerEnabledInput: document.getElementById('turnTimerEnabledHost'),
-                modalTimeoutInput: document.getElementById('modalTimeoutHost')
-            };
-        } else {
-            return {
-                playerLimitPerPeerDisplay: document.getElementById('playerLimitPerPeerDisplayClient'),
-                totalPlayerLimitDisplay: document.getElementById('totalPlayerLimitDisplayClient'),
-                turnTimerDisplay: document.getElementById('turnTimerClient'),
-                moveDelayDisplay: document.getElementById('moveDelayClient'),
-                turnTimerEnabledDisplay: document.getElementById('turnTimerEnabledClient'),
-                modalTimeoutDisplay: document.getElementById('modalTimeoutClient')
-            };
+    /**
+     * Initialize the settings modal
+     */
+    initializeModal() {
+        this.settingsModal = new SettingsModal({
+            isHost: this.isHost,
+            settings: this.currentSettings,
+            onChange: this.isHost ? (settingId, value) => this.handleSettingChange(settingId, value) : null
+        });
+
+        this.settingsModal.init();
+        this.settingsModal.render();
+    }
+
+    /**
+     * Handle setting change (host only)
+     * @param {string} settingId - Setting that changed
+     * @param {any} value - New value
+     */
+    handleSettingChange(settingId, value) {
+        console.log(`Setting changed: ${settingId} = ${value}`);
+
+        // Notify callback if set
+        if (this.onChangeCallback) {
+            this.onChangeCallback();
         }
     }
 
-    getSettingsElements() {
-        return this.settingsElements;
+    /**
+     * Set callback for when settings change
+     * @param {Function} callback - Callback function
+     */
+    setOnChangeCallback(callback) {
+        this.onChangeCallback = callback;
     }
 
+    /**
+     * Update settings from game state
+     * @param {GameState} gameState - Game state with updated settings
+     */
     updateSettings(gameState) {
         this.currentSettings = Settings.fromJSON(gameState.settings.toJSON());
-        this.syncUIWithSettings(this.currentSettings);
+
+        // Initialize modal if not already created
+        if (!this.settingsModal) {
+            this.initializeModal();
+        }
+
+        this.syncModalWithSettings(this.currentSettings);
     }
 
+    /**
+     * Check if settings should be updated
+     * @param {Settings} newSettings - New settings to compare
+     * @returns {boolean} True if update needed
+     */
     shouldUpdateSettings(newSettings) {
         if (!this.currentSettings) {
             return true;
@@ -50,83 +95,116 @@ export default class SettingsManager {
         return JSON.stringify(this.currentSettings) !== JSON.stringify(newSettings);
     }
 
-    syncUIWithSettings(settings) {
-        const elements = this.settingsElements;
-        if (this.isHost) {
-            // Host-side inputs
-            if (elements.playerLimitPerPeerInput) elements.playerLimitPerPeerInput.value = settings.playerLimitPerPeer;
-            if (elements.totalPlayerLimitInput) elements.totalPlayerLimitInput.value = settings.playerLimit;
-            if (elements.turnTimerInput) elements.turnTimerInput.value = settings.turnTimer;
-            if (elements.moveDelayInput) elements.moveDelayInput.value = settings.moveDelay;
-            if (elements.turnTimerEnabledInput) elements.turnTimerEnabledInput.checked = settings.turnTimerEnabled;
-            if (elements.modalTimeoutInput) elements.modalTimeoutInput.value = settings.modalTimeoutSeconds;
-        } else {
-            // Client-side displays
-            if (elements.playerLimitPerPeerDisplay) elements.playerLimitPerPeerDisplay.textContent = settings.playerLimitPerPeer;
-            if (elements.totalPlayerLimitDisplay) elements.totalPlayerLimitDisplay.textContent = settings.playerLimit;
-            if (elements.turnTimerDisplay) elements.turnTimerDisplay.textContent = settings.turnTimer;
-            if (elements.turnTimerEnabledDisplay) elements.turnTimerEnabledDisplay.checked = settings.turnTimerEnabled;
-            if (elements.moveDelayDisplay) elements.moveDelayDisplay.textContent = settings.moveDelay;
-            if (elements.modalTimeoutDisplay) elements.modalTimeoutDisplay.textContent = settings.modalTimeoutSeconds;
+    /**
+     * Sync modal with settings object
+     * @param {Settings} settings - Settings to display
+     */
+    syncModalWithSettings(settings) {
+        if (this.settingsModal) {
+            this.settingsModal.updateFromSettings(settings);
         }
     }
 
-    updateGameStateFromInputs(gameState) {
-        if (!this.isHost || !gameState) return gameState;
+    /**
+     * Show the settings modal
+     */
+    showSettings() {
+        if (!this.settingsModal) {
+            this.initializeModal();
+        }
+        this.settingsModal.show();
+    }
 
-        const elements = this.settingsElements;
+    /**
+     * Hide the settings modal
+     */
+    hideSettings() {
+        if (this.settingsModal) {
+            this.settingsModal.hide();
+        }
+    }
+
+    /**
+     * Update game state from current modal inputs (host only)
+     * @param {GameState} gameState - Game state to update
+     * @returns {GameState} Updated game state
+     */
+    updateGameStateFromInputs(gameState) {
+        if (!this.isHost || !gameState || !this.settingsModal) {
+            return gameState;
+        }
+
+        // Get all values from modal
+        const rawValues = this.settingsModal.getAllValues();
+
+        // Validate all settings
+        const validation = validateAllSettings(rawValues);
+
+        if (!validation.valid) {
+            console.warn('Settings validation errors:', validation.errors);
+        }
+
+        // Use validated settings
+        const validatedSettings = validation.settings;
+
+        // Update current settings
         if (!this.currentSettings) {
             this.currentSettings = Settings.fromJSON(gameState.settings.toJSON());
         }
 
-        const newPlayerLimitPerPeer = this.clampValue(
-            parseInt(elements.playerLimitPerPeerInput.value, 10),
-            elements.playerLimitPerPeerInput.min,
-            elements.playerLimitPerPeerInput.max
-        );
-        const newTotalPlayerLimit = this.clampValue(
-            parseInt(elements.totalPlayerLimitInput.value, 10),
-            elements.totalPlayerLimitInput.min,
-            elements.totalPlayerLimitInput.max
-        );
-        const newTurnTimer = this.clampValue(
-            parseInt(elements.turnTimerInput.value, 10),
-            elements.turnTimerInput.min,
-            elements.turnTimerInput.max
-        );
-        const newMoveDelay = this.clampValue(
-            parseInt(elements.moveDelayInput.value, 10),
-            elements.moveDelayInput.min,
-            elements.moveDelayInput.max
-        );
-        const newTurnTimerEnabled = elements.turnTimerEnabledInput.checked; // New setting from checkbox
-        const modalTimeoutInput = elements.modalTimeoutInput;
-        const newModalTimeout = modalTimeoutInput
-            ? this.clampValue(
-                parseInt(modalTimeoutInput.value, 10),
-                modalTimeoutInput.min,
-                modalTimeoutInput.max
-            )
-            : this.currentSettings.modalTimeoutSeconds;
+        // Apply validated settings to current settings
+        GAME_SETTINGS_SCHEMA.forEach(schema => {
+            if (validatedSettings[schema.id] !== undefined) {
+                this.currentSettings[schema.id] = validatedSettings[schema.id];
+            }
+        });
 
-        // Update current settings
-        this.currentSettings.playerLimitPerPeer = newPlayerLimitPerPeer;
-        this.currentSettings.playerLimit = newTotalPlayerLimit;
-        this.currentSettings.turnTimer = newTurnTimer;
-        this.currentSettings.moveDelay = newMoveDelay;
-        this.currentSettings.turnTimerEnabled = newTurnTimerEnabled; // Add new setting to current settings
-        this.currentSettings.modalTimeoutSeconds = newModalTimeout;
+        // Sync modal to reflect any clamped values
+        this.syncModalWithSettings(this.currentSettings);
 
-        // Sync the UI to reflect changes
-        this.syncUIWithSettings(this.currentSettings);
-
-        // Update the game state's settings
+        // Update game state
         gameState.settings = Settings.fromJSON(this.currentSettings.toJSON());
 
         return gameState;
     }
 
-    clampValue(value, min, max) {
-        return Math.min(Math.max(value, min), max);
+    /**
+     * Get settings elements (for backwards compatibility)
+     * @deprecated Use settingsModal methods instead
+     * @returns {Object} Map of setting IDs to elements
+     */
+    getSettingsElements() {
+        if (!this.settingsModal) {
+            return {};
+        }
+
+        const elements = {};
+        GAME_SETTINGS_SCHEMA.forEach(schema => {
+            const element = this.settingsModal.elements.get(schema.id);
+            if (element) {
+                elements[schema.id] = element;
+            }
+        });
+
+        return elements;
+    }
+
+    /**
+     * Legacy method for backwards compatibility
+     * @deprecated
+     */
+    initializeInputs() {
+        // No longer needed - modal handles this
+        return {};
+    }
+
+    /**
+     * Clean up
+     */
+    cleanup() {
+        if (this.settingsModal) {
+            this.settingsModal.cleanup();
+            this.settingsModal = null;
+        }
     }
 }

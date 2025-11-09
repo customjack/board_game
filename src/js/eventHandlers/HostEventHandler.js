@@ -22,9 +22,23 @@ export default class HostEventHandler extends BaseEventHandler {
         this.mapSelectionUI = null; // Initialized after peer is created
     }
 
-    init() {
-        super.init();
-        this.showPage("hostPage");
+    /**
+     * Host starts on the host page
+     */
+    getInitialPage() {
+        return "hostPage";
+    }
+
+    /**
+     * Override to set up settings callback after managers are initialized
+     */
+    initManagers(peerId, hostPeerId) {
+        super.initManagers(peerId, hostPeerId);
+
+        // Set up settings change callback for host
+        if (this.settingsManager) {
+            this.settingsManager.setOnChangeCallback(() => this.onSettingsChanged());
+        }
     }
 
     setupEventListeners() {
@@ -39,8 +53,7 @@ export default class HostEventHandler extends BaseEventHandler {
         // Bind all actions at once
         this.actionRegistry.bindAll(this.listenerRegistry, this.uiBinder);
 
-        // Setup input bindings
-        this.setupInputBindings();
+        // Settings callback will be set up after managers are initialized
     }
 
     /**
@@ -102,24 +115,6 @@ export default class HostEventHandler extends BaseEventHandler {
         }
     }
 
-    /**
-     * Setup input bindings using UIBinder
-     */
-    setupInputBindings() {
-        // Settings inputs
-        this.uiBinder.bindInput('playerLimitPerPeer', () => this.onSettingsChanged());
-        this.uiBinder.bindInput('totalPlayerLimit', () => this.onSettingsChanged());
-        this.uiBinder.bindInput('turnTimer', () => this.onSettingsChanged());
-        this.uiBinder.bindInput('moveDelay', () => this.onSettingsChanged());
-        this.uiBinder.bindInput('modalTimeout', () => this.onSettingsChanged());
-
-        // Turn timer enabled checkbox
-        const turnTimerCheckbox = this.uiBinder.getInput('turnTimerEnabled');
-        if (turnTimerCheckbox) {
-            this.listenerRegistry.registerListener('turnTimerEnabledHost', 'change', () => this.onSettingsChanged());
-        }
-    }
-    
 
     async startHostGame() {
         const hostNameInput = document.getElementById('hostNameInput');
@@ -190,13 +185,15 @@ export default class HostEventHandler extends BaseEventHandler {
         const closeGameButton = document.getElementById('closeGameButton');
         const startGameButton = document.getElementById('startGameButton');
         const selectMapButton = document.getElementById('selectMapButton');
-        const settingsSection = document.getElementById('settingsSectionHost');
+        const openSettingsButton = document.getElementById('openSettingsButton');
+        const uploadPluginButton = document.getElementById('uploadPluginButton');
 
-        // Show or hide buttons based on conditions, e.g., game state or player limits
-        if (closeGameButton) closeGameButton.style.display = 'inline';
-        if (startGameButton) startGameButton.style.display = 'inline';
-        if (selectMapButton) selectMapButton.style.display = 'inline';
-        if (settingsSection) settingsSection.style.display = 'inline';
+        // Show host-specific buttons
+        if (closeGameButton) closeGameButton.style.display = 'block';
+        if (startGameButton) startGameButton.style.display = 'block';
+        if (selectMapButton) selectMapButton.style.display = 'block';
+        if (openSettingsButton) openSettingsButton.style.display = 'block';
+        if (uploadPluginButton) uploadPluginButton.style.display = 'block';
 
         // Initialize map selection UI
         this.initializeMapSelectionUI();
@@ -206,6 +203,9 @@ export default class HostEventHandler extends BaseEventHandler {
 
         // Conditionally show or hide the "Add Player" button
         this.updateAddPlayerButton();
+
+        // Add settings button listener
+        this.addSettingsButtonListener();
     }
 
     /**
@@ -288,6 +288,9 @@ export default class HostEventHandler extends BaseEventHandler {
             // Broadcast the updated game state to all clients
             this.peer.broadcastGameState();
 
+            // Update host's UI components (including player list validation)
+            this.updateGameState();
+
             console.log(`Map "${mapId}" loaded successfully`);
         } catch (error) {
             console.error('Error loading map:', error);
@@ -317,28 +320,16 @@ export default class HostEventHandler extends BaseEventHandler {
         this.updateGameState(true); //force update
     }
 
-    addPlayerListListeners() {
-        // Register click listener for kick buttons
+    /**
+     * Add host-specific player list listeners (kick button)
+     * Common listeners (edit, remove) are handled by BaseEventHandler
+     */
+    addRoleSpecificPlayerListeners() {
+        // Register click listener for kick buttons (host only)
         document.querySelectorAll('.kick-button').forEach((button) => {
             const playerId = button.getAttribute('data-playerId');
             this.listenerRegistry.registerListener(button.id, 'click', () => {
                 this.confirmAndKickPlayer(playerId);
-            });
-        });
-    
-        // Register click listener for edit buttons
-        document.querySelectorAll('.edit-button').forEach((button) => {
-            const playerId = button.getAttribute('data-playerId');
-            this.listenerRegistry.registerListener(button.id, 'click', () => {
-                this.editPlayerName(playerId);
-            });
-        });
-    
-        // Register click listener for remove buttons
-        document.querySelectorAll('.remove-button').forEach((button) => {
-            const playerId = button.getAttribute('data-playerId');
-            this.listenerRegistry.registerListener(button.id, 'click', () => {
-                this.removePlayer(playerId);
             });
         });
     }
@@ -357,35 +348,26 @@ export default class HostEventHandler extends BaseEventHandler {
         }
     }
 
-    async editPlayerName(playerId) {
-        const player = this.peer.ownedPlayers.find((p) => p.playerId === playerId);
-        if (player) {
-            const newName = await ModalUtil.prompt('Enter new name:', player.nickname, 'Edit Player Name');
-            if (newName && newName.trim() !== '') {
-                player.nickname = newName;
-                this.updateGameState();
-                this.peer.broadcastGameState();
-            }
-        }
+    /**
+     * Host implementation: Update locally and broadcast
+     */
+    async applyPlayerNameChange(_playerId, player, newName) {
+        player.nickname = newName;
+        this.updateGameState();
+        this.peer.broadcastGameState();
     }
 
-    async removePlayer(playerId) {
+    /**
+     * Host implementation: Remove locally and broadcast
+     */
+    async applyPlayerRemoval(playerId) {
         const playerIndex = this.peer.ownedPlayers.findIndex((p) => p.playerId === playerId);
-
         if (playerIndex !== -1) {
-            if (this.peer.ownedPlayers.length === 1) {
-                await ModalUtil.alert('You have removed your last player. Leaving the game.');
-                this.leaveGame();
-            } else {
-                const removedPlayer = this.peer.ownedPlayers.splice(playerIndex, 1)[0];
-                this.peer.removePlayer(removedPlayer.playerId);
-
-                this.peer.broadcastGameState();
-                this.updateGameState();
-                this.updateAddPlayerButton();
-            }
-        } else {
-            await ModalUtil.alert('Player not found.');
+            const removedPlayer = this.peer.ownedPlayers.splice(playerIndex, 1)[0];
+            this.peer.removePlayer(removedPlayer.playerId);
+            this.peer.broadcastGameState();
+            this.updateGameState();
+            this.updateAddPlayerButton();
         }
     }
 
@@ -402,5 +384,17 @@ export default class HostEventHandler extends BaseEventHandler {
         this.updateAddPlayerButton();
     }
 
-    
+    /**
+     * Add listener for settings button
+     */
+    addSettingsButtonListener() {
+        const openSettingsButton = document.getElementById('openSettingsButton');
+        if (openSettingsButton) {
+            this.listenerRegistry.registerListener('openSettingsButton', 'click', () => {
+                this.settingsManager.showSettings();
+            });
+        }
+    }
+
+
 }

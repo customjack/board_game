@@ -23,6 +23,8 @@
 @import 'components/board-controls.css';
 @import 'components/connection-status.css';
 @import 'components/map-selection.css';
+@import 'components/settings.css';
+@import 'components/settings-modal.css';
 
 @import 'animations.css';
 

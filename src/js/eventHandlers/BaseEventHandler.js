@@ -29,6 +29,16 @@ export default class BaseEventHandler {
 
     init() {
         this.setupEventListeners();
+        this.showPage(this.getInitialPage());
+    }
+
+    /**
+     * Template method: Get the initial page to show
+     * Must be implemented by subclasses
+     * @returns {string} Page ID to show initially
+     */
+    getInitialPage() {
+        throw new Error('getInitialPage must be implemented by subclass');
     }
 
     initManagers(peerId, hostPeerId) {
@@ -171,5 +181,106 @@ export default class BaseEventHandler {
         } else {
             addPlayerButton.style.display = 'none';
         }
+    }
+
+    /**
+     * Setup common player list listeners (edit, remove)
+     * Override addRoleSpecificPlayerListeners() for role-specific buttons
+     */
+    addPlayerListListeners() {
+        // Register click listener for edit buttons
+        document.querySelectorAll('.edit-button').forEach((button) => {
+            const playerId = button.getAttribute('data-playerId');
+            this.listenerRegistry.registerListener(button.id, 'click', () => {
+                this.editPlayerName(playerId);
+            });
+        });
+
+        // Register click listener for remove buttons
+        document.querySelectorAll('.remove-button').forEach((button) => {
+            const playerId = button.getAttribute('data-playerId');
+            this.listenerRegistry.registerListener(button.id, 'click', () => {
+                this.removePlayer(playerId);
+            });
+        });
+
+        // Allow subclasses to add role-specific listeners (e.g., kick button for host)
+        this.addRoleSpecificPlayerListeners();
+    }
+
+    /**
+     * Hook for role-specific player list listeners
+     * Override in subclasses to add additional listeners
+     */
+    addRoleSpecificPlayerListeners() {
+        // Default: no additional listeners
+    }
+
+    /**
+     * Edit a player's name
+     * Calls applyPlayerNameChange() which subclasses implement differently
+     */
+    async editPlayerName(playerId) {
+        const player = this.peer.ownedPlayers.find((p) => p.playerId === playerId);
+        if (player) {
+            const newName = await ModalUtil.prompt('Enter new name:', player.nickname, 'Edit Player Name');
+            if (newName && newName.trim() !== '') {
+                await this.applyPlayerNameChange(playerId, player, newName.trim());
+            }
+        }
+    }
+
+    /**
+     * Remove a player
+     * Calls applyPlayerRemoval() which subclasses implement differently
+     */
+    async removePlayer(playerId) {
+        const playerIndex = this.peer.ownedPlayers.findIndex((p) => p.playerId === playerId);
+
+        if (playerIndex !== -1) {
+            const player = this.peer.ownedPlayers[playerIndex];
+
+            if (this.peer.ownedPlayers.length === 1) {
+                const confirmed = await ModalUtil.confirm(
+                    `Are you sure you want to remove ${player.nickname}? This is your last player, so you will leave the game.`,
+                    'Remove Player'
+                );
+                if (confirmed) {
+                    this.leaveGame();
+                }
+            } else {
+                const confirmed = await ModalUtil.confirm(
+                    `Are you sure you want to remove ${player.nickname}?`,
+                    'Remove Player'
+                );
+                if (confirmed) {
+                    await this.applyPlayerRemoval(playerId);
+                }
+            }
+        } else {
+            await ModalUtil.alert('Player not found.');
+        }
+    }
+
+    /**
+     * Template method: Apply player name change
+     * HOST: Updates locally and broadcasts
+     * CLIENT: Sends message to host
+     * @param {string} playerId - Player ID
+     * @param {Object} player - Player object
+     * @param {string} newName - New player name
+     */
+    async applyPlayerNameChange(playerId, player, newName) {
+        throw new Error('applyPlayerNameChange must be implemented by subclass');
+    }
+
+    /**
+     * Template method: Apply player removal
+     * HOST: Removes locally and broadcasts
+     * CLIENT: Sends message to host
+     * @param {string} playerId - Player ID to remove
+     */
+    async applyPlayerRemoval(playerId) {
+        throw new Error('applyPlayerRemoval must be implemented by subclass');
     }
 }
