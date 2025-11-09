@@ -19,19 +19,30 @@ export default class Space {
         });
     }
 
-    // Serialize this space to JSON
+    // Serialize this space to JSON (new format)
     toJSON() {
+        // Split visualDetails back into position and visual
+        const { x, y, ...visual } = this.visualDetails;
+
         return {
             id: this.id,
             name: this.name,
             type: this.type,
-            events: this.events.map(event => event.toJSON()),
+            position: { x, y },
+            visual: visual,
             connections: this.connections.map(conn => ({
                 targetId: conn.target.id,
-                condition: conn.condition,
-                drawConnection: conn.drawConnection
+                draw: conn.drawConnection,
+                ...(conn.condition && { condition: conn.condition })
             })),
-            visualDetails: this.visualDetails
+            triggers: this.events.map(event => {
+                const eventJson = event.toJSON();
+                return {
+                    when: eventJson.trigger,
+                    action: eventJson.action,
+                    priority: eventJson.priority
+                };
+            })
         };
     }
 

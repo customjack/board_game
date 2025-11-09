@@ -55,13 +55,32 @@ export default class Board {
         });
     }
 
-    // Serialize the board to JSON, including metadata and game rules
+    // Serialize the board to JSON (new format), including metadata and game rules
     toJSON() {
+        // Flatten game rules for new format
+        const gameRulesJson = this.gameRules.toJSON();
+        const flatGameRules = {
+            minPlayers: gameRulesJson.players?.min,
+            maxPlayers: gameRulesJson.players?.max,
+            recommendedPlayers: gameRulesJson.players?.recommended,
+            startingPositions: gameRulesJson.players?.startingPositions,
+            turns: gameRulesJson.turns,
+            victory: gameRulesJson.victory,
+            movement: gameRulesJson.movement,
+            constraints: gameRulesJson.constraints
+        };
+
         return {
-            metadata: {
-                ...this.metadata,
-                gameRules: this.gameRules.toJSON()
-            },
+            version: this.metadata.version || "1.0.0",
+            name: this.metadata.name,
+            author: this.metadata.author,
+            description: this.metadata.description,
+            created: this.metadata.createdDate,
+            modified: new Date().toISOString(),
+            tags: this.metadata.tags,
+            gameEngine: this.metadata.gameEngine,
+            renderConfig: this.metadata.renderConfig,
+            gameRules: flatGameRules,
             spaces: this.spaces.map(space => space.toJSON())
         };
     }
