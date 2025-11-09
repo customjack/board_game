@@ -7,7 +7,7 @@ import Settings from './Settings'; // Import the Settings class
 import SharedRandomNumberGenerator from './SharedRandomNumberGenerator.js';
 
 export default class GameState {
-    constructor(board, factoryManager, players = [], settings = new Settings(), randomGenerator = new SharedRandomNumberGenerator(Math.random().toString(36).slice(2, 11))) {
+    constructor(board, factoryManager, players = [], settings = new Settings(), randomGenerator = new SharedRandomNumberGenerator(Math.random().toString(36).slice(2, 11)), selectedMapId = 'default', selectedMapData = null) {
         // Serialized Data
         this.board = board;
         this.factoryManager = factoryManager;
@@ -16,6 +16,10 @@ export default class GameState {
         this.turnPhase = TurnPhases.BEGIN_TURN;
         this.gamePhase = GamePhases.IN_LOBBY;
         this.settings = settings;
+
+        // Map selection data (synced across all players)
+        this.selectedMapId = selectedMapId;
+        this.selectedMapData = selectedMapData; // Full board JSON for custom maps
 
         // Unserialized Data
         this.triggeredEvents = [];
@@ -270,6 +274,8 @@ export default class GameState {
             gamePhase: this.gamePhase,
             settings: this.settings.toJSON(),
             randomGenerator: this.randomGenerator.toJSON(), // Serialize the random generator
+            selectedMapId: this.selectedMapId,
+            selectedMapData: this.selectedMapData,
             _version: this._version,
             _timestamp: this._timestamp
         };
@@ -281,7 +287,9 @@ export default class GameState {
         const players = json.players.map(playerData => Player.fromJSON(playerData, factoryManager));
         const settings = Settings.fromJSON(json.settings);
         const randomGenerator = SharedRandomNumberGenerator.fromJSON(json.randomGenerator);
-        const gameState = new GameState(board, factoryManager, players, settings, randomGenerator);
+        const selectedMapId = json.selectedMapId || 'default';
+        const selectedMapData = json.selectedMapData || null;
+        const gameState = new GameState(board, factoryManager, players, settings, randomGenerator, selectedMapId, selectedMapData);
 
         gameState.remainingMoves = json.remainingMoves;
         gameState.turnPhase = json.turnPhase;
