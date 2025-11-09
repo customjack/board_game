@@ -41,12 +41,12 @@ export default class MapStorageManager {
             {
                 id: 'simple-linear',
                 name: 'Simple Linear',
-                author: 'System',
+                author: 'Example',
                 description: 'A simple linear path board',
                 isBuiltIn: true,
                 path: 'assets/maps/examples/simple-linear-board.json',
                 thumbnail: null,
-                createdDate: '2024-10-28T12:00:00Z'
+                createdDate: '2025-01-27T00:00:00Z'
             },
             {
                 id: 'branching-paths',
@@ -67,6 +67,26 @@ export default class MapStorageManager {
                 path: 'assets/maps/examples/custom-engine-config-board.json',
                 thumbnail: null,
                 createdDate: '2024-10-28T12:00:00Z'
+            },
+            {
+                id: 'circular-party',
+                name: 'Circular Party Board',
+                author: 'Test Creator',
+                description: 'A circular board with 6 spaces arranged in a circle',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/test-circular-board.json',
+                thumbnail: null,
+                createdDate: '2025-01-27T00:00:00Z'
+            },
+            {
+                id: 'mini-test',
+                name: 'Mini Test Board',
+                author: 'Test Creator',
+                description: 'A tiny 3-space board for quick testing',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/test-mini-board.json',
+                thumbnail: null,
+                createdDate: '2025-01-27T00:00:00Z'
             }
         ];
     }

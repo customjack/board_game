@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "name": "Mini Test Board",
+    "author": "Test Creator",
+    "description": "A tiny 3-space board for quick testing",
+    "createdDate": "2025-01-27T00:00:00.000Z",
+    "gameEngine": {
+      "type": "turn-based",
+      "config": {
+        "turnManager": {
+          "skipInactivePlayers": true,
+          "maxTurns": 0
+        }
+      }
+    }
+  },
+  "spaces": [
+    {
+      "id": "start",
+      "name": "Start",
+      "visualDetails": {
+        "x": 200,
+        "y": 300,
+        "size": 70,
+        "color": "#3498db",
+        "textColor": "#ffffff"
+      },
+      "connections": [
+        {
+          "targetId": "middle",
+          "bidirectional": false
+        }
+      ],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "Starting position! Roll to begin."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "middle",
+      "name": "Middle",
+      "visualDetails": {
+        "x": 400,
+        "y": 300,
+        "size": 70,
+        "color": "#f39c12",
+        "textColor": "#ffffff"
+      },
+      "connections": [
+        {
+          "targetId": "end",
+          "bidirectional": false
+        }
+      ],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "Halfway there! Take a drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "name": "End",
+      "visualDetails": {
+        "x": 600,
+        "y": 300,
+        "size": 70,
+        "color": "#e74c3c",
+        "textColor": "#ffffff"
+      },
+      "connections": [],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "You made it! Game complete."
+            }
+          },
+          "priority": "CRITICAL"
+        }
+      ]
+    }
+  ]
+}

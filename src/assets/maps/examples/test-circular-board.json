@@ -1,0 +1,205 @@
+{
+  "metadata": {
+    "name": "Circular Party Board",
+    "author": "Test Creator",
+    "description": "A circular board with 6 spaces arranged in a circle",
+    "createdDate": "2025-01-27T00:00:00.000Z",
+    "gameEngine": {
+      "type": "turn-based",
+      "config": {
+        "turnManager": {
+          "skipInactivePlayers": true,
+          "maxTurns": 0
+        }
+      }
+    }
+  },
+  "spaces": [
+    {
+      "id": "start",
+      "name": "Start",
+      "visualDetails": {
+        "x": 400,
+        "y": 200,
+        "size": 60,
+        "color": "#2ecc71"
+      },
+      "connections": [
+        {
+          "targetId": "space1",
+          "bidirectional": false
+        }
+      ],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "Welcome to the party! Let's go around the circle."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "space1",
+      "name": "Dance Floor",
+      "visualDetails": {
+        "x": 550,
+        "y": 300,
+        "size": 60,
+        "color": "#e74c3c"
+      },
+      "connections": [
+        {
+          "targetId": "space2",
+          "bidirectional": false
+        }
+      ],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "Dance floor! Everyone take a sip."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "space2",
+      "name": "Bar",
+      "visualDetails": {
+        "x": 550,
+        "y": 450,
+        "size": 60,
+        "color": "#8B4513"
+      },
+      "connections": [
+        {
+          "targetId": "space3",
+          "bidirectional": false
+        }
+      ],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "At the bar! Take 2 drinks."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "space3",
+      "name": "Lounge",
+      "visualDetails": {
+        "x": 400,
+        "y": 550,
+        "size": 60,
+        "color": "#9b59b6"
+      },
+      "connections": [
+        {
+          "targetId": "space4",
+          "bidirectional": false
+        }
+      ],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "Relax in the lounge."
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "space4",
+      "name": "Game Room",
+      "visualDetails": {
+        "x": 250,
+        "y": 450,
+        "size": 60,
+        "color": "#3498db"
+      },
+      "connections": [
+        {
+          "targetId": "space5",
+          "bidirectional": false
+        }
+      ],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "Game room! Play a mini-game."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "space5",
+      "name": "Garden",
+      "visualDetails": {
+        "x": 250,
+        "y": 300,
+        "size": 60,
+        "color": "#27ae60"
+      },
+      "connections": [
+        {
+          "targetId": "start",
+          "bidirectional": false
+        }
+      ],
+      "events": [
+        {
+          "trigger": {
+            "type": "ON_LAND",
+            "data": {}
+          },
+          "action": {
+            "type": "PROMPT",
+            "payload": {
+              "message": "Fresh air in the garden. Back to start!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    }
+  ]
+}

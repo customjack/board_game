@@ -8,6 +8,9 @@ import ActionRegistry from './ActionRegistry.js';
 import { HOST_UI_BINDINGS } from '../config/ui-bindings.js';
 import LoadingProgressTracker, { LOADING_STAGES } from '../utils/LoadingProgressTracker.js';
 import LoadingBar from '../ui/LoadingBar.js';
+import MapSelectionUI from '../ui/components/MapSelectionUI.js';
+import MapStorageManager from '../managers/MapStorageManager.js';
+import Board from '../models/Board.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
@@ -16,6 +19,7 @@ export default class HostEventHandler extends BaseEventHandler {
         // Initialize UI systems
         this.uiBinder = new UIBinder(HOST_UI_BINDINGS);
         this.actionRegistry = new ActionRegistry();
+        this.mapSelectionUI = null; // Initialized after peer is created
     }
 
     init() {
@@ -67,6 +71,12 @@ export default class HostEventHandler extends BaseEventHandler {
         this.actionRegistry.register('addPlayer', () => this.addPlayer(), {
             elementId: 'addPlayerButton',
             description: 'Add a new player'
+        });
+
+        // Map selection action
+        this.actionRegistry.register('selectMap', () => this.openMapSelection(), {
+            elementId: 'selectMapButton',
+            description: 'Select a map'
         });
 
         // Board upload action
@@ -204,17 +214,109 @@ export default class HostEventHandler extends BaseEventHandler {
     displayLobbyControls() {
         const closeGameButton = document.getElementById('closeGameButton');
         const startGameButton = document.getElementById('startGameButton');
+        const selectMapButton = document.getElementById('selectMapButton');
         const uploadBoardButton = document.getElementById('uploadBoardButton');
         const settingsSection = document.getElementById('settingsSectionHost');
 
         // Show or hide buttons based on conditions, e.g., game state or player limits
         if (closeGameButton) closeGameButton.style.display = 'inline';
         if (startGameButton) startGameButton.style.display = 'inline';
+        if (selectMapButton) selectMapButton.style.display = 'inline';
         if (uploadBoardButton) uploadBoardButton.style.display = 'inline';
         if (settingsSection) settingsSection.style.display = 'inline';
 
+        // Initialize map selection UI
+        this.initializeMapSelectionUI();
+
+        // Load the default or previously selected map
+        this.loadInitialMap();
+
         // Conditionally show or hide the "Add Player" button
         this.updateAddPlayerButton();
+    }
+
+    /**
+     * Initialize the map selection UI component
+     */
+    initializeMapSelectionUI() {
+        if (!this.mapSelectionUI) {
+            this.mapSelectionUI = new MapSelectionUI({
+                eventBus: this.eventBus,
+                isHost: true,
+                onMapSelected: async (mapId) => await this.handleMapSelected(mapId),
+                onMapUploaded: (mapObject) => this.handleMapUploaded(mapObject)
+            });
+            this.mapSelectionUI.init();
+        }
+    }
+
+    /**
+     * Load the initial map (from localStorage or default)
+     */
+    async loadInitialMap() {
+        const selectedMapId = MapStorageManager.getSelectedMapId();
+        try {
+            await this.loadMapById(selectedMapId);
+        } catch (error) {
+            console.error('Error loading initial map, falling back to default:', error);
+            await this.loadMapById('default');
+        }
+    }
+
+    /**
+     * Open the map selection modal
+     */
+    openMapSelection() {
+        if (this.mapSelectionUI) {
+            this.mapSelectionUI.showMapSelectionModal();
+        }
+    }
+
+    /**
+     * Handle map selection
+     * @param {string} mapId - Selected map ID
+     */
+    async handleMapSelected(mapId) {
+        await this.loadMapById(mapId);
+    }
+
+    /**
+     * Handle map upload
+     * @param {Object} mapObject - Uploaded map object
+     */
+    handleMapUploaded(mapObject) {
+        console.log('Map uploaded:', mapObject.name);
+    }
+
+    /**
+     * Load a map by its ID
+     * @param {string} mapId - Map ID to load
+     */
+    async loadMapById(mapId) {
+        try {
+            // Load the map data
+            const mapData = await MapStorageManager.loadMapData(mapId);
+
+            // Create board from map data
+            const board = Board.fromJSON(mapData);
+
+            // Update game state
+            this.peer.gameState.board = board;
+            this.peer.gameState.selectedMapId = mapId;
+            this.peer.gameState.selectedMapData = mapData;
+
+            // Update UI
+            this.uiSystem.getActiveBoard().setBoard(board);
+            this.uiSystem.getActiveBoard().drawBoard();
+
+            // Broadcast the updated game state to all clients
+            this.peer.broadcastGameState();
+
+            console.log(`Map "${mapId}" loaded successfully`);
+        } catch (error) {
+            console.error('Error loading map:', error);
+            throw error;
+        }
     }
 
     startGame() {
