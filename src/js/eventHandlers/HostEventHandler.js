@@ -307,7 +307,7 @@ export default class HostEventHandler extends BaseEventHandler {
 
             // Update UI
             this.uiSystem.getActiveBoard().setBoard(board);
-            this.uiSystem.getActiveBoard().drawBoard();
+            this.uiSystem.getActiveBoard().render();
 
             // Broadcast the updated game state to all clients
             this.peer.broadcastGameState();
