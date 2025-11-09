@@ -315,7 +315,7 @@ export default class GameState {
 
     // Deserialize the game state from JSON (using the random generator's fromJSON)
     static fromJSON(json, factoryManager) {
-        const board = Board.fromJSON(json.board);
+        const board = Board.fromJSON(json.board, factoryManager);
         const players = json.players.map(playerData => Player.fromJSON(playerData, factoryManager));
         const settings = Settings.fromJSON(json.settings);
         const randomGenerator = SharedRandomNumberGenerator.fromJSON(json.randomGenerator);
