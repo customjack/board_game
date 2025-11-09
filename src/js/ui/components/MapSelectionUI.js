@@ -225,6 +225,12 @@ export default class MapSelectionUI extends BaseUIComponent {
         description.className = 'map-description';
         description.textContent = map.description || 'No description available';
 
+        // Board requirements (from gameRules)
+        const requirements = this.createRequirementsDisplay(map);
+        if (requirements) {
+            info.appendChild(requirements);
+        }
+
         // Tags/badges
         const tags = document.createElement('div');
         tags.className = 'map-tags';
@@ -267,6 +273,46 @@ export default class MapSelectionUI extends BaseUIComponent {
         card.appendChild(info);
 
         return card;
+    }
+
+    /**
+     * Create requirements display from map's gameRules
+     * @param {Object} map - Map object with boardData
+     * @returns {HTMLElement|null} Requirements element or null
+     */
+    createRequirementsDisplay(map) {
+        // Try to get gameRules from boardData
+        const gameRules = map.boardData?.metadata?.gameRules;
+        if (!gameRules || !gameRules.players) {
+            return null;
+        }
+
+        const reqDiv = document.createElement('div');
+        reqDiv.className = 'map-requirements';
+
+        const players = gameRules.players;
+        let playerText = '';
+
+        if (players.min || players.max) {
+            const min = players.min || 1;
+            const max = players.max || '∞';
+            playerText = `Players: ${min}-${max}`;
+
+            if (players.recommended && (players.recommended.min || players.recommended.max)) {
+                const recMin = players.recommended.min || min;
+                const recMax = players.recommended.max || max;
+                playerText += ` (recommended: ${recMin}-${recMax})`;
+            }
+        }
+
+        if (playerText) {
+            const playerReq = document.createElement('div');
+            playerReq.className = 'map-requirement';
+            playerReq.innerHTML = `<span class="req-icon">👥</span> ${playerText}`;
+            reqDiv.appendChild(playerReq);
+        }
+
+        return reqDiv.children.length > 0 ? reqDiv : null;
     }
 
     /**

@@ -161,6 +161,31 @@
     min-height: 36px;
 }
 
+/* Map Requirements */
+.map-requirements {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.map-requirement {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary, #555);
+    padding: 4px 8px;
+    background-color: rgba(0, 123, 255, 0.05);
+    border-radius: 4px;
+    border-left: 3px solid var(--primary-color, #007bff);
+}
+
+.req-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
 /* Map Tags */
 .map-tags {
     display: flex;
