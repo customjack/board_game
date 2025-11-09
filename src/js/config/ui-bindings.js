@@ -16,7 +16,6 @@ export const HOST_UI_BINDINGS = {
         closeGame: 'closeGameButton',
         startGame: 'startGameButton',
         addPlayer: 'addPlayerButton',
-        uploadBoard: 'uploadBoardButton',
         uploadPlugin: 'uploadPluginButton'
     },
 
@@ -75,11 +74,6 @@ export const HOST_UI_BINDINGS = {
         turnTimerEnabled: {
             elementId: 'turnTimerEnabledHost',
             type: 'checkbox',
-            events: ['change']
-        },
-        boardFileInput: {
-            elementId: 'boardFileInput',
-            type: 'file',
             events: ['change']
         },
         pluginFileInput: {

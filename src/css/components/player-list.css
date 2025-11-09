@@ -143,6 +143,18 @@
   flex-shrink: 0;
 }
 
+.validation-content {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing-unit) * 0.25);
+  flex-grow: 1;
+}
+
+.validation-status {
+  font-weight: 600;
+  margin: 0;
+}
+
 .validation-messages {
   display: flex;
   flex-direction: column;

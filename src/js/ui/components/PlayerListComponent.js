@@ -129,6 +129,11 @@ export default class PlayerListComponent extends BaseUIComponent {
             return true;
         }
 
+        // Check if board changed (important for validation rules)
+        if (this.gameState.board?.metadata?.name !== newGameState.board?.metadata?.name) {
+            return true;
+        }
+
         return false;
     }
 
@@ -171,14 +176,23 @@ export default class PlayerListComponent extends BaseUIComponent {
      * @param {number} playerCount - Current number of players
      */
     renderPlayerCountValidation(playerCount) {
+        // Only show in lobby, not in-game
+        if (this.currentListElementId !== 'lobbyPlayerList') {
+            return;
+        }
+
         if (!this.gameState?.board?.gameRules) {
             return; // No validation rules available
         }
 
         const validation = this.gameState.board.gameRules.validatePlayerCount(playerCount);
 
+        // Find the parent section (lobbyPlayerListSection) and insert before h3
+        const section = document.getElementById('lobbyPlayerListSection');
+        if (!section) return;
+
         // Remove existing validation indicator
-        const existingIndicator = this.container.querySelector('.player-count-validation');
+        const existingIndicator = section.querySelector('.player-count-validation');
         if (existingIndicator) {
             existingIndicator.remove();
         }
@@ -189,30 +203,45 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         let icon = '';
         let colorClass = '';
+        let statusText = '';
 
         switch (validation.status) {
             case 'invalid':
                 icon = '❌';
                 colorClass = 'invalid';
+                statusText = 'Player Count: Invalid';
                 break;
             case 'warning':
                 icon = '⚠️';
                 colorClass = 'warning';
+                statusText = 'Player Count: Acceptable';
                 break;
             case 'valid':
                 icon = '✓';
                 colorClass = 'valid';
+                statusText = `Player Count: ${playerCount} player${playerCount !== 1 ? 's' : ''}`;
                 break;
         }
 
         indicator.innerHTML = `
             <div class="validation-icon ${colorClass}">${icon}</div>
-            <div class="validation-messages">
-                ${validation.messages.map(msg => `<div class="validation-message">${msg}</div>`).join('')}
+            <div class="validation-content">
+                <div class="validation-status">${statusText}</div>
+                ${validation.messages.length > 0 ? `
+                    <div class="validation-messages">
+                        ${validation.messages.map(msg => `<div class="validation-message">${msg}</div>`).join('')}
+                    </div>
+                ` : ''}
             </div>
         `;
 
-        this.container.appendChild(indicator);
+        // Insert before the h3 "Connected Players"
+        const heading = section.querySelector('h3');
+        if (heading) {
+            section.insertBefore(indicator, heading);
+        } else {
+            section.prepend(indicator);
+        }
     }
 
     /**

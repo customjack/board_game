@@ -39,40 +39,10 @@ export default class MapStorageManager {
                 createdDate: '2024-10-28T12:00:00Z'
             },
             {
-                id: 'simple-linear',
-                name: 'Simple Linear',
-                author: 'Example',
-                description: 'A simple linear path board',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/simple-linear-board.json',
-                thumbnail: null,
-                createdDate: '2025-01-27T00:00:00Z'
-            },
-            {
-                id: 'branching-paths',
-                name: 'Branching Paths',
-                author: 'System',
-                description: 'A board with multiple branching paths',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/branching-paths-board.json',
-                thumbnail: null,
-                createdDate: '2024-10-28T12:00:00Z'
-            },
-            {
-                id: 'custom-engine',
-                name: 'Custom Engine Config',
-                author: 'System',
-                description: 'Board with custom engine configuration',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/custom-engine-config-board.json',
-                thumbnail: null,
-                createdDate: '2024-10-28T12:00:00Z'
-            },
-            {
                 id: 'circular-party',
                 name: 'Circular Party Board',
                 author: 'Test Creator',
-                description: 'A circular board with 6 spaces arranged in a circle',
+                description: 'A circular board with 6 spaces - players spread across starting positions',
                 isBuiltIn: true,
                 path: 'assets/maps/examples/test-circular-board.json',
                 thumbnail: null,

@@ -79,31 +79,6 @@ export default class HostEventHandler extends BaseEventHandler {
             description: 'Select a map'
         });
 
-        // Board upload action
-        const boardFileInput = this.uiBinder.getInput('boardFileInput');
-        if (boardFileInput) {
-            this.actionRegistry.register('uploadBoard', () => boardFileInput.click(), {
-                elementId: 'uploadBoardButton',
-                description: 'Upload custom board'
-            });
-
-            // Handle board file selection
-            this.listenerRegistry.registerListener('boardFileInput', 'change', async (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    try {
-                        await this.uiSystem.loadBoardFromFile(file);
-                        this.peer.gameState.board = this.uiSystem.getActiveBoard().board;
-                        this.peer.broadcastGameState();
-                        this.updateGameState(true);
-                        event.target.value = '';
-                    } catch (error) {
-                        await ModalUtil.alert(`Error loading board file: ${error.message}`);
-                    }
-                }
-            });
-        }
-
         // Plugin upload action
         const pluginFileInput = this.uiBinder.getInput('pluginFileInput');
         if (pluginFileInput) {
@@ -215,14 +190,12 @@ export default class HostEventHandler extends BaseEventHandler {
         const closeGameButton = document.getElementById('closeGameButton');
         const startGameButton = document.getElementById('startGameButton');
         const selectMapButton = document.getElementById('selectMapButton');
-        const uploadBoardButton = document.getElementById('uploadBoardButton');
         const settingsSection = document.getElementById('settingsSectionHost');
 
         // Show or hide buttons based on conditions, e.g., game state or player limits
         if (closeGameButton) closeGameButton.style.display = 'inline';
         if (startGameButton) startGameButton.style.display = 'inline';
         if (selectMapButton) selectMapButton.style.display = 'inline';
-        if (uploadBoardButton) uploadBoardButton.style.display = 'inline';
         if (settingsSection) settingsSection.style.display = 'inline';
 
         // Initialize map selection UI
