@@ -37,29 +37,23 @@ export default class DefaultActionsPlugin extends Plugin {
         }
 
         // Register all built-in actions
+        const actions = [
+            [ActionTypes.PROMPT_ALL_PLAYERS, PromptAllPlayersAction],
+            [ActionTypes.PROMPT_CURRENT_PLAYER, PromptCurrentPlayerAction],
+            [ActionTypes.SET_PLAYER_STATE, SetPlayerStateAction],
+            [ActionTypes.DISPLACE_PLAYER, DisplacePlayerAction],
+            [ActionTypes.APPLY_EFFECT, ApplyEffectAction],
+            [ActionTypes.SET_PLAYER_SPACE, SetPlayerSpaceAction],
+            [ActionTypes.CUSTOM, CustomAction]
+        ];
+
         try {
-            actionFactory.register(ActionTypes.PROMPT_ALL_PLAYERS, PromptAllPlayersAction);
-            console.log('Registered action: PROMPT_ALL_PLAYERS');
-
-            actionFactory.register(ActionTypes.PROMPT_CURRENT_PLAYER, PromptCurrentPlayerAction);
-            console.log('Registered action: PROMPT_CURRENT_PLAYER');
-
-            actionFactory.register(ActionTypes.SET_PLAYER_STATE, SetPlayerStateAction);
-            console.log('Registered action: SET_PLAYER_STATE');
-
-            actionFactory.register(ActionTypes.DISPLACE_PLAYER, DisplacePlayerAction);
-            console.log('Registered action: DISPLACE_PLAYER');
-
-            actionFactory.register(ActionTypes.APPLY_EFFECT, ApplyEffectAction);
-            console.log('Registered action: APPLY_EFFECT');
-
-            actionFactory.register(ActionTypes.SET_PLAYER_SPACE, SetPlayerSpaceAction);
-            console.log('Registered action: SET_PLAYER_SPACE');
-
-            actionFactory.register(ActionTypes.CUSTOM, CustomAction);
-            console.log('Registered action: CUSTOM');
-
-            console.log('DefaultActionsPlugin: All 7 built-in actions registered successfully');
+            const registered = [];
+            actions.forEach(([type, classRef]) => {
+                actionFactory.register(type, classRef);
+                registered.push(type);
+            });
+            console.log(`DefaultActionsPlugin: Registered ${registered.length} actions: ${registered.join(', ')}`);
         } catch (error) {
             console.error('Failed to register actions in DefaultActionsPlugin:', error);
         }

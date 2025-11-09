@@ -66,9 +66,15 @@ export default class Board {
         };
     }
 
-    // First pass: Deserialize the board without connections, including metadata
-    static fromJSON(json) {
-        const spaces = json.spaces.map(spaceData => Space.fromJSON(spaceData));
+    /**
+     * Deserialize the board from JSON, including metadata
+     * @param {Object} json - JSON representation
+     * @param {FactoryManager} factoryManager - Factory manager for creating game objects
+     * @returns {Board} Board instance
+     */
+    static fromJSON(json, factoryManager) {
+        // First pass: Deserialize spaces without connections
+        const spaces = json.spaces.map(spaceData => Space.fromJSON(spaceData, factoryManager));
 
         // Second pass: Resolve connections between spaces
         Space.resolveConnections(spaces, json.spaces);

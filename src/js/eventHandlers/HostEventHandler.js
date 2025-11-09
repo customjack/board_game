@@ -271,7 +271,7 @@ export default class HostEventHandler extends BaseEventHandler {
             const mapData = await MapStorageManager.loadMapData(mapId);
 
             // Create board from map data
-            const board = Board.fromJSON(mapData);
+            const board = Board.fromJSON(mapData, this.factoryManager);
 
             // Update game state
             this.peer.gameState.board = board;

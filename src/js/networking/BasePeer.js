@@ -59,9 +59,9 @@ export default class BasePeer {
     }
 
     async initializeGameState() {
-        const boardManager = new BoardManager();
+        const boardManager = new BoardManager(this.eventHandler.factoryManager);
         await boardManager.loadDefaultBoard();
-        this.gameState = new GameState(boardManager.board, this.eventHandler.factoryManagert);
+        this.gameState = new GameState(boardManager.board, this.eventHandler.factoryManager);
         console.log("GameState initialized", this.gameState);
     }
 

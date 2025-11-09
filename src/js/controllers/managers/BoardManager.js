@@ -7,7 +7,8 @@ import SpaceRenderer from '../../rendering/SpaceRenderer.js';
 import BoardSchemaValidator from '../../utils/BoardSchemaValidator.js';
 
 export default class BoardManager {
-    constructor() {
+    constructor(factoryManager = null) {
+        this.factoryManager = factoryManager;
         this.board = null;
         this.boardContainer = document.getElementById('lobbyBoardContent'); // Assuming a container div for the board
 
@@ -23,7 +24,7 @@ export default class BoardManager {
      */
     setBoard(newBoard) {
         // Use the Board's toJSON and fromJSON for deep copying
-        const boardCopy = Board.fromJSON(newBoard.toJSON());
+        const boardCopy = Board.fromJSON(newBoard.toJSON(), this.factoryManager);
         this.board = boardCopy;
     }
 
@@ -66,7 +67,7 @@ export default class BoardManager {
             }
 
             // Create the Board object from JSON
-            this.board = Board.fromJSON(boardData);
+            this.board = Board.fromJSON(boardData, this.factoryManager);
             console.log("Board object created:", this.board);
 
             this.drawBoard();
@@ -95,7 +96,7 @@ export default class BoardManager {
 
             console.log("Board validation passed:", validation.summary);
 
-            const board = Board.fromJSON(boardData);
+            const board = Board.fromJSON(boardData, this.factoryManager);
             this.setBoard(board);
             this.drawBoard();
             return board; // Return the loaded board if needed

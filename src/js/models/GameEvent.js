@@ -1,14 +1,21 @@
-import Trigger from './Trigger.js';
-import Action from './Action.js';
 import { PriorityLevels } from '../enums/PriorityLevels.js';
 import { processStringToEnum } from '../utils/helpers.js';
 import TurnPhases from '../enums/TurnPhases';
-import GameEventState from '../enums/GameEventState.js'; // Import the new enum
+import GameEventState from '../enums/GameEventState.js';
 
+/**
+ * GameEvent - Combines a trigger condition with an action to execute
+ *
+ * A GameEvent consists of:
+ * - Trigger: Condition that determines when the event should fire
+ * - Action: What happens when the trigger condition is met
+ * - Priority: Determines execution order when multiple events trigger
+ * - State: Tracks the lifecycle of the event
+ */
 export default class GameEvent {
     constructor(trigger, action, priority = PriorityLevels.MID) {
-        this.trigger = trigger; // Instance of Trigger
-        this.action = action;   // Instance of Action
+        this.trigger = trigger; // Instance of BaseTrigger (from TriggerFactory)
+        this.action = action;   // Instance of BaseAction (from ActionFactory)
         this.priority = priority; // Priority level, defaulting to MID if not specified
         this.state = GameEventState.READY; // Initialize state to READY
         //Flow: READY -> CHECKING_TRIGGER (can bypass) -> TRIGGERED -> PROCESSING_ACTION -> COMPLETED_ACTION
@@ -72,8 +79,28 @@ export default class GameEvent {
         };
     }
 
-    // Deserialization from JSON format
-    static fromJSON(json) {
+    /**
+     * Deserialize from JSON format
+     * @param {Object} json - JSON representation
+     * @param {FactoryManager} factoryManager - Factory manager for creating triggers and actions
+     * @returns {GameEvent} GameEvent instance
+     */
+    static fromJSON(json, factoryManager) {
+        if (!factoryManager) {
+            throw new Error('FactoryManager is required for GameEvent.fromJSON');
+        }
+
+        // Get factories
+        const triggerFactory = factoryManager.getFactory('TriggerFactory');
+        const actionFactory = factoryManager.getFactory('ActionFactory');
+
+        if (!triggerFactory) {
+            throw new Error('TriggerFactory not found in FactoryManager');
+        }
+        if (!actionFactory) {
+            throw new Error('ActionFactory not found in FactoryManager');
+        }
+
         // Handle priority: could be string ("MID"), object with name ({name: "MID"}), or undefined
         let priorityName = '';
         if (json.priority) {
@@ -83,17 +110,17 @@ export default class GameEvent {
                 priorityName = processStringToEnum(json.priority.name);
             }
         }
-        const processedPriority = PriorityLevels[priorityName] || PriorityLevels.MID; // Default to MID if not found
+        const processedPriority = PriorityLevels[priorityName] || PriorityLevels.MID;
 
-        const gameEvent = new GameEvent(
-            Trigger.fromJSON(json.trigger),
-            Action.fromJSON(json.action),
-            processedPriority
-        );
+        // Create trigger and action using factories
+        const trigger = triggerFactory.createFromJSON(json.trigger);
+        const action = actionFactory.createFromJSON(json.action);
+
+        const gameEvent = new GameEvent(trigger, action, processedPriority);
 
         // Set the state from JSON, defaulting to READY if not provided
         gameEvent.setState(json.state || GameEventState.READY);
-        
+
         return gameEvent;
     }
 }

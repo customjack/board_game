@@ -65,7 +65,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
      */
     setBoard(newBoard) {
         // Deep copy using toJSON/fromJSON
-        this.board = Board.fromJSON(newBoard.toJSON());
+        this.board = Board.fromJSON(newBoard.toJSON(), this.factoryManager);
         this.updateRenderersFromBoard();
         this.emit('boardChanged', { board: this.board });
     }
@@ -130,7 +130,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
             }
 
             // Create board object
-            this.board = Board.fromJSON(boardData);
+            this.board = Board.fromJSON(boardData, this.factoryManager);
             this.updateRenderersFromBoard();
             console.log('Board object created:', this.board);
 
@@ -168,7 +168,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
             console.log('Board validation passed:', validation.summary);
 
             // Create and set board
-            this.board = Board.fromJSON(boardData);
+            this.board = Board.fromJSON(boardData, this.factoryManager);
             this.updateRenderersFromBoard();
             this.render();
             this.emit('boardLoaded', { board: this.board, source: 'file' });

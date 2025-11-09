@@ -34,20 +34,20 @@ export default class DefaultTriggersPlugin extends Plugin {
         }
 
         // Register all built-in triggers
+        const triggers = [
+            [TriggerTypes.ON_ENTER, OnEnterTrigger],
+            [TriggerTypes.ON_LAND, OnLandTrigger],
+            [TriggerTypes.ON_EXIT, OnExitTrigger],
+            [TriggerTypes.CODE, CodeTrigger]
+        ];
+
         try {
-            triggerFactory.register(TriggerTypes.ON_ENTER, OnEnterTrigger);
-            console.log('Registered trigger: ON_ENTER');
-
-            triggerFactory.register(TriggerTypes.ON_LAND, OnLandTrigger);
-            console.log('Registered trigger: ON_LAND');
-
-            triggerFactory.register(TriggerTypes.ON_EXIT, OnExitTrigger);
-            console.log('Registered trigger: ON_EXIT');
-
-            triggerFactory.register(TriggerTypes.CODE, CodeTrigger);
-            console.log('Registered trigger: CODE');
-
-            console.log('DefaultTriggersPlugin: All 4 built-in triggers registered successfully');
+            const registered = [];
+            triggers.forEach(([type, classRef]) => {
+                triggerFactory.register(type, classRef);
+                registered.push(type);
+            });
+            console.log(`DefaultTriggersPlugin: Registered ${registered.length} triggers: ${registered.join(', ')}`);
         } catch (error) {
             console.error('Failed to register triggers in DefaultTriggersPlugin:', error);
         }

@@ -15,6 +15,7 @@ export default class BaseUIComponent {
      * @param {string} config.id - Unique component identifier
      * @param {string} config.containerId - DOM container element ID
      * @param {EventBus} config.eventBus - Event bus for communication
+     * @param {FactoryManager} config.factoryManager - Factory manager for creating game objects
      */
     constructor(config = {}) {
         if (new.target === BaseUIComponent) {
@@ -24,6 +25,7 @@ export default class BaseUIComponent {
         this.id = config.id || this.constructor.name;
         this.containerId = config.containerId || null;
         this.eventBus = config.eventBus || null;
+        this.factoryManager = config.factoryManager || null;
         this.config = { ...config };
 
         // Component state

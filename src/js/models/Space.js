@@ -36,9 +36,14 @@ export default class Space {
     }
 
 
-    // First pass: Deserialize spaces without resolving connections
-    static fromJSON(json) {
-        const events = json.events.map(eventData => GameEvent.fromJSON(eventData));
+    /**
+     * First pass: Deserialize spaces without resolving connections
+     * @param {Object} json - JSON representation
+     * @param {FactoryManager} factoryManager - Factory manager for creating events
+     * @returns {Space} Space instance
+     */
+    static fromJSON(json, factoryManager) {
+        const events = json.events.map(eventData => GameEvent.fromJSON(eventData, factoryManager));
         return new Space(
             json.id,
             json.name,
