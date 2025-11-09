@@ -79,6 +79,132 @@ export default class BoardSchemaValidator {
             errors.push(...renderErrors);
         }
 
+        // Validate game rules
+        if (metadata.gameRules) {
+            const rulesErrors = this.validateGameRules(metadata.gameRules);
+            errors.push(...rulesErrors);
+        }
+
+        return errors;
+    }
+
+    /**
+     * Validate game rules configuration
+     * @param {Object} gameRules - Game rules config
+     * @returns {string[]} Array of error messages
+     */
+    static validateGameRules(gameRules) {
+        const errors = [];
+
+        if (typeof gameRules !== 'object') {
+            errors.push('metadata.gameRules must be an object');
+            return errors;
+        }
+
+        // Validate players section
+        if (gameRules.players) {
+            const playersErrors = this.validatePlayersRules(gameRules.players);
+            errors.push(...playersErrors);
+        }
+
+        // Other sections are optional and flexible
+        return errors;
+    }
+
+    /**
+     * Validate players rules
+     * @param {Object} players - Players rules config
+     * @returns {string[]} Array of error messages
+     */
+    static validatePlayersRules(players) {
+        const errors = [];
+
+        if (typeof players !== 'object') {
+            errors.push('gameRules.players must be an object');
+            return errors;
+        }
+
+        // Validate min/max
+        if (players.min !== undefined) {
+            if (typeof players.min !== 'number' || players.min < 0) {
+                errors.push('gameRules.players.min must be a non-negative number');
+            }
+        }
+
+        if (players.max !== undefined) {
+            if (typeof players.max !== 'number' || players.max < 1) {
+                errors.push('gameRules.players.max must be a positive number');
+            }
+        }
+
+        // Validate min <= max
+        if (players.min !== undefined && players.max !== undefined) {
+            if (players.min > players.max) {
+                errors.push('gameRules.players.min cannot be greater than max');
+            }
+        }
+
+        // Validate recommended
+        if (players.recommended) {
+            if (typeof players.recommended !== 'object') {
+                errors.push('gameRules.players.recommended must be an object');
+            } else {
+                if (players.recommended.min !== undefined && typeof players.recommended.min !== 'number') {
+                    errors.push('gameRules.players.recommended.min must be a number');
+                }
+                if (players.recommended.max !== undefined && typeof players.recommended.max !== 'number') {
+                    errors.push('gameRules.players.recommended.max must be a number');
+                }
+            }
+        }
+
+        // Validate starting positions
+        if (players.startingPositions) {
+            const posErrors = this.validateStartingPositions(players.startingPositions);
+            errors.push(...posErrors);
+        }
+
+        return errors;
+    }
+
+    /**
+     * Validate starting positions configuration
+     * @param {Object} positions - Starting positions config
+     * @returns {string[]} Array of error messages
+     */
+    static validateStartingPositions(positions) {
+        const errors = [];
+
+        if (typeof positions !== 'object') {
+            errors.push('gameRules.players.startingPositions must be an object');
+            return errors;
+        }
+
+        // Validate mode
+        if (positions.mode) {
+            const validModes = ['single', 'spread', 'random', 'custom'];
+            if (!validModes.includes(positions.mode)) {
+                errors.push(`gameRules.players.startingPositions.mode must be one of: ${validModes.join(', ')}`);
+            }
+        }
+
+        // Validate spaceIds
+        if (positions.spaceIds) {
+            if (!Array.isArray(positions.spaceIds)) {
+                errors.push('gameRules.players.startingPositions.spaceIds must be an array');
+            } else if (positions.spaceIds.length === 0) {
+                errors.push('gameRules.players.startingPositions.spaceIds cannot be empty');
+            }
+        }
+
+        // Validate distribution
+        if (positions.distribution) {
+            const validDistributions = ['round-robin', 'sequential'];
+            if (!validDistributions.includes(positions.distribution)) {
+                errors.push(`gameRules.players.startingPositions.distribution must be one of: ${validDistributions.join(', ')}`);
+            }
+        }
+
         return errors;
     }
 
