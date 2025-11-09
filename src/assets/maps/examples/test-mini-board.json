@@ -4,12 +4,24 @@
     "author": "Test Creator",
     "description": "A tiny 3-space board for quick testing",
     "createdDate": "2025-01-27T00:00:00.000Z",
+    "version": "1.0.0",
+    "tags": ["test", "mini", "quick"],
     "gameEngine": {
       "type": "turn-based",
       "config": {
         "turnManager": {
           "skipInactivePlayers": true,
           "maxTurns": 0
+        }
+      }
+    },
+    "gameRules": {
+      "players": {
+        "min": 1,
+        "max": 8,
+        "startingPositions": {
+          "mode": "single",
+          "spaceIds": ["start"]
         }
       }
     }
