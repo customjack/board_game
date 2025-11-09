@@ -40,7 +40,8 @@ export default class Space {
                 return {
                     when: eventJson.trigger,
                     action: eventJson.action,
-                    priority: eventJson.priority
+                    priority: eventJson.priority,
+                    state: eventJson.state  // Preserve event state through serialization!
                 };
             })
         };
@@ -59,7 +60,8 @@ export default class Space {
             const eventData = {
                 trigger: triggerData.when,
                 action: triggerData.action,
-                priority: triggerData.priority
+                priority: triggerData.priority,
+                state: triggerData.state  // Preserve event state from serialization
             };
             return GameEvent.fromJSON(eventData, factoryManager);
         });

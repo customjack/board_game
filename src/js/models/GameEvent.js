@@ -27,16 +27,20 @@ export default class GameEvent {
     // even if the conditions which triggered them are no longer true
     // (ex. triggered based on score > 5, score reduced before event occurs, event will STILL occur)
     checkTrigger(context) {
+        console.log(`[checkTrigger] ${this.trigger.type} - current state: ${this.state}`);
         if (this.state === GameEventState.TRIGGERED) {
+            console.log(`[checkTrigger] ${this.trigger.type} - already triggered, returning true`);
             return true; //The event has already been triggered
         }
         // Prevent re-triggering completed or processing events
         if (this.state !== GameEventState.READY) {
+            console.log(`[checkTrigger] ${this.trigger.type} - not ready (state: ${this.state}), returning false`);
             return false; // Not ready, so it cannot be tested for trigger
         }
         this.state = GameEventState.CHECKING_TRIGGER; // Update state
         const isTriggered = this.trigger.isTriggered(context);
         this.state = isTriggered ? GameEventState.TRIGGERED : GameEventState.READY; // Update state based on trigger
+        console.log(`[checkTrigger] ${this.trigger.type} - trigger check result: ${isTriggered}, new state: ${this.state}`);
         return isTriggered;
     }
 
