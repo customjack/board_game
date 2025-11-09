@@ -162,14 +162,25 @@ export default class Client extends BasePeer {
 
     async handleDisconnection() {
         this.stopHeartbeat();
-        await ModalUtil.alert('Disconnected from the host.');
-        location.reload();
+
+        if (this.connectionStatusManager) {
+            this.connectionStatusManager.handleDisconnection();
+        } else {
+            await ModalUtil.alert('Disconnected from the host.');
+            location.reload();
+        }
     }
 
     async handleConnectionError(err) {
         this.stopHeartbeat();
-        await ModalUtil.alert('Connection error: ' + err);
-        location.reload();
+
+        if (this.connectionStatusManager) {
+            console.error('Connection error:', err);
+            this.connectionStatusManager.handleDisconnection();
+        } else {
+            await ModalUtil.alert('Connection error: ' + err);
+            location.reload();
+        }
     }
 
     startHeartbeat() {

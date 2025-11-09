@@ -194,6 +194,12 @@ export default class ConnectionStatusManager {
             false,
             true // Show reload button
         );
+
+        setTimeout(async () => {
+            this.hideStatusModal();
+            await ModalUtil.alert('Disconnected from the host.');
+            location.reload();
+        }, 300);
     }
 
     async showStatusModal() {
