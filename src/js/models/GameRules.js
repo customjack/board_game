@@ -262,10 +262,28 @@ export default class GameRules {
 
     /**
      * Create from JSON
-     * @param {Object} json - JSON data
+     * @param {Object} json - JSON data (supports both nested and flat formats)
      * @returns {GameRules} New GameRules instance
      */
     static fromJSON(json = {}) {
+        // Handle new flat format (minPlayers, maxPlayers, etc.) by converting to nested format
+        if (json.minPlayers !== undefined || json.maxPlayers !== undefined || json.startingPositions !== undefined) {
+            const nestedFormat = {
+                players: {
+                    min: json.minPlayers,
+                    max: json.maxPlayers,
+                    recommended: json.recommendedPlayers,
+                    startingPositions: json.startingPositions
+                },
+                turns: json.turns,
+                victory: json.victory,
+                movement: json.movement,
+                constraints: json.constraints
+            };
+            return new GameRules(nestedFormat);
+        }
+
+        // Handle old nested format
         return new GameRules(json);
     }
 

@@ -43,17 +43,32 @@ export default class Space {
      * @returns {Space} Space instance
      */
     static fromJSON(json, factoryManager) {
-        const events = json.events.map(eventData => GameEvent.fromJSON(eventData, factoryManager));
+        // Handle triggers array (new format) - map trigger.when -> trigger, trigger.action -> action
+        const events = (json.triggers || []).map(triggerData => {
+            const eventData = {
+                trigger: triggerData.when,
+                action: triggerData.action,
+                priority: triggerData.priority
+            };
+            return GameEvent.fromJSON(eventData, factoryManager);
+        });
+
+        // Merge position object with visual object to create visualDetails
+        const visualDetails = {
+            ...(json.position || {}),
+            ...(json.visual || {})
+        };
+
         return new Space(
             json.id,
             json.name,
             json.type,
             events,
-            json.visualDetails,
+            visualDetails,
             json.connections.map(conn => ({
-                targetId: conn.targetId,   // Temporarily store the targetId, will resolve later
+                targetId: conn.targetId,
                 condition: conn.condition,
-                drawConnection: conn.drawConnection !== undefined ? conn.drawConnection : true
+                drawConnection: conn.draw !== undefined ? conn.draw : true
             }))
         );
     }
@@ -66,7 +81,7 @@ export default class Space {
                 .connections.map(conn => ({
                     target: spaces.find(targetSpace => targetSpace.id === conn.targetId),
                     condition: conn.condition,
-                    drawConnection: conn.drawConnection !== undefined ? conn.drawConnection : true
+                    drawConnection: conn.draw !== undefined ? conn.draw : true
                 }));
         });
     }

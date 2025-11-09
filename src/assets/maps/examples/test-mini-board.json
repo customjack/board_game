@@ -1,29 +1,32 @@
 {
-  "metadata": {
-    "name": "Mini Test Board",
-    "author": "Test Creator",
-    "description": "A tiny 3-space board for quick testing",
-    "createdDate": "2025-01-27T00:00:00.000Z",
-    "version": "1.0.0",
-    "tags": ["test", "mini", "quick"],
-    "gameEngine": {
-      "type": "turn-based",
-      "config": {
-        "turnManager": {
-          "skipInactivePlayers": true,
-          "maxTurns": 0
-        }
+  "version": "1.0.0",
+  "name": "Mini Test Board",
+  "author": "Test Creator",
+  "description": "A tiny 3-space board for quick testing",
+  "created": "2025-01-27T00:00:00.000Z",
+  "modified": "2025-11-09T19:05:24.067Z",
+  "tags": [
+    "test",
+    "mini",
+    "quick"
+  ],
+  "gameEngine": {
+    "type": "turn-based",
+    "config": {
+      "turnManager": {
+        "skipInactivePlayers": true,
+        "maxTurns": 0
       }
-    },
-    "gameRules": {
-      "players": {
-        "min": 1,
-        "max": 8,
-        "startingPositions": {
-          "mode": "single",
-          "spaceIds": ["start"]
-        }
-      }
+    }
+  },
+  "gameRules": {
+    "minPlayers": 1,
+    "maxPlayers": 8,
+    "startingPositions": {
+      "mode": "single",
+      "spaceIds": [
+        "start"
+      ]
     }
   },
   "spaces": [
@@ -31,9 +34,11 @@
       "id": "start",
       "name": "Start",
       "type": "start",
-      "visualDetails": {
+      "position": {
         "x": 200,
-        "y": 300,
+        "y": 300
+      },
+      "visual": {
         "size": 70,
         "color": "#3498db",
         "textColor": "#ffffff"
@@ -41,18 +46,20 @@
       "connections": [
         {
           "targetId": "middle",
-          "drawConnection": true
+          "draw": true
         }
       ],
-      "events": []
+      "triggers": []
     },
     {
       "id": "middle",
       "name": "Take a Drink",
       "type": "action",
-      "visualDetails": {
+      "position": {
         "x": 400,
-        "y": 300,
+        "y": 300
+      },
+      "visual": {
         "size": 70,
         "color": "#f39c12",
         "textColor": "#ffffff"
@@ -60,12 +67,12 @@
       "connections": [
         {
           "targetId": "end",
-          "drawConnection": true
+          "draw": true
         }
       ],
-      "events": [
+      "triggers": [
         {
-          "trigger": {
+          "when": {
             "type": "ON_ENTER"
           },
           "action": {
@@ -73,7 +80,8 @@
             "payload": {
               "message": "{{CURRENT_PLAYER_NAME}} takes a drink!"
             }
-          }
+          },
+          "priority": "MID"
         }
       ]
     },
@@ -81,17 +89,19 @@
       "id": "end",
       "name": "Finish",
       "type": "action",
-      "visualDetails": {
+      "position": {
         "x": 600,
-        "y": 300,
+        "y": 300
+      },
+      "visual": {
         "size": 70,
         "color": "#e74c3c",
         "textColor": "#ffffff"
       },
       "connections": [],
-      "events": [
+      "triggers": [
         {
-          "trigger": {
+          "when": {
             "type": "ON_LAND"
           },
           "action": {
@@ -99,7 +109,8 @@
             "payload": {
               "message": "{{CURRENT_PLAYER_NAME}} reached the finish! Game complete."
             }
-          }
+          },
+          "priority": "MID"
         }
       ]
     }

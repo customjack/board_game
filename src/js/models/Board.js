@@ -73,6 +73,18 @@ export default class Board {
      * @returns {Board} Board instance
      */
     static fromJSON(json, factoryManager) {
+        // Map JSON structure to internal Board structure
+        const metadata = {
+            name: json.name,
+            author: json.author,
+            description: json.description,
+            createdDate: json.created,
+            version: json.version,
+            tags: json.tags,
+            gameEngine: json.gameEngine,
+            renderConfig: json.renderConfig
+        };
+
         // First pass: Deserialize spaces without connections
         const spaces = json.spaces.map(spaceData => Space.fromJSON(spaceData, factoryManager));
 
@@ -80,9 +92,9 @@ export default class Board {
         Space.resolveConnections(spaces, json.spaces);
 
         // Parse game rules
-        const gameRules = GameRules.fromJSON(json.metadata?.gameRules || json.gameRules || {});
+        const gameRules = GameRules.fromJSON(json.gameRules || {});
 
         // Return the new Board instance with metadata and game rules
-        return new Board(spaces, json.metadata, gameRules);
+        return new Board(spaces, metadata, gameRules);
     }
 }
