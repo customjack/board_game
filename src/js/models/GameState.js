@@ -84,6 +84,17 @@ export default class GameState {
         // Ensure they don't get extra turns when they first join
         player.setTurnsTaken(this.getTurnNumber() - 1);
 
+        // Set starting position based on board's game rules
+        if (player.currentSpaceId === null && this.board && this.board.gameRules) {
+            const playerIndex = this.players.length; // Index for this new player
+            const totalPlayers = this.players.length + 1; // Including the new player
+            player.currentSpaceId = this.board.gameRules.getStartingSpaceForPlayer(
+                playerIndex,
+                totalPlayers,
+                this.board
+            );
+        }
+
         // Add the player to the game state
         this.players.push(player);
 

@@ -23,8 +23,9 @@ export default class Player {
         this.id = this.playerId;
         this.state = initialState; // Use PlayerStates instead of isSpectator
 
-        // Default to space 1 at the start
-        this.currentSpaceId = 1;
+        // Starting space will be set by GameState based on board's game rules
+        // Default to null - must be set before game starts
+        this.currentSpaceId = null;
 
         this.playerColor = (new ColorAssigner()).assignColor(this.playerId);
         this.peerColor = (new ColorAssigner()).assignColor(this.peerId);

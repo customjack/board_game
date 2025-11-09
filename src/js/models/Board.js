@@ -1,14 +1,17 @@
 import Space from './Space';
+import GameRules from './GameRules.js';
 import { getVisibleElementById } from '../utils/helpers.js';
 
 export default class Board {
-    constructor(spaces = [], metadata = {}) {
+    constructor(spaces = [], metadata = {}, gameRules = null) {
         this.spaces = spaces;
         this.metadata = {
             name: metadata.name || "Default Board",
             author: metadata.author || "Unknown",
             description: metadata.description || "",
             createdDate: metadata.createdDate || new Date().toISOString(),
+            version: metadata.version || "1.0.0",
+            tags: metadata.tags || [],
             // Game engine configuration
             gameEngine: metadata.gameEngine || {
                 type: "turn-based", // Default engine type
@@ -17,6 +20,9 @@ export default class Board {
             // Board rendering configuration (optional overrides)
             renderConfig: metadata.renderConfig || {}
         };
+
+        // Game rules and constraints
+        this.gameRules = gameRules || GameRules.fromJSON(metadata.gameRules || {});
     }
 
     // Add space to board
@@ -49,10 +55,13 @@ export default class Board {
         });
     }
 
-    // Serialize the board to JSON, including metadata
+    // Serialize the board to JSON, including metadata and game rules
     toJSON() {
         return {
-            metadata: this.metadata,
+            metadata: {
+                ...this.metadata,
+                gameRules: this.gameRules.toJSON()
+            },
             spaces: this.spaces.map(space => space.toJSON())
         };
     }
@@ -60,11 +69,14 @@ export default class Board {
     // First pass: Deserialize the board without connections, including metadata
     static fromJSON(json) {
         const spaces = json.spaces.map(spaceData => Space.fromJSON(spaceData));
-        
+
         // Second pass: Resolve connections between spaces
         Space.resolveConnections(spaces, json.spaces);
 
-        // Return the new Board instance with metadata
-        return new Board(spaces, json.metadata);
+        // Parse game rules
+        const gameRules = GameRules.fromJSON(json.metadata?.gameRules || json.gameRules || {});
+
+        // Return the new Board instance with metadata and game rules
+        return new Board(spaces, json.metadata, gameRules);
     }
 }
