@@ -17,19 +17,16 @@ import CustomAction from '../models/Actions/CustomAction.js';
  * the 7 core action types that come with the game.
  */
 export default class DefaultActionsPlugin extends Plugin {
-    constructor() {
-        super('DefaultActionsPlugin', '1.0.0');
-        this.description = 'Provides all built-in action types for the game';
-    }
-
     /**
      * Initialize the plugin and register all action types
-     * @param {Object} context - Plugin context with eventBus, registryManager, factoryManager
+     * @param {EventBus} eventBus - The event bus instance
+     * @param {RegistryManager} registryManager - The registry manager instance
+     * @param {FactoryManager} factoryManager - The factory manager instance
      */
-    initialize(context) {
-        super.initialize(context);
-
-        const { factoryManager } = context;
+    initialize(eventBus, registryManager, factoryManager) {
+        this.eventBus = eventBus;
+        this.registryManager = registryManager;
+        this.factoryManager = factoryManager;
 
         // Get or create the ActionFactory
         let actionFactory = factoryManager.getFactory('ActionFactory');
@@ -73,10 +70,17 @@ export default class DefaultActionsPlugin extends Plugin {
      * @returns {Object} Map of action types to their metadata
      */
     getActionMetadata() {
-        const actionFactory = this.context?.factoryManager?.getFactory('ActionFactory');
+        const actionFactory = this.factoryManager?.getFactory('ActionFactory');
         if (actionFactory && typeof actionFactory.getAllMetadata === 'function') {
             return actionFactory.getAllMetadata();
         }
         return {};
+    }
+
+    /**
+     * Optional cleanup method when the plugin is removed
+     */
+    cleanup() {
+        console.log('Cleaning up DefaultActionsPlugin...');
     }
 }
