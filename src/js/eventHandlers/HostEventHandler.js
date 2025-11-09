@@ -305,6 +305,9 @@ export default class HostEventHandler extends BaseEventHandler {
             this.peer.gameState.selectedMapId = mapId;
             this.peer.gameState.selectedMapData = mapData;
 
+            // Reset all player positions to the new board's starting spaces
+            this.peer.gameState.resetPlayerPositions();
+
             // Update UI
             this.uiSystem.getActiveBoard().setBoard(board);
             this.uiSystem.getActiveBoard().render();

@@ -255,6 +255,27 @@ export default class GameState {
         return this.remainingMoves > 0;
     }
 
+    /**
+     * Reset all player positions to starting spaces based on current board's game rules
+     * Should be called when a new board/map is loaded
+     */
+    resetPlayerPositions() {
+        if (!this.board || !this.board.gameRules) {
+            console.warn('Cannot reset player positions: board or game rules not available');
+            return;
+        }
+
+        this.players.forEach((player, index) => {
+            const startingSpaceId = this.board.gameRules.getStartingSpaceForPlayer(
+                index,
+                this.players.length,
+                this.board
+            );
+            player.currentSpaceId = startingSpaceId;
+            console.log(`Reset ${player.nickname} to starting space ${startingSpaceId}`);
+        });
+    }
+
     // Change the turn phase (e.g., BEGIN_TURN, END_TURN, etc.)
     setTurnPhase(phase) {
         if (Object.values(TurnPhases).includes(phase)) {
