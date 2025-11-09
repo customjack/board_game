@@ -33,16 +33,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "Welcome to the party! Let's go around the circle."
             }
-          },
-          "priority": "MID"
+          }
         }
       ]
     },
@@ -64,16 +62,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "Dance floor! Everyone take a sip."
             }
-          },
-          "priority": "MID"
+          }
         }
       ]
     },
@@ -95,16 +91,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "At the bar! Take 2 drinks."
             }
-          },
-          "priority": "MID"
+          }
         }
       ]
     },
@@ -126,16 +120,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "Relax in the lounge."
             }
-          },
-          "priority": "LOW"
+          }
         }
       ]
     },
@@ -157,16 +149,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "Game room! Play a mini-game."
             }
-          },
-          "priority": "MID"
+          }
         }
       ]
     },
@@ -188,16 +178,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "Fresh air in the garden. Back to start!"
             }
-          },
-          "priority": "MID"
+          }
         }
       ]
     }

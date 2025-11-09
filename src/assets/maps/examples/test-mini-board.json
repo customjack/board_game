@@ -34,16 +34,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "Starting position! Roll to begin."
             }
-          },
-          "priority": "MID"
+          }
         }
       ]
     },
@@ -66,16 +64,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "Halfway there! Take a drink."
             }
-          },
-          "priority": "MID"
+          }
         }
       ]
     },
@@ -93,16 +89,14 @@
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND",
-            "data": {}
+            "type": "ON_LAND"
           },
           "action": {
             "type": "PROMPT",
             "payload": {
               "message": "You made it! Game complete."
             }
-          },
-          "priority": "CRITICAL"
+          }
         }
       ]
     }
