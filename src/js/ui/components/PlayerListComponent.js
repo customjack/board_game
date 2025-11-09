@@ -160,7 +160,59 @@ export default class PlayerListComponent extends BaseUIComponent {
             this.container.appendChild(playerElement);
         });
 
+        // Add player count validation indicator
+        this.renderPlayerCountValidation(players.length);
+
         this.emit('playerListRendered', { playerCount: players.length });
+    }
+
+    /**
+     * Render player count validation indicator
+     * @param {number} playerCount - Current number of players
+     */
+    renderPlayerCountValidation(playerCount) {
+        if (!this.gameState?.board?.gameRules) {
+            return; // No validation rules available
+        }
+
+        const validation = this.gameState.board.gameRules.validatePlayerCount(playerCount);
+
+        // Remove existing validation indicator
+        const existingIndicator = this.container.querySelector('.player-count-validation');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+
+        // Create validation indicator
+        const indicator = document.createElement('div');
+        indicator.className = `player-count-validation validation-${validation.status}`;
+
+        let icon = '';
+        let colorClass = '';
+
+        switch (validation.status) {
+            case 'invalid':
+                icon = '❌';
+                colorClass = 'invalid';
+                break;
+            case 'warning':
+                icon = '⚠️';
+                colorClass = 'warning';
+                break;
+            case 'valid':
+                icon = '✓';
+                colorClass = 'valid';
+                break;
+        }
+
+        indicator.innerHTML = `
+            <div class="validation-icon ${colorClass}">${icon}</div>
+            <div class="validation-messages">
+                ${validation.messages.map(msg => `<div class="validation-message">${msg}</div>`).join('')}
+            </div>
+        `;
+
+        this.container.appendChild(indicator);
     }
 
     /**
