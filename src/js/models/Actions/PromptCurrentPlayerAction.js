@@ -49,8 +49,6 @@ export default class PromptCurrentPlayerAction extends BaseAction {
                 // After message editing, unregister CURRENT_PLAYER_NAME to prevent future use
                 placeholderRegistry.unregister('CURRENT_PLAYER_NAME');
 
-                console.log(`Prompting ${currentPlayer.nickname}: ${processed_message}`);
-
                 if (currentPlayer.peerId === gameEngine.peerId) {
                     gameEngine.showPromptModal(processed_message, postExecutionCallback);
                 }

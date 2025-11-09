@@ -48,14 +48,12 @@ export default class DefaultActionsPlugin extends Plugin {
         ];
 
         try {
-            const registered = [];
             actions.forEach(([type, classRef]) => {
                 actionFactory.register(type, classRef);
-                registered.push(type);
             });
-            console.log(`DefaultActionsPlugin: Registered ${registered.length} actions: ${registered.join(', ')}`);
+            console.log(`[Plugin] DefaultActions: Registered ${actions.length} built-in actions`);
         } catch (error) {
-            console.error('Failed to register actions in DefaultActionsPlugin:', error);
+            console.error('[Plugin] DefaultActions: Failed to register actions', error);
         }
     }
 

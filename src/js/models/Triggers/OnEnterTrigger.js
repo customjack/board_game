@@ -45,11 +45,6 @@ export default class OnEnterTrigger extends BaseTrigger {
             space
         });
 
-        // Debug logging
-        if (isTriggered) {
-            console.log(`OnEnterTrigger activated for space ID ${space.id} by player ${player.nickname}`);
-        }
-
         return isTriggered;
     }
 

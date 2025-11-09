@@ -42,14 +42,12 @@ export default class DefaultTriggersPlugin extends Plugin {
         ];
 
         try {
-            const registered = [];
             triggers.forEach(([type, classRef]) => {
                 triggerFactory.register(type, classRef);
-                registered.push(type);
             });
-            console.log(`DefaultTriggersPlugin: Registered ${registered.length} triggers: ${registered.join(', ')}`);
+            console.log(`[Plugin] DefaultTriggers: Registered ${triggers.length} built-in triggers`);
         } catch (error) {
-            console.error('Failed to register triggers in DefaultTriggersPlugin:', error);
+            console.error('[Plugin] DefaultTriggers: Failed to register triggers', error);
         }
     }
 

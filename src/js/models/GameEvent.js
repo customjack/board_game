@@ -27,20 +27,16 @@ export default class GameEvent {
     // even if the conditions which triggered them are no longer true
     // (ex. triggered based on score > 5, score reduced before event occurs, event will STILL occur)
     checkTrigger(context) {
-        console.log(`[checkTrigger] ${this.trigger.type} - current state: ${this.state}`);
         if (this.state === GameEventState.TRIGGERED) {
-            console.log(`[checkTrigger] ${this.trigger.type} - already triggered, returning true`);
             return true; //The event has already been triggered
         }
         // Prevent re-triggering completed or processing events
         if (this.state !== GameEventState.READY) {
-            console.log(`[checkTrigger] ${this.trigger.type} - not ready (state: ${this.state}), returning false`);
             return false; // Not ready, so it cannot be tested for trigger
         }
         this.state = GameEventState.CHECKING_TRIGGER; // Update state
         const isTriggered = this.trigger.isTriggered(context);
         this.state = isTriggered ? GameEventState.TRIGGERED : GameEventState.READY; // Update state based on trigger
-        console.log(`[checkTrigger] ${this.trigger.type} - trigger check result: ${isTriggered}, new state: ${this.state}`);
         return isTriggered;
     }
 
@@ -55,10 +51,6 @@ export default class GameEvent {
             this.state = GameEventState.PROCESSING_ACTION; // Update state before execution
 
             const completeActionCallback = () => {
-                console.log(`Action callback called for ${this.trigger.type}, current state: ${this.state}`);
-                if (this.state !== GameEventState.PROCESSING_ACTION) {
-                    console.warn(`Unexpected state in callback: ${this.state}, expected PROCESSING_ACTION`);
-                }
                 this.state = GameEventState.COMPLETED_ACTION; // Update state after execution
                 gameEngine.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
             };
@@ -69,10 +61,6 @@ export default class GameEvent {
     setState(newState) {
         if (!Object.values(GameEventState).includes(newState)) {
             throw new Error(`Invalid state: ${newState}`);
-        }
-        // Debug logging for state transitions
-        if (this.state === GameEventState.COMPLETED_ACTION && newState === GameEventState.READY) {
-            console.warn(`Event state reset from COMPLETED_ACTION to READY for ${this.trigger.type}`);
         }
         this.state = newState;
     }
