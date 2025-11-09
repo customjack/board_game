@@ -103,22 +103,26 @@ export default class UISystem {
         this.components.lobbyBoard = uiComponentFactory
             ? uiComponentFactory.create('BoardCanvasComponent', {
                 containerElementId: 'lobbyBoardContent',
-                eventBus: this.eventBus
+                eventBus: this.eventBus,
+                factoryManager: this.factoryManager
             })
             : new BoardCanvasComponent({
                 containerElementId: 'lobbyBoardContent',
-                eventBus: this.eventBus
+                eventBus: this.eventBus,
+                factoryManager: this.factoryManager
             });
 
         // Create game board
         this.components.gameBoard = uiComponentFactory
             ? uiComponentFactory.create('BoardCanvasComponent', {
                 containerElementId: 'gameBoardContent',
-                eventBus: this.eventBus
+                eventBus: this.eventBus,
+                factoryManager: this.factoryManager
             })
             : new BoardCanvasComponent({
                 containerElementId: 'gameBoardContent',
-                eventBus: this.eventBus
+                eventBus: this.eventBus,
+                factoryManager: this.factoryManager
             });
 
         // Create remaining moves component
