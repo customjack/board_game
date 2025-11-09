@@ -4,10 +4,10 @@
  */
 
 import HostEventHandler from '../../src/js/eventHandlers/HostEventHandler.js';
-import RegistryManager from '../../src/js/managers/RegistryManager.js';
-import PluginManager from '../../src/js/managers/PluginManager.js';
-import FactoryManager from '../../src/js/managers/FactoryManager.js';
-import EventBus from '../../src/js/models/EventBus.js';
+import RegistryManager from '../../src/js/registries/RegistryManager.js';
+import PluginManager from '../../src/js/pluginManagement/PluginManager.js';
+import FactoryManager from '../../src/js/factories/FactoryManager.js';
+import EventBus from '../../src/js/events/EventBus.js';
 import PersonalSettings from '../../src/js/models/PersonalSettings.js';
 import MapStorageManager from '../../src/js/managers/MapStorageManager.js';
 
@@ -116,7 +116,7 @@ describe('HostEventHandler Integration Tests', () => {
     });
 
     describe('Map Selection Integration', () => {
-        test('should initialize MapSelectionUI in displayLobbyControls', () => {
+        test('should initialize MapSelectionUI in displayLobbyControls', async () => {
             // Mock the necessary methods
             hostEventHandler.peer = {
                 gameState: {
@@ -134,6 +134,9 @@ describe('HostEventHandler Integration Tests', () => {
                     board: {}
                 }))
             };
+
+            // Mock loadInitialMap to prevent async issues
+            hostEventHandler.loadInitialMap = jest.fn().mockResolvedValue();
 
             // Call displayLobbyControls
             hostEventHandler.displayLobbyControls();
