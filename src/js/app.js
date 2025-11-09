@@ -13,6 +13,7 @@ import PluginManager from './pluginManagement/PluginManager';
 import FactoryManager from './factories/FactoryManager';
 import EffectFactory from './factories/EffectFactory';
 import ActionFactory from './factories/ActionFactory';
+import TriggerFactory from './factories/TriggerFactory';
 import SkipTurnEffect from './models/PlayerEffects/SkipTurnEffect';
 import PhaseStateMachineFactory from './factories/PhaseStateMachineFactory';
 import TurnManagerFactory from './factories/TurnManagerFactory';
@@ -21,6 +22,7 @@ import UIControllerFactory from './factories/UIControllerFactory';
 import UIComponentFactory from './factories/UIComponentFactory';
 import AnimationFactory from './factories/AnimationFactory';
 import DefaultActionsPlugin from './plugins/DefaultActionsPlugin';
+import DefaultTriggersPlugin from './plugins/DefaultTriggersPlugin';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
 
@@ -109,6 +111,11 @@ function initializeFactories() {
     const actionFactory = new ActionFactory();
     factoryManager.registerFactory('ActionFactory', actionFactory);
     // Note: Actions are registered by DefaultActionsPlugin, not here
+
+    // Create and add the TriggerFactory
+    const triggerFactory = new TriggerFactory();
+    factoryManager.registerFactory('TriggerFactory', triggerFactory);
+    // Note: Triggers are registered by DefaultTriggersPlugin, not here
 
     // Create and add engine component factories
     const phaseStateMachineFactory = new PhaseStateMachineFactory();

@@ -1,72 +1,92 @@
 import { processStringToEnum } from '../utils/helpers';
-import TriggerTypes from '../enums/TriggerTypes';
 
+/**
+ * Trigger - Legacy wrapper for backward compatibility
+ *
+ * This class has been refactored to use the plugin-based TriggerFactory system.
+ * The actual trigger logic is now handled by individual trigger classes:
+ * - OnEnterTrigger
+ * - OnLandTrigger
+ * - OnExitTrigger
+ * - CodeTrigger
+ *
+ * @deprecated Use TriggerFactory.createFromJSON() directly for new code
+ */
 export default class Trigger {
-    constructor(type, payload) {
-        this.type = type; // e.g., "code", "location", "time"
-        this.payload = payload; // JavaScript code or value to check
+    constructor(type, payload = null) {
+        this.type = type;
+        this.payload = payload;
+        this._delegateTrigger = null; // Will hold the actual trigger instance
     }
 
-    // Check if this trigger is met based on the game state and associated space
+    /**
+     * Check if this trigger is met based on the game state and associated space
+     * Delegates to the appropriate trigger class via TriggerFactory
+     *
+     * @param {Object} context - Trigger evaluation context
+     * @param {GameState} context.gameState - Current game state
+     * @param {Space} context.space - Space being evaluated
+     * @param {EventBus} context.eventBus - Event bus for notifications
+     * @param {string} context.peerId - Network peer ID
+     * @returns {boolean} True if trigger condition is met
+     */
     isTriggered(context) {
-        const { gameState, space, eventBus, peerId} = context; // Destructure context
+        // Get TriggerFactory from gameState (it should have access via factoryManager)
+        const factoryManager = context.gameState?.factoryManager;
 
-        const player = gameState.getCurrentPlayer();
-
-        // Emit an event before checking the trigger if the eventEmitter is provided
-        if (eventBus) {
-            eventBus.emit('triggerCheckStarted', { trigger: this, gameState: gameState, space: space });
+        if (!factoryManager) {
+            console.error('FactoryManager not found in gameState');
+            return false;
         }
 
-        let isTriggered = false;
+        const triggerFactory = factoryManager.getFactory('TriggerFactory');
 
-        switch (this.type) {
-            case TriggerTypes.CODE:
-                if (this.payload) {
-                    isTriggered = eval(this.payload); // Evaluate custom JavaScript condition
-                }
-                break;
-            case TriggerTypes.ON_ENTER:
-                const hasMovedThisTurn = player.movementHistory.getHistoryForTurn(gameState.getTurnNumber()).length > 0;
-                isTriggered = hasMovedThisTurn && player.currentSpaceId === space.id;
-                break;
-            case TriggerTypes.ON_LAND:
-                isTriggered = player.currentSpaceId === space.id && !gameState.hasMovesLeft();
-                break;
-            case TriggerTypes.ON_EXIT:
-                // Check if the player exited from the space by looking up their movement history
-                const lastMove = player.movementHistory.getPreviousMove(1); // Get the second most recent move
-                isTriggered = lastMove && lastMove.spaceId === space.id; // Check if it matches the space ID
-                break;
-            default:
-                isTriggered = false;
+        if (!triggerFactory) {
+            console.error('TriggerFactory not found in FactoryManager');
+            return false;
         }
 
-        // Emit an event after checking the trigger if the eventBus is provided
-        if (eventBus) {
-            eventBus.emit('triggerCheckEnded', { trigger: this, result: isTriggered, gameState: gameState, space: space });
-        }
+        try {
+            // Create or reuse delegate trigger instance
+            if (!this._delegateTrigger) {
+                this._delegateTrigger = triggerFactory.createFromJSON({
+                    type: this.type,
+                    payload: this.payload
+                });
+            }
 
-        // Debug print if the event is triggered
-        if (isTriggered) {
-            console.log(`Trigger of type ${this.type} was activated for space ID ${space.id} by player ${player.nickname}.`);
+            if (this._delegateTrigger) {
+                return this._delegateTrigger.isTriggered(context);
+            } else {
+                console.warn(`Trigger type "${this.type}" not recognized`);
+                return false;
+            }
+        } catch (error) {
+            console.error(`Failed to evaluate trigger "${this.type}":`, error);
+            return false;
         }
-
-        return isTriggered;
     }
 
-    // Serialization
+    /**
+     * Serialize trigger to JSON
+     * @returns {Object} JSON representation
+     */
     toJSON() {
         return {
             type: this.type,
-            payload: this.payload || null // Ensure payload is present in JSON output
+            payload: this.payload !== undefined ? this.payload : null
         };
     }
 
+    /**
+     * Deserialize trigger from JSON
+     * @static
+     * @param {Object} json - JSON representation
+     * @returns {Trigger} Trigger instance
+     */
     static fromJSON(json) {
-        // Process the type before using it
         const processedType = processStringToEnum(json.type);
-        const payload = json.payload !== undefined ? json.payload : null; // Default to null if payload is missing
+        const payload = json.payload !== undefined ? json.payload : null;
         return new Trigger(processedType, payload);
     }
 }
