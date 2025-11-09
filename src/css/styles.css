@@ -22,6 +22,7 @@
 @import 'components/loading-bar.css';
 @import 'components/board-controls.css';
 @import 'components/connection-status.css';
+@import 'components/map-selection.css';
 
 @import 'animations.css';
 
