@@ -3,7 +3,23 @@
       "name": "Drinking Board Game",
       "author": "Jack Carlton",
       "description": "Game to drink with your friends while playing",
-      "createdDate": "2024-10-28T12:00:00Z"
+      "createdDate": "2024-10-28T12:00:00Z",
+      "version": "1.0.0",
+      "tags": ["default", "party", "drinking"],
+      "gameRules": {
+        "players": {
+          "min": 2,
+          "max": 8,
+          "recommended": {
+            "min": 3,
+            "max": 6
+          },
+          "startingPositions": {
+            "mode": "single",
+            "spaceIds": [1]
+          }
+        }
+      }
     },
     "spaces": [
       {

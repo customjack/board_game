@@ -30,6 +30,7 @@
     {
       "id": "start",
       "name": "Start",
+      "type": "start",
       "visualDetails": {
         "x": 200,
         "y": 300,
@@ -40,26 +41,15 @@
       "connections": [
         {
           "targetId": "middle",
-          "bidirectional": false
+          "drawConnection": true
         }
       ],
-      "events": [
-        {
-          "trigger": {
-            "type": "ON_LAND"
-          },
-          "action": {
-            "type": "PROMPT",
-            "payload": {
-              "message": "Starting position! Roll to begin."
-            }
-          }
-        }
-      ]
+      "events": []
     },
     {
       "id": "middle",
-      "name": "Middle",
+      "name": "Take a Drink",
+      "type": "action",
       "visualDetails": {
         "x": 400,
         "y": 300,
@@ -70,18 +60,18 @@
       "connections": [
         {
           "targetId": "end",
-          "bidirectional": false
+          "drawConnection": true
         }
       ],
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND"
+            "type": "ON_ENTER"
           },
           "action": {
-            "type": "PROMPT",
+            "type": "PROMPT_CURRENT_PLAYER",
             "payload": {
-              "message": "Halfway there! Take a drink."
+              "message": "{{CURRENT_PLAYER_NAME}} takes a drink!"
             }
           }
         }
@@ -89,7 +79,8 @@
     },
     {
       "id": "end",
-      "name": "End",
+      "name": "Finish",
+      "type": "action",
       "visualDetails": {
         "x": 600,
         "y": 300,
@@ -104,9 +95,9 @@
             "type": "ON_LAND"
           },
           "action": {
-            "type": "PROMPT",
+            "type": "PROMPT_ALL_PLAYERS",
             "payload": {
-              "message": "You made it! Game complete."
+              "message": "{{CURRENT_PLAYER_NAME}} reached the finish! Game complete."
             }
           }
         }

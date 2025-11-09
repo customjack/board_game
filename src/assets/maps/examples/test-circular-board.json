@@ -2,8 +2,10 @@
   "metadata": {
     "name": "Circular Party Board",
     "author": "Test Creator",
-    "description": "A circular board with 6 spaces arranged in a circle",
+    "description": "A circular board with 6 spaces - players spread across starting positions",
     "createdDate": "2025-01-27T00:00:00.000Z",
+    "version": "1.0.0",
+    "tags": ["party", "circular", "test"],
     "gameEngine": {
       "type": "turn-based",
       "config": {
@@ -12,62 +14,69 @@
           "maxTurns": 0
         }
       }
+    },
+    "gameRules": {
+      "players": {
+        "min": 2,
+        "max": 12,
+        "recommended": {
+          "min": 4,
+          "max": 8
+        },
+        "startingPositions": {
+          "mode": "spread",
+          "spaceIds": ["start", "space2", "space4"],
+          "distribution": "round-robin"
+        }
+      }
     }
   },
   "spaces": [
     {
       "id": "start",
       "name": "Start",
+      "type": "start",
       "visualDetails": {
         "x": 400,
         "y": 200,
         "size": 60,
-        "color": "#2ecc71"
+        "color": "#2ecc71",
+        "textColor": "#ffffff"
       },
       "connections": [
         {
           "targetId": "space1",
-          "bidirectional": false
+          "drawConnection": true
         }
       ],
-      "events": [
-        {
-          "trigger": {
-            "type": "ON_LAND"
-          },
-          "action": {
-            "type": "PROMPT",
-            "payload": {
-              "message": "Welcome to the party! Let's go around the circle."
-            }
-          }
-        }
-      ]
+      "events": []
     },
     {
       "id": "space1",
       "name": "Dance Floor",
+      "type": "action",
       "visualDetails": {
         "x": 550,
         "y": 300,
         "size": 60,
-        "color": "#e74c3c"
+        "color": "#e74c3c",
+        "textColor": "#ffffff"
       },
       "connections": [
         {
           "targetId": "space2",
-          "bidirectional": false
+          "drawConnection": true
         }
       ],
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND"
+            "type": "ON_ENTER"
           },
           "action": {
-            "type": "PROMPT",
+            "type": "PROMPT_ALL_PLAYERS",
             "payload": {
-              "message": "Dance floor! Everyone take a sip."
+              "message": "{{CURRENT_PLAYER_NAME}} hits the dance floor! Everyone take a sip."
             }
           }
         }
@@ -76,16 +85,18 @@
     {
       "id": "space2",
       "name": "Bar",
+      "type": "action",
       "visualDetails": {
         "x": 550,
         "y": 450,
         "size": 60,
-        "color": "#8B4513"
+        "color": "#8B4513",
+        "textColor": "#ffffff"
       },
       "connections": [
         {
           "targetId": "space3",
-          "bidirectional": false
+          "drawConnection": true
         }
       ],
       "events": [
@@ -94,9 +105,9 @@
             "type": "ON_LAND"
           },
           "action": {
-            "type": "PROMPT",
+            "type": "PROMPT_CURRENT_PLAYER",
             "payload": {
-              "message": "At the bar! Take 2 drinks."
+              "message": "You're at the bar! Take 2 drinks."
             }
           }
         }
@@ -105,56 +116,48 @@
     {
       "id": "space3",
       "name": "Lounge",
+      "type": "action",
       "visualDetails": {
         "x": 400,
         "y": 550,
         "size": 60,
-        "color": "#9b59b6"
+        "color": "#9b59b6",
+        "textColor": "#ffffff"
       },
       "connections": [
         {
           "targetId": "space4",
-          "bidirectional": false
+          "drawConnection": true
         }
       ],
-      "events": [
-        {
-          "trigger": {
-            "type": "ON_LAND"
-          },
-          "action": {
-            "type": "PROMPT",
-            "payload": {
-              "message": "Relax in the lounge."
-            }
-          }
-        }
-      ]
+      "events": []
     },
     {
       "id": "space4",
       "name": "Game Room",
+      "type": "action",
       "visualDetails": {
         "x": 250,
         "y": 450,
         "size": 60,
-        "color": "#3498db"
+        "color": "#3498db",
+        "textColor": "#ffffff"
       },
       "connections": [
         {
           "targetId": "space5",
-          "bidirectional": false
+          "drawConnection": true
         }
       ],
       "events": [
         {
           "trigger": {
-            "type": "ON_LAND"
+            "type": "ON_ENTER"
           },
           "action": {
-            "type": "PROMPT",
+            "type": "PROMPT_CURRENT_PLAYER",
             "payload": {
-              "message": "Game room! Play a mini-game."
+              "message": "Game room! Roll a {{RANDOM_NUMBER(1,6)}}."
             }
           }
         }
@@ -163,16 +166,18 @@
     {
       "id": "space5",
       "name": "Garden",
+      "type": "action",
       "visualDetails": {
         "x": 250,
         "y": 300,
         "size": 60,
-        "color": "#27ae60"
+        "color": "#27ae60",
+        "textColor": "#ffffff"
       },
       "connections": [
         {
           "targetId": "start",
-          "bidirectional": false
+          "drawConnection": true
         }
       ],
       "events": [
@@ -181,9 +186,9 @@
             "type": "ON_LAND"
           },
           "action": {
-            "type": "PROMPT",
+            "type": "PROMPT_ALL_PLAYERS",
             "payload": {
-              "message": "Fresh air in the garden. Back to start!"
+              "message": "{{CURRENT_PLAYER_NAME}} enjoys the garden. Back to start!"
             }
           }
         }
