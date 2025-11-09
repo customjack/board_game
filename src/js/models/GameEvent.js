@@ -74,7 +74,15 @@ export default class GameEvent {
 
     // Deserialization from JSON format
     static fromJSON(json) {
-        const priorityName = json.priority ? processStringToEnum(json.priority.name) : ''; // Check if json.priority exists
+        // Handle priority: could be string ("MID"), object with name ({name: "MID"}), or undefined
+        let priorityName = '';
+        if (json.priority) {
+            if (typeof json.priority === 'string') {
+                priorityName = processStringToEnum(json.priority);
+            } else if (json.priority.name) {
+                priorityName = processStringToEnum(json.priority.name);
+            }
+        }
         const processedPriority = PriorityLevels[priorityName] || PriorityLevels.MID; // Default to MID if not found
 
         const gameEvent = new GameEvent(
