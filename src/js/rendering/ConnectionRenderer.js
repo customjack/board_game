@@ -136,7 +136,10 @@ export default class ConnectionRenderer {
      * @returns {boolean} True if connection should be drawn
      */
     static shouldDrawConnection(fromSpace, toSpace, drawnConnections) {
-        const connectionKey = `${Math.min(fromSpace.id, toSpace.id)}-${Math.max(fromSpace.id, toSpace.id)}`;
+        // Create a consistent connection key that works with both string and integer IDs
+        // Sort the IDs alphabetically to ensure consistent ordering
+        const ids = [String(fromSpace.id), String(toSpace.id)].sort();
+        const connectionKey = `${ids[0]}-${ids[1]}`;
         if (drawnConnections.has(connectionKey)) {
             return false;
         }
