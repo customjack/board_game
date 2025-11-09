@@ -18,10 +18,37 @@ export default class EffectFactory extends BaseFactory {
 
     // Custom method for creating effects from JSON
     createEffectFromJSON(json) {
-        const { type, args } = json;     
+        const { type, args } = json;
         // Convert the array of objects into an array of values, preserving the order
         const resolvedArgs = args.map(argObj => Object.values(argObj)[0]);
 
         return this.create(type, ...resolvedArgs); // Spread the arguments in the correct order
+    }
+
+    /**
+     * Get metadata for all registered effects
+     * @returns {Object} Map of effect types to their metadata
+     */
+    getAllMetadata() {
+        const metadata = {};
+        for (const [typeName, classRef] of this.registry.entries()) {
+            if (typeof classRef.getMetadata === 'function') {
+                metadata[typeName] = classRef.getMetadata();
+            }
+        }
+        return metadata;
+    }
+
+    /**
+     * Get metadata for a specific effect type
+     * @param {string} typeName - The effect type identifier
+     * @returns {Object|null} The effect's metadata or null if not found
+     */
+    getMetadata(typeName) {
+        const classRef = this.registry.get(typeName);
+        if (classRef && typeof classRef.getMetadata === 'function') {
+            return classRef.getMetadata();
+        }
+        return null;
     }
 }
