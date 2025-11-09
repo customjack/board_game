@@ -69,4 +69,32 @@ export default class DefaultTriggersPlugin extends Plugin {
     cleanup() {
         console.log('Cleaning up DefaultTriggersPlugin...');
     }
+
+    /**
+     * Get plugin metadata for Plugin Manager
+     * @static
+     * @returns {Object} Plugin metadata
+     */
+    static getPluginMetadata() {
+        return {
+            id: 'default-triggers',
+            name: 'Default Triggers',
+            version: '1.0.0',
+            description: 'Core trigger types for game events including movement-based and custom code triggers',
+            author: 'Game Engine',
+            type: 'triggers',
+            isDefault: true,
+            dependencies: [],
+            provides: {
+                actions: [],
+                triggers: [
+                    'ON_ENTER',
+                    'ON_LAND',
+                    'ON_EXIT',
+                    'CODE'
+                ],
+                effects: []
+            }
+        };
+    }
 }

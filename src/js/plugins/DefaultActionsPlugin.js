@@ -75,4 +75,35 @@ export default class DefaultActionsPlugin extends Plugin {
     cleanup() {
         console.log('Cleaning up DefaultActionsPlugin...');
     }
+
+    /**
+     * Get plugin metadata for Plugin Manager
+     * @static
+     * @returns {Object} Plugin metadata
+     */
+    static getPluginMetadata() {
+        return {
+            id: 'default-actions',
+            name: 'Default Actions',
+            version: '1.0.0',
+            description: 'Core action types for game events including prompts, player state changes, and effects',
+            author: 'Game Engine',
+            type: 'actions',
+            isDefault: true,
+            dependencies: [],
+            provides: {
+                actions: [
+                    'PROMPT_ALL_PLAYERS',
+                    'PROMPT_CURRENT_PLAYER',
+                    'SET_PLAYER_STATE',
+                    'DISPLACE_PLAYER',
+                    'APPLY_EFFECT',
+                    'SET_PLAYER_SPACE',
+                    'CUSTOM'
+                ],
+                triggers: [],
+                effects: []
+            }
+        };
+    }
 }

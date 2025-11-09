@@ -13,13 +13,14 @@ import MapStorageManager from '../managers/MapStorageManager.js';
 import Board from '../models/Board.js';
 
 export default class HostEventHandler extends BaseEventHandler {
-    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
+    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal) {
         super(true, registryManager, pluginManager, factoryManager, eventBus, personalSettings);
 
         // Initialize UI systems
         this.uiBinder = new UIBinder(HOST_UI_BINDINGS);
         this.actionRegistry = new ActionRegistry();
         this.mapSelectionUI = null; // Initialized after peer is created
+        this.pluginManagerModal = pluginManagerModal; // Plugin manager modal
     }
 
     /**
@@ -92,26 +93,19 @@ export default class HostEventHandler extends BaseEventHandler {
             description: 'Select a map'
         });
 
-        // Plugin upload action
-        const pluginFileInput = this.uiBinder.getInput('pluginFileInput');
-        if (pluginFileInput) {
-            this.actionRegistry.register('uploadPlugin', () => pluginFileInput.click(), {
-                elementId: 'uploadPluginButton',
-                description: 'Upload plugin'
-            });
+        // Plugin manager action
+        this.actionRegistry.register('uploadPlugin', () => this.openPluginManager(), {
+            elementId: 'uploadPluginButton',
+            description: 'Open plugin manager'
+        });
+    }
 
-            // Handle plugin file selection
-            this.listenerRegistry.registerListener('pluginFileInput', 'change', async (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    try {
-                        await this.pluginManager.initializePluginFromFile(file);
-                        await ModalUtil.alert('Plugin uploaded and initialized successfully!');
-                    } catch (error) {
-                        await ModalUtil.alert(`Error loading plugin: ${error.message}`);
-                    }
-                }
-            });
+    /**
+     * Open the plugin manager modal
+     */
+    openPluginManager() {
+        if (this.pluginManagerModal) {
+            this.pluginManagerModal.show();
         }
     }
 

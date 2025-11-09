@@ -18,25 +18,25 @@
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <h2>Personal Settings</h2>
-    
+
             <!-- Theme Selection -->
             <div>
                 <label for="themeSelect">Theme:</label>
                 <select class="select" id="themeSelect"></select> <!-- Empty options, to be populated by JS -->
             </div>
-    
+
             <!-- Sound Volume Slider -->
             <div>
                 <label for="soundVolume">Sound Volume (Not Currently Functional):</label>
                 <input class="input-range" type="range" id="soundVolume" min="0" max="1" step="0.1">
             </div>
-    
+
             <!-- Show Tips Toggle -->
             <div>
                 <label for="showTips">Show Gameplay Tips (Not Currently Functional):</label>
                 <input class="input-checkbox" type="checkbox" id="showTips">
             </div>
-    
+
             <!-- Auto Roll Toggle -->
             <div>
                 <label for="autoRoll">Enable Auto Roll (Not Currently Functional):</label>
@@ -51,6 +51,27 @@
 
             <!-- Buttons -->
             <button id="closeSettingsButton" class="button">Close</button>
+        </div>
+    </div>
+
+    <!-- Modal Popup for Plugin Manager -->
+    <div id="pluginManagerModal" class="modal">
+        <div class="modal-content">
+            <h2>Plugin Manager</h2>
+
+            <!-- Plugin List -->
+            <div id="pluginList" class="plugin-list">
+                <!-- Plugins will be populated here by JS -->
+            </div>
+
+            <!-- Add Plugin Section (Coming Soon) -->
+            <div class="add-plugin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
+                <h3>Add New Plugin (Coming Soon)</h3>
+                <p style="font-size: 0.9em; color: #666;">External plugin loading will be available in a future update.</p>
+            </div>
+
+            <!-- Buttons -->
+            <button id="closePluginManagerButton" class="button">Close</button>
         </div>
     </div>
 
@@ -122,14 +143,14 @@
             <div id="lobbyControlsSection" class="lobby-section-left">
                 <h3>Lobby Controls</h3>
                 <div class="lobby-button-group">
-                    <button id="openSettingsButton" class="button button-primary" style="display: none;">
+                    <button id="openSettingsButton" class="button button-secondary" style="display: none;">
                         Settings
                     </button>
-                    <button id="selectMapButton" class="button button-primary" style="display: none;">
+                    <button id="selectMapButton" class="button button-secondary" style="display: none;">
                         Map Picker
                     </button>
-                    <button id="uploadPluginButton" class="button button-primary" style="display: none;">
-                        Upload Plugin
+                    <button id="uploadPluginButton" class="button button-secondary" style="display: none;">
+                        Plugin Manager
                     </button>
                     <input type="file" id="pluginFileInput" accept=".js" style="display: none;">
                     <button id="startGameButton" class="button button-primary" style="display: none;">

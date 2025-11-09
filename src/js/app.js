@@ -3,6 +3,7 @@ import HostEventHandler from './eventHandlers/HostEventHandler';
 import ClientEventHandler from './eventHandlers/ClientEventHandler';
 import PersonalSettings from './models/PersonalSettings';
 import PersonalSettingsMenu from './controllers/menus/PersonalSettingsMenu';
+import PluginManagerModal from './controllers/menus/PluginManagerModal';
 import PageRegistry from './registries/PageRegistry';
 import ListenerRegistry from './registries/ListenerRegistry';
 import PlaceholderRegistry from './registries/PlaceholderRegistry';
@@ -88,8 +89,14 @@ function initializePluginManager(eventBus, registryManager, factoryManager) {
         const pluginModule = requirePlugin(fileName);
         const plugin = pluginModule.default || pluginModule; // Use default export or the module itself
         if (plugin && typeof plugin === 'function') {
-            const pluginInstance = new plugin(); // Create an instance of the plugin
-            pluginManager.registerPlugin(pluginInstance); // Register the plugin
+            // Register plugin class in metadata system (if it supports it)
+            if (typeof plugin.getPluginMetadata === 'function') {
+                pluginManager.registerPluginClass(plugin);
+            }
+
+            // Create instance and register (legacy method)
+            const pluginInstance = new plugin();
+            pluginManager.registerPlugin(pluginInstance);
         }
     });
 
@@ -158,6 +165,9 @@ function registerListeners(
     const hostBackButton = document.getElementById('hostBackButton');
     const joinBackButton = document.getElementById('joinBackButton');
 
+    // Initialize Plugin Manager Modal
+    const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager);
+
     const resetHomePage = () => {
         pageRegistry.showPage('homePage');
         if (hostButton) hostButton.disabled = false;
@@ -209,7 +219,8 @@ function registerListeners(
                     pluginManager,
                     factoryManager,
                     eventBus,
-                    personalSettings
+                    personalSettings,
+                    pluginManagerModal
                 );
                 hostEventHandlerInstance.init();
                 await hostEventHandlerInstance.startHostGame();
