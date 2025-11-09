@@ -23,7 +23,7 @@ export default class ConnectionStatusManager {
 
         // Heartbeat tracking
         this.lastHeartbeatTime = Date.now();
-        this.heartbeatTimeout = 10000; // 10 seconds without heartbeat = disconnected
+        this.heartbeatTimeout = 25000; // 25 seconds without heartbeat = disconnected (matches client timeout)
         this.heartbeatCheckInterval = 2000; // Check every 2 seconds
 
         // Modal state
@@ -177,10 +177,10 @@ export default class ConnectionStatusManager {
             true
         );
 
-        // Auto-close modal after 2 seconds
+        // Auto-close modal quickly so it doesn't linger on screen
         setTimeout(() => {
             this.hideStatusModal();
-        }, 2000);
+        }, 800);
     }
 
     handleReconnectFailure() {
