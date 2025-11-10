@@ -269,12 +269,14 @@ export default class PluginManager {
     }
 
     /**
-     * Get all plugins of a specific type
-     * @param {string} type - Plugin type (actions, triggers, effects, core)
+     * Get all plugins with a specific tag
+     * @param {string} tag - Tag to filter by
      * @returns {Array} Array of plugin metadata
      */
-    getPluginsByType(type) {
-        return this.getAllPlugins().filter(plugin => plugin.type === type);
+    getPluginsByTag(tag) {
+        return this.getAllPlugins().filter(plugin =>
+            plugin.tags && plugin.tags.includes(tag)
+        );
     }
 
     /**
@@ -516,8 +518,8 @@ export default class PluginManager {
             errors.push('Missing or invalid plugin version');
         }
 
-        if (!metadata.type || !['actions', 'triggers', 'effects', 'core'].includes(metadata.type)) {
-            errors.push('Missing or invalid plugin type');
+        if (!Array.isArray(metadata.tags)) {
+            errors.push('Missing or invalid tags array');
         }
 
         if (typeof metadata.isDefault !== 'boolean') {

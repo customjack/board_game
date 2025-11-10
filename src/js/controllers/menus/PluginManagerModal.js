@@ -3,8 +3,8 @@ import BaseMenu from './BaseMenu.js';
 /**
  * PluginManagerModal - UI controller for the Plugin Manager modal
  *
- * Displays installed plugins with their metadata and provides
- * controls for managing plugins (enable/disable for custom plugins).
+ * Displays installed plugins in a scrollable list with toggle switches
+ * for custom plugins and status indicators for core plugins.
  */
 export default class PluginManagerModal extends BaseMenu {
     /**
@@ -53,48 +53,19 @@ export default class PluginManagerModal extends BaseMenu {
         const plugins = this.pluginManager.getAllPlugins();
 
         if (plugins.length === 0) {
-            this.pluginListContainer.innerHTML = '<p>No plugins registered.</p>';
+            this.pluginListContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No plugins registered.</p>';
             return;
         }
 
-        // Group plugins by type
-        const pluginsByType = {
-            'core': [],
-            'actions': [],
-            'triggers': [],
-            'effects': []
-        };
-
+        // Render each plugin as a row
         plugins.forEach(plugin => {
-            if (pluginsByType[plugin.type]) {
-                pluginsByType[plugin.type].push(plugin);
-            }
-        });
-
-        // Render each type group
-        Object.entries(pluginsByType).forEach(([type, pluginList]) => {
-            if (pluginList.length === 0) return;
-
-            const typeSection = document.createElement('div');
-            typeSection.className = 'plugin-type-section';
-
-            // Section header
-            const typeHeader = document.createElement('h3');
-            typeHeader.textContent = this._formatTypeName(type);
-            typeSection.appendChild(typeHeader);
-
-            // Plugin items
-            pluginList.forEach(plugin => {
-                const pluginRow = this._createPluginRow(plugin);
-                typeSection.appendChild(pluginRow);
-            });
-
-            this.pluginListContainer.appendChild(typeSection);
+            const pluginRow = this._createPluginRow(plugin);
+            this.pluginListContainer.appendChild(pluginRow);
         });
     }
 
     /**
-     * Create a plugin row element (similar to settings items)
+     * Create a plugin row element
      * @private
      * @param {Object} plugin - Plugin metadata
      * @returns {HTMLElement} Plugin row element
@@ -131,6 +102,14 @@ export default class PluginManagerModal extends BaseMenu {
         descEl.className = 'plugin-description';
         descEl.textContent = plugin.description || 'No description available';
         infoContainer.appendChild(descEl);
+
+        // Tags (if any)
+        if (plugin.tags && plugin.tags.length > 0) {
+            const tagsEl = document.createElement('div');
+            tagsEl.className = 'plugin-tags';
+            tagsEl.innerHTML = plugin.tags.map(tag => `<span class="plugin-tag">${tag}</span>`).join(' ');
+            infoContainer.appendChild(tagsEl);
+        }
 
         // Provides info
         if (plugin.provides) {
@@ -197,22 +176,6 @@ export default class PluginManagerModal extends BaseMenu {
         row.appendChild(controlContainer);
 
         return row;
-    }
-
-    /**
-     * Format type name for display
-     * @private
-     * @param {string} type - Plugin type
-     * @returns {string} Formatted type name
-     */
-    _formatTypeName(type) {
-        const typeNames = {
-            'core': 'Core Engine Components',
-            'actions': 'Action Plugins',
-            'triggers': 'Trigger Plugins',
-            'effects': 'Effect Plugins'
-        };
-        return typeNames[type] || type;
     }
 
     /**

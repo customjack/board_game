@@ -22,8 +22,6 @@ import EventProcessorFactory from './factories/EventProcessorFactory';
 import UIControllerFactory from './factories/UIControllerFactory';
 import UIComponentFactory from './factories/UIComponentFactory';
 import AnimationFactory from './factories/AnimationFactory';
-import DefaultActionsPlugin from './plugins/DefaultActionsPlugin';
-import DefaultTriggersPlugin from './plugins/DefaultTriggersPlugin';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
 
