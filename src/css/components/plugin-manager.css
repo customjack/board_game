@@ -1,0 +1,163 @@
+/* components/plugin-manager.css */
+
+/* Import variables */
+@import '../variables.css';
+
+/* Plugin List Container */
+.plugin-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+/* Plugin Type Section */
+.plugin-type-section {
+    margin-bottom: 24px;
+}
+
+.plugin-type-section h3 {
+    margin-bottom: 12px;
+    font-size: 1.1em;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 6px;
+    color: var(--text-color);
+}
+
+/* Plugin Row (similar to settings items) */
+.plugin-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-light, #eee);
+    transition: background-color 0.2s ease;
+}
+
+.plugin-row:hover {
+    background-color: var(--background-hover, rgba(0, 0, 0, 0.02));
+}
+
+.plugin-row:last-child {
+    border-bottom: none;
+}
+
+/* Plugin Info Container */
+.plugin-info {
+    flex: 1;
+}
+
+.plugin-name-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.plugin-name {
+    font-weight: 500;
+    font-size: 1em;
+    color: var(--text-color);
+}
+
+.plugin-badge {
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.65em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.plugin-description {
+    font-size: 0.85em;
+    color: var(--text-secondary, #666);
+    margin-bottom: 4px;
+}
+
+.plugin-provides {
+    font-size: 0.75em;
+    color: var(--text-tertiary, #888);
+}
+
+/* Plugin Control Container */
+.plugin-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 16px;
+}
+
+.plugin-status {
+    font-size: 0.85em;
+    color: var(--color-success, #28a745);
+    font-weight: 500;
+}
+
+/* Custom Toggle Switch for Plugin Manager */
+.plugin-toggle {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.plugin-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.plugin-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color, #ccc);
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.plugin-toggle-slider.active {
+    background-color: var(--color-success, #28a745);
+}
+
+.plugin-toggle-button {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.plugin-toggle-button.active {
+    left: 26px;
+}
+
+.plugin-toggle-button.inactive {
+    left: 3px;
+}
+
+/* Add Plugin Section */
+.add-plugin-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.add-plugin-section h3 {
+    font-size: 1em;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+.add-plugin-section p {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}

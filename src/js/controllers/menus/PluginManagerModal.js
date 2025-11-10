@@ -77,17 +77,16 @@ export default class PluginManagerModal extends BaseMenu {
 
             const typeSection = document.createElement('div');
             typeSection.className = 'plugin-type-section';
-            typeSection.style.marginBottom = '20px';
 
+            // Section header
             const typeHeader = document.createElement('h3');
             typeHeader.textContent = this._formatTypeName(type);
-            typeHeader.style.marginBottom = '10px';
-            typeHeader.style.textTransform = 'capitalize';
             typeSection.appendChild(typeHeader);
 
+            // Plugin items
             pluginList.forEach(plugin => {
-                const pluginCard = this._createPluginCard(plugin);
-                typeSection.appendChild(pluginCard);
+                const pluginRow = this._createPluginRow(plugin);
+                typeSection.appendChild(pluginRow);
             });
 
             this.pluginListContainer.appendChild(typeSection);
@@ -95,110 +94,90 @@ export default class PluginManagerModal extends BaseMenu {
     }
 
     /**
-     * Create a plugin card element
+     * Create a plugin row element (similar to settings items)
      * @private
      * @param {Object} plugin - Plugin metadata
-     * @returns {HTMLElement} Plugin card element
+     * @returns {HTMLElement} Plugin row element
      */
-    _createPluginCard(plugin) {
-        const card = document.createElement('div');
-        card.className = 'plugin-card';
-        card.style.cssText = `
-            background: var(--card-background, #f5f5f5);
-            border: 1px solid var(--border-color, #ddd);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
-        `;
+    _createPluginRow(plugin) {
+        const row = document.createElement('div');
+        row.className = 'plugin-row';
 
-        // Header with name and badge
-        const header = document.createElement('div');
-        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;';
+        // Left side: Plugin info
+        const infoContainer = document.createElement('div');
+        infoContainer.className = 'plugin-info';
 
+        // Plugin name with badge
         const nameContainer = document.createElement('div');
-        nameContainer.style.cssText = 'display: flex; align-items: center; gap: 10px;';
+        nameContainer.className = 'plugin-name-container';
 
-        const nameEl = document.createElement('strong');
+        const nameEl = document.createElement('div');
+        nameEl.className = 'plugin-name';
         nameEl.textContent = plugin.name;
-        nameEl.style.fontSize = '1.1em';
         nameContainer.appendChild(nameEl);
 
-        // Badge for default plugins
+        // CORE badge for default plugins
         if (plugin.isDefault) {
             const badge = document.createElement('span');
+            badge.className = 'plugin-badge';
             badge.textContent = 'CORE';
-            badge.style.cssText = `
-                background: var(--primary-color, #007bff);
-                color: white;
-                font-size: 0.7em;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-weight: bold;
-            `;
             nameContainer.appendChild(badge);
         }
 
-        header.appendChild(nameContainer);
-
-        // Status indicator
-        const statusContainer = document.createElement('div');
-        statusContainer.style.cssText = 'display: flex; align-items: center; gap: 8px;';
-
-        const statusDot = document.createElement('span');
-        statusDot.textContent = '●';
-        statusDot.style.cssText = `
-            color: ${plugin.enabled ? '#28a745' : '#dc3545'};
-            font-size: 1.2em;
-        `;
-        statusContainer.appendChild(statusDot);
-
-        const statusText = document.createElement('span');
-        statusText.textContent = plugin.enabled ? 'Enabled' : 'Disabled';
-        statusText.style.fontSize = '0.9em';
-        statusContainer.appendChild(statusText);
-
-        header.appendChild(statusContainer);
-        card.appendChild(header);
-
-        // Version and author
-        const metaInfo = document.createElement('div');
-        metaInfo.style.cssText = 'font-size: 0.85em; color: #666; margin-bottom: 8px;';
-        metaInfo.innerHTML = `Version ${plugin.version}`;
-        if (plugin.author) {
-            metaInfo.innerHTML += ` • by ${plugin.author}`;
-        }
-        card.appendChild(metaInfo);
+        infoContainer.appendChild(nameContainer);
 
         // Description
-        if (plugin.description) {
-            const desc = document.createElement('p');
-            desc.textContent = plugin.description;
-            desc.style.cssText = 'font-size: 0.9em; margin: 8px 0; color: #333;';
-            card.appendChild(desc);
-        }
+        const descEl = document.createElement('div');
+        descEl.className = 'plugin-description';
+        descEl.textContent = plugin.description || 'No description available';
+        infoContainer.appendChild(descEl);
 
-        // Provides info (what this plugin registers)
+        // Provides info
         if (plugin.provides) {
             const providesInfo = this._formatProvidesInfo(plugin.provides);
             if (providesInfo) {
-                const provides = document.createElement('div');
-                provides.style.cssText = 'font-size: 0.85em; color: #555; margin-top: 8px;';
-                provides.innerHTML = `<em>Provides:</em> ${providesInfo}`;
-                card.appendChild(provides);
+                const providesEl = document.createElement('div');
+                providesEl.className = 'plugin-provides';
+                providesEl.innerHTML = `<em>Provides:</em> ${providesInfo}`;
+                infoContainer.appendChild(providesEl);
             }
         }
 
-        // Toggle button for custom plugins
-        if (!plugin.isDefault) {
-            const buttonContainer = document.createElement('div');
-            buttonContainer.style.cssText = 'margin-top: 12px; text-align: right;';
+        row.appendChild(infoContainer);
 
-            const toggleButton = document.createElement('button');
-            toggleButton.className = 'button button-secondary';
-            toggleButton.textContent = plugin.enabled ? 'Disable' : 'Enable';
-            toggleButton.style.cssText = 'padding: 6px 16px; font-size: 0.9em;';
+        // Right side: Toggle or status
+        const controlContainer = document.createElement('div');
+        controlContainer.className = 'plugin-control';
 
-            toggleButton.addEventListener('click', () => {
+        if (plugin.isDefault) {
+            // Core plugins: just show enabled status (no toggle)
+            const statusEl = document.createElement('div');
+            statusEl.className = 'plugin-status';
+            statusEl.textContent = 'Always Enabled';
+            controlContainer.appendChild(statusEl);
+        } else {
+            // Custom plugins: show toggle switch
+            const toggleContainer = document.createElement('label');
+            toggleContainer.className = 'plugin-toggle';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = plugin.enabled;
+            checkbox.style.cssText = 'opacity: 0; width: 0; height: 0;';
+
+            const slider = document.createElement('span');
+            slider.className = plugin.enabled ? 'plugin-toggle-slider active' : 'plugin-toggle-slider';
+
+            const sliderButton = document.createElement('span');
+            sliderButton.className = plugin.enabled ? 'plugin-toggle-button active' : 'plugin-toggle-button inactive';
+            slider.appendChild(sliderButton);
+
+            toggleContainer.appendChild(checkbox);
+            toggleContainer.appendChild(slider);
+
+            // Handle toggle click
+            toggleContainer.addEventListener('click', (e) => {
+                e.preventDefault();
                 if (plugin.enabled) {
                     const success = this.pluginManager.disablePlugin(plugin.id);
                     if (success) {
@@ -212,11 +191,12 @@ export default class PluginManagerModal extends BaseMenu {
                 }
             });
 
-            buttonContainer.appendChild(toggleButton);
-            card.appendChild(buttonContainer);
+            controlContainer.appendChild(toggleContainer);
         }
 
-        return card;
+        row.appendChild(controlContainer);
+
+        return row;
     }
 
     /**
@@ -227,7 +207,7 @@ export default class PluginManagerModal extends BaseMenu {
      */
     _formatTypeName(type) {
         const typeNames = {
-            'core': 'Core Plugins',
+            'core': 'Core Engine Components',
             'actions': 'Action Plugins',
             'triggers': 'Trigger Plugins',
             'effects': 'Effect Plugins'
@@ -254,6 +234,10 @@ export default class PluginManagerModal extends BaseMenu {
 
         if (provides.effects && provides.effects.length > 0) {
             parts.push(`${provides.effects.length} effect${provides.effects.length > 1 ? 's' : ''}`);
+        }
+
+        if (provides.components && provides.components.length > 0) {
+            parts.push(`${provides.components.length} component${provides.components.length > 1 ? 's' : ''}`);
         }
 
         return parts.join(', ');
