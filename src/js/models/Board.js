@@ -12,6 +12,8 @@ export default class Board {
             createdDate: metadata.createdDate || new Date().toISOString(),
             version: metadata.version || "1.0.0",
             tags: metadata.tags || [],
+            // Required plugins for this board to function
+            requiredPlugins: metadata.requiredPlugins || [],
             // Game engine configuration
             gameEngine: metadata.gameEngine || {
                 type: "turn-based", // Default engine type
@@ -78,6 +80,7 @@ export default class Board {
             created: this.metadata.createdDate,
             modified: new Date().toISOString(),
             tags: this.metadata.tags,
+            requiredPlugins: this.metadata.requiredPlugins || [],
             gameEngine: this.metadata.gameEngine,
             renderConfig: this.metadata.renderConfig,
             gameRules: flatGameRules,

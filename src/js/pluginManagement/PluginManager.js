@@ -58,7 +58,8 @@ export default class PluginManager {
 
             // Check for duplicate plugin ID
             if (this.pluginClasses.has(metadata.id)) {
-                console.warn(`Plugin with ID "${metadata.id}" is already registered`);
+                const existingPlugin = this.pluginClasses.get(metadata.id).getPluginMetadata();
+                console.error(`Cannot register plugin: ID "${metadata.id}" is already in use by "${existingPlugin.name}"`);
                 return false;
             }
 
