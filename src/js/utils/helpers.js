@@ -187,8 +187,17 @@ function isElementVisible(element) {
         return true;
     }
 
-    if (element.getClientRects().length === 0) {
-        return false;
+    if (typeof element.getClientRects === 'function') {
+        if (element.getClientRects().length === 0) {
+            return false;
+        }
+    }
+
+    const canInspectStyle = typeof element.nodeType === 'number' ||
+        (typeof Element !== 'undefined' && element instanceof Element);
+
+    if (!canInspectStyle) {
+        return true;
     }
 
     const style = window.getComputedStyle(element);
@@ -213,9 +222,19 @@ function isElementVisible(element) {
 export function getVisibleElementById(id) {
     if (!id) return null;
 
-    const candidates = document.querySelectorAll(`[id="${id}"]`);
+    const nodeList = typeof document.querySelectorAll === 'function'
+        ? document.querySelectorAll(`[id="${id}"]`)
+        : [];
+    const candidates = Array.from(nodeList).filter(element => element?.id === id);
+
     if (candidates.length === 0) {
-        return null;
+        const fallback = typeof document.getElementById === 'function'
+            ? document.getElementById(id)
+            : null;
+        if (fallback && isElementVisible(fallback)) {
+            return fallback;
+        }
+        return fallback;
     }
 
     for (const element of candidates) {

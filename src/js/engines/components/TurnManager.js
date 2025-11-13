@@ -26,6 +26,7 @@ export default class TurnManager {
         // Turn tracking
         this.turnHistory = [];
         this.turnCallbacks = new Map();
+        this.totalTurnsProcessed = 0;
     }
 
     /**
@@ -60,12 +61,21 @@ export default class TurnManager {
         const players = this.getPlayersInTurnOrder();
         if (players.length === 0) return null;
 
-        // Find the player with the fewest turns who isn't the current player
         const currentPlayer = this.getCurrentPlayer();
-        const nextPlayers = players.filter(p => p.playerId !== currentPlayer?.playerId);
+        const minTurns = players[0].turnsTaken;
+        const playersWithMinTurns = players.filter(p => p.turnsTaken === minTurns);
 
-        if (nextPlayers.length === 0) return players[0]; // Only one player
-        return nextPlayers[0];
+        if (playersWithMinTurns.length === 1) {
+            return playersWithMinTurns[0];
+        }
+
+        const currentIndex = playersWithMinTurns.findIndex(p => p.playerId === currentPlayer?.playerId);
+        if (currentIndex === -1) {
+            return playersWithMinTurns[0];
+        }
+
+        const nextIndex = (currentIndex + 1) % playersWithMinTurns.length;
+        return playersWithMinTurns[nextIndex];
     }
 
     /**
@@ -85,16 +95,17 @@ export default class TurnManager {
         previousPlayer.turnsTaken++;
 
         // Record turn transition
-        this.recordTurnTransition(previousPlayer, context);
+        const completedTurnNumber = this.recordTurnTransition(previousPlayer, context);
 
         // Get new current player
         const newCurrentPlayer = this.getCurrentPlayer();
+        const nextTurnNumber = completedTurnNumber + 1;
 
         // Execute callbacks
         this.executeCallbacks('turnChanged', {
             previousPlayer,
             currentPlayer: newCurrentPlayer,
-            turnNumber: this.getCurrentTurnNumber(),
+            turnNumber: nextTurnNumber,
             ...context
         });
 
@@ -193,6 +204,7 @@ export default class TurnManager {
         }
 
         this.turnHistory = [];
+        this.totalTurnsProcessed = 0;
 
         this.executeCallbacks('turnOrderReset', {
             preserveTurnCounts,
@@ -279,19 +291,24 @@ export default class TurnManager {
      * @param {Player} player - Player whose turn ended
      * @param {Object} context - Additional context
      */
-    recordTurnTransition(player, context) {
+    recordTurnTransition(player, context = {}) {
+        this.totalTurnsProcessed += 1;
+        const completedTurnNumber = this.totalTurnsProcessed;
+
         this.turnHistory.push({
             playerId: player.playerId,
             playerNickname: player.nickname,
-            turnNumber: this.getCurrentTurnNumber(),
             timestamp: Date.now(),
-            ...context
+            ...context,
+            turnNumber: completedTurnNumber
         });
 
         // Keep history limited to last 100 turns
         if (this.turnHistory.length > 100) {
             this.turnHistory.shift();
         }
+
+        return completedTurnNumber;
     }
 
     /**

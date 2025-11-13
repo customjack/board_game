@@ -32,6 +32,8 @@ export default class EventProcessor {
         this.currentEventIndex = 0;
         this.eventHistory = [];
         this.isProcessing = false;
+        this.totalEventsCurrentRun = 0;
+        this.completedEventsCurrentRun = 0;
     }
 
     /**
@@ -97,6 +99,8 @@ export default class EventProcessor {
         this.currentEventQueue = eventQueue || this.determineTriggeredEvents();
         this.currentEventIndex = 0;
         this.isProcessing = true;
+        this.totalEventsCurrentRun = this.currentEventQueue.length;
+        this.completedEventsCurrentRun = 0;
 
         // Emit processing started event
         if (this.eventBus) {
@@ -135,6 +139,12 @@ export default class EventProcessor {
         }
 
         this.currentEventIndex++;
+        if (this.totalEventsCurrentRun > 0) {
+            this.completedEventsCurrentRun = Math.min(
+                this.completedEventsCurrentRun + 1,
+                this.totalEventsCurrentRun
+            );
+        }
 
         // Check if done processing
         if (this.currentEventIndex >= this.currentEventQueue.length) {
@@ -147,6 +157,7 @@ export default class EventProcessor {
      */
     finishProcessing() {
         this.isProcessing = false;
+        this.completedEventsCurrentRun = this.totalEventsCurrentRun;
 
         // Emit processing finished event
         if (this.eventBus) {
@@ -168,6 +179,10 @@ export default class EventProcessor {
         if (!this.isProcessing) return;
 
         this.isProcessing = false;
+        this.completedEventsCurrentRun = Math.min(
+            this.currentEventIndex,
+            this.totalEventsCurrentRun
+        );
 
         // Emit cancellation event
         if (this.eventBus) {
@@ -204,8 +219,8 @@ export default class EventProcessor {
      * @returns {number} Progress as decimal
      */
     getProgress() {
-        if (!this.isProcessing || this.currentEventQueue.length === 0) return 0;
-        return this.currentEventIndex / this.currentEventQueue.length;
+        if (this.totalEventsCurrentRun === 0) return 0;
+        return this.completedEventsCurrentRun / this.totalEventsCurrentRun;
     }
 
     /**
@@ -283,17 +298,25 @@ export default class EventProcessor {
      * @param {Object} eventWithSpace - {event, space} object
      * @param {Object} result - Execution result
      */
-    recordEventExecution(eventWithSpace, result) {
-        const { event, space } = eventWithSpace;
+    recordEventExecution(eventWithSpace = {}, result = {}) {
+        const event = eventWithSpace?.event || {};
+        const space = eventWithSpace?.space || {};
+        const eventState = typeof event.getState === 'function'
+            ? event.getState()
+            : (event.state ?? 'UNKNOWN');
+        const priority = event.priority ?? { value: 0, name: 'UNKNOWN' };
+        const turnNumber = typeof this.gameState?.getTurnNumber === 'function'
+            ? this.gameState.getTurnNumber()
+            : null;
 
         this.eventHistory.push({
-            eventState: event.getState(),
-            spaceName: space.name,
-            spaceId: space.id,
-            priority: event.priority,
+            eventState,
+            spaceName: space.name ?? 'Unknown Space',
+            spaceId: space.id ?? null,
+            priority,
             timestamp: Date.now(),
-            turnNumber: this.gameState.getTurnNumber(),
-            result: result
+            turnNumber,
+            result
         });
 
         // Keep history limited to last 100 events
