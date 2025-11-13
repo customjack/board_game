@@ -2,10 +2,19 @@
  * PlayerListComponent - Displays the list of players
  *
  * Shows player information including names, colors, badges (Host/You),
- * and action buttons (edit, remove, kick)
+ * and action buttons (info, settings)
  */
 import BaseUIComponent from '../BaseUIComponent.js';
 import GameState from '../../models/GameState.js';
+import { createInfoIcon, createGearIcon, createIconButton } from '../../utils/IconUtils.js';
+import PlayerInfoModal from '../../controllers/modals/PlayerInfoModal.js';
+import PlayerControlModal from '../../controllers/modals/PlayerControlModal.js';
+import HostPlayerControlModal from '../../controllers/modals/HostPlayerControlModal.js';
+
+// Shared modal instances (singletons) across all PlayerListComponent instances
+let sharedPlayerInfoModal = null;
+let sharedPlayerControlModal = null;
+let sharedHostPlayerControlModal = null;
 
 export default class PlayerListComponent extends BaseUIComponent {
     /**
@@ -26,9 +35,16 @@ export default class PlayerListComponent extends BaseUIComponent {
         this.currentPlayerPeerId = config.currentPlayerPeerId || null;
         this.hostPeerId = config.hostPeerId || null;
         this.gameState = null;
+        this.allowPlayerColorChange = true;
+        this.allowPeerColorChange = true;
 
         // Store list element ID for switching contexts (lobby vs game)
         this.currentListElementId = config.listElementId || 'lobbyPlayerList';
+
+        // Use shared modal instances
+        this.playerInfoModal = null;
+        this.playerControlModal = null;
+        this.hostPlayerControlModal = null;
     }
 
     /**
@@ -40,6 +56,105 @@ export default class PlayerListComponent extends BaseUIComponent {
         if (!this.container) {
             console.warn(`Player list element ${this.currentListElementId} not found`);
         }
+
+        // Initialize modals
+        this.initModals();
+    }
+
+    /**
+     * Initialize player modals (using shared singletons)
+     */
+    initModals() {
+        // Only create modals once (singleton pattern)
+        if (!sharedPlayerInfoModal) {
+            sharedPlayerInfoModal = new PlayerInfoModal('playerInfoModal', this.gameState);
+        }
+
+        if (!sharedPlayerControlModal) {
+            sharedPlayerControlModal = new PlayerControlModal(
+                'playerControlModal',
+                null, // Will be set when opened
+                (playerId, newNickname) => this.handleNicknameChange(playerId, newNickname),
+                (playerId, newColor) => this.handleColorChange(playerId, newColor),
+                (playerId, newPeerColor) => this.handlePeerColorChange(playerId, newPeerColor),
+                () => this.handleLeaveGame()
+            );
+        }
+
+        if (!sharedHostPlayerControlModal) {
+            sharedHostPlayerControlModal = new HostPlayerControlModal(
+                'hostPlayerControlModal',
+                null, // Will be set when opened
+                (playerId, newNickname) => this.handleHostNicknameChange(playerId, newNickname),
+                (playerId) => this.handleKickPlayer(playerId),
+                (playerId, newColor) => this.handleHostColorChange(playerId, newColor),
+                (playerId, newPeerColor) => this.handleHostPeerColorChange(playerId, newPeerColor)
+            );
+        }
+
+        // Reference the shared instances
+        this.playerInfoModal = sharedPlayerInfoModal;
+        this.playerControlModal = sharedPlayerControlModal;
+        this.hostPlayerControlModal = sharedHostPlayerControlModal;
+    }
+
+    /**
+     * Handle nickname change (player changing their own name)
+     * @param {string} playerId - Player being updated
+     * @param {string} newNickname - New nickname
+     */
+    handleNicknameChange(playerId, newNickname) {
+        this.emit('nicknameChange', { playerId, newNickname });
+    }
+
+    /**
+     * Handle color change (player changing their own color)
+     * @param {string} playerId - Player being updated
+     * @param {string} newColor - New color hex code
+     */
+    handleColorChange(playerId, newColor) {
+        this.emit('colorChange', { playerId, newColor });
+    }
+
+    /**
+     * Handle peer color change (player changing their own border color)
+     * @param {string} playerId - Player being updated
+     * @param {string} newPeerColor - New peer color hex code
+     */
+    handlePeerColorChange(playerId, newPeerColor) {
+        this.emit('peerColorChange', { playerId, newPeerColor });
+    }
+
+    /**
+     * Handle host changing a player's nickname
+     * @param {string} playerId - Target player ID
+     * @param {string} newNickname - New nickname
+     */
+    handleHostNicknameChange(playerId, newNickname) {
+        this.emit('hostNicknameChange', { playerId, newNickname });
+    }
+
+    handleHostColorChange(playerId, newColor) {
+        this.emit('hostColorChange', { playerId, newColor });
+    }
+
+    handleHostPeerColorChange(playerId, newPeerColor) {
+        this.emit('hostPeerColorChange', { playerId, newPeerColor });
+    }
+
+    /**
+     * Handle leave game (player leaving)
+     */
+    handleLeaveGame() {
+        this.emit('leaveGame', {});
+    }
+
+    /**
+     * Handle kick player (host kicking a player)
+     * @param {string} playerId - Player ID to kick
+     */
+    handleKickPlayer(playerId) {
+        this.emit('kickPlayer', { playerId });
     }
 
     /**
@@ -76,6 +191,16 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         // Store a deep copy of game state
         this.gameState = GameState.fromJSON(gameState.toJSON(), gameState.factoryManager);
+
+        const settings = this.gameState.settings;
+        this.allowPlayerColorChange = settings?.allowPlayerColorChange !== false;
+        this.allowPeerColorChange = settings?.allowPeerColorChange !== false;
+
+        if (this.playerControlModal?.setColorPermissions) {
+            this.playerControlModal.setColorPermissions(
+                this.getPlayerColorPermissions(this.currentPlayerPeerId)
+            );
+        }
 
         // Re-render player list
         this.render();
@@ -131,6 +256,15 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         // Check if board changed (important for validation rules)
         if (this.gameState.board?.metadata?.name !== newGameState.board?.metadata?.name) {
+            return true;
+        }
+
+        const prevSettings = this.gameState.settings;
+        const nextSettings = newGameState.settings;
+        if (
+            prevSettings?.allowPlayerColorChange !== nextSettings?.allowPlayerColorChange ||
+            prevSettings?.allowPeerColorChange !== nextSettings?.allowPeerColorChange
+        ) {
             return true;
         }
 
@@ -244,6 +378,21 @@ export default class PlayerListComponent extends BaseUIComponent {
         }
     }
 
+    getPlayerColorPermissions(peerId) {
+        if (!this.isHost || peerId !== this.currentPlayerPeerId) {
+            return {
+                playerColor: this.allowPlayerColorChange,
+                peerColor: this.allowPeerColorChange
+            };
+        }
+
+        // Hosts can always edit their own players regardless of settings
+        return {
+            playerColor: true,
+            peerColor: true
+        };
+    }
+
     /**
      * Create a player element
      * @param {Player} player - Player object
@@ -279,31 +428,35 @@ export default class PlayerListComponent extends BaseUIComponent {
         const playerButtons = document.createElement('div');
         playerButtons.className = 'player-buttons';
 
-        // Edit and remove buttons for own players
-        if (player.peerId === this.currentPlayerPeerId) {
-            const editButton = document.createElement('button');
-            editButton.className = 'edit-button';
-            editButton.textContent = '✏️';
-            editButton.setAttribute('data-playerId', player.playerId);
-            editButton.id = `${this.currentListElementId}-edit-${player.playerId}`;
-            playerButtons.appendChild(editButton);
+        // Info button - shows stats/inventory for any player
+        const infoButton = createIconButton(
+            createInfoIcon(20),
+            'View player info',
+            () => this.openPlayerInfo(player),
+            'icon-btn-info'
+        );
+        playerButtons.appendChild(infoButton);
 
-            const removeButton = document.createElement('button');
-            removeButton.className = 'remove-button';
-            removeButton.textContent = '❌';
-            removeButton.setAttribute('data-playerId', player.playerId);
-            removeButton.id = `${this.currentListElementId}-remove-${player.playerId}`;
-            playerButtons.appendChild(removeButton);
+        // Gear button for players you control (self-management)
+        if (player.peerId === this.currentPlayerPeerId) {
+            const gearButton = createIconButton(
+                createGearIcon(20),
+                'Player settings',
+                () => this.openPlayerControl(player),
+                'icon-btn-settings'
+            );
+            playerButtons.appendChild(gearButton);
         }
 
-        // Kick button for host (other players only)
-        if (this.isHost && player.peerId !== this.hostPeerId) {
-            const kickButton = document.createElement('button');
-            kickButton.className = 'kick-button';
-            kickButton.textContent = '❌';
-            kickButton.setAttribute('data-playerId', player.playerId);
-            kickButton.id = `${this.currentListElementId}-kick-${player.playerId}`;
-            playerButtons.appendChild(kickButton);
+        // Gear button for host on all other players (host management)
+        if (this.isHost && player.peerId !== this.currentPlayerPeerId) {
+            const hostGearButton = createIconButton(
+                createGearIcon(20),
+                'Manage player',
+                () => this.openHostPlayerControl(player),
+                'icon-btn-settings'
+            );
+            playerButtons.appendChild(hostGearButton);
         }
 
         // Highlight current turn
@@ -316,6 +469,56 @@ export default class PlayerListComponent extends BaseUIComponent {
         li.appendChild(playerButtons);
 
         return li;
+    }
+
+    /**
+     * Open player info modal to view stats/inventory
+     * @param {Player} player - Player to view
+     */
+    openPlayerInfo(player) {
+        if (!this.playerInfoModal) {
+            console.warn('Player info modal not initialized');
+            return;
+        }
+
+        // Find the viewer (current player)
+        const viewer = this.gameState.players.find(p => p.peerId === this.currentPlayerPeerId);
+
+        // Update modal with current game state
+        this.playerInfoModal.gameState = this.gameState;
+        this.playerInfoModal.open(player, viewer);
+    }
+
+    /**
+     * Open player control modal (self-management)
+     * @param {Player} player - Player to control
+     */
+    openPlayerControl(player) {
+        if (!this.playerControlModal) {
+            console.warn('Player control modal not initialized');
+            return;
+        }
+
+        this.playerControlModal.player = player;
+        if (this.playerControlModal.setColorPermissions) {
+            this.playerControlModal.setColorPermissions(
+                this.getPlayerColorPermissions(player.peerId)
+            );
+        }
+        this.playerControlModal.open();
+    }
+
+    /**
+     * Open host player control modal (host management)
+     * @param {Player} player - Target player
+     */
+    openHostPlayerControl(player) {
+        if (!this.hostPlayerControlModal) {
+            console.warn('Host player control modal not initialized');
+            return;
+        }
+
+        this.hostPlayerControlModal.open(player);
     }
 
     /**
@@ -348,6 +551,18 @@ export default class PlayerListComponent extends BaseUIComponent {
     cleanup() {
         this.clear();
         this.gameState = null;
+
+        // Cleanup modals
+        if (this.playerInfoModal) {
+            this.playerInfoModal.close();
+        }
+        if (this.playerControlModal) {
+            this.playerControlModal.close();
+        }
+        if (this.hostPlayerControlModal) {
+            this.hostPlayerControlModal.close();
+        }
+
         super.cleanup();
     }
 }
