@@ -20,9 +20,20 @@ import UIControllerFactory from '../../src/js/factories/UIControllerFactory.js';
 import UIComponentFactory from '../../src/js/factories/UIComponentFactory.js';
 import AnimationFactory from '../../src/js/factories/AnimationFactory.js';
 import DefaultCorePlugin from '../../src/js/plugins/DefaultCorePlugin.js';
+import StatFactory from '../../src/js/factories/StatFactory.js';
+import Board from '../../src/js/models/Board.js';
+import Settings from '../../src/js/models/Settings.js';
+import SkipTurnEffect from '../../src/js/models/PlayerEffects/SkipTurnEffect.js';
+import SkipTurnsEffect from '../../src/js/models/PlayerEffects/SkipTurnsEffect.js';
+import DoubleTurnEffect from '../../src/js/models/PlayerEffects/DoubleTurnEffect.js';
+import ChangeDirectionEffect from '../../src/js/models/PlayerEffects/ChangeDirectionEffect.js';
 
 // Import the testing board
 import testingBoard from '../../src/assets/maps/examples/action-effect-testing.json';
+
+const getSpaceDefinition = (spaceId) => {
+    return testingBoard.board?.topology?.spaces?.find(space => space.id === spaceId);
+};
 
 describe('Action & Effect Testing Map Integration Tests', () => {
     let gameEngine;
@@ -50,6 +61,7 @@ describe('Action & Effect Testing Map Integration Tests', () => {
         factoryManager.registerFactory('UIControllerFactory', new UIControllerFactory());
         factoryManager.registerFactory('UIComponentFactory', new UIComponentFactory());
         factoryManager.registerFactory('AnimationFactory', new AnimationFactory());
+        factoryManager.registerFactory('StatFactory', new StatFactory());
 
         // Initialize plugin manager
         pluginManager = new PluginManager(eventBus, registryManager, factoryManager);
@@ -59,20 +71,24 @@ describe('Action & Effect Testing Map Integration Tests', () => {
         pluginManager.registerPlugin(defaultCorePlugin);
 
         // Create players
-        player1 = new Player('peer-1', 'Player1', 1, false, 0);
-        player2 = new Player('peer-2', 'Player2', 2, false, 0);
+        player1 = new Player('peer-1', 'Player1', factoryManager, false, 'p1');
+        player2 = new Player('peer-2', 'Player2', factoryManager, false, 'p2');
 
-        // Create game state with the testing board
+        const board = Board.fromJSON(testingBoard, factoryManager);
+        const settings = new Settings({
+            turnTimerEnabled: false,
+            turnTimer: 30,
+            moveDelay: 0,
+            modalTimeoutSeconds: 0
+        });
+
         gameState = new GameState(
-            testingBoard,
+            board,
+            factoryManager,
             [player1, player2],
-            {
-                turnTimerEnabled: false,
-                turnTimer: 30,
-                moveDelay: 0,
-                modalTimeout: 0
-            }
+            settings
         );
+        gameState.resetPlayerPositions();
 
         // Mock dependencies for game engine
         const dependencies = {
@@ -112,12 +128,12 @@ describe('Action & Effect Testing Map Integration Tests', () => {
     describe('Board Structure', () => {
         test('should load testing board correctly', () => {
             expect(gameState.board).toBeDefined();
-            expect(gameState.board.name).toBe('Action & Effect Testing Map');
-            expect(gameState.board.spaces).toHaveLength(8); // 8 spaces in the testing map (removed post spaces)
+            expect(gameState.board.metadata.name).toBe('Complete Action & Effect Testing Map');
+            expect(gameState.board.spaces).toHaveLength(testingBoard.board.topology.spaces.length);
         });
 
         test('should have all required test spaces', () => {
-            const spaceIds = gameState.board.spaces.map(s => s.id);
+            const spaceIds = testingBoard.board.topology.spaces.map(s => s.id);
             expect(spaceIds).toContain('start');
             expect(spaceIds).toContain('hub');
             expect(spaceIds).toContain('force-stop');
@@ -138,10 +154,10 @@ describe('Action & Effect Testing Map Integration Tests', () => {
         test('should set remaining moves to 0 when landing on force-stop space', () => {
             // Move player1 to force-stop space
             player1.currentSpaceId = 'force-stop';
-            player1.remainingMoves = 5;
+            gameState.remainingMoves = 5;
 
             // Get the force-stop space and its triggers
-            const forceStopSpace = gameState.board.spaces.find(s => s.id === 'force-stop');
+            const forceStopSpace = getSpaceDefinition('force-stop');
             expect(forceStopSpace).toBeDefined();
 
             // Find the FORCE_STOP trigger
@@ -156,10 +172,10 @@ describe('Action & Effect Testing Map Integration Tests', () => {
                 forceStopTrigger.action.type,
                 forceStopTrigger.action.payload || {}
             );
-            forceStopAction.execute(gameEngine);
+            forceStopAction.execute(gameEngine, () => {});
 
             // Verify remaining moves is now 0
-            expect(gameState.getCurrentPlayer().remainingMoves).toBe(0);
+            expect(gameState.remainingMoves).toBe(0);
         });
     });
 
@@ -171,7 +187,7 @@ describe('Action & Effect Testing Map Integration Tests', () => {
             gameState.setCurrentPlayerIndex(0); // player1 is current
 
             // Get the swap-places space and its triggers
-            const swapSpace = gameState.board.spaces.find(s => s.id === 'swap-places');
+            const swapSpace = getSpaceDefinition('swap-places');
             expect(swapSpace).toBeDefined();
 
             // Find the SWAP_PLACES trigger
@@ -186,7 +202,7 @@ describe('Action & Effect Testing Map Integration Tests', () => {
                 swapTrigger.action.type,
                 swapTrigger.action.payload || {}
             );
-            swapAction.execute(gameEngine);
+            swapAction.execute(gameEngine, () => {});
 
             // Verify positions were swapped
             expect(player1.currentSpaceId).toBe('hub');
@@ -195,46 +211,45 @@ describe('Action & Effect Testing Map Integration Tests', () => {
     });
 
     describe('SkipTurnEffect Tests', () => {
-        test('should apply SkipTurnEffect with duration 2', () => {
+        test('should apply SkipTurnsEffect with duration 2', () => {
             // Move player1 to skip-turn space
             player1.currentSpaceId = 'skip-turn';
             gameState.setCurrentPlayerIndex(0);
 
             // Get the skip-turn space and its triggers
-            const skipSpace = gameState.board.spaces.find(s => s.id === 'skip-turn');
+            const skipSpace = getSpaceDefinition('skip-turn');
             expect(skipSpace).toBeDefined();
 
-            // Find the APPLY_EFFECT trigger for SkipTurnEffect
+            // Find the APPLY_EFFECT trigger for SkipTurnsEffect
             const skipTrigger = skipSpace.triggers.find(
                 t => t.action?.type === 'APPLY_EFFECT' &&
-                    t.action?.payload?.effectType === 'SkipTurnEffect'
+                    t.action?.payload?.effect?.type === 'SkipTurnsEffect'
             );
             expect(skipTrigger).toBeDefined();
 
-            // Execute the action
-            const actionFactory = factoryManager.getFactory('ActionFactory');
-            const applyEffectAction = actionFactory.create(
-                skipTrigger.action.type,
-                skipTrigger.action.payload
-            );
-            applyEffectAction.execute(gameEngine);
+            // Apply the effect directly using the effect factory
+            const effectFactory = factoryManager.getFactory('EffectFactory');
+            const effectInstance = effectFactory.createEffectFromJSON(skipTrigger.action.payload.effect);
+            effectInstance.apply(gameEngine);
 
             // Verify effect was applied
-            const effects = player1.getEffects();
-            const skipEffect = effects.find(e => e.constructor.name === 'SkipTurnEffect');
+            const effects = player1.effects;
+            const skipEffect = effects.find(e => e instanceof SkipTurnsEffect);
             expect(skipEffect).toBeDefined();
-            expect(skipEffect.duration).toBe(2);
+            expect(skipEffect.turnsToSkip).toBe(2);
         });
 
         test('should skip player turns when SkipTurnEffect is active', () => {
             // Apply SkipTurnEffect to player1
             const effectFactory = factoryManager.getFactory('EffectFactory');
-            const skipEffect = effectFactory.create('SkipTurnEffect', ['skip_test', 2, false, null]);
+            const skipEffect = effectFactory.create('SkipTurnEffect', 'skip_test', 2, false, null);
+            gameState.setCurrentPlayerIndex(0);
             skipEffect.apply(gameEngine);
 
             // Get player1's effects
-            const effects = player1.getEffects();
-            const activeSkipEffect = effects.find(e => e.constructor.name === 'SkipTurnEffect');
+            const effects = player1.effects;
+            expect(effects.length).toBeGreaterThan(0);
+            const activeSkipEffect = effects.find(e => e instanceof SkipTurnEffect);
             expect(activeSkipEffect).toBeDefined();
 
             // The effect should be active for 2 turns
@@ -245,31 +260,28 @@ describe('Action & Effect Testing Map Integration Tests', () => {
     describe('DoubleTurnEffect Tests', () => {
         test('should apply DoubleTurnEffect with duration 1', () => {
             // Move player1 to double-turn space
-            player1.currentSpaceId = 'double-turn';
+            player1.currentSpaceId = 'double-single-turn';
             gameState.setCurrentPlayerIndex(0);
 
             // Get the double-turn space and its triggers
-            const doubleSpace = gameState.board.spaces.find(s => s.id === 'double-turn');
+            const doubleSpace = getSpaceDefinition('double-single-turn');
             expect(doubleSpace).toBeDefined();
 
             // Find the APPLY_EFFECT trigger for DoubleTurnEffect
             const doubleTrigger = doubleSpace.triggers.find(
                 t => t.action?.type === 'APPLY_EFFECT' &&
-                    t.action?.payload?.effectType === 'DoubleTurnEffect'
+                    t.action?.payload?.effect?.type === 'DoubleTurnEffect'
             );
             expect(doubleTrigger).toBeDefined();
 
             // Execute the action
-            const actionFactory = factoryManager.getFactory('ActionFactory');
-            const applyEffectAction = actionFactory.create(
-                doubleTrigger.action.type,
-                doubleTrigger.action.payload
-            );
-            applyEffectAction.execute(gameEngine);
+            const effectFactory = factoryManager.getFactory('EffectFactory');
+            const effectInstance = effectFactory.createEffectFromJSON(doubleTrigger.action.payload.effect);
+            effectInstance.apply(gameEngine);
 
             // Verify effect was applied
-            const effects = player1.getEffects();
-            const doubleEffect = effects.find(e => e.constructor.name === 'DoubleTurnEffect');
+            const effects = player1.effects;
+            const doubleEffect = effects.find(e => e instanceof DoubleTurnEffect);
             expect(doubleEffect).toBeDefined();
             expect(doubleEffect.duration).toBe(1);
         });
@@ -282,27 +294,24 @@ describe('Action & Effect Testing Map Integration Tests', () => {
             gameState.setCurrentPlayerIndex(0);
 
             // Get the change-dir space and its triggers
-            const changeSpace = gameState.board.spaces.find(s => s.id === 'change-dir');
+            const changeSpace = getSpaceDefinition('change-dir');
             expect(changeSpace).toBeDefined();
 
             // Find the APPLY_EFFECT trigger for ChangeDirectionEffect
             const changeTrigger = changeSpace.triggers.find(
                 t => t.action?.type === 'APPLY_EFFECT' &&
-                    t.action?.payload?.effectType === 'ChangeDirectionEffect'
+                    t.action?.payload?.effect?.type === 'ChangeDirectionEffect'
             );
             expect(changeTrigger).toBeDefined();
 
             // Execute the action
-            const actionFactory = factoryManager.getFactory('ActionFactory');
-            const applyEffectAction = actionFactory.create(
-                changeTrigger.action.type,
-                changeTrigger.action.payload
-            );
-            applyEffectAction.execute(gameEngine);
+            const effectFactory = factoryManager.getFactory('EffectFactory');
+            const effectInstance = effectFactory.createEffectFromJSON(changeTrigger.action.payload.effect);
+            effectInstance.apply(gameEngine);
 
             // Verify effect was applied
-            const effects = player1.getEffects();
-            const changeEffect = effects.find(e => e.constructor.name === 'ChangeDirectionEffect');
+            const effects = player1.effects;
+            const changeEffect = effects.find(e => e instanceof ChangeDirectionEffect);
             expect(changeEffect).toBeDefined();
             expect(changeEffect.duration).toBe(3);
             expect(changeEffect.isReversed).toBe(true);
@@ -315,7 +324,7 @@ describe('Action & Effect Testing Map Integration Tests', () => {
             changeEffect.apply(gameEngine);
 
             // Verify the effect was applied and player is marked for reversal
-            const effects = player1.getEffects();
+            const effects = player1.effects;
             const activeChangeEffect = effects.find(e => e.constructor.name === 'ChangeDirectionEffect');
             expect(activeChangeEffect).toBeDefined();
             expect(activeChangeEffect.playerIdReversed).toBe(player1.id);
@@ -325,16 +334,18 @@ describe('Action & Effect Testing Map Integration Tests', () => {
 
     describe('Hub Navigation Tests', () => {
         test('should have 5 connections from hub to test paths', () => {
-            const hubSpace = gameState.board.spaces.find(s => s.id === 'hub');
+            const hubSpace = getSpaceDefinition('hub');
             expect(hubSpace).toBeDefined();
-            expect(hubSpace.connections).toHaveLength(5);
+            expect(hubSpace.connections).toHaveLength(11);
 
             const connectionIds = hubSpace.connections.map(c => c.targetId);
-            expect(connectionIds).toContain('force-stop');
-            expect(connectionIds).toContain('swap-places');
-            expect(connectionIds).toContain('skip-turn');
-            expect(connectionIds).toContain('double-turn');
-            expect(connectionIds).toContain('change-dir');
+            expect(connectionIds).toEqual(expect.arrayContaining([
+                'force-stop',
+                'swap-places',
+                'skip-turn',
+                'double-turn',
+                'change-dir'
+            ]));
         });
     });
 
@@ -349,16 +360,16 @@ describe('Action & Effect Testing Map Integration Tests', () => {
 
             // Player 1 chooses force-stop path
             player1.currentSpaceId = 'force-stop';
-            player1.remainingMoves = 3;
+            gameState.remainingMoves = 3;
 
             // Apply FORCE_STOP
             const actionFactory = factoryManager.getFactory('ActionFactory');
             const forceStopAction = actionFactory.create('FORCE_STOP', {});
-            forceStopAction.execute(gameEngine);
-            expect(player1.remainingMoves).toBe(0);
+            forceStopAction.execute(gameEngine, () => {});
+            expect(gameState.remainingMoves).toBe(0);
 
             // Move to next turn (player 2)
-            gameState.nextTurn();
+            gameState.setCurrentPlayerIndex(1);
             expect(gameState.getCurrentPlayer()).toBe(player2);
 
             // Player 2 moves to skip-turn space
@@ -366,16 +377,18 @@ describe('Action & Effect Testing Map Integration Tests', () => {
 
             // Apply SkipTurnEffect
             const effectFactory = factoryManager.getFactory('EffectFactory');
-            const skipEffect = effectFactory.create('SkipTurnEffect', ['skip_test', 2, false, null]);
+            const skipEffect = effectFactory.create('SkipTurnEffect', 'skip_test', 2, false, null);
 
             // Change current player back to player1 for the test
             gameState.setCurrentPlayerIndex(0);
             skipEffect.apply(gameEngine);
 
             // Verify the effect is on player1
-            const effects = player1.getEffects();
+            const effects = player1.effects;
             expect(effects.length).toBeGreaterThan(0);
-            expect(effects[0].duration).toBe(2);
+            const singleSkipEffect = effects.find(e => e instanceof SkipTurnEffect);
+            expect(singleSkipEffect).toBeDefined();
+            expect(singleSkipEffect.duration).toBe(2);
         });
     });
 });

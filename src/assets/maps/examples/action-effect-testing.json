@@ -638,6 +638,7 @@
                     "type": "SkipTurnEffect",
                     "args": [
                       "skip_single",
+                      1,
                       false,
                       null
                     ]
@@ -691,8 +692,10 @@
                     "type": "DoubleTurnEffect",
                     "args": [
                       "double_single",
+                      1,
                       false,
-                      null
+                      null,
+                      false
                     ]
                   }
                 }

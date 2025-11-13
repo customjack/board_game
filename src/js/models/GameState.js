@@ -30,6 +30,7 @@ export default class GameState {
         // Version tracking for delta updates
         this._version = 0;
         this._timestamp = Date.now();
+        this._currentPlayerOverride = null;
     }
 
     /**
@@ -134,6 +135,15 @@ export default class GameState {
             return null;
         }
 
+        if (Number.isInteger(this._currentPlayerOverride)) {
+            const overridePlayer = this.players[this._currentPlayerOverride];
+            if (overridePlayer) {
+                this._currentPlayerOverride = null;
+                return overridePlayer;
+            }
+            this._currentPlayerOverride = null;
+        }
+
         return this.players.reduce((prev, current) => {
             return current.turnsTaken < prev.turnsTaken ? current : prev;
         });
@@ -204,6 +214,39 @@ export default class GameState {
     updatePlayerStats(statName, delta) {
         const player = this.getCurrentPlayer();
         player.updateStat(statName, delta);
+    }
+
+    /**
+     * Force the current player for scenarios like tests or scripted events.
+     * Adjusts turn counts so the target player becomes the active player.
+     * @param {number} index - Index of the player to make current
+     * @returns {boolean} True if update succeeded
+     */
+    setCurrentPlayerIndex(index) {
+        if (!Array.isArray(this.players) || this.players.length === 0) {
+            return false;
+        }
+
+        if (typeof index !== 'number' || index < 0 || index >= this.players.length) {
+            return false;
+        }
+
+        const targetPlayer = this.players[index];
+        if (!targetPlayer) {
+            return false;
+        }
+
+        // Normalize turnsTaken so that the target player becomes the minimum.
+        targetPlayer.turnsTaken = 0;
+
+        this.players.forEach((player, idx) => {
+            if (idx !== index && player.turnsTaken <= 0) {
+                player.turnsTaken = 1;
+            }
+        });
+
+        this._currentPlayerOverride = index;
+        return true;
     }
 
     // Move to the next player's turn (increment their turns taken)
