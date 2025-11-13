@@ -1,34 +1,104 @@
 /**
- * BoardSchemaValidator - Validates board JSON against the schema
+ * BoardSchemaValidator - Validates board JSON against the v2.0 schema
  *
  * Ensures board JSON files are properly formatted and contain valid data
  * before being loaded into the game.
+ *
+ * v2.0 Format Changes:
+ * - No metadata wrapper - top-level properties
+ * - Uses 'visual' instead of 'visualDetails'
+ * - Uses 'triggers' instead of 'events'
+ * - Space IDs must be strings
  */
 export default class BoardSchemaValidator {
+    /**
+     * Normalize incoming board/game definition JSON into a common structure
+     * @param {Object} boardJson
+     * @returns {Object|null}
+     */
+    static normalizeBoardJson(boardJson) {
+        if (!boardJson || typeof boardJson !== 'object') {
+            return null;
+        }
+
+        const isGameDefinition = boardJson.type === 'game' || boardJson.board;
+
+        if (isGameDefinition) {
+            const metadata = boardJson.metadata || {};
+            const requirements = boardJson.requirements || {};
+            const boardSection = boardJson.board || {};
+            const topology = boardSection.topology || {};
+            const spaces = Array.isArray(topology.spaces) ? topology.spaces : [];
+
+            return {
+                format: 'game',
+                raw: boardJson,
+                metadata,
+                requirements,
+                engine: boardJson.engine || {},
+                ui: boardJson.ui || {},
+                rules: boardJson.rules || {},
+                spaces,
+                renderConfig: boardSection.rendering || boardSection.renderConfig || {}
+            };
+        }
+
+        const metadata = boardJson.metadata || {};
+
+        return {
+            format: 'legacy',
+            raw: boardJson,
+            metadata: {
+                name: boardJson.name ?? metadata.name,
+                author: boardJson.author ?? metadata.author,
+                description: boardJson.description ?? metadata.description,
+                created: boardJson.created ?? metadata.createdDate,
+                modified: boardJson.modified ?? metadata.modified,
+                version: boardJson.version ?? metadata.version,
+                tags: boardJson.tags ?? metadata.tags,
+                renderConfig: boardJson.renderConfig ?? metadata.renderConfig
+            },
+            requirements: {
+                minPlayers: boardJson.gameRules?.minPlayers,
+                maxPlayers: boardJson.gameRules?.maxPlayers
+            },
+            engine: boardJson.gameEngine ?? metadata.gameEngine ?? {},
+            ui: boardJson.ui || {},
+            rules: boardJson.gameRules || {},
+            spaces: Array.isArray(boardJson.spaces) ? boardJson.spaces : [],
+            renderConfig: boardJson.renderConfig ?? metadata.renderConfig ?? {}
+        };
+    }
     /**
      * Validate a complete board JSON object
      * @param {Object} boardJson - The board JSON to validate
      * @returns {Object} { valid: boolean, errors: string[] }
      */
     static validate(boardJson) {
-        const errors = [];
-
-        if (!boardJson || typeof boardJson !== 'object') {
-            return { valid: false, errors: ['Board JSON must be an object'] };
+        const normalized = this.normalizeBoardJson(boardJson);
+        if (!normalized) {
+            return { valid: false, errors: ['Game definition must be an object'] };
         }
 
-        // Validate metadata
-        const metadataErrors = this.validateMetadata(boardJson.metadata);
-        errors.push(...metadataErrors);
+        const errors = [];
 
-        // Validate spaces
-        const spacesErrors = this.validateSpaces(boardJson.spaces);
-        errors.push(...spacesErrors);
+        errors.push(...this.validateMetadataSection(normalized.metadata));
+        errors.push(...this.validateRequirementsSection(normalized.requirements));
+        errors.push(...this.validateGameEngine(normalized.engine));
 
-        // Validate connections reference existing spaces
-        if (boardJson.spaces && Array.isArray(boardJson.spaces)) {
-            const connectionErrors = this.validateConnections(boardJson.spaces);
-            errors.push(...connectionErrors);
+        if (normalized.ui && Object.keys(normalized.ui).length > 0) {
+            errors.push(...this.validateUIConfig(normalized.ui));
+        }
+
+        errors.push(...this.validateRules(normalized.rules, normalized.requirements));
+        errors.push(...this.validateSpaces(normalized.spaces));
+
+        if (normalized.spaces.length > 0) {
+            errors.push(...this.validateConnections(normalized.spaces));
+        }
+
+        if (normalized.renderConfig && Object.keys(normalized.renderConfig).length > 0) {
+            errors.push(...this.validateRenderConfig(normalized.renderConfig));
         }
 
         return {
@@ -38,51 +108,93 @@ export default class BoardSchemaValidator {
     }
 
     /**
-     * Validate metadata section
-     * @param {Object} metadata - Metadata object
+     * Validate top-level metadata fields (v2.0 format)
+     * @param {Object} boardJson - Board JSON object
      * @returns {string[]} Array of error messages
      */
-    static validateMetadata(metadata) {
+    static validateMetadataSection(metadata) {
         const errors = [];
 
-        if (!metadata) {
-            errors.push('Metadata is required');
+        if (!metadata || typeof metadata !== 'object') {
+            errors.push('metadata section is required');
             return errors;
         }
 
-        // Check optional fields
-        if (metadata.name && typeof metadata.name !== 'string') {
+        if (metadata.name !== undefined && typeof metadata.name !== 'string') {
             errors.push('metadata.name must be a string');
         }
 
-        if (metadata.author && typeof metadata.author !== 'string') {
+        if (metadata.author !== undefined && typeof metadata.author !== 'string') {
             errors.push('metadata.author must be a string');
         }
 
-        if (metadata.description && typeof metadata.description !== 'string') {
+        if (metadata.description !== undefined && typeof metadata.description !== 'string') {
             errors.push('metadata.description must be a string');
         }
 
-        if (metadata.createdDate && typeof metadata.createdDate !== 'string') {
-            errors.push('metadata.createdDate must be a string (ISO 8601 format)');
+        if (metadata.created !== undefined && typeof metadata.created !== 'string') {
+            errors.push('metadata.created must be a string (ISO 8601 format)');
         }
 
-        // Validate game engine config
-        if (metadata.gameEngine) {
-            const engineErrors = this.validateGameEngine(metadata.gameEngine);
-            errors.push(...engineErrors);
+        if (metadata.modified !== undefined && typeof metadata.modified !== 'string') {
+            errors.push('metadata.modified must be a string (ISO 8601 format)');
         }
 
-        // Validate render config
-        if (metadata.renderConfig) {
-            const renderErrors = this.validateRenderConfig(metadata.renderConfig);
-            errors.push(...renderErrors);
+        if (metadata.tags && !Array.isArray(metadata.tags)) {
+            errors.push('metadata.tags must be an array');
         }
 
-        // Validate game rules
-        if (metadata.gameRules) {
-            const rulesErrors = this.validateGameRules(metadata.gameRules);
-            errors.push(...rulesErrors);
+        return errors;
+    }
+
+    /**
+     * Validate requirements section (plugins, player counts)
+     * @param {Object} requirements
+     * @returns {string[]}
+     */
+    static validateRequirementsSection(requirements) {
+        const errors = [];
+
+        if (!requirements) {
+            return errors;
+        }
+
+        if (requirements.minPlayers !== undefined && (typeof requirements.minPlayers !== 'number' || requirements.minPlayers < 1)) {
+            errors.push('requirements.minPlayers must be a positive number');
+        }
+
+        if (requirements.maxPlayers !== undefined && (typeof requirements.maxPlayers !== 'number' || requirements.maxPlayers < 1)) {
+            errors.push('requirements.maxPlayers must be a positive number');
+        }
+
+        if (requirements.minPlayers !== undefined &&
+            requirements.maxPlayers !== undefined &&
+            requirements.minPlayers > requirements.maxPlayers) {
+            errors.push('requirements.minPlayers cannot be greater than maxPlayers');
+        }
+
+        if (requirements.plugins && !Array.isArray(requirements.plugins)) {
+            errors.push('requirements.plugins must be an array');
+        }
+
+        return errors;
+    }
+
+    /**
+     * Validate UI configuration section
+     * @param {Object} ui
+     * @returns {string[]}
+     */
+    static validateUIConfig(ui) {
+        const errors = [];
+
+        if (typeof ui !== 'object') {
+            errors.push('ui section must be an object');
+            return errors;
+        }
+
+        if (ui.components && !Array.isArray(ui.components)) {
+            errors.push('ui.components must be an array');
         }
 
         return errors;
@@ -93,75 +205,36 @@ export default class BoardSchemaValidator {
      * @param {Object} gameRules - Game rules config
      * @returns {string[]} Array of error messages
      */
-    static validateGameRules(gameRules) {
+    static validateRules(rules = {}, requirements = {}) {
         const errors = [];
 
-        if (typeof gameRules !== 'object') {
-            errors.push('metadata.gameRules must be an object');
+        if (rules && typeof rules !== 'object') {
+            errors.push('rules section must be an object');
             return errors;
         }
 
-        // Validate players section
-        if (gameRules.players) {
-            const playersErrors = this.validatePlayersRules(gameRules.players);
-            errors.push(...playersErrors);
+        if (rules.recommendedPlayers && typeof rules.recommendedPlayers !== 'object') {
+            errors.push('rules.recommendedPlayers must be an object');
         }
 
-        // Other sections are optional and flexible
-        return errors;
-    }
-
-    /**
-     * Validate players rules
-     * @param {Object} players - Players rules config
-     * @returns {string[]} Array of error messages
-     */
-    static validatePlayersRules(players) {
-        const errors = [];
-
-        if (typeof players !== 'object') {
-            errors.push('gameRules.players must be an object');
-            return errors;
+        if (rules.startingPositions) {
+            errors.push(...this.validateStartingPositions(rules.startingPositions));
         }
 
-        // Validate min/max
-        if (players.min !== undefined) {
-            if (typeof players.min !== 'number' || players.min < 0) {
-                errors.push('gameRules.players.min must be a non-negative number');
+        if (rules.winCondition) {
+            if (typeof rules.winCondition !== 'object') {
+                errors.push('rules.winCondition must be an object');
+            } else if (!rules.winCondition.type) {
+                errors.push('rules.winCondition.type is required');
             }
         }
 
-        if (players.max !== undefined) {
-            if (typeof players.max !== 'number' || players.max < 1) {
-                errors.push('gameRules.players.max must be a positive number');
-            }
+        if (requirements.minPlayers !== undefined && typeof requirements.minPlayers !== 'number') {
+            errors.push('requirements.minPlayers must be a number');
         }
 
-        // Validate min <= max
-        if (players.min !== undefined && players.max !== undefined) {
-            if (players.min > players.max) {
-                errors.push('gameRules.players.min cannot be greater than max');
-            }
-        }
-
-        // Validate recommended
-        if (players.recommended) {
-            if (typeof players.recommended !== 'object') {
-                errors.push('gameRules.players.recommended must be an object');
-            } else {
-                if (players.recommended.min !== undefined && typeof players.recommended.min !== 'number') {
-                    errors.push('gameRules.players.recommended.min must be a number');
-                }
-                if (players.recommended.max !== undefined && typeof players.recommended.max !== 'number') {
-                    errors.push('gameRules.players.recommended.max must be a number');
-                }
-            }
-        }
-
-        // Validate starting positions
-        if (players.startingPositions) {
-            const posErrors = this.validateStartingPositions(players.startingPositions);
-            errors.push(...posErrors);
+        if (requirements.maxPlayers !== undefined && typeof requirements.maxPlayers !== 'number') {
+            errors.push('requirements.maxPlayers must be a number');
         }
 
         return errors;
@@ -176,33 +249,29 @@ export default class BoardSchemaValidator {
         const errors = [];
 
         if (typeof positions !== 'object') {
-            errors.push('gameRules.players.startingPositions must be an object');
+            errors.push('rules.startingPositions must be an object');
             return errors;
         }
 
         // Validate mode
         if (positions.mode) {
-            const validModes = ['single', 'spread', 'random', 'custom'];
+            const validModes = ['single', 'spread', 'random', 'custom', 'multiple'];
             if (!validModes.includes(positions.mode)) {
-                errors.push(`gameRules.players.startingPositions.mode must be one of: ${validModes.join(', ')}`);
+                errors.push(`rules.startingPositions.mode must be one of: ${validModes.join(', ')}`);
             }
         }
 
         // Validate spaceIds
         if (positions.spaceIds) {
             if (!Array.isArray(positions.spaceIds)) {
-                errors.push('gameRules.players.startingPositions.spaceIds must be an array');
+                errors.push('rules.startingPositions.spaceIds must be an array');
             } else if (positions.spaceIds.length === 0) {
-                errors.push('gameRules.players.startingPositions.spaceIds cannot be empty');
+                errors.push('rules.startingPositions.spaceIds cannot be empty');
             }
         }
 
-        // Validate distribution
-        if (positions.distribution) {
-            const validDistributions = ['round-robin', 'sequential'];
-            if (!validDistributions.includes(positions.distribution)) {
-                errors.push(`gameRules.players.startingPositions.distribution must be one of: ${validDistributions.join(', ')}`);
-            }
+        if (positions.startZones && typeof positions.startZones !== 'object') {
+            errors.push('rules.startingPositions.startZones must be an object');
         }
 
         return errors;
@@ -217,16 +286,16 @@ export default class BoardSchemaValidator {
         const errors = [];
 
         if (typeof gameEngine !== 'object') {
-            errors.push('metadata.gameEngine must be an object');
+            errors.push('gameEngine must be an object');
             return errors;
         }
 
         if (gameEngine.type && typeof gameEngine.type !== 'string') {
-            errors.push('metadata.gameEngine.type must be a string');
+            errors.push('gameEngine.type must be a string');
         }
 
         if (gameEngine.config && typeof gameEngine.config !== 'object') {
-            errors.push('metadata.gameEngine.config must be an object');
+            errors.push('gameEngine.config must be an object');
         }
 
         return errors;
@@ -241,25 +310,30 @@ export default class BoardSchemaValidator {
         const errors = [];
 
         if (typeof renderConfig !== 'object') {
-            errors.push('metadata.renderConfig must be an object');
+            errors.push('renderConfig must be an object');
             return errors;
         }
 
         // Validate color fields
-        const colorFields = ['connectionColor', 'arrowColor'];
+        const colorFields = ['connectionColor', 'arrowColor', 'backgroundColor'];
         colorFields.forEach(field => {
             if (renderConfig[field] && !this.isValidColor(renderConfig[field])) {
-                errors.push(`metadata.renderConfig.${field} must be a valid CSS color`);
+                errors.push(`renderConfig.${field} must be a valid CSS color`);
             }
         });
 
         // Validate number fields
-        const numberFields = ['connectionThickness', 'arrowSize', 'arrowPositionSingle', 'arrowPositionBidirectional'];
+        const numberFields = ['connectionThickness', 'arrowSize', 'gridSize'];
         numberFields.forEach(field => {
             if (renderConfig[field] !== undefined && typeof renderConfig[field] !== 'number') {
-                errors.push(`metadata.renderConfig.${field} must be a number`);
+                errors.push(`renderConfig.${field} must be a number`);
             }
         });
+
+        // Validate boolean fields
+        if (renderConfig.gridEnabled !== undefined && typeof renderConfig.gridEnabled !== 'boolean') {
+            errors.push('renderConfig.gridEnabled must be a boolean');
+        }
 
         return errors;
     }
@@ -273,17 +347,17 @@ export default class BoardSchemaValidator {
         const errors = [];
 
         if (!spaces) {
-            errors.push('spaces array is required');
+            errors.push('board.topology.spaces is required');
             return errors;
         }
 
         if (!Array.isArray(spaces)) {
-            errors.push('spaces must be an array');
+            errors.push('board.topology.spaces must be an array');
             return errors;
         }
 
         if (spaces.length === 0) {
-            errors.push('spaces array must contain at least one space');
+            errors.push('board.topology.spaces must contain at least one space');
             return errors;
         }
 
@@ -307,7 +381,7 @@ export default class BoardSchemaValidator {
     }
 
     /**
-     * Validate a single space
+     * Validate a single space (v2.0 format)
      * @param {Object} space - Space object
      * @param {number} index - Index in spaces array
      * @returns {string[]} Array of error messages
@@ -334,10 +408,21 @@ export default class BoardSchemaValidator {
             errors.push(`${prefix}.name must be a string`);
         }
 
-        if (!space.visualDetails) {
-            errors.push(`${prefix}.visualDetails is required`);
+        const legacyVisual = space.visualDetails;
+        const positionData = space.position || (legacyVisual ? { x: legacyVisual.x, y: legacyVisual.y } : null);
+        const visualData = space.visual || legacyVisual;
+
+        if (!positionData) {
+            errors.push(`${prefix}.position is required`);
         } else {
-            const visualErrors = this.validateVisualDetails(space.visualDetails, prefix);
+            const posErrors = this.validatePosition(positionData, prefix);
+            errors.push(...posErrors);
+        }
+
+        if (!visualData) {
+            errors.push(`${prefix}.visual is required`);
+        } else {
+            const visualErrors = this.validateVisual(visualData, prefix);
             errors.push(...visualErrors);
         }
 
@@ -353,13 +438,15 @@ export default class BoardSchemaValidator {
             }
         }
 
-        if (space.events) {
-            if (!Array.isArray(space.events)) {
-                errors.push(`${prefix}.events must be an array`);
+        // Validate triggers (v2.0) or events (v1.0) for backward compatibility
+        const triggerData = space.triggers || space.events;
+        if (triggerData) {
+            if (!Array.isArray(triggerData)) {
+                errors.push(`${prefix}.triggers must be an array`);
             } else {
-                space.events.forEach((event, eventIndex) => {
-                    const eventErrors = this.validateEvent(event, `${prefix}.events[${eventIndex}]`);
-                    errors.push(...eventErrors);
+                triggerData.forEach((trigger, triggerIndex) => {
+                    const triggerErrors = this.validateTrigger(trigger, `${prefix}.triggers[${triggerIndex}]`);
+                    errors.push(...triggerErrors);
                 });
             }
         }
@@ -368,52 +455,67 @@ export default class BoardSchemaValidator {
     }
 
     /**
-     * Validate visual details
-     * @param {Object} visualDetails - Visual details object
+     * Validate position object
+     * @param {Object} position - Position object
      * @param {string} prefix - Error message prefix
      * @returns {string[]} Array of error messages
      */
-    static validateVisualDetails(visualDetails, prefix) {
+    static validatePosition(position, prefix) {
         const errors = [];
-        const vdPrefix = `${prefix}.visualDetails`;
 
-        if (typeof visualDetails !== 'object') {
-            errors.push(`${vdPrefix} must be an object`);
+        if (typeof position !== 'object') {
+            errors.push(`${prefix}.position must be an object`);
             return errors;
         }
 
-        // Required fields
-        if (visualDetails.x === undefined) {
-            errors.push(`${vdPrefix}.x is required`);
-        } else if (typeof visualDetails.x !== 'number') {
-            errors.push(`${vdPrefix}.x must be a number`);
+        if (position.x === undefined) {
+            errors.push(`${prefix}.position.x is required`);
+        } else if (typeof position.x !== 'number') {
+            errors.push(`${prefix}.position.x must be a number`);
         }
 
-        if (visualDetails.y === undefined) {
-            errors.push(`${vdPrefix}.y is required`);
-        } else if (typeof visualDetails.y !== 'number') {
-            errors.push(`${vdPrefix}.y must be a number`);
+        if (position.y === undefined) {
+            errors.push(`${prefix}.position.y is required`);
+        } else if (typeof position.y !== 'number') {
+            errors.push(`${prefix}.position.y must be a number`);
+        }
+
+        return errors;
+    }
+
+    /**
+     * Validate visual details (v2.0 format)
+     * @param {Object} visual - Visual object
+     * @param {string} prefix - Error message prefix
+     * @returns {string[]} Array of error messages
+     */
+    static validateVisual(visual, prefix) {
+        const errors = [];
+
+        if (typeof visual !== 'object') {
+            errors.push(`${prefix}.visual must be an object`);
+            return errors;
         }
 
         // Optional fields
-        if (visualDetails.size !== undefined && typeof visualDetails.size !== 'number') {
-            errors.push(`${vdPrefix}.size must be a number`);
+        if (visual.size !== undefined && typeof visual.size !== 'number') {
+            errors.push(`${prefix}.visual.size must be a number`);
         }
 
-        if (visualDetails.color && !this.isValidColor(visualDetails.color)) {
-            errors.push(`${vdPrefix}.color must be a valid CSS color`);
+        if (visual.color && !this.isValidColor(visual.color)) {
+            errors.push(`${prefix}.visual.color must be a valid CSS color`);
         }
 
-        if (visualDetails.textColor && !this.isValidColor(visualDetails.textColor)) {
-            errors.push(`${vdPrefix}.textColor must be a valid CSS color`);
+        if (visual.textColor && !this.isValidColor(visual.textColor)) {
+            errors.push(`${prefix}.visual.textColor must be a valid CSS color`);
         }
 
-        if (visualDetails.borderColor && !this.isValidColor(visualDetails.borderColor)) {
-            errors.push(`${vdPrefix}.borderColor must be a valid CSS color`);
+        if (visual.borderColor && !this.isValidColor(visual.borderColor)) {
+            errors.push(`${prefix}.visual.borderColor must be a valid CSS color`);
         }
 
-        if (visualDetails.borderWidth !== undefined && typeof visualDetails.borderWidth !== 'number') {
-            errors.push(`${vdPrefix}.borderWidth must be a number`);
+        if (visual.borderWidth !== undefined && typeof visual.borderWidth !== 'number') {
+            errors.push(`${prefix}.visual.borderWidth must be a number`);
         }
 
         return errors;
@@ -439,8 +541,12 @@ export default class BoardSchemaValidator {
             errors.push(`${prefix}.targetId must be a string`);
         }
 
-        if (connection.bidirectional !== undefined && typeof connection.bidirectional !== 'boolean') {
-            errors.push(`${prefix}.bidirectional must be a boolean`);
+        if (connection.draw !== undefined && typeof connection.draw !== 'boolean') {
+            errors.push(`${prefix}.draw must be a boolean`);
+        }
+
+        if (connection.weight !== undefined && typeof connection.weight !== 'number') {
+            errors.push(`${prefix}.weight must be a number`);
         }
 
         return errors;
@@ -472,45 +578,7 @@ export default class BoardSchemaValidator {
     }
 
     /**
-     * Validate an event
-     * @param {Object} event - Event object
-     * @param {string} prefix - Error message prefix
-     * @returns {string[]} Array of error messages
-     */
-    static validateEvent(event, prefix) {
-        const errors = [];
-
-        if (!event || typeof event !== 'object') {
-            errors.push(`${prefix} must be an object`);
-            return errors;
-        }
-
-        if (!event.trigger) {
-            errors.push(`${prefix}.trigger is required`);
-        } else {
-            const triggerErrors = this.validateTrigger(event.trigger, `${prefix}.trigger`);
-            errors.push(...triggerErrors);
-        }
-
-        if (!event.action) {
-            errors.push(`${prefix}.action is required`);
-        } else {
-            const actionErrors = this.validateAction(event.action, `${prefix}.action`);
-            errors.push(...actionErrors);
-        }
-
-        if (event.priority) {
-            const validPriorities = ['LOW', 'MID', 'HIGH', 'CRITICAL'];
-            if (!validPriorities.includes(event.priority)) {
-                errors.push(`${prefix}.priority must be one of: ${validPriorities.join(', ')}`);
-            }
-        }
-
-        return errors;
-    }
-
-    /**
-     * Validate a trigger
+     * Validate a trigger (v2.0 format)
      * @param {Object} trigger - Trigger object
      * @param {string} prefix - Error message prefix
      * @returns {string[]} Array of error messages
@@ -523,15 +591,56 @@ export default class BoardSchemaValidator {
             return errors;
         }
 
-        if (!trigger.type) {
+        // Validate 'when' (trigger condition)
+        if (!trigger.when) {
+            errors.push(`${prefix}.when is required`);
+        } else {
+            const whenErrors = this.validateWhen(trigger.when, `${prefix}.when`);
+            errors.push(...whenErrors);
+        }
+
+        // Validate 'action'
+        if (!trigger.action) {
+            errors.push(`${prefix}.action is required`);
+        } else {
+            const actionErrors = this.validateAction(trigger.action, `${prefix}.action`);
+            errors.push(...actionErrors);
+        }
+
+        // Validate priority
+        if (trigger.priority) {
+            const validPriorities = ['LOW', 'MID', 'HIGH', 'CRITICAL'];
+            if (!validPriorities.includes(trigger.priority)) {
+                errors.push(`${prefix}.priority must be one of: ${validPriorities.join(', ')}`);
+            }
+        }
+
+        return errors;
+    }
+
+    /**
+     * Validate a 'when' condition
+     * @param {Object} when - When object
+     * @param {string} prefix - Error message prefix
+     * @returns {string[]} Array of error messages
+     */
+    static validateWhen(when, prefix) {
+        const errors = [];
+
+        if (!when || typeof when !== 'object') {
+            errors.push(`${prefix} must be an object`);
+            return errors;
+        }
+
+        if (!when.type) {
             errors.push(`${prefix}.type is required`);
-        } else if (typeof trigger.type !== 'string') {
+        } else if (typeof when.type !== 'string') {
             errors.push(`${prefix}.type must be a string`);
         }
 
-        // data field is optional but must be an object if present
-        if (trigger.data !== undefined && typeof trigger.data !== 'object') {
-            errors.push(`${prefix}.data must be an object`);
+        // payload field is optional but must be an object if present
+        if (when.payload !== undefined && when.payload !== null && typeof when.payload !== 'object') {
+            errors.push(`${prefix}.payload must be an object or null`);
         }
 
         return errors;
@@ -587,7 +696,8 @@ export default class BoardSchemaValidator {
         // Check named colors (common ones)
         const namedColors = [
             'transparent', 'black', 'white', 'red', 'green', 'blue',
-            'yellow', 'cyan', 'magenta', 'gray', 'grey'
+            'yellow', 'cyan', 'magenta', 'gray', 'grey', 'orange',
+            'purple', 'pink', 'brown', 'silver', 'gold'
         ];
         if (namedColors.includes(color.toLowerCase())) return true;
 
@@ -600,18 +710,21 @@ export default class BoardSchemaValidator {
      * @returns {Object} Detailed validation report
      */
     static validateDetailed(boardJson) {
+        const normalized = this.normalizeBoardJson(boardJson);
         const result = this.validate(boardJson);
 
+        const spaces = normalized?.spaces || [];
         return {
             ...result,
             summary: {
-                totalSpaces: boardJson.spaces?.length || 0,
-                totalConnections: boardJson.spaces?.reduce((sum, space) =>
-                    sum + (space.connections?.length || 0), 0) || 0,
-                totalEvents: boardJson.spaces?.reduce((sum, space) =>
-                    sum + (space.events?.length || 0), 0) || 0,
-                engineType: boardJson.metadata?.gameEngine?.type || 'turn-based',
-                hasCustomRenderConfig: !!boardJson.metadata?.renderConfig
+                totalSpaces: spaces.length,
+                totalConnections: spaces.reduce((sum, space) =>
+                    sum + (space.connections?.length || 0), 0),
+                totalTriggers: spaces.reduce((sum, space) =>
+                    sum + ((space.triggers || space.events)?.length || 0), 0),
+                engineType: normalized?.engine?.type || 'turn-based',
+                hasCustomRenderConfig: !!(normalized?.renderConfig && Object.keys(normalized.renderConfig).length > 0),
+                version: normalized?.raw?.version || '1.0.0'
             }
         };
     }

@@ -5,6 +5,61 @@
 import MapStorageManager from '../../src/js/managers/MapStorageManager.js';
 import BoardSchemaValidator from '../../src/js/utils/BoardSchemaValidator.js';
 
+const baseGameDefinition = {
+    type: 'game',
+    version: '3.0.0',
+    metadata: {
+        name: 'Custom Test Map',
+        author: 'Test Author',
+        description: 'A test map',
+        created: '2025-01-01T00:00:00Z'
+    },
+    requirements: {
+        minPlayers: 2,
+        maxPlayers: 8,
+        plugins: []
+    },
+    engine: {
+        type: 'turn-based',
+        config: {}
+    },
+    ui: {
+        layout: 'standard-board',
+        components: []
+    },
+    rules: {
+        startingPositions: {
+            mode: 'single',
+            spaceIds: ['start']
+        }
+    },
+    board: {
+        topology: {
+            spaces: [
+                {
+                    id: 'start',
+                    name: 'Start',
+                    type: 'start',
+                    position: { x: 100, y: 100 },
+                    visual: { size: 50, color: '#ffffff' },
+                    connections: [],
+                    triggers: []
+                }
+            ]
+        },
+        rendering: {}
+    }
+};
+
+const createGameDefinition = () => JSON.parse(JSON.stringify(baseGameDefinition));
+
+const createCustomMapData = (name = 'Custom Map', author = 'Author') => {
+    const gameDef = createGameDefinition();
+    gameDef.metadata.name = name;
+    gameDef.metadata.author = author;
+    return gameDef;
+};
+
 describe('MapStorageManager', () => {
     beforeEach(() => {
         // Clear localStorage before each test
@@ -65,22 +120,10 @@ describe('MapStorageManager', () => {
         });
 
         test('should add custom map to localStorage', () => {
-            const mockMapData = {
-                metadata: {
-                    name: 'Custom Test Map',
-                    author: 'Test Author',
-                    description: 'A test map'
-                },
-                spaces: [
-                    {
-                        id: 'start',
-                        name: 'Start',
-                        visualDetails: { x: 100, y: 100, size: 50 },
-                        connections: [],
-                        events: []
-                    }
-                ]
-            };
+            const mockMapData = createGameDefinition();
+            mockMapData.metadata.name = 'Custom Test Map';
+            mockMapData.metadata.author = 'Test Author';
+            mockMapData.metadata.description = 'A test map';
 
             jest.spyOn(BoardSchemaValidator, 'validate').mockReturnValue({
                 valid: true,
@@ -98,14 +141,12 @@ describe('MapStorageManager', () => {
         });
 
         test('should throw error when adding invalid map', () => {
-            const invalidMapData = {
-                metadata: {},
-                spaces: [] // Invalid: no spaces
-            };
+            const invalidMapData = createGameDefinition();
+            invalidMapData.board.topology.spaces = []; // Invalid: no spaces
 
             jest.spyOn(BoardSchemaValidator, 'validate').mockReturnValue({
                 valid: false,
-                errors: ['spaces array must contain at least one space']
+                errors: ['board.topology.spaces must contain at least one space']
             });
 
             expect(() => {
@@ -114,21 +155,7 @@ describe('MapStorageManager', () => {
         });
 
         test('should retrieve custom map after adding', () => {
-            const mockMapData = {
-                metadata: {
-                    name: 'Custom Map',
-                    author: 'Author'
-                },
-                spaces: [
-                    {
-                        id: 'start',
-                        name: 'Start',
-                        visualDetails: { x: 0, y: 0 },
-                        connections: [],
-                        events: []
-                    }
-                ]
-            };
+            const mockMapData = createCustomMapData('Custom Map', 'Author');
 
             jest.spyOn(BoardSchemaValidator, 'validate').mockReturnValue({
                 valid: true,
@@ -143,18 +170,7 @@ describe('MapStorageManager', () => {
         });
 
         test('should delete custom map', () => {
-            const mockMapData = {
-                metadata: { name: 'To Delete', author: 'Test' },
-                spaces: [
-                    {
-                        id: 'start',
-                        name: 'Start',
-                        visualDetails: { x: 0, y: 0 },
-                        connections: [],
-                        events: []
-                    }
-                ]
-            };
+            const mockMapData = createCustomMapData('To Delete', 'Test');
 
             jest.spyOn(BoardSchemaValidator, 'validate').mockReturnValue({
                 valid: true,
@@ -176,18 +192,7 @@ describe('MapStorageManager', () => {
 
     describe('Get All Maps', () => {
         test('should return both built-in and custom maps', () => {
-            const mockMapData = {
-                metadata: { name: 'Custom', author: 'Test' },
-                spaces: [
-                    {
-                        id: 'start',
-                        name: 'Start',
-                        visualDetails: { x: 0, y: 0 },
-                        connections: [],
-                        events: []
-                    }
-                ]
-            };
+            const mockMapData = createCustomMapData('Custom', 'Test');
 
             jest.spyOn(BoardSchemaValidator, 'validate').mockReturnValue({
                 valid: true,
@@ -219,18 +224,7 @@ describe('MapStorageManager', () => {
         });
 
         test('should find custom map by id', () => {
-            const mockMapData = {
-                metadata: { name: 'Findable', author: 'Test' },
-                spaces: [
-                    {
-                        id: 'start',
-                        name: 'Start',
-                        visualDetails: { x: 0, y: 0 },
-                        connections: [],
-                        events: []
-                    }
-                ]
-            };
+            const mockMapData = createCustomMapData('Findable', 'Test');
 
             jest.spyOn(BoardSchemaValidator, 'validate').mockReturnValue({
                 valid: true,
@@ -296,18 +290,7 @@ describe('MapStorageManager', () => {
 
     describe('Load Map Data', () => {
         test('should return board data for custom map', async () => {
-            const mockMapData = {
-                metadata: { name: 'Loadable', author: 'Test' },
-                spaces: [
-                    {
-                        id: 'start',
-                        name: 'Start',
-                        visualDetails: { x: 0, y: 0 },
-                        connections: [],
-                        events: []
-                    }
-                ]
-            };
+            const mockMapData = createCustomMapData('Loadable', 'Test');
 
             jest.spyOn(BoardSchemaValidator, 'validate').mockReturnValue({
                 valid: true,
@@ -321,18 +304,7 @@ describe('MapStorageManager', () => {
         });
 
         test('should fetch built-in map from path', async () => {
-            const mockResponse = {
-                metadata: { name: 'Built-in', author: 'System' },
-                spaces: [
-                    {
-                        id: 'start',
-                        name: 'Start',
-                        visualDetails: { x: 0, y: 0 },
-                        connections: [],
-                        events: []
-                    }
-                ]
-            };
+            const mockResponse = createCustomMapData('Built-in', 'System');
 
             global.fetch = jest.fn(() =>
                 Promise.resolve({
@@ -356,18 +328,7 @@ describe('MapStorageManager', () => {
 
     describe('Clear All Custom Maps', () => {
         test('should remove all custom maps from localStorage', () => {
-            const mockMapData = {
-                metadata: { name: 'To Clear', author: 'Test' },
-                spaces: [
-                    {
-                        id: 'start',
-                        name: 'Start',
-                        visualDetails: { x: 0, y: 0 },
-                        connections: [],
-                        events: []
-                    }
-                ]
-            };
+            const mockMapData = createCustomMapData('To Clear', 'Test');
 
             jest.spyOn(BoardSchemaValidator, 'validate').mockReturnValue({
                 valid: true,

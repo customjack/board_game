@@ -12,15 +12,13 @@ export default class Board {
             createdDate: metadata.createdDate || new Date().toISOString(),
             version: metadata.version || "1.0.0",
             tags: metadata.tags || [],
-            // Required plugins for this board to function
             requiredPlugins: metadata.requiredPlugins || [],
-            // Game engine configuration
             gameEngine: metadata.gameEngine || {
-                type: "turn-based", // Default engine type
-                config: {} // Engine-specific configuration
+                type: "turn-based",
+                config: {}
             },
-            // Board rendering configuration (optional overrides)
-            renderConfig: metadata.renderConfig || {}
+            renderConfig: metadata.renderConfig || {},
+            modifiedDate: metadata.modifiedDate || metadata.modified || metadata.createdDate || new Date().toISOString()
         };
 
         // Game rules and constraints
@@ -78,7 +76,7 @@ export default class Board {
             author: this.metadata.author,
             description: this.metadata.description,
             created: this.metadata.createdDate,
-            modified: new Date().toISOString(),
+            modified: this.metadata.modifiedDate,
             tags: this.metadata.tags,
             requiredPlugins: this.metadata.requiredPlugins || [],
             gameEngine: this.metadata.gameEngine,
@@ -95,7 +93,18 @@ export default class Board {
      * @returns {Board} Board instance
      */
     static fromJSON(json, factoryManager) {
-        // Map JSON structure to internal Board structure
+        if (!json || typeof json !== 'object') {
+            throw new Error('Invalid board definition');
+        }
+
+        if (json.type === 'game' || json.board) {
+            return this.fromGameDefinition(json, factoryManager);
+        }
+
+        return this.fromLegacyBoard(json, factoryManager);
+    }
+
+    static fromLegacyBoard(json, factoryManager) {
         const metadata = {
             name: json.name,
             author: json.author,
@@ -104,19 +113,76 @@ export default class Board {
             version: json.version,
             tags: json.tags,
             gameEngine: json.gameEngine,
-            renderConfig: json.renderConfig
+            renderConfig: json.renderConfig,
+            modifiedDate: json.modified
         };
 
-        // First pass: Deserialize spaces without connections
         const spaces = json.spaces.map(spaceData => Space.fromJSON(spaceData, factoryManager));
-
-        // Second pass: Resolve connections between spaces
         Space.resolveConnections(spaces, json.spaces);
-
-        // Parse game rules
         const gameRules = GameRules.fromJSON(json.gameRules || {});
-
-        // Return the new Board instance with metadata and game rules
         return new Board(spaces, metadata, gameRules);
+    }
+
+    static fromGameDefinition(gameDefinition, factoryManager) {
+        const boardSection = gameDefinition.board || {};
+        const topology = boardSection.topology || {};
+        const spacesJson = Array.isArray(topology.spaces) ? topology.spaces : [];
+
+        if (spacesJson.length === 0) {
+            throw new Error('Game definition must include board.topology.spaces');
+        }
+
+        const spaces = spacesJson.map(spaceData => Space.fromJSON(spaceData, factoryManager));
+        Space.resolveConnections(spaces, spacesJson);
+
+        const metadata = {
+            name: gameDefinition.metadata?.name,
+            author: gameDefinition.metadata?.author,
+            description: gameDefinition.metadata?.description,
+            createdDate: gameDefinition.metadata?.created,
+            version: gameDefinition.version,
+            tags: gameDefinition.metadata?.tags,
+            requiredPlugins: (gameDefinition.requirements?.plugins || []).map(plugin =>
+                typeof plugin === 'string' ? plugin : plugin.id
+            ),
+            gameEngine: {
+                type: gameDefinition.engine?.type || 'turn-based',
+                config: gameDefinition.engine?.config || {}
+            },
+            renderConfig: boardSection.rendering || {},
+            modifiedDate: gameDefinition.metadata?.modified
+        };
+
+        const rulesInput = this.mapGameDefinitionRules(gameDefinition);
+        const gameRules = GameRules.fromJSON(rulesInput);
+
+        return new Board(spaces, metadata, gameRules);
+    }
+
+    static mapGameDefinitionRules(gameDefinition) {
+        const requirements = gameDefinition.requirements || {};
+        const rules = gameDefinition.rules || {};
+
+        return {
+            minPlayers: requirements.minPlayers,
+            maxPlayers: requirements.maxPlayers,
+            recommendedPlayers: rules.recommendedPlayers,
+            startingPositions: rules.startingPositions,
+            turns: rules.turns ? rules.turns : (rules.turnOrder ? { turnOrder: rules.turnOrder } : undefined),
+            movement: rules.movement || (rules.diceRolling ? {
+                type: 'dice',
+                rollRange: {
+                    min: 1,
+                    max: rules.diceRolling.diceSides || 6
+                }
+            } : undefined),
+            victory: rules.winCondition ? {
+                conditions: [{
+                    type: rules.winCondition.type || 'CUSTOM',
+                    config: rules.winCondition.config || {}
+                }]
+            } : rules.victory,
+            constraints: rules.constraints
+        };
     }
 }

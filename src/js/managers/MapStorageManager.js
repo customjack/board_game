@@ -39,6 +39,16 @@ export default class MapStorageManager {
                 createdDate: '2024-10-28T12:00:00Z'
             },
             {
+                id: 'action-effect-testing',
+                name: 'Complete Action & Effect Testing Map',
+                author: 'Game Engine',
+                description: 'A comprehensive testing map covering ALL core actions and effects',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/action-effect-testing.json',
+                thumbnail: null,
+                createdDate: '2025-01-15T00:00:00Z'
+            },
+            {
                 id: 'circular-party',
                 name: 'Circular Party Board',
                 author: 'Test Creator',
@@ -109,18 +119,19 @@ export default class MapStorageManager {
         // Generate unique ID
         const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-        // Extract metadata from the map data or use provided metadata
-        const mapMetadata = mapData.metadata || {};
+        // Extract metadata from the map data (v2.0 format) or use provided metadata
+        const sourceMetadata = mapData.metadata || {};
+        const mergedMetadata = { ...sourceMetadata, ...metadata };
 
         const mapObject = {
             id,
-            name: metadata.name || mapMetadata.name || 'Untitled Map',
-            author: metadata.author || mapMetadata.author || 'Unknown',
-            description: metadata.description || mapMetadata.description || '',
+            name: mergedMetadata.name || mapData.name || 'Untitled Map',
+            author: mergedMetadata.author || mapData.author || 'Unknown',
+            description: mergedMetadata.description || mapData.description || '',
             isBuiltIn: false,
             boardData: mapData, // Store the entire board JSON
-            thumbnail: metadata.thumbnail || null,
-            createdDate: new Date().toISOString(),
+            thumbnail: mergedMetadata.thumbnail || null,
+            createdDate: mergedMetadata.created || mapData.created || new Date().toISOString(),
             uploadedDate: new Date().toISOString()
         };
 

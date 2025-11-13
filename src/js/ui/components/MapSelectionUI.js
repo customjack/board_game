@@ -281,35 +281,42 @@ export default class MapSelectionUI extends BaseUIComponent {
      * @returns {HTMLElement|null} Requirements element or null
      */
     createRequirementsDisplay(map) {
-        // Try to get gameRules from boardData
-        const gameRules = map.boardData?.metadata?.gameRules;
-        if (!gameRules || !gameRules.players) {
+        const requirements = map.boardData?.requirements;
+        const rules = map.boardData?.rules;
+        if (!requirements && !rules) {
             return null;
         }
 
         const reqDiv = document.createElement('div');
         reqDiv.className = 'map-requirements';
 
-        const players = gameRules.players;
-        let playerText = '';
-
-        if (players.min || players.max) {
-            const min = players.min || 1;
-            const max = players.max || '∞';
-            playerText = `Players: ${min}-${max}`;
-
-            if (players.recommended && (players.recommended.min || players.recommended.max)) {
-                const recMin = players.recommended.min || min;
-                const recMax = players.recommended.max || max;
-                playerText += ` (recommended: ${recMin}-${recMax})`;
-            }
-        }
-
-        if (playerText) {
+        const minPlayers = requirements?.minPlayers;
+        const maxPlayers = requirements?.maxPlayers;
+        if (minPlayers || maxPlayers) {
+            const min = minPlayers || 1;
+            const max = maxPlayers || '∞';
             const playerReq = document.createElement('div');
             playerReq.className = 'map-requirement';
-            playerReq.innerHTML = `<span class="req-icon">👥</span> ${playerText}`;
+            playerReq.innerHTML = `<span class="req-icon">👥</span> Players: ${min}-${max}`;
             reqDiv.appendChild(playerReq);
+        }
+
+        const recommended = rules?.recommendedPlayers;
+        if (recommended && (recommended.min || recommended.max)) {
+            const rec = document.createElement('div');
+            rec.className = 'map-requirement';
+            let recText;
+            if (recommended.min && recommended.max && recommended.min !== recommended.max) {
+                recText = `${recommended.min}-${recommended.max}`;
+            } else if (recommended.min && recommended.max) {
+                recText = `${recommended.min}`;
+            } else if (recommended.min) {
+                recText = `${recommended.min}+`;
+            } else {
+                recText = `≤${recommended.max}`;
+            }
+            rec.innerHTML = `<span class="req-icon">⭐</span> Recommended: ${recText}`;
+            reqDiv.appendChild(rec);
         }
 
         return reqDiv.children.length > 0 ? reqDiv : null;
