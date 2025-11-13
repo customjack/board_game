@@ -24,7 +24,7 @@ export default class BoardSchemaValidator {
         const isGameDefinition = boardJson.type === 'game' || boardJson.board;
 
         if (isGameDefinition) {
-            const metadata = boardJson.metadata || {};
+            const metadata = boardJson.metadata ?? null;
             const requirements = boardJson.requirements || {};
             const boardSection = boardJson.board || {};
             const topology = boardSection.topology || {};
@@ -217,8 +217,13 @@ export default class BoardSchemaValidator {
             errors.push('rules.recommendedPlayers must be an object');
         }
 
-        if (rules.startingPositions) {
-            errors.push(...this.validateStartingPositions(rules.startingPositions));
+        if (rules.startingPositions !== undefined) {
+            if (typeof rules.startingPositions !== 'object') {
+                errors.push('gameRules.startingPositions must be an object');
+                errors.push('rules.startingPositions must be an object');
+            } else {
+                errors.push(...this.validateStartingPositions(rules.startingPositions));
+            }
         }
 
         if (rules.winCondition) {
