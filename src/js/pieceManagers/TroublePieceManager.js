@@ -43,12 +43,12 @@ export default class TroublePieceManager extends BasePieceManager {
             const owner = players.get(pieceState.playerId);
             const nickname = owner?.nickname || pieceState.playerId;
             const label = String((pieceState.pieceIndex ?? 0) + 1);
-            const isSelectable =
-                selectableIds.has(pieceState.id) &&
-                currentPlayerId === pieceState.playerId;
+            const pieceId = pieceState.id || `${pieceState.playerId}-${pieceState.pieceIndex}`;
+            const selectionData = selectableIds.get(pieceId);
+            const isSelectable = !!selectionData && currentPlayerId === pieceState.playerId;
 
             const snapshot = {
-                id: pieceState.id || `${pieceState.playerId}-${pieceState.pieceIndex}`,
+                id: pieceId,
                 playerId: pieceState.playerId,
                 nickname: `${nickname} ${label}`,
                 label,
@@ -58,7 +58,7 @@ export default class TroublePieceManager extends BasePieceManager {
             };
 
             if (isSelectable) {
-                const { pieceIndex } = selectableIds.get(pieceState.id) || {};
+                const { pieceIndex } = selectionData;
                 snapshot.onSelect = () => {
                     this.eventBus?.emit('trouble:uiSelectPiece', {
                         playerId: pieceState.playerId,
