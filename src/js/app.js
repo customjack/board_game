@@ -9,6 +9,7 @@ import PageRegistry from './registries/PageRegistry';
 import ListenerRegistry from './registries/ListenerRegistry';
 import PlaceholderRegistry from './registries/PlaceholderRegistry';
 import WindowListenerRegistry from './registries/WindowListenerRegistry';
+import PieceManagerRegistry from './registries/PieceManagerRegistry';
 import RegistryManager from './registries/RegistryManager';
 import EventBus from './events/EventBus';
 import PluginManager from './pluginManagement/PluginManager';
@@ -49,13 +50,15 @@ function initializeRegistryManager() {
     const listenerRegistry = new ListenerRegistry();
     const placeholderRegistry = new PlaceholderRegistry();
     const windowListenerRegistry = new WindowListenerRegistry();
+    const pieceManagerRegistry = new PieceManagerRegistry();
 
     registryManager.addRegistry('pageRegistry', pageRegistry);
     registryManager.addRegistry('listenerRegistry', listenerRegistry);
     registryManager.addRegistry('placeholderRegistry', placeholderRegistry);
     registryManager.addRegistry('windowListenerRegistry', windowListenerRegistry);
+    registryManager.addRegistry('pieceManagerRegistry', pieceManagerRegistry);
 
-    return { registryManager, pageRegistry, listenerRegistry, placeholderRegistry, windowListenerRegistry};
+    return { registryManager, pageRegistry, listenerRegistry, placeholderRegistry, windowListenerRegistry, pieceManagerRegistry};
 }
 
 // Register pages in the PageRegistry

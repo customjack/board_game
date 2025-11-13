@@ -48,6 +48,7 @@ import ParticleAnimation from '../animations/ParticleAnimation.js';
 import DiceRollAnimation from '../animations/DiceRollAnimation.js';
 import SlotMachineAnimation from '../animations/SlotMachineAnimation.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
+import PieceManager from '../controllers/managers/PieceManager.js';
 
 /**
  * DefaultCorePlugin - Registers all core/default components as a single plugin
@@ -89,7 +90,8 @@ export default class DefaultCorePlugin extends Plugin {
             actions: 0,
             triggers: 0,
             effects: 0,
-            stats: 0
+            stats: 0,
+            pieceManagers: 0
         };
 
         // Register all components
@@ -104,6 +106,7 @@ export default class DefaultCorePlugin extends Plugin {
         counts.triggers += this._registerTriggers(factoryManager);
         counts.effects += this._registerEffects(factoryManager);
         counts.stats += this._registerStats(factoryManager);
+        counts.pieceManagers += this._registerPieceManagers(registryManager);
 
         // Output single consolidated message
         console.log(
@@ -117,7 +120,8 @@ export default class DefaultCorePlugin extends Plugin {
             `${counts.actions} actions, ` +
             `${counts.triggers} triggers, ` +
             `${counts.effects} effects, ` +
-            `${counts.stats} stats`
+            `${counts.stats} stats, ` +
+            `${counts.pieceManagers} piece manager`
         );
     }
 
@@ -407,6 +411,18 @@ export default class DefaultCorePlugin extends Plugin {
             return stats.length;
         } catch (error) {
             console.error('[Plugin] Core: Failed to register stats', error);
+            return 0;
+        }
+    }
+
+    _registerPieceManagers(registryManager) {
+        const pieceRegistry = registryManager.getPieceManagerRegistry?.();
+        if (!pieceRegistry) return 0;
+        try {
+            pieceRegistry.register('standard', PieceManager);
+            return 1;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register piece manager', error);
             return 0;
         }
     }

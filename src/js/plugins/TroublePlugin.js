@@ -1,6 +1,7 @@
 import Plugin from '../pluginManagement/Plugin.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
 import TroubleGameEngine from '../engines/TroubleGameEngine.js';
+import TroublePieceManager from './TroublePieceManager.js';
 
 /**
  * TroublePlugin - Registers the Trouble (Pop-O-Matic) engine with the modular factory.
@@ -18,6 +19,12 @@ export default class TroublePlugin extends Plugin {
         if (!GameEngineFactory.isRegistered('trouble')) {
             GameEngineFactory.register('trouble', TroubleGameEngine);
             console.log('[Plugin] Trouble: registered trouble game engine');
+        }
+
+        const pieceRegistry = registryManager.getPieceManagerRegistry?.();
+        if (pieceRegistry && !pieceRegistry.get('trouble')) {
+            pieceRegistry.register('trouble', TroublePieceManager);
+            console.log('[Plugin] Trouble: registered trouble piece manager');
         }
     }
 

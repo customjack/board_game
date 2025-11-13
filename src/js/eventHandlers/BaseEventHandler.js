@@ -22,6 +22,7 @@ export default class BaseEventHandler {
 
         // Remaining managers (to be componentized later)
         this.pieceManager = null;
+        this.pieceManagerType = 'standard';
         this.settingsManager = null;
 
         this.peer = null; // This will be either client or host depending on the role
@@ -57,7 +58,7 @@ export default class BaseEventHandler {
         this.uiSystem.init();
 
         // Initialize remaining managers
-        this.pieceManager = new PieceManager();
+        this.setPieceManagerType('standard');
         this.settingsManager = new SettingsManager(this.isHost);
 
         // Setup PlayerListComponent event listeners
@@ -216,7 +217,7 @@ export default class BaseEventHandler {
             this.eventBus.emit('settingsUpdated', { gamestate: gameState });
         }
 
-        const shouldRefreshPieces = forceUpdate || this.pieceManager.shouldUpdatePieces(gameState.players);
+        const shouldRefreshPieces = forceUpdate || this.pieceManager.shouldUpdatePieces(gameState);
 
         // Update UI components through UISystem before manipulating DOM-dependent managers
         this.uiSystem.updateFromGameState(gameState);
@@ -274,6 +275,25 @@ export default class BaseEventHandler {
         const shouldShow = ownedPlayersCount < playerLimitPerPeer && totalPlayersCount < totalPlayerLimit;
 
         setButtonVisibility(shouldShow);
+    }
+
+    setPieceManagerType(type = 'standard') {
+        if (this.pieceManagerType === type && this.pieceManager) {
+            return;
+        }
+
+        if (this.pieceManager?.destroy) {
+            this.pieceManager.destroy();
+        }
+
+        const registry = this.registryManager.getPieceManagerRegistry?.();
+        const ManagerClass =
+            registry?.get(type) ||
+            registry?.get('standard') ||
+            PieceManager;
+
+        this.pieceManager = new ManagerClass({ eventBus: this.eventBus });
+        this.pieceManagerType = type;
     }
 
     /**

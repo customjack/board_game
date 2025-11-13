@@ -1,10 +1,24 @@
-import { darkenColor, componentToHex } from '../utils/helpers';
-
+import { darkenColor } from '../utils/helpers';
 
 export default class Piece {
-    constructor(player) {
-        this.player = player;
-        this.element = null;  // DOM element representing the piece
+    constructor(snapshot) {
+        this.element = null;
+        this.update(snapshot);
+    }
+
+    update(snapshot) {
+        this.data = {
+            id: snapshot.id,
+            playerId: snapshot.playerId,
+            nickname: snapshot.nickname || '',
+            label: snapshot.label || (snapshot.nickname || snapshot.playerId || '?').charAt(0).toUpperCase(),
+            playerColor: snapshot.playerColor || '#cccccc',
+            spaceId: snapshot.spaceId || null
+        };
+    }
+
+    getData() {
+        return this.data;
     }
 
     /**
@@ -22,20 +36,22 @@ export default class Piece {
             this.element.style.position = 'absolute';
             this.element.style.width = '30px';
             this.element.style.height = '30px';
-            this.element.style.backgroundColor = this.player.playerColor; // Uses player color for piece color
+            this.element.style.backgroundColor = this.data.playerColor;
             this.element.style.borderRadius = '50%';
             this.element.style.textAlign = 'center';
             this.element.style.color = '#000';
             this.element.style.lineHeight = '30px';
             this.element.style.zIndex = '3'; // Ensure it's above the board
             this.element.style.opacity = '0.75';  // Set transparency (0.7 = 70% opaque)
-            const darkerBorderColor = darkenColor(this.player.playerColor, 0.75);
-            this.element.style.border = `2px solid ${darkerBorderColor}`; // Use darker color for outline
-
+            const darkerBorderColor = darkenColor(this.data.playerColor, 0.75);
+            this.element.style.border = `2px solid ${darkerBorderColor}`;
 
             // Add click listener for piece interactions
             this.element.addEventListener('click', () => this.handlePieceClick());
         }
+        this.element.style.backgroundColor = this.data.playerColor;
+        const darkerBorderColor = darkenColor(this.data.playerColor, 0.75);
+        this.element.style.border = `2px solid ${darkerBorderColor}`;
 
         // Calculate offset based on totalPiecesAtSpace and indexAtSpace
         let offsetX = 0;
@@ -48,9 +64,9 @@ export default class Piece {
         }
 
         // Set the position relative to the space element itself
-        this.element.style.left = `calc(50% + ${offsetX}px - 15px)`; // Center horizontally with offset
-        this.element.style.top = `calc(50% + ${offsetY}px - 15px)`;  // Center vertically with offset
-        this.element.innerText = this.player.nickname.charAt(0).toUpperCase(); // Display first letter of player's name (as this could change)
+        this.element.style.left = `calc(50% + ${offsetX}px - 15px)`;
+        this.element.style.top = `calc(50% + ${offsetY}px - 15px)`;
+        this.element.innerText = this.data.label;
 
         // Append the piece to the space element if not already appended
         if (!this.element.parentElement || this.element.parentElement !== spaceElement) {

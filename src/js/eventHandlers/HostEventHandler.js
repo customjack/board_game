@@ -179,6 +179,12 @@ export default class HostEventHandler extends BaseEventHandler {
         });
         console.log(`[Performance] Game engine created in ${(performance.now() - engineStart).toFixed(0)}ms`);
 
+        const pieceManagerType =
+            this.gameEngine?.getPieceManagerType?.() ||
+            this.gameEngine?.getEngineType?.() ||
+            'standard';
+        this.setPieceManagerType(pieceManagerType);
+
         progressTracker.nextStage();
         progressTracker.complete();
 

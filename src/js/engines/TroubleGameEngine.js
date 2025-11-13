@@ -147,6 +147,10 @@ export default class TroubleGameEngine extends BaseGameEngine {
         return 'trouble';
     }
 
+    getPieceManagerType() {
+        return 'trouble';
+    }
+
     getCapabilities() {
         return {
             supportsDiceRoll: true,
@@ -176,6 +180,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
             this.playerState.set(player.playerId, {
                 pieces: Array.from({ length: this.piecesPerPlayer }, (_, pieceIndex) => ({
                     id: `${player.playerId}-piece-${pieceIndex}`,
+                    pieceIndex,
                     status: 'HOME',
                     stepsFromStart: 0,
                     spaceId: this.getHomeSpaceId(index, pieceIndex)
@@ -491,9 +496,11 @@ export default class TroubleGameEngine extends BaseGameEngine {
         const pieces = [];
         for (const [playerId, state] of this.playerState.entries()) {
             state.pieces.forEach((piece, idx) => {
+                const pieceIndex = piece.pieceIndex ?? idx;
                 pieces.push({
+                    id: piece.id || `${playerId}-piece-${pieceIndex}`,
                     playerId,
-                    pieceIndex: idx,
+                    pieceIndex,
                     status: piece.status,
                     spaceId: piece.spaceId,
                     stepsFromStart: piece.stepsFromStart
