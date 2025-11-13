@@ -4,6 +4,7 @@ export default class Plugin {
      * Initialize the plugin.
      * @param {EventBus} eventBus - The event bus instance.
      * @param {RegistryManager} registryManager - The registry manager instance.
+     * @param {FactoryManager} factoryManager - The factory manager instance.
      */
     initialize(eventBus, registryManager, factoryManager) {
         throw new Error('initialize() method must be implemented by the plugin.');
@@ -30,5 +31,29 @@ export default class Plugin {
      */
     cleanup() {
         // Can be overridden by the plugin for cleanup logic
+    }
+
+    /**
+     * Get plugin metadata (should be implemented as static method)
+     * @static
+     * @returns {Object} Plugin metadata including dependencies
+     */
+    static getPluginMetadata() {
+        return {
+            id: 'unknown',
+            name: 'Unknown Plugin',
+            version: '1.0.0',
+            description: '',
+            author: '',
+            tags: [],
+            isDefault: false,
+            dependencies: [], // Array of plugin IDs this depends on
+            provides: {
+                actions: [],
+                triggers: [],
+                effects: [],
+                components: []
+            }
+        };
     }
 }

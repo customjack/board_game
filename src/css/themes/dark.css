@@ -5,11 +5,17 @@
 .dark-theme {
   --background-body: #0a0a0a;
   --background-box: #1a1a1a;
+  --background-secondary: #1e1e1e;
   --text-color: #d0d0d0;
+  --text-color-secondary: #a0a0a0;
+  --text-secondary: #999999;
+  --text-tertiary: #888888;
   --background-sidebar: #141414;
   --background-modal: #141414;
   --background-board: #141414;
+  --background-hover: rgba(255, 255, 255, 0.05);
   --border-color: #333333;
+  --border-light: #2a2a2a;
 
 
   --color-primary: #2c3e50;
@@ -30,6 +36,16 @@
   --input-border-color: #333333;
 
   --text-color-light: #e0e0e0;
+
+  /* Modal-specific */
+  --modal-backdrop: rgba(0, 0, 0, 0.8);
+  --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.4);
+
+  /* Aliases for backwards compatibility */
+  --primary-color: var(--color-primary);
+  --primary-hover: var(--color-primary-hover);
+  --danger-color: var(--color-danger);
 
   /* Headers and Labels */
   --font-family-header: 'Arial', sans-serif;

@@ -14,47 +14,33 @@
     </button>
     
 
-    <!-- Modal Popup for Personal Settings -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <h2>Personal Settings</h2>
-
-            <!-- Theme Selection -->
-            <div>
-                <label for="themeSelect">Theme:</label>
-                <select class="select" id="themeSelect"></select> <!-- Empty options, to be populated by JS -->
+    <!-- Modal Popup for Personal Settings (Sidebar Layout) -->
+    <div id="settingsModal" class="settings-modal-backdrop" style="display: none;">
+        <div class="settings-modal-container">
+            <!-- Header -->
+            <div class="settings-modal-header">
+                <h2>Personal Settings</h2>
+                <div class="settings-modal-header-buttons">
+                    <button id="closeSettingsButton" class="button button-secondary settings-modal-close">×</button>
+                </div>
             </div>
 
-            <!-- Sound Volume Slider -->
-            <div>
-                <label for="soundVolume">Sound Volume (Not Currently Functional):</label>
-                <input class="input-range" type="range" id="soundVolume" min="0" max="1" step="0.1">
-            </div>
+            <!-- Body (Sidebar + Content) -->
+            <div class="settings-modal-body">
+                <!-- Left Sidebar Navigation -->
+                <div class="settings-modal-sidebar" id="personalSettingsSidebar">
+                    <!-- Navigation items will be populated by JS -->
+                </div>
 
-            <!-- Show Tips Toggle -->
-            <div>
-                <label for="showTips">Show Gameplay Tips (Not Currently Functional):</label>
-                <input class="input-checkbox" type="checkbox" id="showTips">
+                <!-- Right Content Area -->
+                <div class="settings-modal-content" id="personalSettingsContent">
+                    <!-- Content will be populated by JS -->
+                </div>
             </div>
-
-            <!-- Auto Roll Toggle -->
-            <div>
-                <label for="autoRoll">Enable Auto Roll (Not Currently Functional):</label>
-                <input class="input-checkbox" type="checkbox" id="autoRoll">
-            </div>
-
-            <!-- Roll Animation Selection -->
-            <div>
-                <label for="rollAnimationSelect">Roll Animation:</label>
-                <select class="select" id="rollAnimationSelect"></select> <!-- Populated by JS -->
-            </div>
-
-            <!-- Buttons -->
-            <button id="closeSettingsButton" class="button">Close</button>
         </div>
     </div>
 
-    <!-- Modal Popup for Plugin Manager -->
+    <!-- Modal Popup for Plugin Manager (Host Only) -->
     <div id="pluginManagerModal" class="modal">
         <div class="modal-content">
             <h2>Plugin Manager</h2>
@@ -65,7 +51,7 @@
             </div>
 
             <!-- Add Plugin Section (Coming Soon) -->
-            <div class="add-plugin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
+            <div id="addPluginSection" class="add-plugin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
                 <h3>Add New Plugin (Coming Soon)</h3>
                 <p style="font-size: 0.9em; color: #666;">External plugin loading will be available in a future update.</p>
             </div>
@@ -147,10 +133,13 @@
                         Settings
                     </button>
                     <button id="selectMapButton" class="button button-secondary" style="display: none;">
-                        Map Picker
+                        Map Manager
                     </button>
                     <button id="uploadPluginButton" class="button button-secondary" style="display: none;">
                         Plugin Manager
+                    </button>
+                    <button id="viewPluginListButton" class="button button-secondary" style="display: none;">
+                        Plugin List
                     </button>
                     <input type="file" id="pluginFileInput" accept=".js" style="display: none;">
                     <button id="startGameButton" class="button button-primary" style="display: none;">
@@ -159,7 +148,7 @@
                     <button id="closeGameButton" class="button button-danger" style="display: none;">
                         Close Game
                     </button>
-                    <button id="leaveGameButton" class="button button-primary" style="display: none;">
+                    <button id="leaveGameButton" class="button button-danger" style="display: none;">
                         Leave Game
                     </button>
                 </div>
@@ -170,8 +159,8 @@
                 <h3>Connected Players</h3>
                 <ul id="lobbyPlayerList"></ul>
                 <!-- Green "+" button to add players -->
-                <div class="add-player-container">
-                    <button id="addPlayerButton" class="button">Add Another Local Player</button>
+                <div class="add-player-container" id="addPlayerButtonContainer" style="display: none;">
+                    <button id="addPlayerButton" class="button" style="display: none;">Add Another Local Player</button>
                 </div>
             </div>
         </div>
@@ -230,6 +219,7 @@
                 <!-- Action Buttons Group -->
                 <div class="sidebar-button-group">
                     <button id="openGameLogButton" class="button button-secondary">Game Log</button>
+                    <button id="openPluginListButton" class="button button-secondary">Plugin List</button>
                 </div>
 
             </div>
@@ -250,6 +240,17 @@
             <button id="closeGameLogButton" class="button button-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">✕</button>
         </div>
         <div id="gameLogContainer" class="game-log-popup-content"></div>
+    </div>
+
+    <!-- Plugin List Popup (Read-Only for Clients) -->
+    <div id="pluginListPopup" class="game-log-popup">
+        <div class="game-log-popup-header" id="pluginListPopupHeader">
+            <h3>Plugin List</h3>
+            <button id="closePluginListButton" class="button button-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">✕</button>
+        </div>
+        <div id="pluginListContainer" class="game-log-popup-content">
+            <!-- Plugin list will be populated here -->
+        </div>
     </div>
 
     <!-- Game prompt Modal Structure -->

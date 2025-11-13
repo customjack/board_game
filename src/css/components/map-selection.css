@@ -42,7 +42,7 @@
 }
 
 .button-close:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--background-hover, rgba(0, 0, 0, 0.1));
 }
 
 /* Search Bar */
@@ -89,7 +89,7 @@
     padding: 15px;
     cursor: pointer;
     transition: all 0.2s;
-    background-color: var(--card-background, #fff);
+    background-color: var(--background-box, #fff);
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -97,21 +97,21 @@
 
 .map-card:hover {
     border-color: var(--primary-color, #007bff);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-small, 0 4px 8px rgba(0, 0, 0, 0.1));
     transform: translateY(-2px);
 }
 
 .map-card.selected {
     border-color: var(--primary-color, #007bff);
-    background-color: var(--selected-background, #e3f2fd);
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+    background-color: var(--background-secondary, #e3f2fd);
+    box-shadow: 0 0 10px var(--color-primary, rgba(0, 123, 255, 0.3));
 }
 
 /* Map Thumbnail */
 .map-thumbnail {
     width: 100%;
     height: 120px;
-    background-color: var(--thumbnail-background, #f5f5f5);
+    background-color: var(--background-secondary, #f5f5f5);
     border-radius: 4px;
     overflow: hidden;
     display: flex;
@@ -136,7 +136,7 @@
     font-size: 16px;
     font-weight: bold;
     margin: 0;
-    color: var(--text-primary, #333);
+    color: var(--text-color, #333);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -144,7 +144,7 @@
 
 .map-author {
     font-size: 12px;
-    color: var(--text-muted, #666);
+    color: var(--text-color-secondary, #666);
     margin: 0;
     font-style: italic;
 }
@@ -176,7 +176,7 @@
     font-size: 12px;
     color: var(--text-secondary, #555);
     padding: 4px 8px;
-    background-color: rgba(0, 123, 255, 0.05);
+    background-color: var(--background-secondary, rgba(0, 123, 255, 0.05));
     border-radius: 4px;
     border-left: 3px solid var(--primary-color, #007bff);
 }
@@ -202,7 +202,7 @@
 }
 
 .map-tag.built-in {
-    background-color: var(--tag-builtin-bg, #28a745);
+    background-color: var(--color-success, #28a745);
     color: white;
 }
 
@@ -250,32 +250,4 @@
     }
 }
 
-/* Theme Support - Dark Theme */
-.theme-dark .map-card {
-    --card-background: #2d2d2d;
-    --border-color: #444;
-    --selected-background: #1a3a52;
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-muted: #888;
-    --thumbnail-background: #1a1a1a;
-}
-
-.theme-dark .button-close:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Theme Support - Retro Theme */
-.theme-retro .map-card {
-    border-width: 3px;
-    border-style: solid;
-}
-
-.theme-retro .map-card.selected {
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
-    transform: translateY(-2px) translateX(-2px);
-}
-
-.theme-retro .map-thumbnail {
-    border: 2px solid var(--border-color, #000);
-}
+/* Theme-specific styles are now handled by CSS variables */

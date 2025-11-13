@@ -4,14 +4,11 @@
  * Allows plugins to register custom event processor implementations
  */
 import EventProcessor from '../engines/components/EventProcessor.js';
-import { globalLogger } from '../utils/CompactLogger.js';
 
 export default class EventProcessorFactory {
     constructor() {
         this.registry = new Map();
-        // Register default implementation
-        this.register('default', EventProcessor);
-        globalLogger.flush('event processor');
+        // Note: Default implementation registered by DefaultCorePlugin
     }
 
     /**
@@ -29,7 +26,6 @@ export default class EventProcessorFactory {
         }
 
         this.registry.set(type, EventProcessorClass);
-        globalLogger.add('event processor', type);
     }
 
     /**

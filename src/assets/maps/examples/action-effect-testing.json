@@ -1,0 +1,772 @@
+{
+  "$schema": "https://boardgame.example.com/schemas/game-v3.json",
+  "version": "1.0.0",
+  "type": "game",
+  "metadata": {
+    "name": "Complete Action & Effect Testing Map",
+    "author": "Game Engine",
+    "description": "A comprehensive testing map covering ALL core actions and effects: FORCE_STOP, SWAP_PLACES, SET_PLAYER_STATE, DISPLACE_PLAYER, SET_PLAYER_SPACE, and all player effects.",
+    "created": "2025-01-15T00:00:00Z",
+    "modified": "2025-01-12T00:00:00Z",
+    "tags": [
+      "testing",
+      "actions",
+      "effects",
+      "branching"
+    ]
+  },
+  "requirements": {
+    "plugins": [
+      {
+        "id": "core",
+        "version": "^1.0.0",
+        "source": "builtin",
+        "description": "Core game functionality"
+      }
+    ],
+    "minPlayers": 2,
+    "maxPlayers": 8
+  },
+  "engine": {
+    "type": "turn-based",
+    "config": {
+      "turnManager": {
+        "skipInactivePlayers": true,
+        "maxTurns": 0
+      }
+    }
+  },
+  "ui": {
+    "layout": "standard-board",
+    "components": [
+      {
+        "id": "rollButton",
+        "enabled": true,
+        "position": {
+          "bottom": 20,
+          "centerX": true
+        },
+        "config": {
+          "label": "Roll",
+          "hotkey": "space"
+        }
+      },
+      {
+        "id": "timer",
+        "enabled": true,
+        "position": {
+          "top": 20,
+          "right": 20
+        },
+        "config": {}
+      },
+      {
+        "id": "remainingMoves",
+        "enabled": true,
+        "position": {
+          "top": 80,
+          "right": 20
+        },
+        "config": {}
+      }
+    ],
+    "theme": {}
+  },
+  "rules": {
+    "turnOrder": "sequential",
+    "startingPositions": {
+      "mode": "single",
+      "spaceIds": [
+        "start"
+      ]
+    },
+    "recommendedPlayers": {
+      "min": 2,
+      "max": 4
+    },
+    "diceRolling": {
+      "enabled": true,
+      "diceCount": 1,
+      "diceSides": 6,
+      "rollAgainOn": []
+    },
+    "winCondition": {}
+  },
+  "board": {
+    "topology": {
+      "spaces": [
+        {
+          "id": "start",
+          "name": "Start",
+          "type": "start",
+          "position": {
+            "x": 400,
+            "y": 100
+          },
+          "visual": {
+            "size": 60,
+            "color": "#4CAF50",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Welcome to the Action & Effect Testing Map! Roll to continue."
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "hub",
+          "name": "Branch Hub",
+          "type": "choice",
+          "position": {
+            "x": 400,
+            "y": 200
+          },
+          "visual": {
+            "size": 65,
+            "color": "#FFC107",
+            "textColor": "#000000"
+          },
+          "connections": [
+            {
+              "targetId": "force-stop",
+              "draw": true
+            },
+            {
+              "targetId": "swap-places",
+              "draw": true
+            },
+            {
+              "targetId": "skip-turn",
+              "draw": true
+            },
+            {
+              "targetId": "double-turn",
+              "draw": true
+            },
+            {
+              "targetId": "change-dir",
+              "draw": true
+            },
+            {
+              "targetId": "set-player-state",
+              "draw": true
+            },
+            {
+              "targetId": "displace-player",
+              "draw": true
+            },
+            {
+              "targetId": "set-player-space",
+              "draw": true
+            },
+            {
+              "targetId": "skip-single-turn",
+              "draw": true
+            },
+            {
+              "targetId": "double-single-turn",
+              "draw": true
+            },
+            {
+              "targetId": "on-exit-test",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Test hub - Choose any direction to test different actions and effects!"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "force-stop",
+          "name": "Force Stop Test",
+          "type": "action",
+          "position": {
+            "x": 250,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#f44336",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing FORCE_STOP: Your remaining moves will be set to 0!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "FORCE_STOP",
+                "payload": {}
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "swap-places",
+          "name": "Swap Places Test",
+          "type": "action",
+          "position": {
+            "x": 300,
+            "y": 350
+          },
+          "visual": {
+            "size": 60,
+            "color": "#9C27B0",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing SWAP_PLACES: You will swap positions with a random player!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "SWAP_PLACES",
+                "payload": {}
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "skip-turn",
+          "name": "Skip Turns Test",
+          "type": "action",
+          "position": {
+            "x": 450,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#FF9800",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing SkipTurnsEffect: You will skip your next 2 turns!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "APPLY_EFFECT",
+                "payload": {
+                  "effect": {
+                    "type": "SkipTurnsEffect",
+                    "args": [
+                      "skip_test_1",
+                      2,
+                      false,
+                      null,
+                      0
+                    ]
+                  }
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "double-turn",
+          "name": "Repeat Turns Test",
+          "type": "action",
+          "position": {
+            "x": 500,
+            "y": 350
+          },
+          "visual": {
+            "size": 60,
+            "color": "#8BC34A",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing RepeatTurnsEffect: You will get 1 extra turn after this one!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "APPLY_EFFECT",
+                "payload": {
+                  "effect": {
+                    "type": "RepeatTurnsEffect",
+                    "args": [
+                      "repeat_test_1",
+                      1,
+                      false,
+                      null,
+                      0
+                    ]
+                  }
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "change-dir",
+          "name": "Change Direction Test",
+          "type": "action",
+          "position": {
+            "x": 550,
+            "y": 250
+          },
+          "visual": {
+            "size": 60,
+            "color": "#607D8B",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing ChangeDirectionEffect: Applied for 3 turns (backwards movement NOT IMPLEMENTED)."
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "APPLY_EFFECT",
+                "payload": {
+                  "effect": {
+                    "type": "ChangeDirectionEffect",
+                    "args": [
+                      "direction_test_1",
+                      3,
+                      false,
+                      null,
+                      false
+                    ]
+                  }
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "set-player-state",
+          "name": "Set Player State Test",
+          "type": "action",
+          "position": {
+            "x": 200,
+            "y": 250
+          },
+          "visual": {
+            "size": 60,
+            "color": "#3F51B5",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing SET_PLAYER_STATE: You are now INACTIVE for 1 turn!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "SET_PLAYER_STATE",
+                "payload": {
+                  "active": false,
+                  "duration": 1
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "displace-player",
+          "name": "Displace Player Test",
+          "type": "action",
+          "position": {
+            "x": 150,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#00BCD4",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing DISPLACE_PLAYER: Moving you back 3 spaces!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "DISPLACE_PLAYER",
+                "payload": {
+                  "steps": -3
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "set-player-space",
+          "name": "Set Player Space Test",
+          "type": "action",
+          "position": {
+            "x": 100,
+            "y": 200
+          },
+          "visual": {
+            "size": 60,
+            "color": "#009688",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing SET_PLAYER_SPACE: Teleporting you to the start!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "SET_PLAYER_SPACE",
+                "payload": {
+                  "spaceId": "start"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "skip-single-turn",
+          "name": "Skip Single Turn Test",
+          "type": "action",
+          "position": {
+            "x": 600,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#FF5722",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing SkipTurnEffect: You will skip your NEXT turn only!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "APPLY_EFFECT",
+                "payload": {
+                  "effect": {
+                    "type": "SkipTurnEffect",
+                    "args": [
+                      "skip_single",
+                      false,
+                      null
+                    ]
+                  }
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "double-single-turn",
+          "name": "Double Single Turn Test",
+          "type": "action",
+          "position": {
+            "x": 650,
+            "y": 250
+          },
+          "visual": {
+            "size": 60,
+            "color": "#4CAF50",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Testing DoubleTurnEffect: You get ONE extra turn right after this!"
+                }
+              },
+              "priority": "HIGH"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "APPLY_EFFECT",
+                "payload": {
+                  "effect": {
+                    "type": "DoubleTurnEffect",
+                    "args": [
+                      "double_single",
+                      false,
+                      null
+                    ]
+                  }
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "on-exit-test",
+          "name": "ON_EXIT Trigger Test",
+          "type": "action",
+          "position": {
+            "x": 300,
+            "y": 150
+          },
+          "visual": {
+            "size": 60,
+            "color": "#795548",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "hub",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_EXIT"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "ON_EXIT trigger fired! You're leaving this space."
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "finish",
+          "name": "Finish",
+          "type": "finish",
+          "position": {
+            "x": 400,
+            "y": 500
+          },
+          "visual": {
+            "size": 60,
+            "color": "#E91E63",
+            "textColor": "#ffffff"
+          },
+          "connections": [],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "Testing complete! {{CURRENT_PLAYER_NAME}} wins!"
+                }
+              },
+              "priority": "HIGH"
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "rendering": {}
+  }
+}

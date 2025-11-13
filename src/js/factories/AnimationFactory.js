@@ -9,8 +9,6 @@
  * - Custom game events
  */
 
-import { globalLogger } from '../utils/CompactLogger.js';
-
 // Import default animations
 import ParticleAnimation from '../animations/ParticleAnimation.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
@@ -21,42 +19,7 @@ export default class AnimationFactory {
     constructor() {
         this.registry = new Map();
         this.metadata = new Map(); // Store animation metadata
-
-        // Register default animations
-        this.register('particle-burst', ParticleAnimation, {
-            displayName: 'Particle Burst',
-            description: 'Colorful particle explosion with result display',
-            category: 'roll',
-            duration: 4000,
-            preview: 'Fireworks-style particle explosion'
-        });
-
-        this.register('dice-roll', DiceRollAnimation, {
-            displayName: 'Dice Roll',
-            description: 'Simple animated dice rolling',
-            category: 'roll',
-            duration: 1500,
-            preview: 'Classic dice tumbling animation',
-            isDefault: true
-        });
-
-        this.register('slot-machine', SlotMachineAnimation, {
-            displayName: 'Slot Machine',
-            description: 'Numbers scroll like a slot machine reel',
-            category: 'roll',
-            duration: 1500,
-            preview: 'Vegas-style slot machine rolling'
-        });
-
-        this.register('timer', TimerAnimation, {
-            displayName: 'Timer',
-            description: 'Countdown timer animation',
-            category: 'timer',
-            duration: 'variable',
-            preview: 'Circular countdown timer'
-        });
-
-        globalLogger.flush('animation');
+        // Note: Default animations registered by DefaultCorePlugin
     }
 
     /**
@@ -85,8 +48,6 @@ export default class AnimationFactory {
             isDefault: metadata.isDefault || false,
             ...metadata
         });
-
-        globalLogger.add('animation', type);
     }
 
     /**

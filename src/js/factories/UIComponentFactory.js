@@ -10,22 +10,11 @@ import RollButtonComponent from '../ui/components/RollButtonComponent.js';
 import TimerComponent from '../ui/components/TimerComponent.js';
 import GameLogComponent from '../ui/components/GameLogComponent.js';
 import BoardCanvasComponent from '../ui/components/BoardCanvasComponent.js';
-import { globalLogger } from '../utils/CompactLogger.js';
 
 export default class UIComponentFactory {
     constructor() {
         this.registry = new Map();
-
-        // Register default implementations
-        this.register('RemainingMovesComponent', RemainingMovesComponent);
-        this.register('PlayerListComponent', PlayerListComponent);
-        this.register('RollButtonComponent', RollButtonComponent);
-        this.register('TimerComponent', TimerComponent);
-        this.register('GameLogComponent', GameLogComponent);
-        this.register('BoardCanvasComponent', BoardCanvasComponent);
-
-        // Flush UI component registrations
-        globalLogger.flush('UI component');
+        // Note: Default implementations registered by DefaultCorePlugin
     }
 
     /**
@@ -43,7 +32,6 @@ export default class UIComponentFactory {
         }
 
         this.registry.set(type, ComponentClass);
-        globalLogger.add('UI component', type);
     }
 
     /**

@@ -4,6 +4,7 @@ import ClientEventHandler from './eventHandlers/ClientEventHandler';
 import PersonalSettings from './models/PersonalSettings';
 import PersonalSettingsMenu from './controllers/menus/PersonalSettingsMenu';
 import PluginManagerModal from './controllers/menus/PluginManagerModal';
+import PluginListPopup from './controllers/menus/PluginListPopup';
 import PageRegistry from './registries/PageRegistry';
 import ListenerRegistry from './registries/ListenerRegistry';
 import PlaceholderRegistry from './registries/PlaceholderRegistry';
@@ -11,11 +12,12 @@ import WindowListenerRegistry from './registries/WindowListenerRegistry';
 import RegistryManager from './registries/RegistryManager';
 import EventBus from './events/EventBus';
 import PluginManager from './pluginManagement/PluginManager';
+import LocalStorageManager from './managers/LocalStorageManager';
 import FactoryManager from './factories/FactoryManager';
 import EffectFactory from './factories/EffectFactory';
 import ActionFactory from './factories/ActionFactory';
 import TriggerFactory from './factories/TriggerFactory';
-import SkipTurnEffect from './models/PlayerEffects/SkipTurnEffect';
+import StatFactory from './factories/StatFactory';
 import PhaseStateMachineFactory from './factories/PhaseStateMachineFactory';
 import TurnManagerFactory from './factories/TurnManagerFactory';
 import EventProcessorFactory from './factories/EventProcessorFactory';
@@ -26,9 +28,15 @@ import AnimationFactory from './factories/AnimationFactory';
 import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
 
 // Initialize personal settings
-function initializePersonalSettings(factoryManager) {
+function initializePersonalSettings(factoryManager, pluginManager, localStorageManager) {
     const personalSettings = new PersonalSettings();
-    const personalSettingsMenu = new PersonalSettingsMenu('settingsModal', personalSettings, factoryManager);
+    const personalSettingsMenu = new PersonalSettingsMenu(
+        'settingsModal',
+        personalSettings,
+        factoryManager,
+        pluginManager,
+        localStorageManager
+    );
     return { personalSettings, personalSettingsMenu };
 }
 
@@ -108,19 +116,22 @@ function initializeFactories() {
     // Create and add the EffectFactory
     const effectFactory = new EffectFactory();
     factoryManager.registerFactory('EffectFactory', effectFactory);
-
-    // Register effects in the EffectFactory
-    effectFactory.register('SkipTurnEffect', SkipTurnEffect);
+    // Note: Effects are registered by DefaultCorePlugin, not here
 
     // Create and add the ActionFactory
     const actionFactory = new ActionFactory();
     factoryManager.registerFactory('ActionFactory', actionFactory);
-    // Note: Actions are registered by DefaultActionsPlugin, not here
+    // Note: Actions are registered by DefaultCorePlugin, not here
 
     // Create and add the TriggerFactory
     const triggerFactory = new TriggerFactory();
     factoryManager.registerFactory('TriggerFactory', triggerFactory);
     // Note: Triggers are registered by DefaultTriggersPlugin, not here
+
+    // Create and add the StatFactory
+    const statFactory = new StatFactory();
+    factoryManager.registerFactory('StatFactory', statFactory);
+    // Note: Stats are registered by DefaultCorePlugin, not here
 
     // Create and add engine component factories
     const phaseStateMachineFactory = new PhaseStateMachineFactory();
@@ -153,7 +164,8 @@ function registerListeners(
     registryManager,
     pluginManager,
     factoryManager,
-    eventBus
+    eventBus,
+    localStorageManager
 ) {
     const pageRegistry = registryManager.getPageRegistry();
     const hostButton = document.getElementById('hostButton');
@@ -164,7 +176,10 @@ function registerListeners(
     const joinBackButton = document.getElementById('joinBackButton');
 
     // Initialize Plugin Manager Modal
-    const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager);
+    const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager, false, eventBus);
+
+    // Initialize Plugin List Popup (for clients in-game)
+    const pluginListPopup = new PluginListPopup(pluginManager);
 
     const resetHomePage = () => {
         pageRegistry.showPage('homePage');
@@ -212,6 +227,7 @@ function registerListeners(
             }
             try {
                 pluginManager.setHost(true);
+                pluginManagerModal.setHost(true);
                 hostEventHandlerInstance = new HostEventHandler(
                     registryManager,
                     pluginManager,
@@ -261,6 +277,11 @@ function registerListeners(
         personalSettingsMenu.show();
     });
 
+    // Plugin List button in lobby (for clients to view enabled plugins)
+    listenerRegistry.registerListener('viewPluginListButton', 'click', () => {
+        pluginManagerModal.show(false); // Don't show "Add Plugin" section for clients
+    });
+
     // Add refresh/back button warning
     windowListenerRegistry.registerListener('beforeunload', (event) => {
         // Custom message to warn the user
@@ -275,11 +296,8 @@ function registerListeners(
 
 // Main application initialization function
 function initializeApp() {
-    // Factories and manager (initialized first so we can pass to PersonalSettingsMenu)
+    // Factories and manager (initialized first)
     const factoryManager = initializeFactories();
-
-    // Personal settings
-    const { personalSettings, personalSettingsMenu } = initializePersonalSettings(factoryManager);
 
     // Registries and manager
     const { registryManager, pageRegistry, listenerRegistry, windowListenerRegistry, placeholderRegistry } =
@@ -293,6 +311,16 @@ function initializeApp() {
     const eventBus = new EventBus();
     const pluginManager = initializePluginManager(eventBus, registryManager, factoryManager);
 
+    // Local Storage Manager
+    const localStorageManager = new LocalStorageManager();
+
+    // Personal settings (needs factoryManager, pluginManager, and localStorageManager)
+    const { personalSettings, personalSettingsMenu } = initializePersonalSettings(
+        factoryManager,
+        pluginManager,
+        localStorageManager
+    );
+
     // Register listeners
     registerListeners(
         listenerRegistry,
@@ -302,7 +330,8 @@ function initializeApp() {
         registryManager,
         pluginManager,
         factoryManager,
-        eventBus
+        eventBus,
+        localStorageManager
     );
 }
 

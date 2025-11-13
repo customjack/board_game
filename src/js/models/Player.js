@@ -18,7 +18,7 @@ export default class Player {
         this.nickname = nickname;
         this.factoryManager = factoryManager;
         this.isHost = isHost;
-        this.stats = {};
+        this.stats = []; // Initialize as array of stat instances
         this.playerId = playerId || this.generatePlayerId();
         this.id = this.playerId;
         this.state = initialState; // Use PlayerStates instead of isSpectator
@@ -34,7 +34,7 @@ export default class Player {
         this.turnsTaken = 0;
 
         this.movementHistory = new PlayerMovementHistory();
-        
+
         this.effects = []; // Initialize the effects list
     }
 
@@ -107,44 +107,69 @@ export default class Player {
     }
 
     /**
-     * Dynamically updates or adds a stat.
-     * @param {string} statName - The name of the stat.
+     * Dynamically updates or adds a stat by delta.
+     * @param {string} statId - The ID of the stat (e.g., "score").
      * @param {number} delta - The value to add to the stat.
+     * @param {string} mode - Which value to change: 'both' (default), 'true', or 'display'
      */
-    updateStat(statName, delta) {
-        if (!this.stats[statName]) {
-            this.stats[statName] = 0;
+    updateStat(statId, delta, mode = 'both') {
+        const stat = this.stats.find(s => s.id === statId);
+        if (stat) {
+            stat.changeValue(delta, this, mode);
+        } else {
+            console.warn(`Stat "${statId}" not found on player ${this.nickname}. Cannot update.`);
         }
-        this.stats[statName] += delta;
     }
 
     /**
      * Sets a stat to a specific value.
-     * @param {string} statName - The name of the stat.
-     * @param {number} value - The value to set for the stat.
+     * @param {string} statId - The ID of the stat (e.g., "score").
+     * @param {*} value - The value to set for the stat.
+     * @param {string} mode - Which value to set: 'both' (default), 'true', or 'display'
      */
-    setStat(statName, value) {
-        this.stats[statName] = value;
-    }
-
-    /**
-     * Retrieves a player's stat.
-     * @param {string} statName - The name of the stat.
-     * @returns {number} The value of the stat.
-     */
-    getStat(statName) {
-        return this.stats[statName] || 0;
-    }
-
-    /**
-     * Removes a stat from the player’s stats.
-     * @param {string} statName - The name of the stat to remove.
-     */
-    removeStat(statName) {
-        if (this.stats[statName]) {
-            delete this.stats[statName];
+    setStat(statId, value, mode = 'both') {
+        const stat = this.stats.find(s => s.id === statId);
+        if (stat) {
+            stat.setValue(value, this, mode);
         } else {
-            console.error(`Stat "${statName}" does not exist.`);
+            console.warn(`Stat "${statId}" not found on player ${this.nickname}. Cannot set.`);
+        }
+    }
+
+    /**
+     * Retrieves a player's stat value.
+     * @param {string} statId - The ID of the stat (e.g., "score").
+     * @returns {*} The value of the stat, or undefined if not found.
+     */
+    getStat(statId) {
+        const stat = this.stats.find(s => s.id === statId);
+        return stat ? stat.getValue() : undefined;
+    }
+
+    /**
+     * Adds a stat instance to the player.
+     * @param {BaseStat} stat - The stat instance to add.
+     */
+    addStat(stat) {
+        // Check if stat with this ID already exists
+        const existingStat = this.stats.find(s => s.id === stat.id);
+        if (existingStat) {
+            console.warn(`Stat with ID "${stat.id}" already exists on player ${this.nickname}. Replacing.`);
+            this.removeStat(stat.id);
+        }
+        this.stats.push(stat);
+    }
+
+    /**
+     * Removes a stat from the player's stats.
+     * @param {string} statId - The ID of the stat to remove.
+     */
+    removeStat(statId) {
+        const index = this.stats.findIndex(s => s.id === statId);
+        if (index !== -1) {
+            this.stats.splice(index, 1);
+        } else {
+            console.warn(`Stat "${statId}" does not exist on player ${this.nickname}.`);
         }
     }
 
@@ -216,7 +241,9 @@ export default class Player {
             nickname: this.nickname,
             isHost: this.isHost,
             state: this.state,
-            stats: this.stats,
+            playerColor: this.playerColor,
+            peerColor: this.peerColor,
+            stats: this.stats.map(stat => stat.toJSON()), // Serialize stat instances
             playerId: this.playerId,
             currentSpaceId: this.currentSpaceId,
             rollEngine: this.rollEngine.toJSON(),  // Serialize the RollEngine
@@ -229,7 +256,7 @@ export default class Player {
     /**
      * Deserializes player data from JSON.
      * @param {Object} json - The JSON object containing player data.
-     * @param {EffectFactory} effectFactory - The factory to create effects.
+     * @param {FactoryManager} factoryManager - The factory manager to create stats and effects.
      * @returns {Player} A new Player instance.
      */
     static fromJSON(json, factoryManager) {
@@ -241,7 +268,21 @@ export default class Player {
             json.playerId,
             json.state
         );
-        player.stats = json.stats;
+
+        // Rebuild stats from JSON
+        player.stats = (json.stats || []).map(statJson => {
+            return factoryManager.getFactory('StatFactory').createStatFromJSON(statJson);
+        }).filter(stat => stat !== null); // Filter out any failed deserializations
+
+        // Preserve custom colors if provided, otherwise fallback to generated values
+        if (json.playerColor) {
+            player.playerColor = json.playerColor;
+        }
+
+        if (json.peerColor) {
+            player.peerColor = json.peerColor;
+        }
+
         player.currentSpaceId = json.currentSpaceId;
         player.rollEngine = RollEngine.fromJSON(json.rollEngine);  // Rebuild the RollEngine from JSON
         player.turnsTaken = json.turnsTaken;                       // Rebuild the turns taken
@@ -249,7 +290,7 @@ export default class Player {
         player.effects = json.effects.map(effectJson => {
             //console.log('Deserializing effect:', effectJson);
             return factoryManager.getFactory('EffectFactory').createEffectFromJSON(effectJson);
-        }); // Rebuild effects        
+        }); // Rebuild effects
         return player;
     }
 }

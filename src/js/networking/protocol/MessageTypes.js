@@ -25,10 +25,15 @@ export const MessageTypes = {
     PROPOSE_ADD_PLAYER: 'proposeAddPlayer',
     ADD_PLAYER_REJECTED: 'addPlayerRejected',
     NAME_CHANGE: 'nameChange',
+    COLOR_CHANGE: 'colorChange',
+    PEER_COLOR_CHANGE: 'peerColorChange',
     REMOVE_PLAYER: 'removePlayer',
 
     // Game control
     START_GAME: 'startGame',
+
+    // Plugin management
+    PLUGIN_STATE_UPDATE: 'pluginStateUpdate',
 
     // Heartbeat
     HEARTBEAT: 'heartbeat',
@@ -83,8 +88,22 @@ export const MessageSchemas = {
         newName: { type: 'string', required: true }
     },
 
+    [MessageTypes.COLOR_CHANGE]: {
+        playerId: { type: 'string', required: true },
+        newColor: { type: 'string', required: true }
+    },
+
+    [MessageTypes.PEER_COLOR_CHANGE]: {
+        playerId: { type: 'string', required: true },
+        newPeerColor: { type: 'string', required: true }
+    },
+
     [MessageTypes.REMOVE_PLAYER]: {
         playerId: { type: 'string', required: true }
+    },
+
+    [MessageTypes.PLUGIN_STATE_UPDATE]: {
+        pluginStates: { type: 'object', required: true }
     },
 
     [MessageTypes.HEARTBEAT]: {

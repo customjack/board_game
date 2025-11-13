@@ -23,8 +23,10 @@
     /* Background Colors */
     --background-body: var(--color-light);
     --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
     --background-modal: var(--color-light);
     --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
 
     /*Headers*/
     --font-family-header: 'Arial', sans-serif; /* Default header font */
@@ -37,6 +39,9 @@
     /* Text Colors */
     --text-color: #212529;
     --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
 
     /* Input Background and Text */
     --input-bg: #ffffff;
@@ -48,6 +53,7 @@
   
     /* Borders */
     --border-color: #cccccc;
+    --border-light: #eeeeee;
   
     /* Fonts */
     --font-family-base: 'Arial', sans-serif;
@@ -59,6 +65,16 @@
     /* Z-Index Levels */
     --z-index-modal: 1000;
     --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
 
     /* Highlight */
     --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */

@@ -10,10 +10,14 @@ export default class PluginManagerModal extends BaseMenu {
     /**
      * @param {string} modalId - ID of the modal element
      * @param {PluginManager} pluginManager - Plugin manager instance
+     * @param {boolean} isHost - Whether the current user is the host
+     * @param {EventBus} eventBus - Event bus for listening to plugin state changes
      */
-    constructor(modalId, pluginManager) {
+    constructor(modalId, pluginManager, isHost = false, eventBus = null) {
         super(modalId);
         this.pluginManager = pluginManager;
+        this.isHost = isHost;
+        this.eventBus = eventBus;
         this.pluginListContainer = document.getElementById('pluginList');
 
         if (!this.pluginListContainer) {
@@ -32,14 +36,39 @@ export default class PluginManagerModal extends BaseMenu {
                 this.hide();
             }
         });
+
+        // Listen for plugin state updates from host (for clients)
+        if (this.eventBus) {
+            this.eventBus.on('pluginStatesReceived', () => {
+                // Refresh the plugin list if modal is open
+                if (this.modal && this.modal.style.display !== 'none') {
+                    this.refreshPluginList();
+                }
+            });
+        }
+    }
+
+    /**
+     * Set the host status
+     * @param {boolean} isHost - Whether the current user is the host
+     */
+    setHost(isHost) {
+        this.isHost = isHost;
     }
 
     /**
      * Show the modal and refresh plugin list
+     * @param {boolean} showAddSection - Whether to show the "Add Plugin" section (default: true)
      */
-    show() {
+    show(showAddSection = true) {
         super.show();
         this.refreshPluginList();
+
+        // Control visibility of Add Plugin section
+        const addPluginSection = document.getElementById('addPluginSection');
+        if (addPluginSection) {
+            addPluginSection.style.display = showAddSection ? 'block' : 'none';
+        }
     }
 
     /**
@@ -135,42 +164,51 @@ export default class PluginManagerModal extends BaseMenu {
             statusEl.textContent = 'Always Enabled';
             controlContainer.appendChild(statusEl);
         } else {
-            // Custom plugins: show toggle switch
-            const toggleContainer = document.createElement('label');
-            toggleContainer.className = 'plugin-toggle';
+            // Custom plugins: show toggle switch (only functional for hosts)
+            if (!this.isHost) {
+                // Clients see a status indicator instead of a toggle
+                const statusEl = document.createElement('div');
+                statusEl.className = plugin.enabled ? 'plugin-status enabled' : 'plugin-status disabled';
+                statusEl.textContent = plugin.enabled ? 'Enabled' : 'Disabled';
+                controlContainer.appendChild(statusEl);
+            } else {
+                // Hosts see a functional toggle switch
+                const toggleContainer = document.createElement('label');
+                toggleContainer.className = 'plugin-toggle';
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = plugin.enabled;
-            checkbox.style.cssText = 'opacity: 0; width: 0; height: 0;';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = plugin.enabled;
+                checkbox.style.cssText = 'opacity: 0; width: 0; height: 0;';
 
-            const slider = document.createElement('span');
-            slider.className = plugin.enabled ? 'plugin-toggle-slider active' : 'plugin-toggle-slider';
+                const slider = document.createElement('span');
+                slider.className = plugin.enabled ? 'plugin-toggle-slider active' : 'plugin-toggle-slider';
 
-            const sliderButton = document.createElement('span');
-            sliderButton.className = plugin.enabled ? 'plugin-toggle-button active' : 'plugin-toggle-button inactive';
-            slider.appendChild(sliderButton);
+                const sliderButton = document.createElement('span');
+                sliderButton.className = plugin.enabled ? 'plugin-toggle-button active' : 'plugin-toggle-button inactive';
+                slider.appendChild(sliderButton);
 
-            toggleContainer.appendChild(checkbox);
-            toggleContainer.appendChild(slider);
+                toggleContainer.appendChild(checkbox);
+                toggleContainer.appendChild(slider);
 
-            // Handle toggle click
-            toggleContainer.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (plugin.enabled) {
-                    const success = this.pluginManager.disablePlugin(plugin.id);
-                    if (success) {
-                        this.refreshPluginList();
+                // Handle toggle click
+                toggleContainer.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (plugin.enabled) {
+                        const success = this.pluginManager.disablePlugin(plugin.id);
+                        if (success) {
+                            this.refreshPluginList();
+                        }
+                    } else {
+                        const success = this.pluginManager.enablePlugin(plugin.id);
+                        if (success) {
+                            this.refreshPluginList();
+                        }
                     }
-                } else {
-                    const success = this.pluginManager.enablePlugin(plugin.id);
-                    if (success) {
-                        this.refreshPluginList();
-                    }
-                }
-            });
+                });
 
-            controlContainer.appendChild(toggleContainer);
+                controlContainer.appendChild(toggleContainer);
+            }
         }
 
         row.appendChild(controlContainer);
@@ -185,24 +223,29 @@ export default class PluginManagerModal extends BaseMenu {
      * @returns {string} Formatted provides string
      */
     _formatProvidesInfo(provides) {
-        const parts = [];
+        // Count total components across all types
+        let totalComponents = 0;
 
         if (provides.actions && provides.actions.length > 0) {
-            parts.push(`${provides.actions.length} action${provides.actions.length > 1 ? 's' : ''}`);
+            totalComponents += provides.actions.length;
         }
 
         if (provides.triggers && provides.triggers.length > 0) {
-            parts.push(`${provides.triggers.length} trigger${provides.triggers.length > 1 ? 's' : ''}`);
+            totalComponents += provides.triggers.length;
         }
 
         if (provides.effects && provides.effects.length > 0) {
-            parts.push(`${provides.effects.length} effect${provides.effects.length > 1 ? 's' : ''}`);
+            totalComponents += provides.effects.length;
         }
 
         if (provides.components && provides.components.length > 0) {
-            parts.push(`${provides.components.length} component${provides.components.length > 1 ? 's' : ''}`);
+            totalComponents += provides.components.length;
         }
 
-        return parts.join(', ');
+        if (totalComponents === 0) {
+            return '';
+        }
+
+        return `${totalComponents} component${totalComponents > 1 ? 's' : ''}`;
     }
 }

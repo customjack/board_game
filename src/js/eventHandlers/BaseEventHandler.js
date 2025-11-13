@@ -59,6 +59,102 @@ export default class BaseEventHandler {
         // Initialize remaining managers
         this.pieceManager = new PieceManager();
         this.settingsManager = new SettingsManager(this.isHost);
+
+        // Setup PlayerListComponent event listeners
+        this.setupPlayerListComponentListeners();
+    }
+
+    /**
+     * Setup event listeners for PlayerListComponent events
+     */
+    setupPlayerListComponentListeners() {
+        const lobbyPlayerList = this.uiSystem?.components?.lobbyPlayerList;
+        const gamePlayerList = this.uiSystem?.components?.gamePlayerList;
+
+        if (lobbyPlayerList) {
+            lobbyPlayerList.on('nicknameChange', ({ playerId, newNickname }) => {
+                const ownedPlayer = this.getOwnedPlayer(playerId);
+                if (ownedPlayer) {
+                    this.applyPlayerNameChange(ownedPlayer.playerId, ownedPlayer, newNickname);
+                }
+            });
+
+            lobbyPlayerList.on('colorChange', ({ playerId, newColor }) => {
+                const ownedPlayer = this.getOwnedPlayer(playerId);
+                if (ownedPlayer) {
+                    this.applyPlayerColorChange(ownedPlayer.playerId, ownedPlayer, newColor);
+                }
+            });
+
+            lobbyPlayerList.on('peerColorChange', ({ playerId, newPeerColor }) => {
+                const ownedPlayer = this.getOwnedPlayer(playerId);
+                if (ownedPlayer) {
+                    this.applyPeerColorChange(ownedPlayer.playerId, ownedPlayer, newPeerColor);
+                }
+            });
+
+            lobbyPlayerList.on('leaveGame', () => {
+                const ownedPlayer = this.getOwnedPlayer();
+                if (ownedPlayer) {
+                    this.removePlayer(ownedPlayer.playerId);
+                }
+            });
+
+            this.setupRoleSpecificPlayerListComponentListeners(lobbyPlayerList);
+        }
+
+        if (gamePlayerList) {
+            gamePlayerList.on('nicknameChange', ({ playerId, newNickname }) => {
+                const ownedPlayer = this.getOwnedPlayer(playerId);
+                if (ownedPlayer) {
+                    this.applyPlayerNameChange(ownedPlayer.playerId, ownedPlayer, newNickname);
+                }
+            });
+
+            gamePlayerList.on('colorChange', ({ playerId, newColor }) => {
+                const ownedPlayer = this.getOwnedPlayer(playerId);
+                if (ownedPlayer) {
+                    this.applyPlayerColorChange(ownedPlayer.playerId, ownedPlayer, newColor);
+                }
+            });
+
+            gamePlayerList.on('peerColorChange', ({ playerId, newPeerColor }) => {
+                const ownedPlayer = this.getOwnedPlayer(playerId);
+                if (ownedPlayer) {
+                    this.applyPeerColorChange(ownedPlayer.playerId, ownedPlayer, newPeerColor);
+                }
+            });
+
+            gamePlayerList.on('leaveGame', () => {
+                const ownedPlayer = this.getOwnedPlayer();
+                if (ownedPlayer) {
+                    this.removePlayer(ownedPlayer.playerId);
+                }
+            });
+
+            this.setupRoleSpecificPlayerListComponentListeners(gamePlayerList);
+        }
+    }
+
+    getOwnedPlayer(playerId) {
+        const ownedPlayers = this.peer?.ownedPlayers;
+        if (!ownedPlayers || ownedPlayers.length === 0) {
+            return null;
+        }
+
+        if (!playerId) {
+            return ownedPlayers[0];
+        }
+
+        return ownedPlayers.find(player => player.playerId === playerId) || null;
+    }
+
+    /**
+     * Hook for role-specific PlayerListComponent event listeners
+     * Override in subclasses (e.g., HostEventHandler)
+     */
+    setupRoleSpecificPlayerListComponentListeners(playerListComponent) {
+        // Default: no additional listeners
     }
 
     setupEventListeners() {
@@ -139,78 +235,60 @@ export default class BaseEventHandler {
             this.gameEngine.updateGameState(gameState);
             this.eventBus.emit('gameStateUpdated', { gamestate: gameState });
         }
+
+        this.updateAddPlayerButton();
     }
 
     updateAddPlayerButton() {
         const addPlayerButton = document.getElementById('addPlayerButton');
+        const addPlayerButtonContainer = document.getElementById('addPlayerButtonContainer');
 
         // Early return if button doesn't exist
         if (!addPlayerButton) return;
 
-        const gameState = this.peer?.gameState;
-        const playerLimitPerPeer = gameState?.settings?.playerLimitPerPeer;
-        const totalPlayerLimit = gameState?.settings?.playerLimit;
-        const ownedPlayers = this.peer?.ownedPlayers;
-        const allPlayers = gameState?.players;
+        const setButtonVisibility = (visible) => {
+            if (addPlayerButtonContainer) {
+                addPlayerButtonContainer.style.display = visible ? 'flex' : 'none';
+            }
+            addPlayerButton.style.display = visible ? '' : 'none';
+        };
 
-        // Check all required data exists and has valid values
-        if (!ownedPlayers || !allPlayers ||
-            playerLimitPerPeer === undefined || playerLimitPerPeer === null ||
+        const gameState = this.peer?.gameState;
+        const settings = gameState?.settings;
+        const allPlayers = Array.isArray(gameState?.players) ? gameState.players : null;
+        const playerLimitPerPeer = settings?.playerLimitPerPeer;
+        const totalPlayerLimit = settings?.playerLimit;
+
+        if (!allPlayers || playerLimitPerPeer === undefined || playerLimitPerPeer === null ||
             totalPlayerLimit === undefined || totalPlayerLimit === null) {
-            console.log('[AddPlayerButton] Hiding - missing data:', {
-                hasOwnedPlayers: !!ownedPlayers,
-                hasAllPlayers: !!allPlayers,
-                playerLimitPerPeer,
-                totalPlayerLimit
-            });
-            addPlayerButton.style.display = 'none';
+            setButtonVisibility(false);
             return;
         }
 
-        // Show button only if both limits allow adding more players
-        const shouldShow = ownedPlayers.length < playerLimitPerPeer && allPlayers.length < totalPlayerLimit;
-        console.log('[AddPlayerButton]', shouldShow ? 'Showing' : 'Hiding', {
-            ownedPlayersCount: ownedPlayers.length,
-            playerLimitPerPeer,
-            allPlayersCount: allPlayers.length,
-            totalPlayerLimit
-        });
+        const localPeerId = this.peerId || this.peer?.peer?.id || null;
+        const ownedPlayersCount = localPeerId
+            ? allPlayers.filter(player => player.peerId === localPeerId).length
+            : this.peer?.ownedPlayers?.length || 0;
 
-        if (shouldShow) {
-            addPlayerButton.style.display = 'block';
-        } else {
-            addPlayerButton.style.display = 'none';
-        }
+        const totalPlayersCount = allPlayers.length;
+        const shouldShow = ownedPlayersCount < playerLimitPerPeer && totalPlayersCount < totalPlayerLimit;
+
+        setButtonVisibility(shouldShow);
     }
 
     /**
      * Setup common player list listeners (edit, remove)
-     * Override addRoleSpecificPlayerListeners() for role-specific buttons
+     * @deprecated Old DOM-based listener system - now handled by PlayerListComponent events
+     * This method is kept for backwards compatibility but does nothing
      */
     addPlayerListListeners() {
-        // Register click listener for edit buttons
-        document.querySelectorAll('.edit-button').forEach((button) => {
-            const playerId = button.getAttribute('data-playerId');
-            this.listenerRegistry.registerListener(button.id, 'click', () => {
-                this.editPlayerName(playerId);
-            });
-        });
-
-        // Register click listener for remove buttons
-        document.querySelectorAll('.remove-button').forEach((button) => {
-            const playerId = button.getAttribute('data-playerId');
-            this.listenerRegistry.registerListener(button.id, 'click', () => {
-                this.removePlayer(playerId);
-            });
-        });
-
-        // Allow subclasses to add role-specific listeners (e.g., kick button for host)
-        this.addRoleSpecificPlayerListeners();
+        // Old button-based system has been replaced by PlayerListComponent events
+        // Event listeners are now setup in setupPlayerListComponentListeners()
     }
 
     /**
      * Hook for role-specific player list listeners
-     * Override in subclasses to add additional listeners
+     * @deprecated Old DOM-based listener system
      */
     addRoleSpecificPlayerListeners() {
         // Default: no additional listeners
@@ -218,16 +296,11 @@ export default class BaseEventHandler {
 
     /**
      * Edit a player's name
-     * Calls applyPlayerNameChange() which subclasses implement differently
+     * @deprecated This is now handled by PlayerControlModal via PlayerListComponent events
      */
     async editPlayerName(playerId) {
-        const player = this.peer.ownedPlayers.find((p) => p.playerId === playerId);
-        if (player) {
-            const newName = await ModalUtil.prompt('Enter new name:', player.nickname, 'Edit Player Name');
-            if (newName && newName.trim() !== '') {
-                await this.applyPlayerNameChange(playerId, player, newName.trim());
-            }
-        }
+        // This method is kept for backwards compatibility but is no longer used
+        // Player name editing is now handled through PlayerControlModal
     }
 
     /**
@@ -272,6 +345,30 @@ export default class BaseEventHandler {
      */
     async applyPlayerNameChange(playerId, player, newName) {
         throw new Error('applyPlayerNameChange must be implemented by subclass');
+    }
+
+    /**
+     * Template method: Apply player color change
+     * HOST: Updates locally and broadcasts
+     * CLIENT: Sends message to host
+     * @param {string} playerId - Player ID
+     * @param {Object} player - Player object
+     * @param {string} newColor - New player color (hex code)
+     */
+    async applyPlayerColorChange(playerId, player, newColor) {
+        throw new Error('applyPlayerColorChange must be implemented by subclass');
+    }
+
+    /**
+     * Template method: Apply peer color change
+     * HOST: Updates locally and broadcasts
+     * CLIENT: Sends message to host
+     * @param {string} playerId - Player ID
+     * @param {Object} player - Player object
+     * @param {string} newPeerColor - New peer color (hex code)
+     */
+    async applyPeerColorChange(playerId, player, newPeerColor) {
+        throw new Error('applyPeerColorChange must be implemented by subclass');
     }
 
     /**

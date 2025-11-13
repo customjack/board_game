@@ -1,16 +1,32 @@
 {
+  "$schema": "https://boardgame.example.com/schemas/game-v3.json",
   "version": "1.0.0",
-  "name": "Mini Test Board",
-  "author": "Test Creator",
-  "description": "A tiny 3-space board for quick testing",
-  "created": "2025-01-27T00:00:00.000Z",
-  "modified": "2025-11-09T19:05:24.067Z",
-  "tags": [
-    "test",
-    "mini",
-    "quick"
-  ],
-  "gameEngine": {
+  "type": "game",
+  "metadata": {
+    "name": "Mini Test Board",
+    "author": "Test Creator",
+    "description": "A tiny 3-space board for quick testing",
+    "created": "2025-01-27T00:00:00.000Z",
+    "modified": "2025-11-09T19:05:24.067Z",
+    "tags": [
+      "test",
+      "mini",
+      "quick"
+    ]
+  },
+  "requirements": {
+    "plugins": [
+      {
+        "id": "core",
+        "version": "^1.0.0",
+        "source": "builtin",
+        "description": "Core game functionality"
+      }
+    ],
+    "minPlayers": 1,
+    "maxPlayers": 8
+  },
+  "engine": {
     "type": "turn-based",
     "config": {
       "turnManager": {
@@ -19,100 +35,149 @@
       }
     }
   },
-  "gameRules": {
-    "minPlayers": 1,
-    "maxPlayers": 8,
+  "ui": {
+    "layout": "standard-board",
+    "components": [
+      {
+        "id": "rollButton",
+        "enabled": true,
+        "position": {
+          "bottom": 20,
+          "centerX": true
+        },
+        "config": {
+          "label": "Roll",
+          "hotkey": "space"
+        }
+      },
+      {
+        "id": "timer",
+        "enabled": true,
+        "position": {
+          "top": 20,
+          "right": 20
+        },
+        "config": {}
+      },
+      {
+        "id": "remainingMoves",
+        "enabled": true,
+        "position": {
+          "top": 80,
+          "right": 20
+        },
+        "config": {}
+      }
+    ],
+    "theme": {}
+  },
+  "rules": {
+    "turnOrder": "sequential",
     "startingPositions": {
       "mode": "single",
       "spaceIds": [
         "start"
       ]
-    }
+    },
+    "recommendedPlayers": {},
+    "diceRolling": {
+      "enabled": true,
+      "diceCount": 1,
+      "diceSides": 6,
+      "rollAgainOn": []
+    },
+    "winCondition": {}
   },
-  "spaces": [
-    {
-      "id": "start",
-      "name": "Start",
-      "type": "start",
-      "position": {
-        "x": 200,
-        "y": 300
-      },
-      "visual": {
-        "size": 70,
-        "color": "#3498db",
-        "textColor": "#ffffff"
-      },
-      "connections": [
+  "board": {
+    "topology": {
+      "spaces": [
         {
-          "targetId": "middle",
-          "draw": true
+          "id": "start",
+          "name": "Start",
+          "type": "start",
+          "position": {
+            "x": 200,
+            "y": 300
+          },
+          "visual": {
+            "size": 70,
+            "color": "#3498db",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "middle",
+              "draw": true
+            }
+          ],
+          "triggers": []
+        },
+        {
+          "id": "middle",
+          "name": "Take a Drink",
+          "type": "action",
+          "position": {
+            "x": 400,
+            "y": 300
+          },
+          "visual": {
+            "size": 70,
+            "color": "#f39c12",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "end",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "{{CURRENT_PLAYER_NAME}} takes a drink!"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "end",
+          "name": "Finish",
+          "type": "action",
+          "position": {
+            "x": 600,
+            "y": 300
+          },
+          "visual": {
+            "size": 70,
+            "color": "#e74c3c",
+            "textColor": "#ffffff"
+          },
+          "connections": [],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "{{CURRENT_PLAYER_NAME}} reached the finish! Game complete."
+                }
+              },
+              "priority": "MID"
+            }
+          ]
         }
       ],
-      "triggers": []
+      "connections": []
     },
-    {
-      "id": "middle",
-      "name": "Take a Drink",
-      "type": "action",
-      "position": {
-        "x": 400,
-        "y": 300
-      },
-      "visual": {
-        "size": 70,
-        "color": "#f39c12",
-        "textColor": "#ffffff"
-      },
-      "connections": [
-        {
-          "targetId": "end",
-          "draw": true
-        }
-      ],
-      "triggers": [
-        {
-          "when": {
-            "type": "ON_ENTER"
-          },
-          "action": {
-            "type": "PROMPT_CURRENT_PLAYER",
-            "payload": {
-              "message": "{{CURRENT_PLAYER_NAME}} takes a drink!"
-            }
-          },
-          "priority": "MID"
-        }
-      ]
-    },
-    {
-      "id": "end",
-      "name": "Finish",
-      "type": "action",
-      "position": {
-        "x": 600,
-        "y": 300
-      },
-      "visual": {
-        "size": 70,
-        "color": "#e74c3c",
-        "textColor": "#ffffff"
-      },
-      "connections": [],
-      "triggers": [
-        {
-          "when": {
-            "type": "ON_LAND"
-          },
-          "action": {
-            "type": "PROMPT_ALL_PLAYERS",
-            "payload": {
-              "message": "{{CURRENT_PLAYER_NAME}} reached the finish! Game complete."
-            }
-          },
-          "priority": "MID"
-        }
-      ]
-    }
-  ]
+    "rendering": {}
+  }
 }

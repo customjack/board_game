@@ -1,10 +1,14 @@
+import IGameEngine from '../interfaces/IGameEngine.js';
+
 /**
  * BaseGameEngine - Abstract base class for all game engines
  *
  * Defines the common interface and shared functionality that all game engines must implement.
  * Specific game types (turn-based, realtime, etc.) extend this class.
+ *
+ * This engine is now UI-independent and can run in headless mode.
  */
-export default class BaseGameEngine {
+export default class BaseGameEngine extends IGameEngine {
     /**
      * Create a base game engine
      * @param {Object} dependencies - Core dependencies
@@ -15,9 +19,12 @@ export default class BaseGameEngine {
      * @param {RegistryManager} dependencies.registryManager - Registry manager
      * @param {FactoryManager} dependencies.factoryManager - Factory manager
      * @param {boolean} dependencies.isHost - Whether this peer is the host
+     * @param {UIComponentRegistry} [dependencies.uiRegistry] - Optional UI component registry
      * @param {Object} config - Engine-specific configuration
      */
     constructor(dependencies, config = {}) {
+        super();
+
         if (new.target === BaseGameEngine) {
             throw new TypeError('Cannot construct BaseGameEngine instances directly - must be extended');
         }
@@ -32,12 +39,160 @@ export default class BaseGameEngine {
         this.isHost = dependencies.isHost;
         this.gameLogManager = dependencies.gameLogManager || null;
 
+        // UI dependencies (optional)
+        this.uiRegistry = dependencies.uiRegistry || null;
+        this.uiComponents = new Map(); // component ID -> instance
+
         // Configuration
         this.config = config;
 
         // Engine state
         this.initialized = false;
         this.running = false;
+        this.paused = false;
+    }
+
+    // ===== IGameEngine Implementation =====
+
+    /**
+     * Start the game engine
+     */
+    start() {
+        if (!this.initialized) {
+            throw new Error('Engine must be initialized before starting');
+        }
+        this.running = true;
+        this.paused = false;
+        this.emitEvent('engineStarted');
+    }
+
+    /**
+     * Stop the game engine
+     */
+    stop() {
+        this.running = false;
+        this.paused = false;
+        this.emitEvent('engineStopped');
+    }
+
+    /**
+     * Get current engine state
+     * @returns {EngineState}
+     */
+    getEngineState() {
+        return {
+            initialized: this.initialized,
+            running: this.running,
+            paused: this.paused,
+            currentPhase: this.getCurrentPhase(),
+            metadata: this.getEngineMetadata()
+        };
+    }
+
+    /**
+     * Get current phase (override in subclass)
+     * @returns {string}
+     */
+    getCurrentPhase() {
+        return 'unknown';
+    }
+
+    /**
+     * Get engine-specific metadata (override in subclass)
+     * @returns {Object}
+     */
+    getEngineMetadata() {
+        return {};
+    }
+
+    // ===== UI Component Management =====
+
+    /**
+     * Register UI components with this engine
+     * Called by framework after engine initialization
+     * @param {UIComponentRegistry} uiRegistry - UI component registry
+     */
+    registerUIComponents(uiRegistry) {
+        this.uiRegistry = uiRegistry;
+
+        if (!uiRegistry) {
+            console.log(`[${this.getEngineType()}] No UI registry provided - running in headless mode`);
+            return;
+        }
+
+        // Get required and optional components
+        const requiredSpecs = this.getRequiredUIComponents();
+        const optionalSpecs = this.getOptionalUIComponents();
+
+        // Create required components
+        requiredSpecs.forEach(spec => {
+            const component = this.createUIComponent(spec, uiRegistry);
+            if (spec.required && !component) {
+                throw new Error(`Required UI component '${spec.id}' could not be created`);
+            }
+        });
+
+        // Create optional components (non-fatal if they fail)
+        optionalSpecs.forEach(spec => {
+            this.createUIComponent(spec, uiRegistry);
+        });
+
+        console.log(`[${this.getEngineType()}] Registered ${this.uiComponents.size} UI components`);
+    }
+
+    /**
+     * Create a UI component from spec
+     * @param {UIComponentSpec} spec - Component spec
+     * @param {UIComponentRegistry} uiRegistry - UI registry
+     * @returns {Object|null} Component instance or null
+     */
+    createUIComponent(spec, uiRegistry) {
+        const context = {
+            eventBus: this.eventBus,
+            gameState: this.gameState,
+            additionalProps: {
+                engine: this,
+                peerId: this.peerId,
+                isHost: this.isHost
+            }
+        };
+
+        const component = uiRegistry.createComponent(spec, context);
+
+        if (component) {
+            this.uiComponents.set(spec.id, component);
+            console.log(`[${this.getEngineType()}] Created UI component: ${spec.id}`);
+        } else if (spec.required) {
+            console.error(`[${this.getEngineType()}] Failed to create required component: ${spec.id}`);
+        }
+
+        return component;
+    }
+
+    /**
+     * Get a UI component by ID
+     * @param {string} componentId - Component identifier
+     * @returns {Object|null} Component instance or null
+     */
+    getUIComponent(componentId) {
+        return this.uiComponents.get(componentId) || null;
+    }
+
+    /**
+     * Check if engine has a specific UI component
+     * @param {string} componentId - Component identifier
+     * @returns {boolean} True if component exists
+     */
+    hasUIComponent(componentId) {
+        return this.uiComponents.has(componentId);
+    }
+
+    /**
+     * Check if engine is running in headless mode
+     * @returns {boolean} True if no UI available
+     */
+    isHeadless() {
+        return this.uiRegistry === null || this.uiComponents.size === 0;
     }
 
     /**
@@ -203,7 +358,7 @@ export default class BaseGameEngine {
      * Can be overridden by subclasses
      */
     pause() {
-        this.running = false;
+        this.paused = true;
         this.emitEvent('enginePaused');
     }
 
@@ -212,7 +367,7 @@ export default class BaseGameEngine {
      * Can be overridden by subclasses
      */
     resume() {
-        this.running = true;
+        this.paused = false;
         this.emitEvent('engineResumed');
     }
 

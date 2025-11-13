@@ -4,14 +4,11 @@
  * Allows plugins to register custom UI controller implementations
  */
 import UIController from '../engines/components/UIController.js';
-import { globalLogger } from '../utils/CompactLogger.js';
 
 export default class UIControllerFactory {
     constructor() {
         this.registry = new Map();
-        // Register default implementation
-        this.register('default', UIController);
-        globalLogger.flush('UI controller');
+        // Note: Default implementation registered by DefaultCorePlugin
     }
 
     /**
@@ -29,7 +26,6 @@ export default class UIControllerFactory {
         }
 
         this.registry.set(type, UIControllerClass);
-        globalLogger.add('UI controller', type);
     }
 
     /**

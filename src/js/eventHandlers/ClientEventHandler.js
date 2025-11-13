@@ -134,10 +134,12 @@ export default class ClientEventHandler extends BaseEventHandler {
     displayLobbyControls() {
         const leaveGameButton = document.getElementById('leaveGameButton');
         const openSettingsButton = document.getElementById('openSettingsButton');
+        const viewPluginListButton = document.getElementById('viewPluginListButton');
 
         // Show client-specific buttons
         if (leaveGameButton) leaveGameButton.style.display = 'block';
         if (openSettingsButton) openSettingsButton.style.display = 'block';
+        if (viewPluginListButton) viewPluginListButton.style.display = 'block';
 
         // Conditionally show or hide the "Add Player" button
         this.updateAddPlayerButton();
@@ -199,6 +201,36 @@ export default class ClientEventHandler extends BaseEventHandler {
             playerId: playerId,
             newName: newName,
         });
+        // Note: Don't update locally - wait for host broadcast to ensure consistency
+    }
+
+    /**
+     * Client implementation: Send color change to host
+     */
+    async applyPlayerColorChange(playerId, _player, newColor) {
+        console.log('[ClientEventHandler] applyPlayerColorChange called:', playerId, newColor);
+        // Send color change to host - host will broadcast the update
+        this.peer.conn.send({
+            type: 'colorChange',
+            playerId: playerId,
+            newColor: newColor,
+        });
+        console.log('[ClientEventHandler] Color change message sent to host');
+        // Note: Don't update locally - wait for host broadcast to ensure consistency
+    }
+
+    /**
+     * Client implementation: Send peer color change to host
+     */
+    async applyPeerColorChange(playerId, _player, newPeerColor) {
+        console.log('[ClientEventHandler] applyPeerColorChange called:', playerId, newPeerColor);
+        // Send peer color change to host - host will broadcast the update
+        this.peer.conn.send({
+            type: 'peerColorChange',
+            playerId: playerId,
+            newPeerColor: newPeerColor,
+        });
+        console.log('[ClientEventHandler] Peer color change message sent to host');
         // Note: Don't update locally - wait for host broadcast to ensure consistency
     }
 

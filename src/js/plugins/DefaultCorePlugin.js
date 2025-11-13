@@ -9,6 +9,10 @@ import SetPlayerStateAction from '../models/Actions/SetPlayerStateAction.js';
 import DisplacePlayerAction from '../models/Actions/DisplacePlayerAction.js';
 import ApplyEffectAction from '../models/Actions/ApplyEffectAction.js';
 import SetPlayerSpaceAction from '../models/Actions/SetPlayerSpaceAction.js';
+import ForceStopAction from '../models/Actions/ForceStopAction.js';
+import SwapPlacesAction from '../models/Actions/SwapPlacesAction.js';
+import SetStatAction from '../models/Actions/SetStatAction.js';
+import ChangeStatAction from '../models/Actions/ChangeStatAction.js';
 import CustomAction from '../models/Actions/CustomAction.js';
 
 // Import all built-in trigger classes
@@ -17,12 +21,42 @@ import OnLandTrigger from '../models/Triggers/OnLandTrigger.js';
 import OnExitTrigger from '../models/Triggers/OnExitTrigger.js';
 import CodeTrigger from '../models/Triggers/CodeTrigger.js';
 
+// Import all built-in effect classes
+import SkipTurnEffect from '../models/PlayerEffects/SkipTurnEffect.js';
+import DoubleTurnEffect from '../models/PlayerEffects/DoubleTurnEffect.js';
+import ChangeDirectionEffect from '../models/PlayerEffects/ChangeDirectionEffect.js';
+import SkipTurnsEffect from '../models/PlayerEffects/SkipTurnsEffect.js';
+import RepeatTurnsEffect from '../models/PlayerEffects/RepeatTurnsEffect.js';
+
+// Import all built-in stat classes
+import ScoreStat from '../models/Stats/ScoreStat.js';
+
+// Import game engine and component classes
+import TurnBasedGameEngine from '../engines/TurnBasedGameEngine.js';
+import GameEngineFactory from '../factories/GameEngineFactory.js';
+import PhaseStateMachine from '../engines/components/PhaseStateMachine.js';
+import TurnManager from '../engines/components/TurnManager.js';
+import EventProcessor from '../engines/components/EventProcessor.js';
+import UIController from '../engines/components/UIController.js';
+import RemainingMovesComponent from '../ui/components/RemainingMovesComponent.js';
+import PlayerListComponent from '../ui/components/PlayerListComponent.js';
+import RollButtonComponent from '../ui/components/RollButtonComponent.js';
+import TimerComponent from '../ui/components/TimerComponent.js';
+import GameLogComponent from '../ui/components/GameLogComponent.js';
+import BoardCanvasComponent from '../ui/components/BoardCanvasComponent.js';
+import ParticleAnimation from '../animations/ParticleAnimation.js';
+import DiceRollAnimation from '../animations/DiceRollAnimation.js';
+import SlotMachineAnimation from '../animations/SlotMachineAnimation.js';
+import TimerAnimation from '../animations/TimerAnimation.js';
+
 /**
  * DefaultCorePlugin - Registers all core/default components as a single plugin
  *
  * This plugin represents ALL essential game components that cannot be disabled:
- * - Actions (7 types)
+ * - Actions (11 types)
  * - Triggers (4 types)
+ * - Effects (5 types)
+ * - Stats (1 type)
  * - Game Engine (turn-based)
  * - Phase State Machine (default)
  * - Turn Manager (default)
@@ -43,26 +77,232 @@ export default class DefaultCorePlugin extends Plugin {
         this.registryManager = registryManager;
         this.factoryManager = factoryManager;
 
-        // Register actions
-        this._registerActions(factoryManager);
+        // Track counts for logging
+        const counts = {
+            gameEngines: 0,
+            phaseStateMachines: 0,
+            turnManagers: 0,
+            eventProcessors: 0,
+            uiControllers: 0,
+            uiComponents: 0,
+            animations: 0,
+            actions: 0,
+            triggers: 0,
+            effects: 0,
+            stats: 0
+        };
 
-        // Register triggers
-        this._registerTriggers(factoryManager);
+        // Register all components
+        counts.gameEngines += this._registerGameEngines();
+        counts.phaseStateMachines += this._registerPhaseStateMachines(factoryManager);
+        counts.turnManagers += this._registerTurnManagers(factoryManager);
+        counts.eventProcessors += this._registerEventProcessors(factoryManager);
+        counts.uiControllers += this._registerUIControllers(factoryManager);
+        counts.uiComponents += this._registerUIComponents(factoryManager);
+        counts.animations += this._registerAnimations(factoryManager);
+        counts.actions += this._registerActions(factoryManager);
+        counts.triggers += this._registerTriggers(factoryManager);
+        counts.effects += this._registerEffects(factoryManager);
+        counts.stats += this._registerStats(factoryManager);
 
-        console.log('[Plugin] Core: All default components registered');
+        // Output single consolidated message
+        console.log(
+            `[Plugin] Core: Registered ${counts.gameEngines} game engine, ` +
+            `${counts.phaseStateMachines} phase state machine, ` +
+            `${counts.turnManagers} turn manager, ` +
+            `${counts.eventProcessors} event processor, ` +
+            `${counts.uiControllers} UI controller, ` +
+            `${counts.uiComponents} UI components, ` +
+            `${counts.animations} animations, ` +
+            `${counts.actions} actions, ` +
+            `${counts.triggers} triggers, ` +
+            `${counts.effects} effects, ` +
+            `${counts.stats} stats`
+        );
+    }
+
+    /**
+     * Register game engine
+     * @private
+     * @returns {number} Count of registered engines
+     */
+    _registerGameEngines() {
+        try {
+            GameEngineFactory.register('turn-based', TurnBasedGameEngine);
+            return 1;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register game engine', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Register phase state machines
+     * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered machines
+     */
+    _registerPhaseStateMachines(factoryManager) {
+        const factory = factoryManager.getFactory('PhaseStateMachineFactory');
+        if (!factory) return 0;
+
+        try {
+            factory.register('default', PhaseStateMachine);
+            return 1;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register phase state machine', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Register turn managers
+     * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered managers
+     */
+    _registerTurnManagers(factoryManager) {
+        const factory = factoryManager.getFactory('TurnManagerFactory');
+        if (!factory) return 0;
+
+        try {
+            factory.register('default', TurnManager);
+            return 1;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register turn manager', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Register event processors
+     * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered processors
+     */
+    _registerEventProcessors(factoryManager) {
+        const factory = factoryManager.getFactory('EventProcessorFactory');
+        if (!factory) return 0;
+
+        try {
+            factory.register('default', EventProcessor);
+            return 1;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register event processor', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Register UI controllers
+     * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered controllers
+     */
+    _registerUIControllers(factoryManager) {
+        const factory = factoryManager.getFactory('UIControllerFactory');
+        if (!factory) return 0;
+
+        try {
+            factory.register('default', UIController);
+            return 1;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register UI controller', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Register UI components
+     * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered components
+     */
+    _registerUIComponents(factoryManager) {
+        const factory = factoryManager.getFactory('UIComponentFactory');
+        if (!factory) return 0;
+
+        const components = [
+            ['RemainingMovesComponent', RemainingMovesComponent],
+            ['PlayerListComponent', PlayerListComponent],
+            ['RollButtonComponent', RollButtonComponent],
+            ['TimerComponent', TimerComponent],
+            ['GameLogComponent', GameLogComponent],
+            ['BoardCanvasComponent', BoardCanvasComponent]
+        ];
+
+        try {
+            components.forEach(([name, classRef]) => {
+                factory.register(name, classRef);
+            });
+            return components.length;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register UI components', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Register animations
+     * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered animations
+     */
+    _registerAnimations(factoryManager) {
+        const factory = factoryManager.getFactory('AnimationFactory');
+        if (!factory) return 0;
+
+        const animations = [
+            ['particle-burst', ParticleAnimation, {
+                displayName: 'Particle Burst',
+                description: 'Colorful particle explosion with result display',
+                category: 'roll',
+                isDefault: false,
+                preview: 'Fireworks-style particle explosion'
+            }],
+            ['dice-roll', DiceRollAnimation, {
+                displayName: 'Dice Roll',
+                description: 'Simple animated dice rolling',
+                category: 'roll',
+                isDefault: true,
+                preview: 'Classic dice animation'
+            }],
+            ['slot-machine', SlotMachineAnimation, {
+                displayName: 'Slot Machine',
+                description: 'Numbers scroll like a slot machine reel',
+                category: 'roll',
+                isDefault: false,
+                preview: 'Vegas-style slot machine rolling'
+            }],
+            ['timer', TimerAnimation, {
+                displayName: 'Timer',
+                description: 'Countdown timer animation',
+                category: 'timer',
+                isDefault: true,
+                preview: 'Circular countdown timer'
+            }]
+        ];
+
+        try {
+            animations.forEach(([name, classRef, metadata]) => {
+                factory.register(name, classRef, metadata);
+            });
+            return animations.length;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register animations', error);
+            return 0;
+        }
     }
 
     /**
      * Register all built-in actions
      * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered actions
      */
     _registerActions(factoryManager) {
         const actionFactory = factoryManager.getFactory('ActionFactory');
-
-        if (!actionFactory) {
-            console.error('ActionFactory not found in FactoryManager. Cannot register actions.');
-            return;
-        }
+        if (!actionFactory) return 0;
 
         const actions = [
             [ActionTypes.PROMPT_ALL_PLAYERS, PromptAllPlayersAction],
@@ -71,6 +311,10 @@ export default class DefaultCorePlugin extends Plugin {
             [ActionTypes.DISPLACE_PLAYER, DisplacePlayerAction],
             [ActionTypes.APPLY_EFFECT, ApplyEffectAction],
             [ActionTypes.SET_PLAYER_SPACE, SetPlayerSpaceAction],
+            [ActionTypes.FORCE_STOP, ForceStopAction],
+            [ActionTypes.SWAP_PLACES, SwapPlacesAction],
+            [ActionTypes.SET_STAT, SetStatAction],
+            [ActionTypes.CHANGE_STAT, ChangeStatAction],
             [ActionTypes.CUSTOM, CustomAction]
         ];
 
@@ -78,23 +322,22 @@ export default class DefaultCorePlugin extends Plugin {
             actions.forEach(([type, classRef]) => {
                 actionFactory.register(type, classRef);
             });
-            console.log(`[Plugin] Core: Registered ${actions.length} built-in actions`);
+            return actions.length;
         } catch (error) {
             console.error('[Plugin] Core: Failed to register actions', error);
+            return 0;
         }
     }
 
     /**
      * Register all built-in triggers
      * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered triggers
      */
     _registerTriggers(factoryManager) {
         const triggerFactory = factoryManager.getFactory('TriggerFactory');
-
-        if (!triggerFactory) {
-            console.error('TriggerFactory not found in FactoryManager. Cannot register triggers.');
-            return;
-        }
+        if (!triggerFactory) return 0;
 
         const triggers = [
             [TriggerTypes.ON_ENTER, OnEnterTrigger],
@@ -107,9 +350,64 @@ export default class DefaultCorePlugin extends Plugin {
             triggers.forEach(([type, classRef]) => {
                 triggerFactory.register(type, classRef);
             });
-            console.log(`[Plugin] Core: Registered ${triggers.length} built-in triggers`);
+            return triggers.length;
         } catch (error) {
             console.error('[Plugin] Core: Failed to register triggers', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Register all built-in effects
+     * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered effects
+     */
+    _registerEffects(factoryManager) {
+        const effectFactory = factoryManager.getFactory('EffectFactory');
+        if (!effectFactory) return 0;
+
+        const effects = [
+            ['SkipTurnEffect', SkipTurnEffect],
+            ['DoubleTurnEffect', DoubleTurnEffect],
+            ['ChangeDirectionEffect', ChangeDirectionEffect],
+            ['SkipTurnsEffect', SkipTurnsEffect],
+            ['RepeatTurnsEffect', RepeatTurnsEffect]
+        ];
+
+        try {
+            effects.forEach(([type, classRef]) => {
+                effectFactory.register(type, classRef);
+            });
+            return effects.length;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register effects', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Register all built-in stats
+     * @private
+     * @param {FactoryManager} factoryManager
+     * @returns {number} Count of registered stats
+     */
+    _registerStats(factoryManager) {
+        const statFactory = factoryManager.getFactory('StatFactory');
+        if (!statFactory) return 0;
+
+        const stats = [
+            ['ScoreStat', ScoreStat]
+        ];
+
+        try {
+            stats.forEach(([type, classRef]) => {
+                statFactory.register(type, classRef);
+            });
+            return stats.length;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register stats', error);
+            return 0;
         }
     }
 
@@ -130,9 +428,9 @@ export default class DefaultCorePlugin extends Plugin {
             id: 'core-default',
             name: 'Core Game Engine',
             version: '1.0.0',
-            description: 'Essential game engine components including actions, triggers, turn management, event processing, UI control, and animations. Cannot be disabled.',
+            description: 'Essential game engine components including actions, triggers, effects, turn management, event processing, UI control, and animations. Cannot be disabled.',
             author: 'Game Engine',
-            tags: ['core', 'default', 'actions', 'triggers', 'engine', 'ui'],
+            tags: ['core', 'default', 'actions', 'triggers', 'effects', 'engine', 'ui'],
             isDefault: true,
             dependencies: [],
             provides: {
@@ -143,6 +441,8 @@ export default class DefaultCorePlugin extends Plugin {
                     'DISPLACE_PLAYER',
                     'APPLY_EFFECT',
                     'SET_PLAYER_SPACE',
+                    'FORCE_STOP',
+                    'SWAP_PLACES',
                     'CUSTOM'
                 ],
                 triggers: [
@@ -151,7 +451,13 @@ export default class DefaultCorePlugin extends Plugin {
                     'ON_EXIT',
                     'CODE'
                 ],
-                effects: [],
+                effects: [
+                    'SkipTurnEffect',
+                    'DoubleTurnEffect',
+                    'ChangeDirectionEffect',
+                    'SkipTurnsEffect',
+                    'RepeatTurnsEffect'
+                ],
                 components: [
                     'GameEngine (turn-based)',
                     'PhaseStateMachine (default)',

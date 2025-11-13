@@ -248,6 +248,18 @@ export default class PluginManager {
     }
 
     /**
+     * Get all plugin states as a simple map
+     * @returns {Object} Map of plugin IDs to enabled status
+     */
+    getAllPluginStates() {
+        const states = {};
+        for (const [pluginId, enabled] of this.pluginStates.entries()) {
+            states[pluginId] = enabled;
+        }
+        return states;
+    }
+
+    /**
      * Get metadata for a specific plugin
      * @param {string} pluginId - Plugin ID
      * @returns {Object|null} Plugin metadata or null if not found
@@ -318,6 +330,14 @@ export default class PluginManager {
 
         this.pluginStates.set(pluginId, true);
         console.log(`[PluginManager] Enabled plugin: ${pluginId}`);
+
+        // Emit event for plugin state change
+        this.eventBus.emit('pluginStateChanged', {
+            pluginId,
+            enabled: true,
+            pluginStates: this.getAllPluginStates()
+        });
+
         return true;
     }
 
@@ -349,6 +369,14 @@ export default class PluginManager {
 
         this.pluginStates.set(pluginId, false);
         console.log(`[PluginManager] Disabled plugin: ${pluginId}`);
+
+        // Emit event for plugin state change
+        this.eventBus.emit('pluginStateChanged', {
+            pluginId,
+            enabled: false,
+            pluginStates: this.getAllPluginStates()
+        });
+
         return true;
     }
 
@@ -473,6 +501,19 @@ export default class PluginManager {
     }
 
     /**
+     * Apply plugin states from host (for clients)
+     * @param {Object} pluginStates - Map of plugin IDs to enabled status
+     */
+    applyPluginStates(pluginStates) {
+        for (const [pluginId, enabled] of Object.entries(pluginStates)) {
+            if (this.pluginClasses.has(pluginId)) {
+                this.pluginStates.set(pluginId, enabled);
+            }
+        }
+        console.log('[PluginManager] Applied plugin states from host:', pluginStates);
+    }
+
+    /**
      * Set the host status for all plugins
      * @param {boolean} isHost - Is this instance the host
      */
@@ -527,8 +568,9 @@ export default class PluginManager {
             errors.push('Missing or invalid isDefault flag');
         }
 
-        if (!Array.isArray(metadata.dependencies)) {
-            errors.push('Missing or invalid dependencies array');
+        // Dependencies is optional, but if present should be an array of plugin IDs
+        if (metadata.dependencies !== undefined && !Array.isArray(metadata.dependencies)) {
+            errors.push('Dependencies must be an array of plugin IDs');
         }
 
         if (!metadata.provides || typeof metadata.provides !== 'object') {

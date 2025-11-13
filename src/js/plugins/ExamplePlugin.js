@@ -77,4 +77,27 @@ export default class ExamplePlugin extends Plugin {
         this.eventBus.off('gameStateUpdated', this.handleGameStateUpdate.bind(this));
     }
 
+    /**
+     * Get plugin metadata
+     * @static
+     * @returns {Object} Plugin metadata
+     */
+    static getPluginMetadata() {
+        return {
+            id: 'example-plugin',
+            name: 'Example Plugin',
+            version: '1.0.0',
+            description: 'A sample plugin showing how to extend game functionality',
+            author: 'Example Author',
+            tags: ['example', 'template'],
+            isDefault: false,
+            dependencies: [], // Array of plugin IDs this depends on (e.g., ['core-default'])
+            provides: {
+                actions: [],
+                triggers: [],
+                effects: [],
+                components: []
+            }
+        };
+    }
 }

@@ -5,11 +5,17 @@
 .retro-theme {
   --background-body: #f4ecd8;
   --background-box: #f0e4d8;
+  --background-secondary: #ffe8c0;
   --text-color: #5c5b5a;
+  --text-color-secondary: #8a7a6a;
+  --text-secondary: #9a8a7a;
+  --text-tertiary: #b0a090;
   --background-sidebar: #fff0d4;
   --background-modal: #fff0d4;
   --background-board: #ffcc5c;
+  --background-hover: rgba(230, 190, 138, 0.2);
   --border-color: #e6be8a;
+  --border-light: #f0d4aa;
 
   --color-primary: #e6be8a;
   --color-primary-hover: #d4a572;
@@ -29,6 +35,16 @@
   --input-border-color: #e6be8a;
 
   --text-color-light: #333333;
+
+  /* Modal-specific */
+  --modal-backdrop: rgba(92, 91, 90, 0.6);
+  --modal-shadow: 0 4px 20px rgba(92, 91, 90, 0.3);
+  --shadow-small: 0 2px 4px rgba(92, 91, 90, 0.2);
+
+  /* Aliases for backwards compatibility */
+  --primary-color: var(--color-primary);
+  --primary-hover: var(--color-primary-hover);
+  --danger-color: var(--color-danger);
 
   /* Headers and Labels */
   --font-family-header: 'Courier New', Courier, monospace;

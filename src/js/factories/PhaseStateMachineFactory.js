@@ -4,14 +4,11 @@
  * Allows plugins to register custom phase state machine implementations
  */
 import PhaseStateMachine from '../engines/components/PhaseStateMachine.js';
-import { globalLogger } from '../utils/CompactLogger.js';
 
 export default class PhaseStateMachineFactory {
     constructor() {
         this.registry = new Map();
-        // Register default implementation
-        this.register('default', PhaseStateMachine);
-        globalLogger.flush('phase state machine');
+        // Note: Default implementation registered by DefaultCorePlugin
     }
 
     /**
@@ -29,7 +26,6 @@ export default class PhaseStateMachineFactory {
         }
 
         this.registry.set(type, StateMachineClass);
-        globalLogger.add('phase state machine', type);
     }
 
     /**

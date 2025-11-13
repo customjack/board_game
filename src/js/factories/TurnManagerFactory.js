@@ -4,14 +4,11 @@
  * Allows plugins to register custom turn manager implementations
  */
 import TurnManager from '../engines/components/TurnManager.js';
-import { globalLogger } from '../utils/CompactLogger.js';
 
 export default class TurnManagerFactory {
     constructor() {
         this.registry = new Map();
-        // Register default implementation
-        this.register('default', TurnManager);
-        globalLogger.flush('turn manager');
+        // Note: Default implementation registered by DefaultCorePlugin
     }
 
     /**
@@ -29,7 +26,6 @@ export default class TurnManagerFactory {
         }
 
         this.registry.set(type, TurnManagerClass);
-        globalLogger.add('turn manager', type);
     }
 
     /**

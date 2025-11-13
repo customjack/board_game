@@ -59,18 +59,14 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             config.eventProcessor || {}
         );
 
-        // Support both new UISystem and legacy manager approach
+        // Support UISystem (current approach) for backwards compatibility
         if (dependencies.uiSystem) {
-            // New modular approach
             this.uiSystem = dependencies.uiSystem;
-            this.rollButton = this.uiSystem.getComponent('rollButton');
-            this.timer = this.uiSystem.getComponent('timer');
-            this.remainingMoves = this.uiSystem.getComponent('remainingMoves');
-            this.gameLog = this.uiSystem.getComponent('gameLog');
-            // Still need popup controller for the button
-            this.gameLogPopupController = new GameLogPopupController(this.eventBus);
-        } else {
-            // Legacy approach (backwards compatibility)
+        }
+
+        // Legacy UIController approach (backwards compatibility)
+        // Will be replaced by UIComponentRegistry in the future
+        if (dependencies.rollButtonManager || dependencies.timerManager) {
             this.uiController = uiControllerFactory.create(
                 config.uiController?.type || 'default',
                 {
@@ -79,8 +75,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
                 },
                 config.uiController || {}
             );
-            this.gameLogPopupController = new GameLogPopupController(this.eventBus);
         }
+
+        // Game log popup controller (not yet migrated to component system)
+        this.gameLogPopupController = new GameLogPopupController(this.eventBus);
 
         // Register phase handlers
         this.registerPhaseHandlers();
@@ -90,76 +88,169 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     }
 
     // ===== UI Abstraction Methods =====
-    // These methods work with both UISystem (new) and UIController (legacy)
+    // These methods work with UIComponentRegistry, UISystem, and UIController
 
     activateRollButton() {
-        if (this.rollButton) {
-            this.rollButton.activate();
-        } else if (this.uiController) {
+        // Try UIComponentRegistry first (future)
+        const rollButton = this.getUIComponent('rollButton');
+        if (rollButton && rollButton.activate) {
+            rollButton.activate();
+            return;
+        }
+        // Try UISystem (current)
+        if (this.uiSystem) {
+            const btn = this.uiSystem.getComponent('rollButton');
+            if (btn && btn.activate) {
+                btn.activate();
+                return;
+            }
+        }
+        // Fall back to UIController (legacy)
+        if (this.uiController) {
             this.uiController.activateRollButton();
         }
     }
 
     deactivateRollButton() {
-        if (this.rollButton) {
-            this.rollButton.deactivate();
-        } else if (this.uiController) {
+        const rollButton = this.getUIComponent('rollButton');
+        if (rollButton && rollButton.deactivate) {
+            rollButton.deactivate();
+            return;
+        }
+        if (this.uiSystem) {
+            const btn = this.uiSystem.getComponent('rollButton');
+            if (btn && btn.deactivate) {
+                btn.deactivate();
+                return;
+            }
+        }
+        if (this.uiController) {
             this.uiController.deactivateRollButton();
         }
     }
 
     startTimer() {
-        if (this.timer) {
-            this.timer.startTimer();
-        } else if (this.uiController) {
+        const timer = this.getUIComponent('timer');
+        if (timer && timer.startTimer) {
+            timer.startTimer();
+            return;
+        }
+        if (this.uiSystem) {
+            const tmr = this.uiSystem.getComponent('timer');
+            if (tmr && tmr.startTimer) {
+                tmr.startTimer();
+                return;
+            }
+        }
+        if (this.uiController) {
             this.uiController.startTimer();
         }
     }
 
     stopTimer() {
-        if (this.timer) {
-            this.timer.stopTimer();
-        } else if (this.uiController) {
+        const timer = this.getUIComponent('timer');
+        if (timer && timer.stopTimer) {
+            timer.stopTimer();
+            return;
+        }
+        if (this.uiSystem) {
+            const tmr = this.uiSystem.getComponent('timer');
+            if (tmr && tmr.stopTimer) {
+                tmr.stopTimer();
+                return;
+            }
+        }
+        if (this.uiController) {
             this.uiController.stopTimer();
         }
     }
 
     pauseTimer() {
-        if (this.timer) {
-            this.timer.pauseTimer();
-        } else if (this.uiController) {
+        const timer = this.getUIComponent('timer');
+        if (timer && timer.pauseTimer) {
+            timer.pauseTimer();
+            return;
+        }
+        if (this.uiSystem) {
+            const tmr = this.uiSystem.getComponent('timer');
+            if (tmr && tmr.pauseTimer) {
+                tmr.pauseTimer();
+                return;
+            }
+        }
+        if (this.uiController) {
             this.uiController.pauseTimer();
         }
     }
 
     resumeTimer() {
-        if (this.timer) {
-            this.timer.resumeTimer();
-        } else if (this.uiController) {
+        const timer = this.getUIComponent('timer');
+        if (timer && timer.resumeTimer) {
+            timer.resumeTimer();
+            return;
+        }
+        if (this.uiSystem) {
+            const tmr = this.uiSystem.getComponent('timer');
+            if (tmr && tmr.resumeTimer) {
+                tmr.resumeTimer();
+                return;
+            }
+        }
+        if (this.uiController) {
             this.uiController.resumeTimer();
         }
     }
 
     showRemainingMoves() {
-        if (this.remainingMoves) {
-            this.remainingMoves.show();
-        } else if (this.uiController) {
+        const remainingMoves = this.getUIComponent('remainingMoves');
+        if (remainingMoves && remainingMoves.show) {
+            remainingMoves.show();
+            return;
+        }
+        if (this.uiSystem) {
+            const rm = this.uiSystem.getComponent('remainingMoves');
+            if (rm && rm.show) {
+                rm.show();
+                return;
+            }
+        }
+        if (this.uiController) {
             this.uiController.showRemainingMoves();
         }
     }
 
     hideRemainingMoves() {
-        if (this.remainingMoves) {
-            this.remainingMoves.hide();
-        } else if (this.uiController) {
+        const remainingMoves = this.getUIComponent('remainingMoves');
+        if (remainingMoves && remainingMoves.hide) {
+            remainingMoves.hide();
+            return;
+        }
+        if (this.uiSystem) {
+            const rm = this.uiSystem.getComponent('remainingMoves');
+            if (rm && rm.hide) {
+                rm.hide();
+                return;
+            }
+        }
+        if (this.uiController) {
             this.uiController.hideRemainingMoves();
         }
     }
 
     updateRemainingMoves(moves) {
-        if (this.remainingMoves) {
-            this.remainingMoves.updateMoves(moves);
-        } else if (this.uiController) {
+        const remainingMoves = this.getUIComponent('remainingMoves');
+        if (remainingMoves && remainingMoves.updateMoves) {
+            remainingMoves.updateMoves(moves);
+            return;
+        }
+        if (this.uiSystem) {
+            const rm = this.uiSystem.getComponent('remainingMoves');
+            if (rm && rm.updateMoves) {
+                rm.updateMoves(moves);
+                return;
+            }
+        }
+        if (this.uiController) {
             this.uiController.updateRemainingMoves(moves);
         }
     }
@@ -186,10 +277,10 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
     }
 
     updateUIFromGameState(gameState, peerId) {
-        if (this.uiSystem) {
-            // UISystem handles this internally via components
-            // Nothing needed here as it's handled by BaseEventHandler
-        } else if (this.uiController) {
+        // When using UIComponentRegistry, components handle updates via event listeners
+        // No manual update needed as components subscribe to gameStateUpdated events
+        if (this.uiController) {
+            // Legacy path
             this.uiController.updateFromGameState(gameState, peerId);
         }
     }
@@ -219,38 +310,56 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      * Initialize the turn-based engine
      */
     init() {
-        // Initialize UI with callbacks
-        if (this.uiSystem) {
-            // New modular approach
-            if (this.rollButton) {
-                this.rollButton.init({
-                    onRollDice: () => this.rollDiceForCurrentPlayer(),
-                    onRollComplete: (result) => this.handleAfterDiceRoll(result)
-                });
-            }
-            if (this.timer) {
-                this.timer.init({
-                    onTimerEnd: () => this.handleTimerEnd(),
-                    onPauseToggle: () => this.handlePauseToggle()
-                });
-            }
-            if (this.gameLog) {
-                this.gameLog.init();
-            }
-            // Init popup controller for the button
-            if (this.gameLogPopupController) {
-                this.gameLogPopupController.init();
-            }
-        } else {
-            // Legacy approach
+        // Try UIComponentRegistry components (future)
+        let rollButton = this.getUIComponent('rollButton');
+        let timer = this.getUIComponent('timer');
+        let gameLog = this.getUIComponent('gameLog');
+
+        // If not found, try UISystem components (current)
+        if (!rollButton && this.uiSystem) {
+            rollButton = this.uiSystem.getComponent('rollButton');
+        }
+        if (!timer && this.uiSystem) {
+            timer = this.uiSystem.getComponent('timer');
+        }
+        if (!gameLog && this.uiSystem) {
+            gameLog = this.uiSystem.getComponent('gameLog');
+        }
+
+        // Initialize roll button
+        if (rollButton && rollButton.init) {
+            rollButton.init({
+                onRollDice: () => this.rollDiceForCurrentPlayer(),
+                onRollComplete: (result) => this.handleAfterDiceRoll(result)
+            });
+        }
+
+        // Initialize timer
+        if (timer && timer.init) {
+            timer.init({
+                onTimerEnd: () => this.handleTimerEnd(),
+                onPauseToggle: () => this.togglePauseGame()
+            });
+        }
+
+        // Initialize game log
+        if (gameLog && gameLog.init) {
+            gameLog.init();
+        }
+
+        // Initialize game log popup controller (not yet in component system)
+        if (this.gameLogPopupController) {
+            this.gameLogPopupController.init();
+        }
+
+        // Legacy UI controller path
+        if (this.uiController) {
             this.uiController.init({
                 onRollDice: () => this.rollDiceForCurrentPlayer(),
                 onRollComplete: (result) => this.handleAfterDiceRoll(result),
                 onTimerEnd: () => this.handleTimerEnd(),
                 onPauseToggle: () => this.togglePauseGame()
             });
-
-            this.gameLogPopupController.init();
         }
 
         this.initialized = true;
@@ -302,12 +411,20 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      */
     cleanup() {
         this.cleanupActiveSpaceChoice();
-        if (this.uiSystem) {
-            // UI components are managed by UISystem
-        } else if (this.uiController) {
+
+        // UI components registered through UIComponentRegistry are cleaned up by the registry
+        // No manual cleanup needed here for those components
+
+        // Legacy UI controller cleanup
+        if (this.uiController) {
             this.uiController.cleanup();
+        }
+
+        // Cleanup game log popup controller
+        if (this.gameLogPopupController && this.gameLogPopupController.destroy) {
             this.gameLogPopupController.destroy();
         }
+
         this.running = false;
         this.initialized = false;
     }
@@ -318,6 +435,209 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      */
     getEngineType() {
         return 'turn-based';
+    }
+
+    /**
+     * Get engine capabilities
+     * @returns {EngineCapabilities}
+     */
+    getCapabilities() {
+        return {
+            supportsDiceRoll: true,
+            supportsCardDraw: false,
+            supportsPieceSelection: false,
+            supportsMultiplePiecesPerPlayer: false,
+            supportsResourceManagement: false,
+            supportsSimultaneousTurns: false,
+            supportsTurnPhases: true,
+            supportsPlayerVoting: false,
+            supportsRealTime: false,
+            supportsTeams: false
+        };
+    }
+
+    /**
+     * Get required UI components for this engine
+     * @returns {UIComponentSpec[]}
+     */
+    getRequiredUIComponents() {
+        return [
+            {
+                id: 'rollButton',
+                type: 'button',
+                required: false, // Can auto-roll if not available
+                description: 'Button to roll dice',
+                config: {},
+                events: {
+                    emits: ['rollDice', 'rollComplete'],
+                    listens: ['turnStarted', 'turnEnded', 'gamePaused']
+                }
+            },
+            {
+                id: 'timer',
+                type: 'timer',
+                required: false, // Optional turn timer
+                description: 'Turn timer display and countdown',
+                config: {},
+                events: {
+                    emits: ['timerExpired'],
+                    listens: ['turnStarted', 'turnEnded', 'gamePaused', 'gameResumed']
+                }
+            },
+            {
+                id: 'remainingMoves',
+                type: 'display',
+                required: false, // Optional moves counter
+                description: 'Display remaining moves in current turn',
+                config: {},
+                events: {
+                    emits: [],
+                    listens: ['playerRolled', 'playerMoved']
+                }
+            }
+        ];
+    }
+
+    /**
+     * Get optional UI components that enhance this engine
+     * @returns {UIComponentSpec[]}
+     */
+    getOptionalUIComponents() {
+        return [
+            {
+                id: 'gameLog',
+                type: 'display',
+                required: false,
+                description: 'Game event log',
+                config: {},
+                events: {
+                    emits: [],
+                    listens: ['*'] // Listens to all events
+                }
+            },
+            {
+                id: 'playerList',
+                type: 'display',
+                required: false,
+                description: 'List of all players',
+                config: {},
+                events: {
+                    emits: ['playerSelected'],
+                    listens: ['gameStateUpdated', 'playerAdded', 'playerRemoved']
+                }
+            }
+        ];
+    }
+
+    /**
+     * Get current phase for engine state
+     * @returns {string}
+     */
+    getCurrentPhase() {
+        return `${this.gameState?.gamePhase || 'unknown'}:${this.gameState?.turnPhase || 'unknown'}`;
+    }
+
+    /**
+     * Get engine-specific metadata
+     * @returns {Object}
+     */
+    getEngineMetadata() {
+        return {
+            currentPlayer: this.gameState?.getCurrentPlayer()?.nickname || 'none',
+            turnNumber: this.gameState?.getTurnNumber() || 0,
+            remainingMoves: this.gameState?.remainingMoves || 0,
+            gamePhase: this.gameState?.gamePhase,
+            turnPhase: this.gameState?.turnPhase
+        };
+    }
+
+    /**
+     * Handle generic player action
+     * @param {string} playerId - Player ID
+     * @param {string} actionType - Action type
+     * @param {Object} actionData - Action data
+     * @returns {Promise<Object>} Action result
+     */
+    async onPlayerAction(playerId, actionType, actionData) {
+        // Check if it's this player's turn
+        const currentPlayer = this.gameState.getCurrentPlayer();
+        if (!currentPlayer || currentPlayer.playerId !== playerId) {
+            return {
+                success: false,
+                error: 'Not your turn'
+            };
+        }
+
+        switch (actionType) {
+            case 'ROLL_DICE':
+                return await this.handlePlayerRollDice(playerId, actionData);
+
+            case 'SELECT_SPACE':
+                return await this.handlePlayerSelectSpace(playerId, actionData);
+
+            case 'END_TURN':
+                return await this.handlePlayerEndTurn(playerId);
+
+            default:
+                return {
+                    success: false,
+                    error: `Unknown action type: ${actionType}`
+                };
+        }
+    }
+
+    /**
+     * Handle player roll dice action
+     */
+    async handlePlayerRollDice(playerId, actionData) {
+        if (this.gameState.turnPhase !== TurnPhases.WAITING_FOR_MOVE) {
+            return {
+                success: false,
+                error: 'Cannot roll dice at this phase'
+            };
+        }
+
+        const rollResult = this.rollDiceForCurrentPlayer();
+        return {
+            success: true,
+            data: { rollResult }
+        };
+    }
+
+    /**
+     * Handle player select space action
+     */
+    async handlePlayerSelectSpace(playerId, actionData) {
+        if (!actionData.spaceId) {
+            return {
+                success: false,
+                error: 'Space ID required'
+            };
+        }
+
+        if (this.gameState.turnPhase !== TurnPhases.PLAYER_CHOOSING_DESTINATION) {
+            return {
+                success: false,
+                error: 'Not in space selection phase'
+            };
+        }
+
+        // Move player to selected space
+        this.gameState.movePlayer(actionData.spaceId);
+        this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
+
+        return {
+            success: true,
+            data: { spaceId: actionData.spaceId }
+        };
+    }
+
+    /**
+     * Handle player end turn action
+     */
+    async handlePlayerEndTurn(playerId) {
+        this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
+        return { success: true };
     }
 
     // ===== Game Phase Handlers =====
@@ -356,6 +676,9 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
 
     handleChangeTurn() {
         this.emitEvent('changeTurn', { gameState: this.gameState });
+
+        // Enact all effects that trigger during CHANGE_TURN phase (e.g., SkipTurnEffect)
+        this.enactAllEffects();
 
         const currentPlayer = this.turnManager.getCurrentPlayer();
         if (!currentPlayer) {
@@ -501,6 +824,21 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         console.log(`Ending turn for ${this.turnManager.getCurrentPlayer().nickname}.`);
         this.emitEvent('turnEnded', { gameState: this.gameState });
 
+        // Flag to track if a repeat turn was requested
+        let repeatTurnRequested = false;
+        const repeatTurnHandler = () => {
+            repeatTurnRequested = true;
+        };
+
+        // Temporarily listen for repeat turn event
+        this.eventBus.on('effect:repeat_turn', repeatTurnHandler);
+
+        // Enact all effects that trigger during END_TURN phase (e.g., RepeatTurnsEffect)
+        this.enactAllEffects();
+
+        // Remove the temporary listener
+        this.eventBus.off('effect:repeat_turn', repeatTurnHandler);
+
         // Stop timer
         this.stopTimer();
 
@@ -525,9 +863,15 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         }
 
         if (this.isClientTurn()) {
-            // Move to next player's turn
-            this.turnManager.nextTurn();
-            this.changePhase({ newTurnPhase: TurnPhases.CHANGE_TURN, delay: 0 });
+            if (repeatTurnRequested) {
+                // Repeat the turn - go back to BEGIN_TURN phase without advancing player
+                console.log(`${currentPlayer.nickname} gets another turn!`);
+                this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 });
+            } else {
+                // Move to next player's turn
+                this.turnManager.nextTurn();
+                this.changePhase({ newTurnPhase: TurnPhases.CHANGE_TURN, delay: 0 });
+            }
         }
     }
 
@@ -619,8 +963,8 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
      * @param {Array} targetSpaces - Available spaces to move to
      */
     waitForChoice(currentPlayer, targetSpaces) {
+        // Legacy UI controller path
         if (this.uiController) {
-            // Legacy UI controller path
             this.uiController.highlightSpaces(targetSpaces);
             this.uiController.setupSpaceClickHandlers(targetSpaces, (selectedSpace) => {
                 this.gameState.movePlayer(selectedSpace.id);
@@ -634,7 +978,27 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             return;
         }
 
-        if (this.uiSystem) {
+        // New component registry path
+        // Check if we have a board interaction component
+        const boardInteraction = this.getUIComponent('boardInteraction');
+        if (boardInteraction && boardInteraction.setupSpaceSelection) {
+            boardInteraction.setupSpaceSelection(targetSpaces, (selectedSpace) => {
+                this.gameState.movePlayer(selectedSpace.id);
+                console.log(`${currentPlayer.nickname} chose to move to space ${selectedSpace.id}`);
+                this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
+                    type: 'movement',
+                    metadata: { spaceId: selectedSpace.id, selected: true }
+                });
+                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
+            });
+            return;
+        }
+
+        // Direct DOM manipulation (current approach with UISystem or when no UI components)
+        // Check if we have any UI available (UISystem or UIComponentRegistry)
+        const hasUI = this.uiSystem || !this.isHeadless();
+
+        if (hasUI) {
             this.cleanupActiveSpaceChoice();
 
             const handlers = new Map();
@@ -671,13 +1035,14 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             return;
         }
 
-        console.warn('Board interaction not available - auto-selecting first space');
+        // Headless mode - auto-select first space
+        console.log('[Headless] Auto-selecting first space');
         if (targetSpaces.length > 0) {
             const selectedSpace = targetSpaces[0];
             this.gameState.movePlayer(selectedSpace.id);
             this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
                 type: 'movement',
-                metadata: { spaceId: selectedSpace.id, selected: true }
+                metadata: { spaceId: selectedSpace.id, selected: true, autoSelected: true }
             });
             this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
         }

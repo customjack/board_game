@@ -20,7 +20,7 @@ export default class SkipTurnEffect extends PlayerEffect {
 
     enact(gameEngine) {
         const currentPlayer = gameEngine.gameState.getCurrentPlayer();
-        if (currentPlayer.playerId === this.playerIdToSkip &&
+        if (currentPlayer.id === this.playerIdToSkip &&
             gameEngine.gameState.turnPhase === TurnPhases.CHANGE_TURN) {
             if (this.duration <= 0) {
                 currentPlayer.setState(PlayerStates.PLAYING);

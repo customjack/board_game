@@ -26,6 +26,7 @@
 @import 'components/settings.css';
 @import 'components/settings-modal.css';
 @import 'components/plugin-manager.css';
+@import 'components/player-modals.css';
 
 @import 'animations.css';
 
@@ -33,3 +34,13 @@
 @import 'themes/light.css';
 @import 'themes/dark.css';
 @import 'themes/retro.css';
+.add-player-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.add-player-container .button {
+    min-width: 220px;
+    text-align: center;
+}

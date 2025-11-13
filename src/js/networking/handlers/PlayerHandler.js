@@ -34,6 +34,18 @@ export default class PlayerHandler extends MessageHandlerPlugin {
         );
 
         this.registerHandler(
+            MessageTypes.COLOR_CHANGE,
+            this.handleColorChange,
+            { description: 'Handle player color change (host only)' }
+        );
+
+        this.registerHandler(
+            MessageTypes.PEER_COLOR_CHANGE,
+            this.handlePeerColorChange,
+            { description: 'Handle peer color change (host only)' }
+        );
+
+        this.registerHandler(
             MessageTypes.REMOVE_PLAYER,
             this.handleRemovePlayer,
             { description: 'Handle player removal (host only)' }
@@ -131,6 +143,73 @@ export default class PlayerHandler extends MessageHandlerPlugin {
         const player = peer.gameState.players.find(p => p.playerId === message.playerId);
         if (player) {
             player.nickname = nicknameValidation.sanitized;
+            peer.updateAndBroadcastGameState(peer.gameState);
+        }
+    }
+
+    /**
+     * Handle player color change (Host)
+     */
+    handleColorChange(message, context) {
+        const peer = this.getPeer();
+
+        // Validate player ID
+        if (!InputValidator.validatePlayerId(message.playerId)) {
+            console.warn('Invalid player ID format in color change request');
+            return;
+        }
+
+        // Validate color format (hex color code)
+        const colorRegex = /^#[0-9A-Fa-f]{6}$/;
+        if (!colorRegex.test(message.newColor)) {
+            console.warn('Invalid color format in color change request:', message.newColor);
+            return;
+        }
+
+        const player = peer.gameState.players.find(p => p.playerId === message.playerId);
+        if (player) {
+            const settings = peer.gameState?.settings;
+            if (settings && settings.allowPlayerColorChange === false) {
+                console.warn('Ignoring player color change - host disabled this option');
+                return;
+            }
+            player.playerColor = message.newColor;
+            peer.updateAndBroadcastGameState(peer.gameState);
+        }
+    }
+
+    /**
+     * Handle peer color change (Host)
+     */
+    handlePeerColorChange(message, context) {
+        const peer = this.getPeer();
+
+        // Validate player ID
+        if (!InputValidator.validatePlayerId(message.playerId)) {
+            console.warn('Invalid player ID format in peer color change request');
+            return;
+        }
+
+        // Validate color format (hex color code)
+        const colorRegex = /^#[0-9A-Fa-f]{6}$/;
+        if (!colorRegex.test(message.newPeerColor)) {
+            console.warn('Invalid color format in peer color change request:', message.newPeerColor);
+            return;
+        }
+
+        const player = peer.gameState.players.find(p => p.playerId === message.playerId);
+        if (player) {
+            const { peerId } = player;
+            const settings = peer.gameState?.settings;
+            if (settings && settings.allowPeerColorChange === false) {
+                console.warn('Ignoring peer color change - host disabled this option');
+                return;
+            }
+            peer.gameState.players.forEach(p => {
+                if (p.peerId === peerId) {
+                    p.peerColor = message.newPeerColor;
+                }
+            });
             peer.updateAndBroadcastGameState(peer.gameState);
         }
     }

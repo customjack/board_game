@@ -96,8 +96,15 @@
 
 .plugin-status {
     font-size: 0.85em;
-    color: var(--color-success, #28a745);
     font-weight: 500;
+}
+
+.plugin-status.enabled {
+    color: var(--color-success, #28a745);
+}
+
+.plugin-status.disabled {
+    color: var(--color-danger, #dc3545);
 }
 
 /* Custom Toggle Switch for Plugin Manager */
@@ -139,7 +146,7 @@
     background-color: white;
     transition: 0.3s;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-small, 0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .plugin-toggle-button.active {
