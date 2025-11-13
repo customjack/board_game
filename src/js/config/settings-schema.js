@@ -96,7 +96,7 @@ export const GAME_SETTINGS_SCHEMA = [
     {
         id: 'turnTimer',
         type: SETTING_TYPES.NUMBER,
-        label: 'Turn Timer Duration',
+        label: 'Turn Timer Duration (s)',
         description: 'Time limit per turn in seconds',
         defaultValue: 150,
         category: SETTING_CATEGORIES.TIMING,
