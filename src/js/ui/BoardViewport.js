@@ -85,7 +85,10 @@ export default class BoardViewport {
 
     onMouseDown(e) {
         // Only pan if clicking on board surface, not on spaces/buttons
-        if (e.target.classList.contains('space') || e.target.closest('.space')) {
+        if (e.target.classList.contains('space') ||
+            e.target.classList.contains('board-space') ||
+            e.target.closest('.space') ||
+            e.target.closest('.board-space')) {
             return; // Let spaces handle their own clicks
         }
 
