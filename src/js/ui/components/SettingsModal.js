@@ -35,6 +35,14 @@ export default class SettingsModal extends BaseUIComponent {
 
         // Modal element reference
         this.modalElement = null;
+        this.applyButton = null;
+
+        // Pending values mirror current inputs so switching tabs preserves edits
+        this.pendingValues = this.settings ? this.extractValues(this.settings) : null;
+
+        // Track pending changes
+        this.dirtySettings = new Set();
+        this.isDirty = false;
     }
 
     /**
@@ -87,8 +95,10 @@ export default class SettingsModal extends BaseUIComponent {
             applyButton.className = 'button settings-modal-apply';
             applyButton.textContent = 'Apply Settings';
             applyButton.id = 'settingsModalApplyButton';
+            applyButton.disabled = true;
             applyButton.addEventListener('click', () => this.applySettings());
             headerButtons.appendChild(applyButton);
+            this.applyButton = applyButton;
         }
 
         const closeButton = document.createElement('button');
@@ -232,6 +242,9 @@ export default class SettingsModal extends BaseUIComponent {
             const row = this.createSettingRow(settingSchema);
             content.appendChild(row);
         });
+
+        // Re-apply any staged values so switching tabs doesn't reset inputs
+        this.applyValuesToInputs(this.pendingValues || this.extractValues(this.settings) || {});
     }
 
     /**
@@ -413,11 +426,9 @@ export default class SettingsModal extends BaseUIComponent {
         // Update dependency visibility
         this.updateDependencies(settingId);
 
-        // Call onChange callback if provided
-        if (this.onChange) {
-            const value = this.getValue(settingId);
-            this.onChange(settingId, value);
-        }
+        const value = this.getValue(settingId);
+        this.storePendingValue(settingId, value);
+        this.updateDirtyForSetting(settingId, value);
     }
 
     /**
@@ -499,6 +510,36 @@ export default class SettingsModal extends BaseUIComponent {
     }
 
     /**
+     * Apply a values object to existing inputs
+     * @param {Object} values - Map of settingId -> value
+     */
+    applyValuesToInputs(values = {}) {
+        if (!values) return;
+        GAME_SETTINGS_SCHEMA.forEach(schema => {
+            if (values[schema.id] !== undefined) {
+                this.setValue(schema.id, values[schema.id]);
+            }
+        });
+    }
+
+    /**
+     * Extract plain values from a settings object or POJO
+     * @param {Object} source - Source settings
+     * @returns {Object} Plain values
+     */
+    extractValues(source = {}) {
+        const values = {};
+        GAME_SETTINGS_SCHEMA.forEach(schema => {
+            if (source && source[schema.id] !== undefined) {
+                values[schema.id] = source[schema.id];
+            } else {
+                values[schema.id] = schema.defaultValue;
+            }
+        });
+        return values;
+    }
+
+    /**
      * Update all settings from a Settings object
      * @param {Object} settings - Settings object or plain object
      */
@@ -511,6 +552,8 @@ export default class SettingsModal extends BaseUIComponent {
                 this.setValue(schema.id, value);
             }
         });
+
+        this.resetDirtyState();
     }
 
     /**
@@ -571,6 +614,10 @@ export default class SettingsModal extends BaseUIComponent {
             return;
         }
 
+        if (this.dirtySettings.size === 0) {
+            return;
+        }
+
         // Get all current values
         const allValues = this.getAllValues();
 
@@ -582,6 +629,73 @@ export default class SettingsModal extends BaseUIComponent {
                 this.onChange(schema.id, value);
             }
         });
+
+        this.resetDirtyState();
+    }
+
+    /**
+     * Store staged value for a setting
+     * @param {string} settingId
+     * @param {any} value
+     */
+    storePendingValue(settingId, value) {
+        if (!this.pendingValues) {
+            this.pendingValues = this.extractValues(this.settings || {});
+        }
+        this.pendingValues[settingId] = value;
+    }
+
+    /**
+     * Update dirty state for a specific setting
+     * @param {string} settingId
+     * @param {any} newValue
+     */
+    updateDirtyForSetting(settingId, newValue) {
+        if (!this.isHost) {
+            return;
+        }
+
+        const currentValue = this.settings ? this.settings[settingId] : undefined;
+
+        if (this.valuesAreEqual(newValue, currentValue)) {
+            this.dirtySettings.delete(settingId);
+        } else {
+            this.dirtySettings.add(settingId);
+        }
+
+        this.updateDirtyState();
+    }
+
+    /**
+     * Reset dirty tracking and disable Apply button
+     */
+    resetDirtyState() {
+        this.dirtySettings.clear();
+        this.updateDirtyState();
+    }
+
+    /**
+     * Update internal dirty flag and Apply button state
+     */
+    updateDirtyState() {
+        this.isDirty = this.dirtySettings.size > 0;
+        if (this.applyButton) {
+            this.applyButton.disabled = !this.isDirty;
+        }
+    }
+
+    /**
+     * Compare two values for equality
+     * @param {any} a
+     * @param {any} b
+     * @returns {boolean}
+     */
+    valuesAreEqual(a, b) {
+        if (Number.isNaN(a) && Number.isNaN(b)) {
+            return true;
+        }
+
+        return a === b;
     }
 
     /**
