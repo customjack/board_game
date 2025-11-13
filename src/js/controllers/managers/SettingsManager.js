@@ -52,8 +52,6 @@ export default class SettingsManager {
      * @param {any} value - New value
      */
     handleSettingChange(settingId, value) {
-        console.log(`Setting changed: ${settingId} = ${value}`);
-
         // Notify callback if set
         if (this.onChangeCallback) {
             this.onChangeCallback();
