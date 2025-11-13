@@ -26,6 +26,7 @@ export default class BaseEventHandler {
         this.settingsManager = null;
 
         this.peer = null; // This will be either client or host depending on the role
+        this.handleTroublePieceSelection = this.handleTroublePieceSelection.bind(this);
     }
 
     init() {
@@ -56,6 +57,7 @@ export default class BaseEventHandler {
             hostPeerId: hostPeerId
         });
         this.uiSystem.init();
+        this.eventBus.on('trouble:uiSelectPiece', this.handleTroublePieceSelection);
 
         // Initialize remaining managers
         this.setPieceManagerType('standard');
@@ -294,6 +296,18 @@ export default class BaseEventHandler {
 
         this.pieceManager = new ManagerClass({ eventBus: this.eventBus });
         this.pieceManagerType = type;
+    }
+
+    handleTroublePieceSelection({ playerId, pieceIndex }) {
+        if (!this.gameEngine || typeof this.gameEngine.onPlayerAction !== 'function') {
+            return;
+        }
+
+        if (this.isHost) {
+            this.gameEngine.onPlayerAction(playerId, 'SELECT_PIECE', { pieceIndex });
+        } else {
+            console.warn('Piece selection from clients is not yet synchronized with the host.');
+        }
     }
 
     /**

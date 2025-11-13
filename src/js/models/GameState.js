@@ -31,6 +31,7 @@ export default class GameState {
         this._version = 0;
         this._timestamp = Date.now();
         this._currentPlayerOverride = null;
+        this.pluginState = {};
     }
 
     /**
@@ -355,6 +356,7 @@ export default class GameState {
             randomGenerator: this.randomGenerator.toJSON(), // Serialize the random generator
             selectedMapId: this.selectedMapId,
             selectedMapData: this.selectedMapData,
+            pluginState: this.pluginState,
             _version: this._version,
             _timestamp: this._timestamp
         };
@@ -373,6 +375,7 @@ export default class GameState {
         gameState.remainingMoves = json.remainingMoves;
         gameState.turnPhase = json.turnPhase;
         gameState.gamePhase = json.gamePhase;
+        gameState.pluginState = json.pluginState || {};
 
         // Restore version tracking
         gameState._version = json._version || 0;

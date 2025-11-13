@@ -238,7 +238,14 @@ export default class TroubleGameEngine extends BaseGameEngine {
             options: moveOptions
         };
         this.gameState.turnPhase = TurnPhases.PLAYER_CHOOSING_DESTINATION;
-        this.emitStateUpdate({ awaitingSelection: true, roll });
+        const selectablePieces = moveOptions.map(option => {
+            const piece = this.getPlayerPiece(player.playerId, option.pieceIndex);
+            return {
+                pieceIndex: option.pieceIndex,
+                pieceId: piece?.id || `${player.playerId}-piece-${option.pieceIndex}`
+            };
+        });
+        this.emitStateUpdate({ awaitingSelection: true, roll, selectablePieces });
         return {
             success: true,
             data: {
@@ -492,6 +499,12 @@ export default class TroubleGameEngine extends BaseGameEngine {
         return `home-${playerIndex}-${pieceIndex}`;
     }
 
+    getPlayerPiece(playerId, pieceIndex) {
+        const state = this.playerState.get(playerId);
+        if (!state) return null;
+        return state.pieces[pieceIndex] || null;
+    }
+
     serializeState() {
         const pieces = [];
         for (const [playerId, state] of this.playerState.entries()) {
@@ -517,11 +530,22 @@ export default class TroubleGameEngine extends BaseGameEngine {
     }
 
     emitStateUpdate(extra = {}) {
+        const state = {
+            ...this.serializeState(),
+            ...extra
+        };
+
         this.emitEvent('trouble:stateUpdated', {
-            troubleState: {
-                ...this.serializeState(),
-                ...extra
-            }
+            troubleState: state
         });
+
+        if (this.isHost) {
+            if (!this.gameState.pluginState) {
+                this.gameState.pluginState = {};
+            }
+            this.gameState.pluginState.trouble = state;
+            this.gameState.incrementVersion();
+            this.proposeStateChange(this.gameState);
+        }
     }
 }

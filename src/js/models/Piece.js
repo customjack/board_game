@@ -67,6 +67,13 @@ export default class Piece {
         this.element.style.left = `calc(50% + ${offsetX}px - 15px)`;
         this.element.style.top = `calc(50% + ${offsetY}px - 15px)`;
         this.element.innerText = this.data.label;
+        if (this.data.isSelectable) {
+            this.element.style.boxShadow = '0 0 10px 2px rgba(255,255,255,0.8)';
+            this.element.style.cursor = 'pointer';
+        } else {
+            this.element.style.boxShadow = '';
+            this.element.style.cursor = 'default';
+        }
 
         // Append the piece to the space element if not already appended
         if (!this.element.parentElement || this.element.parentElement !== spaceElement) {
@@ -79,7 +86,9 @@ export default class Piece {
      * Handles click interactions on the piece.
      */
     handlePieceClick() {
-        // Add logic here for interactions, like displaying player info
+        if (typeof this.data?.onSelect === 'function') {
+            this.data.onSelect(this.data);
+        }
     }
 
     /**

@@ -19,7 +19,9 @@ export default class TroublePieceManager extends BasePieceManager {
     }
 
     buildRenderablePieces(gameState) {
-        if (!this.troubleState?.pieces) {
+        const troubleState = this.troubleState || gameState?.pluginState?.trouble;
+
+        if (!troubleState?.pieces) {
             const players = Array.isArray(gameState?.players) ? gameState.players : [];
             return players.map(player => ({
                 id: player.playerId,
@@ -31,22 +33,41 @@ export default class TroublePieceManager extends BasePieceManager {
             }));
         }
 
-        const players = new Map(
-            (gameState?.players || []).map(player => [player.playerId, player])
+        const players = new Map((gameState?.players || []).map(player => [player.playerId, player]));
+        const selectableIds = new Map(
+            (troubleState.selectablePieces || []).map(item => [item.pieceId, item])
         );
+        const currentPlayerId = troubleState.currentPlayerId;
 
-        return this.troubleState.pieces.map(pieceState => {
+        return troubleState.pieces.map(pieceState => {
             const owner = players.get(pieceState.playerId);
             const nickname = owner?.nickname || pieceState.playerId;
             const label = String((pieceState.pieceIndex ?? 0) + 1);
-            return {
+            const isSelectable =
+                selectableIds.has(pieceState.id) &&
+                currentPlayerId === pieceState.playerId;
+
+            const snapshot = {
                 id: pieceState.id || `${pieceState.playerId}-${pieceState.pieceIndex}`,
                 playerId: pieceState.playerId,
                 nickname: `${nickname} ${label}`,
                 label,
                 playerColor: owner?.playerColor || '#fbbf24',
-                spaceId: pieceState.spaceId || null
+                spaceId: pieceState.spaceId || null,
+                isSelectable
             };
+
+            if (isSelectable) {
+                const { pieceIndex } = selectableIds.get(pieceState.id) || {};
+                snapshot.onSelect = () => {
+                    this.eventBus?.emit('trouble:uiSelectPiece', {
+                        playerId: pieceState.playerId,
+                        pieceIndex: pieceIndex ?? pieceState.pieceIndex ?? 0
+                    });
+                };
+            }
+
+            return snapshot;
         });
     }
 }
