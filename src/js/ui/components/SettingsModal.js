@@ -296,7 +296,11 @@ export default class SettingsModal extends BaseUIComponent {
             ? this.createInputElement(schema)
             : this.createDisplayElement(schema);
 
-        this.elements.set(schema.id, inputElement);
+        const elementToStore = this.isHost && schema.type === SETTING_TYPES.BOOLEAN
+            ? inputElement.querySelector('input') || inputElement
+            : inputElement;
+
+        this.elements.set(schema.id, elementToStore);
         row.appendChild(inputElement);
 
         return row;
