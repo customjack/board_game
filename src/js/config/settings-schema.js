@@ -64,6 +64,26 @@ export const GAME_SETTINGS_SCHEMA = [
         readonly: false
     },
     {
+        id: 'allowPlayerColorChange',
+        type: SETTING_TYPES.BOOLEAN,
+        label: 'Allow Player Color Changes',
+        description: 'Players can adjust their own piece colors',
+        defaultValue: true,
+        category: SETTING_CATEGORIES.PLAYERS,
+        constraints: {},
+        readonly: false
+    },
+    {
+        id: 'allowPeerColorChange',
+        type: SETTING_TYPES.BOOLEAN,
+        label: 'Allow Border Color Changes',
+        description: 'Players can adjust their own border colors',
+        defaultValue: true,
+        category: SETTING_CATEGORIES.PLAYERS,
+        constraints: {},
+        readonly: false
+    },
+    {
         id: 'turnTimerEnabled',
         type: SETTING_TYPES.BOOLEAN,
         label: 'Enable Turn Timer',
@@ -94,7 +114,7 @@ export const GAME_SETTINGS_SCHEMA = [
     {
         id: 'moveDelay',
         type: SETTING_TYPES.NUMBER,
-        label: 'Move Animation Delay',
+        label: 'Move Animation Delay (ms)',
         description: 'Delay between move animations in milliseconds',
         defaultValue: 300,
         category: SETTING_CATEGORIES.UI,
@@ -108,7 +128,7 @@ export const GAME_SETTINGS_SCHEMA = [
     {
         id: 'modalTimeoutSeconds',
         type: SETTING_TYPES.NUMBER,
-        label: 'Modal Auto-Dismiss',
+        label: 'Modal Auto-Dismiss (s)',
         description: 'Automatically dismiss modals after X seconds (0 = disabled)',
         defaultValue: 15,
         category: SETTING_CATEGORIES.UI,
