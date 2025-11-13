@@ -1,6 +1,5 @@
 import BaseEventHandler from './BaseEventHandler.js';
 import Host from '../networking/Host.js';
-import GameEngineFactory from '../factories/GameEngineFactory.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
 import ModalUtil from '../utils/ModalUtil.js';
 import UIBinder from './UIBinder.js';
@@ -165,25 +164,7 @@ export default class HostEventHandler extends BaseEventHandler {
         }
 
         // Create game engine using factory
-        const engineStart = performance.now();
-        this.gameEngine = GameEngineFactory.create({
-            gameState: this.peer.gameState,
-            peerId: this.peer.peer.id,
-            proposeGameState: (proposedGameState) => this.peer.updateAndBroadcastGameState(proposedGameState),
-            eventBus: this.eventBus,
-            registryManager: this.registryManager,
-            factoryManager: this.factoryManager,
-            isHost: true,
-            uiSystem: this.uiSystem,
-            gameLogManager: this.uiSystem.gameLogManager
-        });
-        console.log(`[Performance] Game engine created in ${(performance.now() - engineStart).toFixed(0)}ms`);
-
-        const pieceManagerType =
-            this.gameEngine?.getPieceManagerType?.() ||
-            this.gameEngine?.getEngineType?.() ||
-            'standard';
-        this.setPieceManagerType(pieceManagerType);
+        this.createGameEngine((proposedGameState) => this.peer.updateAndBroadcastGameState(proposedGameState));
 
         progressTracker.nextStage();
         progressTracker.complete();
@@ -317,6 +298,9 @@ export default class HostEventHandler extends BaseEventHandler {
         if (this.peer) {
             this.peer.broadcastStartGame();
         }
+
+        // Re-create engine to honor latest board configuration
+        this.createGameEngine();
 
         // Show game page first so DOM elements are available
         this.showPage("gamePage");

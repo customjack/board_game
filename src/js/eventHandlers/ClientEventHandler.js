@@ -1,6 +1,5 @@
 import BaseEventHandler from './BaseEventHandler.js';
 import Client from '../networking/Client.js';
-import GameEngineFactory from '../factories/GameEngineFactory.js';
 import TimerAnimation from '../animations/TimerAnimation.js';
 import ModalUtil from '../utils/ModalUtil.js';
 import UIBinder from './UIBinder.js';
@@ -111,25 +110,7 @@ export default class ClientEventHandler extends BaseEventHandler {
         }
 
         // Create game engine using factory
-        const engineStart = performance.now();
-        this.gameEngine = GameEngineFactory.create({
-            gameState: this.peer.gameState,
-            peerId: this.peer.peer.id,
-            proposeGameState: (proposedGameState) => this.peer.proposeGameState(proposedGameState),
-            eventBus: this.eventBus,
-            registryManager: this.registryManager,
-            factoryManager: this.factoryManager,
-            isHost: false,
-            uiSystem: this.uiSystem,
-            gameLogManager: this.uiSystem.gameLogManager
-        });
-        console.log(`[Performance] Game engine created in ${(performance.now() - engineStart).toFixed(0)}ms`);
-
-        const pieceManagerType =
-            this.gameEngine?.getPieceManagerType?.() ||
-            this.gameEngine?.getEngineType?.() ||
-            'standard';
-        this.setPieceManagerType(pieceManagerType);
+        this.createGameEngine((proposedGameState) => this.peer.proposeGameState(proposedGameState));
 
         progressTracker.nextStage();
         progressTracker.complete();
@@ -162,6 +143,9 @@ export default class ClientEventHandler extends BaseEventHandler {
 
         // Switch UI context to game page
         this.uiSystem.switchContext('game');
+
+        // Re-create engine to ensure correct board-specific implementation
+        this.createGameEngine((proposedGameState) => this.peer.proposeGameState(proposedGameState));
 
         // Initialize game engine after page is shown
         this.gameEngine.init();

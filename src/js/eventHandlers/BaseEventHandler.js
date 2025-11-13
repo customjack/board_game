@@ -2,6 +2,7 @@ import UISystem from '../ui/UISystem.js';
 import PieceManager from '../controllers/managers/PieceManager';
 import SettingsManager from '../controllers/managers/SettingsManager';
 import ModalUtil from '../utils/ModalUtil.js';
+import GameEngineFactory from '../factories/GameEngineFactory.js';
 
 export default class BaseEventHandler {
     constructor(isHost, registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
@@ -25,6 +26,7 @@ export default class BaseEventHandler {
         this.pieceManagerType = 'standard';
         this.settingsManager = null;
 
+        this.gameEngine = null;
         this.peer = null; // This will be either client or host depending on the role
         this.handleTroublePieceSelection = this.handleTroublePieceSelection.bind(this);
     }
@@ -308,6 +310,54 @@ export default class BaseEventHandler {
         } else {
             console.warn('Piece selection from clients is not yet synchronized with the host.');
         }
+    }
+
+    createGameEngine(proposeGameStateFn) {
+        if (!this.peer?.gameState || !this.peer?.peer?.id) {
+            return null;
+        }
+
+        const proposer = proposeGameStateFn || this.buildDefaultProposeStateFn();
+        if (typeof proposer !== 'function') {
+            throw new Error('proposeGameState function is required to create a game engine');
+        }
+
+        if (this.gameEngine?.cleanup) {
+            try {
+                this.gameEngine.cleanup();
+            } catch (error) {
+                console.error('Error cleaning up previous game engine:', error);
+            }
+        }
+
+        const engineStart = performance.now();
+        this.gameEngine = GameEngineFactory.create({
+            gameState: this.peer.gameState,
+            peerId: this.peer.peer.id,
+            proposeGameState: proposer,
+            eventBus: this.eventBus,
+            registryManager: this.registryManager,
+            factoryManager: this.factoryManager,
+            isHost: this.isHost,
+            uiSystem: this.uiSystem,
+            gameLogManager: this.uiSystem?.gameLogManager
+        });
+        console.log(`[Performance] Game engine created in ${(performance.now() - engineStart).toFixed(0)}ms`);
+
+        const pieceManagerType =
+            this.gameEngine?.getPieceManagerType?.() ||
+            this.gameEngine?.getEngineType?.() ||
+            'standard';
+        this.setPieceManagerType(pieceManagerType);
+
+        return this.gameEngine;
+    }
+
+    buildDefaultProposeStateFn() {
+        if (this.isHost) {
+            return (newState) => this.peer?.updateAndBroadcastGameState?.(newState);
+        }
+        return (newState) => this.peer?.proposeGameState?.(newState);
     }
 
     /**
