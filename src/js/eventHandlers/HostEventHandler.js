@@ -54,6 +54,20 @@ export default class HostEventHandler extends BaseEventHandler {
         // Bind all actions at once
         this.actionRegistry.bindAll(this.listenerRegistry, this.uiBinder);
 
+        // Listen for plugin state changes and broadcast to clients
+        this.eventBus.on('pluginStateChanged', (data) => {
+            if (this.peer && this.peer.connections) {
+                // Broadcast to all connected clients
+                this.peer.connections.forEach(conn => {
+                    conn.send({
+                        type: 'pluginStateUpdate',
+                        pluginStates: data.pluginStates
+                    });
+                });
+                console.log('[Host] Broadcasting plugin state update to clients:', data.pluginStates);
+            }
+        });
+
         // Settings callback will be set up after managers are initialized
     }
 
@@ -316,15 +330,45 @@ export default class HostEventHandler extends BaseEventHandler {
 
     /**
      * Add host-specific player list listeners (kick button)
-     * Common listeners (edit, remove) are handled by BaseEventHandler
+     * @deprecated Old DOM-based listener system
      */
     addRoleSpecificPlayerListeners() {
-        // Register click listener for kick buttons (host only)
-        document.querySelectorAll('.kick-button').forEach((button) => {
-            const playerId = button.getAttribute('data-playerId');
-            this.listenerRegistry.registerListener(button.id, 'click', () => {
-                this.confirmAndKickPlayer(playerId);
-            });
+        // Old button-based system has been replaced by PlayerListComponent events
+    }
+
+    /**
+     * Setup host-specific PlayerListComponent event listeners
+     * @override
+     */
+    setupRoleSpecificPlayerListComponentListeners(playerListComponent) {
+        // Listen for host nickname change event
+        playerListComponent.on('hostNicknameChange', ({ playerId, newNickname }) => {
+            const player = this.peer.gameState.players.find(p => p.playerId === playerId);
+            if (player) {
+                this.applyPlayerNameChange(playerId, player, newNickname);
+            }
+        });
+
+        playerListComponent.on('hostColorChange', ({ playerId, newColor }) => {
+            const player = this.peer.gameState.players.find(p => p.playerId === playerId);
+            if (player) {
+                this.applyPlayerColorChange(playerId, player, newColor);
+            }
+        });
+
+        playerListComponent.on('hostPeerColorChange', ({ playerId, newPeerColor }) => {
+            const player = this.peer.gameState.players.find(p => p.playerId === playerId);
+            if (player) {
+                this.applyPeerColorChange(playerId, player, newPeerColor);
+            }
+        });
+
+        // Listen for kick player event (confirmation already handled by modal)
+        playerListComponent.on('kickPlayer', ({ playerId }) => {
+            const player = this.peer.gameState.players.find(p => p.playerId === playerId);
+            if (player) {
+                this.peer.kickPlayer(player.peerId);
+            }
         });
     }
     
@@ -347,6 +391,37 @@ export default class HostEventHandler extends BaseEventHandler {
      */
     async applyPlayerNameChange(_playerId, player, newName) {
         player.nickname = newName;
+        this.updateGameState();
+        this.peer.broadcastGameState();
+    }
+
+    /**
+     * Host implementation: Update color locally and broadcast
+     */
+    async applyPlayerColorChange(_playerId, player, newColor) {
+        player.playerColor = newColor;
+        this.updateGameState();
+        this.peer.broadcastGameState();
+    }
+
+    /**
+     * Host implementation: Update peer color locally and broadcast
+     */
+    async applyPeerColorChange(_playerId, player, newPeerColor) {
+        const targetPeerId = player.peerId;
+
+        this.peer.gameState.players.forEach(p => {
+            if (p.peerId === targetPeerId) {
+                p.peerColor = newPeerColor;
+            }
+        });
+
+        this.peer.ownedPlayers
+            .filter(p => p.peerId === targetPeerId)
+            .forEach(p => {
+                p.peerColor = newPeerColor;
+            });
+
         this.updateGameState();
         this.peer.broadcastGameState();
     }

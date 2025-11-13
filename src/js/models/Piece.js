@@ -63,7 +63,6 @@ export default class Piece {
      * Handles click interactions on the piece.
      */
     handlePieceClick() {
-        console.log(`Piece clicked: ${this.player.nickname}`);
         // Add logic here for interactions, like displaying player info
     }
 

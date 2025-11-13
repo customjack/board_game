@@ -37,7 +37,8 @@ export default class SettingsModal extends BaseUIComponent {
         this.modalElement = null;
         this.applyButton = null;
 
-        // Pending values mirror current inputs so switching tabs preserves edits
+        // Snapshots for dirty tracking/tab persistence
+        this.originalValues = this.settings ? this.extractValues(this.settings) : {};
         this.pendingValues = this.settings ? this.extractValues(this.settings) : null;
 
         // Track pending changes
@@ -296,9 +297,15 @@ export default class SettingsModal extends BaseUIComponent {
             ? this.createInputElement(schema)
             : this.createDisplayElement(schema);
 
-        const elementToStore = this.isHost && schema.type === SETTING_TYPES.BOOLEAN
-            ? inputElement.querySelector('input') || inputElement
-            : inputElement;
+        let elementToStore = inputElement;
+
+        if (this.isHost) {
+            if (schema.type === SETTING_TYPES.BOOLEAN) {
+                elementToStore = inputElement.querySelector('input') || inputElement;
+            } else if (inputElement && inputElement.__inputRef) {
+                elementToStore = inputElement.__inputRef;
+            }
+        }
 
         this.elements.set(schema.id, elementToStore);
         row.appendChild(inputElement);
@@ -316,7 +323,7 @@ export default class SettingsModal extends BaseUIComponent {
 
         switch (schema.type) {
             case SETTING_TYPES.NUMBER:
-            case SETTING_TYPES.RANGE:
+            case SETTING_TYPES.RANGE: {
                 input = document.createElement('input');
                 input.type = schema.type === SETTING_TYPES.RANGE ? 'range' : 'number';
                 input.className = 'input settings-input';
@@ -336,7 +343,22 @@ export default class SettingsModal extends BaseUIComponent {
                 // Add change listener
                 input.addEventListener('change', () => this.handleInputChange(schema.id));
                 input.addEventListener('input', () => this.handleInputChange(schema.id));
+
+                if (schema.unit) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'settings-input-wrapper';
+                    wrapper.appendChild(input);
+
+                    const unitLabel = document.createElement('span');
+                    unitLabel.className = 'settings-input-unit';
+                    unitLabel.textContent = schema.unit;
+                    wrapper.appendChild(unitLabel);
+
+                    wrapper.__inputRef = input;
+                    return wrapper;
+                }
                 break;
+            }
 
             case SETTING_TYPES.BOOLEAN:
                 const checkboxContainer = document.createElement('div');
@@ -549,6 +571,8 @@ export default class SettingsModal extends BaseUIComponent {
      */
     updateFromSettings(settings) {
         this.settings = settings;
+        this.originalValues = this.extractValues(settings);
+        this.pendingValues = this.extractValues(settings);
 
         GAME_SETTINGS_SCHEMA.forEach(schema => {
             const value = settings[schema.id];
@@ -644,7 +668,7 @@ export default class SettingsModal extends BaseUIComponent {
      */
     storePendingValue(settingId, value) {
         if (!this.pendingValues) {
-            this.pendingValues = this.extractValues(this.settings || {});
+            this.pendingValues = { ...(this.originalValues || {}) };
         }
         this.pendingValues[settingId] = value;
     }
@@ -659,7 +683,7 @@ export default class SettingsModal extends BaseUIComponent {
             return;
         }
 
-        const currentValue = this.settings ? this.settings[settingId] : undefined;
+        const currentValue = this.originalValues ? this.originalValues[settingId] : undefined;
 
         if (this.valuesAreEqual(newValue, currentValue)) {
             this.dirtySettings.delete(settingId);

@@ -7,7 +7,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--modal-backdrop, rgba(0, 0, 0, 0.6));
   display: flex;
   justify-content: center;
   align-items: center;
@@ -18,7 +18,7 @@
 .settings-modal-container {
   background-color: var(--background-modal, #ffffff);
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--modal-shadow, 0 4px 20px rgba(0, 0, 0, 0.3));
   width: 900px;
   height: 600px;
   display: flex;
@@ -155,7 +155,7 @@
   justify-content: space-between;
   padding: calc(var(--spacing-unit) * 1.5) 0;
   gap: calc(var(--spacing-unit) * 2);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border-light, rgba(0, 0, 0, 0.05));
 }
 
 .settings-modal-content .settings-row:last-child {
@@ -179,6 +179,19 @@
   flex: 0 0 auto;
   min-width: 100px;
   max-width: 200px;
+}
+
+.settings-input-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing-unit) * 0.75);
+}
+
+.settings-input-unit {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  min-width: 48px;
+  text-transform: lowercase;
 }
 
 .settings-modal-content .settings-display {

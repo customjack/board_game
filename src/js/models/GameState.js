@@ -81,6 +81,12 @@ export default class GameState {
             player = new Player(peerIdOrPlayer, nickname, this.factoryManager, isHost, playerId);
         }
 
+        // Ensure peer border color is shared across all players belonging to the same peer
+        const existingPeerPlayer = this.players.find(p => p.peerId === player.peerId);
+        if (existingPeerPlayer && existingPeerPlayer.peerColor) {
+            player.peerColor = existingPeerPlayer.peerColor;
+        }
+
         // Ensure they don't get extra turns when they first join
         player.setTurnsTaken(this.getTurnNumber() - 1);
 
@@ -233,7 +239,6 @@ export default class GameState {
     
         // If the player has no movement history (first time moving), add their initial space
         if (currentPlayer.movementHistory.isEmpty()) {
-            console.log(`${currentPlayer.nickname} starts at space ${spaceId}`);
             currentPlayer.movementHistory.addMove(this.getTurnNumber(), currentPlayer.currentSpaceId, this.remainingMoves);
         }
     
@@ -272,7 +277,6 @@ export default class GameState {
                 this.board
             );
             player.currentSpaceId = startingSpaceId;
-            console.log(`Reset ${player.nickname} to starting space ${startingSpaceId}`);
         });
     }
 

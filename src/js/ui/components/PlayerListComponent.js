@@ -379,7 +379,11 @@ export default class PlayerListComponent extends BaseUIComponent {
     }
 
     getPlayerColorPermissions(peerId) {
-        if (!this.isHost || peerId !== this.currentPlayerPeerId) {
+        const hostPeerId = this.hostPeerId || this.currentPlayerPeerId;
+        const isHostEditingOwnPlayer = this.isHost && hostPeerId && peerId === hostPeerId;
+        const isCurrentPeer = peerId === this.currentPlayerPeerId;
+
+        if (!isHostEditingOwnPlayer && (!this.isHost || !isCurrentPeer)) {
             return {
                 playerColor: this.allowPlayerColorChange,
                 peerColor: this.allowPeerColorChange

@@ -96,7 +96,7 @@ export const GAME_SETTINGS_SCHEMA = [
     {
         id: 'turnTimer',
         type: SETTING_TYPES.NUMBER,
-        label: 'Turn Timer Duration (s)',
+        label: 'Turn Timer Duration',
         description: 'Time limit per turn in seconds',
         defaultValue: 150,
         category: SETTING_CATEGORIES.TIMING,
@@ -105,6 +105,7 @@ export const GAME_SETTINGS_SCHEMA = [
             max: 300,
             step: 5
         },
+        unit: 'seconds',
         readonly: false,
         dependsOn: {
             setting: 'turnTimerEnabled',
@@ -114,7 +115,7 @@ export const GAME_SETTINGS_SCHEMA = [
     {
         id: 'moveDelay',
         type: SETTING_TYPES.NUMBER,
-        label: 'Move Animation Delay (ms)',
+        label: 'Move Animation Delay',
         description: 'Delay between move animations in milliseconds',
         defaultValue: 300,
         category: SETTING_CATEGORIES.UI,
@@ -123,12 +124,13 @@ export const GAME_SETTINGS_SCHEMA = [
             max: 5000,
             step: 50
         },
+        unit: 'ms',
         readonly: false
     },
     {
         id: 'modalTimeoutSeconds',
         type: SETTING_TYPES.NUMBER,
-        label: 'Modal Auto-Dismiss (s)',
+        label: 'Modal Auto-Dismiss',
         description: 'Automatically dismiss modals after X seconds (0 = disabled)',
         defaultValue: 15,
         category: SETTING_CATEGORIES.UI,
@@ -137,6 +139,7 @@ export const GAME_SETTINGS_SCHEMA = [
             max: 300,
             step: 5
         },
+        unit: 'seconds',
         readonly: false
     }
 ];
