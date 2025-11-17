@@ -138,10 +138,10 @@ export default class GameState {
 
         if (Number.isInteger(this._currentPlayerOverride)) {
             const overridePlayer = this.players[this._currentPlayerOverride];
+            this._currentPlayerOverride = null;
             if (overridePlayer) {
                 return overridePlayer;
             }
-            this._currentPlayerOverride = null;
         }
 
         return this.players.reduce((prev, current) => {
