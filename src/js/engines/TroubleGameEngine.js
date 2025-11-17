@@ -36,6 +36,35 @@ export default class TroubleGameEngine extends BaseGameEngine {
     init() {
         this.setupPlayerState();
 
+        // Initialize UI components (similar to TurnBasedGameEngine)
+        // Try UIComponentRegistry components (future)
+        let rollButton = this.getUIComponent('rollButton');
+        let timer = this.getUIComponent('timer');
+
+        // If not found, try UISystem components (current)
+        if (!rollButton && this.uiSystem) {
+            rollButton = this.uiSystem.getComponent('rollButton');
+        }
+        if (!timer && this.uiSystem) {
+            timer = this.uiSystem.getComponent('timer');
+        }
+
+        // Initialize roll button
+        if (rollButton && rollButton.init) {
+            rollButton.init({
+                onRollDice: () => this.handleRollDiceForCurrentPlayer(),
+                onRollComplete: (result) => this.handleAfterDiceRoll(result)
+            });
+        }
+
+        // Initialize timer
+        if (timer && timer.init) {
+            timer.init({
+                onTimerEnd: () => this.handleTimerEnd(),
+                onPauseToggle: () => this.togglePauseGame()
+            });
+        }
+
         this.gameState.gamePhase = GamePhases.IN_GAME;
         this.gameState.turnPhase = TurnPhases.WAITING_FOR_MOVE;
         this.turnIndex = 0;
@@ -44,6 +73,9 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.initialized = true;
         this.running = true;
         this.emitStateUpdate();
+
+        // Activate roll button for first player
+        this.activateRollButton();
     }
 
     start() {
@@ -164,6 +196,77 @@ export default class TroubleGameEngine extends BaseGameEngine {
             supportsRealTime: false,
             supportsTeams: false
         };
+    }
+
+    // ===== UI Helper Methods =====
+
+    handleRollDiceForCurrentPlayer() {
+        const currentPlayer = this.getActivePlayer();
+        if (!currentPlayer) return 0;
+
+        // Don't allow rolling if not this player's turn
+        if (!this.isClientTurn()) {
+            console.warn('Not your turn!');
+            return 0;
+        }
+
+        const rollResult = Math.floor(Math.random() * 6) + 1;
+        console.log(`${currentPlayer.nickname} rolled a ${rollResult}`);
+
+        this.deactivateRollButton();
+        return rollResult;
+    }
+
+    handleAfterDiceRoll(rollResult) {
+        const currentPlayer = this.getActivePlayer();
+        if (!currentPlayer) return;
+
+        // Don't process if not this player's turn
+        if (!this.isClientTurn()) {
+            return;
+        }
+
+        this.handleRoll(currentPlayer);
+    }
+
+    handleTimerEnd() {
+        // Auto-end turn when timer expires
+        const currentPlayer = this.getActivePlayer();
+        if (currentPlayer) {
+            console.log(`Time's up for ${currentPlayer.nickname}!`);
+            this.advanceTurn(false);
+        }
+    }
+
+    togglePauseGame() {
+        if (this.paused) {
+            this.resume();
+        } else {
+            this.pause();
+        }
+    }
+
+    activateRollButton() {
+        // Only activate if it's this client's turn
+        if (!this.isClientTurn()) {
+            return;
+        }
+
+        if (this.uiSystem) {
+            const btn = this.uiSystem.getComponent('rollButton');
+            if (btn && btn.activate) {
+                btn.activate();
+            }
+        }
+    }
+
+    deactivateRollButton() {
+        if (this.uiSystem) {
+            const btn = this.uiSystem.getComponent('rollButton');
+            if (btn && btn.deactivate) {
+                btn.deactivate();
+            }
+        }
     }
 
     // ===== Internal helpers =====
@@ -424,6 +527,9 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.gameState.setCurrentPlayerIndex(this.turnIndex);
         this.gameState.turnPhase = TurnPhases.WAITING_FOR_MOVE;
         this.emitStateUpdate();
+
+        // Activate roll button for the new current player
+        this.activateRollButton();
     }
 
     isEntryBlocked(playerId) {

@@ -139,7 +139,6 @@ export default class GameState {
         if (Number.isInteger(this._currentPlayerOverride)) {
             const overridePlayer = this.players[this._currentPlayerOverride];
             if (overridePlayer) {
-                this._currentPlayerOverride = null;
                 return overridePlayer;
             }
             this._currentPlayerOverride = null;
@@ -248,6 +247,10 @@ export default class GameState {
 
         this._currentPlayerOverride = index;
         return true;
+    }
+
+    clearCurrentPlayerOverride() {
+        this._currentPlayerOverride = null;
     }
 
     // Move to the next player's turn (increment their turns taken)

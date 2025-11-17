@@ -36,7 +36,8 @@ export default class MapStorageManager {
                 isBuiltIn: true,
                 path: 'assets/maps/defaultBoard.json',
                 thumbnail: null,
-                createdDate: '2024-10-28T12:00:00Z'
+                createdDate: '2024-10-28T12:00:00Z',
+                engineType: 'turn-based'
             },
             {
                 id: 'action-effect-testing',
@@ -46,7 +47,8 @@ export default class MapStorageManager {
                 isBuiltIn: true,
                 path: 'assets/maps/examples/action-effect-testing.json',
                 thumbnail: null,
-                createdDate: '2025-01-15T00:00:00Z'
+                createdDate: '2025-01-15T00:00:00Z',
+                engineType: 'turn-based'
             },
             {
                 id: 'circular-party',
@@ -56,7 +58,8 @@ export default class MapStorageManager {
                 isBuiltIn: true,
                 path: 'assets/maps/examples/test-circular-board.json',
                 thumbnail: null,
-                createdDate: '2025-01-27T00:00:00Z'
+                createdDate: '2025-01-27T00:00:00Z',
+                engineType: 'turn-based'
             },
             {
                 id: 'mini-test',
@@ -66,7 +69,8 @@ export default class MapStorageManager {
                 isBuiltIn: true,
                 path: 'assets/maps/examples/test-mini-board.json',
                 thumbnail: null,
-                createdDate: '2025-01-27T00:00:00Z'
+                createdDate: '2025-01-27T00:00:00Z',
+                engineType: 'turn-based'
             }
         ];
     }
@@ -81,7 +85,13 @@ export default class MapStorageManager {
 
         try {
             const maps = JSON.parse(stored);
-            return Array.isArray(maps) ? maps : [];
+            if (!Array.isArray(maps)) return [];
+            return maps.map(map => ({
+                ...map,
+                engineType: map.engineType ||
+                    this.getEngineType(map.boardData, map.metadata) ||
+                    'turn-based'
+            }));
         } catch (error) {
             console.error('Error parsing custom maps from localStorage:', error);
             return [];
@@ -122,6 +132,7 @@ export default class MapStorageManager {
         // Extract metadata from the map data (v2.0 format) or use provided metadata
         const sourceMetadata = mapData.metadata || {};
         const mergedMetadata = { ...sourceMetadata, ...metadata };
+        const engineType = this.getEngineType(mapData, mergedMetadata);
 
         const mapObject = {
             id,
@@ -132,13 +143,24 @@ export default class MapStorageManager {
             boardData: mapData, // Store the entire board JSON
             thumbnail: mergedMetadata.thumbnail || null,
             createdDate: mergedMetadata.created || mapData.created || new Date().toISOString(),
-            uploadedDate: new Date().toISOString()
+            uploadedDate: new Date().toISOString(),
+            metadata: mergedMetadata,
+            engineType
         };
 
         customMaps.push(mapObject);
         this.saveCustomMaps(customMaps);
 
         return mapObject;
+    }
+
+    static getEngineType(mapData = {}, metadata = {}) {
+        return metadata?.gameEngine?.type ||
+            mapData?.metadata?.gameEngine?.type ||
+            mapData?.engine?.type ||
+            mapData?.board?.metadata?.gameEngine?.type ||
+            mapData?.board?.engine?.type ||
+            null;
     }
 
     /**
@@ -191,8 +213,8 @@ export default class MapStorageManager {
             try {
                 const response = await fetch(map.path);
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch map: ${response.statusText}`);
-                }
+            throw new Error(`Failed to fetch map: ${response.statusText}`);
+        }
                 return await response.json();
             } catch (error) {
                 console.error(`Error loading built-in map ${mapId}:`, error);

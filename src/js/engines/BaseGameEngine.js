@@ -41,6 +41,7 @@ export default class BaseGameEngine extends IGameEngine {
 
         // UI dependencies (optional)
         this.uiRegistry = dependencies.uiRegistry || null;
+        this.uiSystem = dependencies.uiSystem || null; // Current UI system
         this.uiComponents = new Map(); // component ID -> instance
 
         // Configuration

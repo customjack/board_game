@@ -16,20 +16,27 @@ export default class TroublePlugin extends Plugin {
         this.registryManager = registryManager;
         this.factoryManager = factoryManager;
 
+        let engineCount = 0;
+        let pieceManagerCount = 0;
+
         if (!GameEngineFactory.isRegistered('trouble')) {
             GameEngineFactory.register('trouble', TroubleGameEngine);
-            console.log('[Plugin] Trouble: registered trouble game engine');
+            engineCount++;
         }
 
         const pieceRegistry = registryManager.getPieceManagerRegistry?.();
         if (pieceRegistry && !pieceRegistry.get('trouble')) {
             pieceRegistry.register('trouble', TroublePieceManager);
-            console.log('[Plugin] Trouble: registered trouble piece manager');
+            pieceManagerCount++;
         }
+
+        console.log(
+            `[Plugin] Trouble: Registered ${engineCount} game engine, ${pieceManagerCount} piece manager`
+        );
     }
 
     cleanup() {
-        console.log('[Plugin] Trouble: cleanup invoked');
+        console.log('[Plugin] Trouble: Cleanup complete');
     }
 
     static getPluginMetadata() {

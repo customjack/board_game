@@ -35,6 +35,9 @@ export const MessageTypes = {
     // Plugin management
     PLUGIN_STATE_UPDATE: 'pluginStateUpdate',
 
+    // Gameplay actions
+    PLAYER_ACTION: 'playerAction',
+
     // Heartbeat
     HEARTBEAT: 'heartbeat',
     HEARTBEAT_ACK: 'heartbeatAck'
@@ -104,6 +107,12 @@ export const MessageSchemas = {
 
     [MessageTypes.PLUGIN_STATE_UPDATE]: {
         pluginStates: { type: 'object', required: true }
+    },
+
+    [MessageTypes.PLAYER_ACTION]: {
+        playerId: { type: 'string', required: true },
+        actionType: { type: 'string', required: true },
+        actionData: { type: 'object', required: false }
     },
 
     [MessageTypes.HEARTBEAT]: {

@@ -13,6 +13,7 @@ export default class BasePeer {
         this.settings = null;
         this.ownedPlayers = [];
         this.connections = []; // For Host, will be empty for Client
+        this.isHost = false;
     }
 
     async initPeer() {

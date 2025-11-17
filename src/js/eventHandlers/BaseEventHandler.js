@@ -3,6 +3,7 @@ import PieceManager from '../controllers/managers/PieceManager';
 import SettingsManager from '../controllers/managers/SettingsManager';
 import ModalUtil from '../utils/ModalUtil.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
+import { MessageTypes } from '../networking/protocol/MessageTypes.js';
 
 export default class BaseEventHandler {
     constructor(isHost, registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
@@ -308,7 +309,15 @@ export default class BaseEventHandler {
         if (this.isHost) {
             this.gameEngine.onPlayerAction(playerId, 'SELECT_PIECE', { pieceIndex });
         } else {
-            console.warn('Piece selection from clients is not yet synchronized with the host.');
+            const connection = this.peer?.conn;
+            if (connection && connection.open) {
+                connection.send({
+                    type: MessageTypes.PLAYER_ACTION,
+                    playerId,
+                    actionType: 'SELECT_PIECE',
+                    actionData: { pieceIndex }
+                });
+            }
         }
     }
 

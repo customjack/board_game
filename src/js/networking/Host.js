@@ -9,11 +9,13 @@ import { MessageTypes } from './protocol/MessageTypes.js';
 import GameStateHandler from './handlers/GameStateHandler.js';
 import PlayerHandler from './handlers/PlayerHandler.js';
 import ConnectionHandler from './handlers/ConnectionHandler.js';
+import PlayerActionHandler from './handlers/PlayerActionHandler.js';
 
 export default class Host extends BasePeer {
     constructor(originalName, eventHandler) {
         super(eventHandler);
         this.originalName = originalName;
+        this.isHost = true;
 
         // Store the previous game state for delta calculation
         this.previousGameStateJSON = null;
@@ -41,7 +43,8 @@ export default class Host extends BasePeer {
         this.handlers = [
             new GameStateHandler(this.protocol, context),
             new PlayerHandler(this.protocol, context),
-            new ConnectionHandler(this.protocol, context)
+            new ConnectionHandler(this.protocol, context),
+            new PlayerActionHandler(this.protocol, context)
         ];
 
         // Register each handler

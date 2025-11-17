@@ -221,6 +221,20 @@ export default class MapSelectionUI extends BaseUIComponent {
         author.className = 'map-author';
         author.textContent = `by ${map.author}`;
 
+        // Engine type
+        const engineType = document.createElement('p');
+        engineType.className = 'map-engine-type';
+        engineType.style.fontSize = '0.85em';
+        engineType.style.color = '#666';
+        engineType.style.fontStyle = 'italic';
+        const engine = map.engineType ||
+            map.metadata?.gameEngine?.type ||
+            map.gameEngine?.type ||
+            map.boardData?.metadata?.gameEngine?.type ||
+            map.boardData?.engine?.type ||
+            'turn-based';
+        engineType.textContent = `Engine: ${engine}`;
+
         const description = document.createElement('p');
         description.className = 'map-description';
         description.textContent = map.description || 'No description available';
@@ -244,6 +258,7 @@ export default class MapSelectionUI extends BaseUIComponent {
 
         info.appendChild(name);
         info.appendChild(author);
+        info.appendChild(engineType);
         info.appendChild(description);
         info.appendChild(tags);
 

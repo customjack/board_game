@@ -14,6 +14,7 @@ export default class Client extends BasePeer {
     constructor(originalName, hostId, eventHandler) {
         super(eventHandler);
         this.originalName = originalName;
+        this.isHost = false;
         this.hostId = hostId;
         this.conn = null;
         this.heartbeatInterval = null;

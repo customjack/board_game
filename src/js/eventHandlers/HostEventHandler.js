@@ -276,6 +276,11 @@ export default class HostEventHandler extends BaseEventHandler {
             // Reset all player positions to the new board's starting spaces
             this.peer.gameState.resetPlayerPositions();
 
+            // Recreate the game engine so metadata/engine type reflect the new board
+            this.createGameEngine((proposedGameState) =>
+                this.peer.updateAndBroadcastGameState(proposedGameState)
+            );
+
             // Update UI
             this.uiSystem.getActiveBoard().setBoard(board);
             this.uiSystem.getActiveBoard().render();
