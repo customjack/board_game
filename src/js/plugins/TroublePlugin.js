@@ -3,7 +3,7 @@ import GameEngineFactory from '../factories/GameEngineFactory.js';
 import GameStateFactory from '../factories/GameStateFactory.js';
 import TroubleGameEngine from '../engines/TroubleGameEngine.js';
 import TroublePieceManager from '../pieceManagers/TroublePieceManager.js';
-import TroubleGameState from '../models/TroubleGameState.js';
+import TroubleGameState from '../gameStates/TroubleGameState.js';
 
 /**
  * TroublePlugin - Registers the Trouble (Pop-O-Matic) engine with the modular factory.

@@ -1,6 +1,6 @@
 // GameEngine.js
 
-import GameState from '../models/GameState';
+import TurnBasedGameState from '../gameStates/TurnBasedGameState.js';
 import GameEvent from '../models/GameEvent';
 import TurnPhases from '../enums/TurnPhases';
 import GamePhases from '../enums/GamePhases';
@@ -17,7 +17,7 @@ import { getVisibleElementById } from '../utils/helpers.js';
 export default class GameEngine {
     /**
      * Constructs the GameEngine instance
-     * @param {GameState} gameState - The current game state
+     * @param {TurnBasedGameState} gameState - The current game state
      * @param {String} peerId - The peer ID of the current player
      * @param {Function} proposeGameState - Function to propose a new game state to the host
      * @param {EventBus} eventBus - Event bus to emit events

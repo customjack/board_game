@@ -1,7 +1,7 @@
-import Player from './Player.js';
-import Board from './Board.js';
-import Settings from './Settings.js';
-import SharedRandomNumberGenerator from './SharedRandomNumberGenerator.js';
+import Player from '../models/Player.js';
+import Board from '../models/Board.js';
+import Settings from '../models/Settings.js';
+import SharedRandomNumberGenerator from '../models/SharedRandomNumberGenerator.js';
 import GamePhases from '../enums/GamePhases.js';
 import GameEventState from '../enums/GameEventState.js';
 

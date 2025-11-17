@@ -1,7 +1,7 @@
 import EventBus from '../../src/js/events/EventBus.js';
 import FactoryManager from '../../src/js/factories/FactoryManager.js';
 import RegistryManager from '../../src/js/registries/RegistryManager.js';
-import GameState from '../../src/js/models/GameState.js';
+import TroubleGameState from '../../src/js/gameStates/TroubleGameState.js';
 import Player from '../../src/js/models/Player.js';
 import Board from '../../src/js/models/Board.js';
 import TroubleGameEngine from '../../src/js/engines/TroubleGameEngine.js';
@@ -27,7 +27,11 @@ describe('TroubleGameEngine', () => {
         const board = Board.fromJSON(troubleBoardDefinition, factoryManager);
         player1 = new Player('peer-1', 'Player One', factoryManager, false, 'p1');
         player2 = new Player('peer-2', 'Player Two', factoryManager, false, 'p2');
-        gameState = new GameState(board, factoryManager, [player1, player2]);
+        gameState = new TroubleGameState({
+            board,
+            factoryManager,
+            players: [player1, player2]
+        });
         gameState.resetPlayerPositions();
 
         engine = new TroubleGameEngine(

@@ -170,7 +170,7 @@ const PriorityLevels = Object.freeze({
    - Prepares for next trigger check cycle
 
 ### 3.2 GameState Integration
-**File:** `/home/jack/js_projects/drinking_board_game/src/js/models/GameState.js`
+**File:** `/home/jack/js_projects/drinking_board_game/src/js/gameStates/TurnBasedGameState.js`
 
 **`determineTriggeredEvents(eventBus = null, peerId = null)`**
 - Called at key game phases (usually in TurnBasedGameEngine)
@@ -600,4 +600,3 @@ Board.fromJSON(json)
 ### Payload Placeholders:
 - Messages support placeholders: `{{CURRENT_PLAYER_NAME}}`, `{{RANDOM_WORD}}`, etc.
 - Placeholder replacement happens in action execution, not at load time
-

@@ -4,7 +4,7 @@
  */
 
 import TurnBasedGameEngine from '../../src/js/engines/TurnBasedGameEngine.js';
-import GameState from '../../src/js/models/GameState.js';
+import TurnBasedGameState from '../../src/js/gameStates/TurnBasedGameState.js';
 import Player from '../../src/js/models/Player.js';
 import RegistryManager from '../../src/js/registries/RegistryManager.js';
 import FactoryManager from '../../src/js/factories/FactoryManager.js';
@@ -82,7 +82,7 @@ describe('Action & Effect Testing Map Integration Tests', () => {
             modalTimeoutSeconds: 0
         });
 
-        gameState = new GameState(
+        gameState = new TurnBasedGameState(
             board,
             factoryManager,
             [player1, player2],

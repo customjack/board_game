@@ -34,7 +34,7 @@ import ScoreStat from '../models/Stats/ScoreStat.js';
 // Import game engine and component classes
 import TurnBasedGameEngine from '../engines/TurnBasedGameEngine.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
-import GameState from '../models/GameState.js';
+import TurnBasedGameState from '../gameStates/TurnBasedGameState.js';
 import GameStateFactory from '../factories/GameStateFactory.js';
 import PhaseStateMachine from '../engines/components/PhaseStateMachine.js';
 import TurnManager from '../engines/components/TurnManager.js';
@@ -137,7 +137,7 @@ export default class DefaultCorePlugin extends Plugin {
      */
     _registerGameStates() {
         try {
-            GameStateFactory.register('turn-based', GameState);
+            GameStateFactory.register('turn-based', TurnBasedGameState);
             return 1;
         } catch (error) {
             console.error('[Plugin] Core: Failed to register game state', error);

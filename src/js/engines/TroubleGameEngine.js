@@ -2,6 +2,12 @@ import BaseGameEngine from './BaseGameEngine.js';
 import TurnPhases from '../enums/TurnPhases.js';
 import GamePhases from '../enums/GamePhases.js';
 import PlayerStates from '../enums/PlayerStates.js';
+import { TroublePhases as TroubleStatePhases } from '../gameStates/TroubleGameState.js';
+
+const TroubleTurnPhases = {
+    WAITING_FOR_ROLL: TroubleStatePhases?.WAITING_FOR_ROLL || 'WAITING_FOR_ROLL',
+    WAITING_FOR_SELECTION: TroubleStatePhases?.WAITING_FOR_SELECTION || 'WAITING_FOR_SELECTION'
+};
 
 /**
  * TroubleGameEngine - Implements the classic Pop-O-Matic Trouble rule-set.
@@ -33,6 +39,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.running = false;
         this.paused = false;
         this.lastKnownPlayerId = null;
+        this.troublePhase = TroubleTurnPhases.WAITING_FOR_ROLL;
     }
 
     init() {
@@ -68,9 +75,9 @@ export default class TroubleGameEngine extends BaseGameEngine {
         }
 
         this.gameState.gamePhase = GamePhases.IN_GAME;
-        this.gameState.turnPhase = TurnPhases.WAITING_FOR_MOVE;
+        this.setTroublePhase(TroubleTurnPhases.WAITING_FOR_ROLL);
         this.turnIndex = 0;
-        this.gameState.setCurrentPlayerIndex(0);
+        this.gameState.setCurrentPlayerIndex?.(0);
 
         this.initialized = true;
         this.running = true;
@@ -78,6 +85,22 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
         // Activate roll button for first player
         this.activateRollButton();
+    }
+
+    setTroublePhase(phase) {
+        if (!Object.values(TroubleTurnPhases).includes(phase)) {
+            return;
+        }
+
+        this.troublePhase = phase;
+        this.gameState.setTroublePhase?.(phase);
+        if (phase === TroubleTurnPhases.WAITING_FOR_ROLL) {
+            this.gameState.turnPhase = TurnPhases.WAITING_FOR_MOVE;
+        } else if (phase === TroubleTurnPhases.WAITING_FOR_SELECTION) {
+            this.gameState.turnPhase = TurnPhases.PLAYER_CHOOSING_DESTINATION;
+        }
+
+        this.gameState.setTurnPhase?.(this.gameState.turnPhase);
     }
 
     start() {
@@ -232,7 +255,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         if (!currentPlayer) return 0;
 
         // Don't allow rolling if not this player's turn
-        if (!this.isClientTurn()) {
+        if (!this.isClientTurn() || this.troublePhase !== TroubleTurnPhases.WAITING_FOR_ROLL) {
             console.warn('Not your turn!');
             return 0;
         }
@@ -250,7 +273,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         if (!currentPlayer) return;
 
         // Don't process if not this player's turn
-        if (!this.isClientTurn()) {
+        if (!this.isClientTurn() || this.troublePhase !== TroubleTurnPhases.WAITING_FOR_ROLL) {
             return;
         }
 
@@ -278,7 +301,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
     activateRollButton() {
         // Only activate if it's this client's turn
-        if (!this.isClientTurn()) {
+        if (!this.isClientTurn() || this.troublePhase !== TroubleTurnPhases.WAITING_FOR_ROLL) {
             console.debug('[Trouble] Not activating roll button (not this client turn)', {
                 peerId: this.peerId,
                 currentPlayerId: this.gameState.getCurrentPlayer()?.playerId
@@ -323,6 +346,9 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
         this.pendingRoll = null;
         this.pendingMoveOptions = null;
+        this.turnIndex = 0;
+        this.gameState.setCurrentPlayerIndex?.(0);
+        this.setTroublePhase(TroubleTurnPhases.WAITING_FOR_ROLL);
     }
 
     initializePlayerContainers() {
@@ -371,18 +397,27 @@ export default class TroubleGameEngine extends BaseGameEngine {
             }
         });
 
-        const currentPlayerId = serializedState.currentPlayerId || this.gameState.getCurrentPlayer()?.playerId;
-        const idx = players.findIndex(player => player.playerId === currentPlayerId);
+        const fallbackId = serializedState.currentPlayerId || this.gameState.getCurrentPlayer()?.playerId;
+        let idx = -1;
+        if (typeof serializedState.currentPlayerIndex === 'number') {
+            idx = serializedState.currentPlayerIndex % Math.max(players.length, 1);
+        }
+        if (idx === -1 && fallbackId) {
+            idx = players.findIndex(player => player.playerId === fallbackId);
+        }
         if (idx >= 0) {
             this.turnIndex = idx;
+            this.gameState.setCurrentPlayerIndex?.(idx);
         }
 
         this.pendingRoll = typeof serializedState.pendingRoll === 'number' ? serializedState.pendingRoll : null;
 
-        if (serializedState.pendingSelection && this.pendingRoll && currentPlayerId) {
-            const options = this.findMovablePieces(currentPlayerId, this.pendingRoll);
+        this.setTroublePhase(serializedState.phase || TroubleTurnPhases.WAITING_FOR_ROLL);
+
+        if (serializedState.pendingSelection && this.pendingRoll && fallbackId) {
+            const options = this.findMovablePieces(fallbackId, this.pendingRoll);
             this.pendingMoveOptions = {
-                playerId: currentPlayerId,
+                playerId: fallbackId,
                 roll: this.pendingRoll,
                 options
             };
@@ -392,6 +427,12 @@ export default class TroubleGameEngine extends BaseGameEngine {
     }
 
     getActivePlayer() {
+        if (typeof this.gameState.getCurrentPlayer === 'function') {
+            const player = this.gameState.getCurrentPlayer();
+            if (player) {
+                return player;
+            }
+        }
         const players = this.gameState.players || [];
         if (players.length === 0) return null;
         return players[this.turnIndex % players.length];
@@ -400,6 +441,10 @@ export default class TroubleGameEngine extends BaseGameEngine {
     handleRoll(player, forcedRoll = null) {
         if (this.pendingRoll !== null) {
             return { success: false, error: 'Resolve the previous roll before rolling again' };
+        }
+
+        if (this.troublePhase !== TroubleTurnPhases.WAITING_FOR_ROLL && forcedRoll === null) {
+            return { success: false, error: 'Roll already processed' };
         }
 
         const roll = forcedRoll ?? player.rollDice(1, 6);
@@ -413,6 +458,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
             this.logPlayerAction(player, 'has no legal moves.', { type: 'movement', metadata: { roll } });
             this.pendingRoll = null;
             this.pendingMoveOptions = null;
+            this.emitStateUpdate({ awaitingSelection: false, roll, selectablePieces: [] });
             this.advanceTurn(extraTurn);
             return {
                 success: true,
@@ -433,7 +479,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
             roll,
             options: moveOptions
         };
-        this.gameState.turnPhase = TurnPhases.PLAYER_CHOOSING_DESTINATION;
+        this.setTroublePhase(TroubleTurnPhases.WAITING_FOR_SELECTION);
         const selectablePieces = moveOptions.map(option => {
             const piece = this.getPlayerPiece(player.playerId, option.pieceIndex);
             return {
@@ -457,7 +503,11 @@ export default class TroubleGameEngine extends BaseGameEngine {
     }
 
     handlePieceSelection(player, pieceIndex) {
-        if (!this.pendingMoveOptions || this.pendingMoveOptions.playerId !== player.playerId) {
+        if (
+            this.troublePhase !== TroubleTurnPhases.WAITING_FOR_SELECTION ||
+            !this.pendingMoveOptions ||
+            this.pendingMoveOptions.playerId !== player.playerId
+        ) {
             return { success: false, error: 'No pending selection for this player' };
         }
 
@@ -577,6 +627,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         const extraTurn = roll === 6 && state.finished < this.piecesPerPlayer;
         this.pendingRoll = null;
         this.pendingMoveOptions = null;
+        this.setTroublePhase(TroubleTurnPhases.WAITING_FOR_ROLL);
 
         if (state.finished >= this.piecesPerPlayer) {
             player.setState(PlayerStates.COMPLETED_GAME);
@@ -596,17 +647,23 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
     advanceTurn(extraTurn) {
         const players = this.gameState.players || [];
+        if (players.length === 0) {
+            return;
+        }
+
         const previousPlayer = this.getActivePlayer();
 
         if (!extraTurn) {
-            previousPlayer.turnsTaken += 1;
+            if (previousPlayer) {
+                previousPlayer.turnsTaken = (previousPlayer.turnsTaken || 0) + 1;
+            }
             for (let i = 0; i < players.length; i++) {
                 this.turnIndex = (this.turnIndex + 1) % players.length;
                 if (players[this.turnIndex].getState?.() !== PlayerStates.COMPLETED_GAME) {
                     break;
                 }
             }
-        } else {
+        } else if (previousPlayer) {
             this.logPlayerAction(previousPlayer, 'earned an extra turn!', { type: 'bonus' });
         }
 
@@ -617,8 +674,8 @@ export default class TroubleGameEngine extends BaseGameEngine {
             return;
         }
 
-        this.gameState.setCurrentPlayerIndex(this.turnIndex);
-        this.gameState.turnPhase = TurnPhases.WAITING_FOR_MOVE;
+        this.gameState.setCurrentPlayerIndex?.(this.turnIndex);
+        this.setTroublePhase(TroubleTurnPhases.WAITING_FOR_ROLL);
         this.emitStateUpdate();
         this.lastKnownPlayerId = this.getActivePlayer()?.playerId || null;
 
@@ -721,10 +778,14 @@ export default class TroubleGameEngine extends BaseGameEngine {
             });
         }
 
+        const players = this.gameState.players || [];
+
         return {
             currentPlayerId: this.getActivePlayer()?.playerId || null,
+            currentPlayerIndex: players.length ? this.turnIndex % players.length : 0,
             pendingRoll: this.pendingRoll,
             pendingSelection: !!this.pendingMoveOptions,
+            phase: this.troublePhase,
             pieces
         };
     }

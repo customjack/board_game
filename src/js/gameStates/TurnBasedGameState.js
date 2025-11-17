@@ -1,10 +1,10 @@
 import TurnPhases from '../enums/TurnPhases';
 import GamePhases from '../enums/GamePhases';
-import Settings from './Settings';
-import SharedRandomNumberGenerator from './SharedRandomNumberGenerator.js';
+import Settings from '../models/Settings.js';
+import SharedRandomNumberGenerator from '../models/SharedRandomNumberGenerator.js';
 import BaseGameState from './BaseGameState.js';
 
-export default class GameState extends BaseGameState {
+export default class TurnBasedGameState extends BaseGameState {
     constructor(boardOrConfig, factoryManager, players = [], settings = new Settings(), randomGenerator = new SharedRandomNumberGenerator(Math.random().toString(36).slice(2, 11)), selectedMapId = 'default', selectedMapData = null) {
         if (boardOrConfig && typeof boardOrConfig === 'object' && boardOrConfig.board) {
             super(boardOrConfig);
@@ -156,25 +156,6 @@ export default class GameState extends BaseGameState {
         return this.remainingMoves > 0;
     }
 
-    /**
-     * Reset all player positions to starting spaces based on current board's game rules
-     * Should be called when a new board/map is loaded
-     */
-    resetPlayerPositions() {
-        if (!this.board || !this.board.gameRules) {
-            console.warn('Cannot reset player positions: board or game rules not available');
-            return;
-        }
-
-        this.players.forEach((player, index) => {
-            const startingSpaceId = this.board.gameRules.getStartingSpaceForPlayer(
-                index,
-                this.players.length,
-                this.board
-            );
-            player.currentSpaceId = startingSpaceId;
-        });
-    }
 
     // Change the turn phase (e.g., BEGIN_TURN, END_TURN, etc.)
     setTurnPhase(phase) {
@@ -185,14 +166,6 @@ export default class GameState extends BaseGameState {
             this.turnPhase = phase;
         } else {
             console.error(`Invalid turn phase: ${phase}`);
-        }
-    }
-
-    setGamePhase(phase) {
-        if (Object.values(GamePhases).includes(phase)) {
-            this.gamePhase = phase;
-        } else {
-            console.error(`Invalid game phase: ${phase}`);
         }
     }
 
