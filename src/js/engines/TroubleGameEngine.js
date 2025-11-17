@@ -27,6 +27,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.turnIndex = 0;
         this.pendingRoll = null;
         this.pendingMoveOptions = null;
+        this.pendingLocalRoll = null;
         this.playerState = new Map();
         this.entryOffsets = new Map();
         this.running = false;
@@ -211,6 +212,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         }
 
         const rollResult = Math.floor(Math.random() * 6) + 1;
+        this.pendingLocalRoll = rollResult;
         console.log(`${currentPlayer.nickname} rolled a ${rollResult}`);
 
         this.deactivateRollButton();
@@ -226,7 +228,9 @@ export default class TroubleGameEngine extends BaseGameEngine {
             return;
         }
 
-        this.handleRoll(currentPlayer);
+        const resolvedRoll = typeof rollResult === 'number' ? rollResult : this.pendingLocalRoll;
+        this.pendingLocalRoll = null;
+        this.handleRoll(currentPlayer, resolvedRoll);
     }
 
     handleTimerEnd() {
@@ -304,12 +308,12 @@ export default class TroubleGameEngine extends BaseGameEngine {
         return players[this.turnIndex % players.length];
     }
 
-    handleRoll(player) {
+    handleRoll(player, forcedRoll = null) {
         if (this.pendingRoll !== null) {
             return { success: false, error: 'Resolve the previous roll before rolling again' };
         }
 
-        const roll = player.rollDice(1, 6);
+        const roll = forcedRoll ?? player.rollDice(1, 6);
         this.pendingRoll = roll;
         const moveOptions = this.findMovablePieces(player.playerId, roll);
 
