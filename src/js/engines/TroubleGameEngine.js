@@ -32,6 +32,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.entryOffsets = new Map();
         this.running = false;
         this.paused = false;
+        this.lastKnownPlayerId = null;
     }
 
     init() {
@@ -107,8 +108,33 @@ export default class TroubleGameEngine extends BaseGameEngine {
     }
 
     updateGameState(gameState) {
+        const previousPlayerId = this.getActivePlayer()?.playerId || null;
         this.gameState = gameState;
-        this.setupPlayerState();
+
+        const serializedState = gameState?.pluginState?.trouble || null;
+        if (serializedState) {
+            this.hydratePlayerState(serializedState);
+        } else {
+            this.setupPlayerState();
+        }
+
+        const activePlayerId = this.getActivePlayer()?.playerId || null;
+        if (activePlayerId !== previousPlayerId) {
+            console.debug('[Trouble] Turn updated', {
+                peerId: this.peerId,
+                previousPlayerId,
+                activePlayerId
+            });
+            this.lastKnownPlayerId = activePlayerId;
+        }
+
+        if (this.initialized) {
+            if (this.isClientTurn()) {
+                this.activateRollButton();
+            } else {
+                this.deactivateRollButton();
+            }
+        }
     }
 
     getEngineState() {
@@ -253,6 +279,10 @@ export default class TroubleGameEngine extends BaseGameEngine {
     activateRollButton() {
         // Only activate if it's this client's turn
         if (!this.isClientTurn()) {
+            console.debug('[Trouble] Not activating roll button (not this client turn)', {
+                peerId: this.peerId,
+                currentPlayerId: this.gameState.getCurrentPlayer()?.playerId
+            });
             return;
         }
 
@@ -260,6 +290,10 @@ export default class TroubleGameEngine extends BaseGameEngine {
             const btn = this.uiSystem.getComponent('rollButton');
             if (btn && btn.activate) {
                 btn.activate();
+                console.debug('[Trouble] Roll button activated', {
+                    peerId: this.peerId,
+                    currentPlayerId: this.gameState.getCurrentPlayer()?.playerId
+                });
             }
         }
     }
@@ -269,6 +303,10 @@ export default class TroubleGameEngine extends BaseGameEngine {
             const btn = this.uiSystem.getComponent('rollButton');
             if (btn && btn.deactivate) {
                 btn.deactivate();
+                console.debug('[Trouble] Roll button deactivated', {
+                    peerId: this.peerId,
+                    currentPlayerId: this.gameState.getCurrentPlayer()?.playerId
+                });
             }
         }
     }
@@ -276,6 +314,18 @@ export default class TroubleGameEngine extends BaseGameEngine {
     // ===== Internal helpers =====
 
     setupPlayerState() {
+        this.initializePlayerContainers();
+        const players = this.gameState.players || [];
+        players.forEach(player => {
+            player.turnsTaken = 0;
+            player.setState?.(PlayerStates.PLAYING);
+        });
+
+        this.pendingRoll = null;
+        this.pendingMoveOptions = null;
+    }
+
+    initializePlayerContainers() {
         this.playerState.clear();
         this.entryOffsets.clear();
 
@@ -294,12 +344,51 @@ export default class TroubleGameEngine extends BaseGameEngine {
                 })),
                 finished: 0
             });
-            player.turnsTaken = 0;
-            player.setState?.(PlayerStates.PLAYING);
+        });
+    }
+
+    hydratePlayerState(serializedState) {
+        this.initializePlayerContainers();
+
+        const players = this.gameState.players || [];
+        serializedState?.pieces?.forEach(pieceState => {
+            const ownerState = this.playerState.get(pieceState.playerId);
+            if (!ownerState) {
+                return;
+            }
+
+            const pieceIndex = Math.max(0, Math.min(this.piecesPerPlayer - 1, pieceState.pieceIndex || 0));
+            const piece = ownerState.pieces[pieceIndex];
+            piece.status = pieceState.status || piece.status;
+            piece.stepsFromStart = typeof pieceState.stepsFromStart === 'number'
+                ? pieceState.stepsFromStart
+                : piece.stepsFromStart;
+            piece.spaceId = pieceState.spaceId || piece.spaceId;
+            piece.id = pieceState.id || piece.id;
+
+            if (piece.status === 'DONE') {
+                ownerState.finished += 1;
+            }
         });
 
-        this.pendingRoll = null;
-        this.pendingMoveOptions = null;
+        const currentPlayerId = serializedState.currentPlayerId || this.gameState.getCurrentPlayer()?.playerId;
+        const idx = players.findIndex(player => player.playerId === currentPlayerId);
+        if (idx >= 0) {
+            this.turnIndex = idx;
+        }
+
+        this.pendingRoll = typeof serializedState.pendingRoll === 'number' ? serializedState.pendingRoll : null;
+
+        if (serializedState.pendingSelection && this.pendingRoll && currentPlayerId) {
+            const options = this.findMovablePieces(currentPlayerId, this.pendingRoll);
+            this.pendingMoveOptions = {
+                playerId: currentPlayerId,
+                roll: this.pendingRoll,
+                options
+            };
+        } else {
+            this.pendingMoveOptions = null;
+        }
     }
 
     getActivePlayer() {
@@ -531,6 +620,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.gameState.setCurrentPlayerIndex(this.turnIndex);
         this.gameState.turnPhase = TurnPhases.WAITING_FOR_MOVE;
         this.emitStateUpdate();
+        this.lastKnownPlayerId = this.getActivePlayer()?.playerId || null;
 
         // Activate roll button for the new current player
         this.activateRollButton();
@@ -649,13 +739,11 @@ export default class TroubleGameEngine extends BaseGameEngine {
             troubleState: state
         });
 
-        if (this.isHost) {
-            if (!this.gameState.pluginState) {
-                this.gameState.pluginState = {};
-            }
-            this.gameState.pluginState.trouble = state;
-            this.gameState.incrementVersion();
-            this.proposeStateChange(this.gameState);
+        if (!this.gameState.pluginState) {
+            this.gameState.pluginState = {};
         }
+        this.gameState.pluginState.trouble = state;
+        this.gameState.incrementVersion();
+        this.proposeStateChange(this.gameState);
     }
 }
