@@ -1,6 +1,6 @@
 // PlayerListManager.js
 
-import GameState from "../../models/GameState";
+import GameStateFactory from '../../factories/GameStateFactory.js';
 
 export default class PlayerListManager {
     constructor(defaultListElement, isHost, currentPlayerPeerId, hostPeerId) {
@@ -27,7 +27,7 @@ export default class PlayerListManager {
         // It's okay to use the gameState's factory MAnager because it's a reference
         // I.e. everything in the game state copy gets deep copied except the factory manager
         // The factory manager should never be copied to begin with, it's effectively a singleton
-        const gameStateCopy = GameState.fromJSON(gameState.toJSON(), gameState.factoryManager);
+        const gameStateCopy = GameStateFactory.fromJSON(gameState.toJSON(), gameState.factoryManager);
         
         // Set the copied game state
         this.gameState = gameStateCopy;

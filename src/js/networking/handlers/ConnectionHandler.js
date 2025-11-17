@@ -12,7 +12,7 @@
 
 import MessageHandlerPlugin from './MessageHandlerPlugin.js';
 import { MessageTypes } from '../protocol/MessageTypes.js';
-import GameState from '../../models/GameState.js';
+import GameStateFactory from '../../factories/GameStateFactory.js';
 import InputValidator from '../../utils/InputValidator.js';
 import ModalUtil from '../../utils/ModalUtil.js';
 
@@ -71,7 +71,7 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         // Store current owned players before updating game state
         const previousOwnedPlayers = peer.ownedPlayers || [];
 
-        peer.gameState = GameState.fromJSON(message.gameState, factoryManager);
+        peer.gameState = GameStateFactory.fromJSON(message.gameState, factoryManager);
 
         // Try to get owned players from the new game state
         const ownedPlayersFromState = peer.gameState.getPlayersByPeerId(peer.peer.id);

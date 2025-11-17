@@ -1,7 +1,7 @@
 // BasePeer.js
 
 import Peer from 'peerjs';
-import GameState from '../models/GameState';
+import GameStateFactory from '../factories/GameStateFactory.js';
 import BoardManager from '../controllers/managers/BoardManager';
 import { PEER_CONFIG, getPerformanceLabel, PERFORMANCE_THRESHOLDS } from './NetworkConfig.js';
 
@@ -62,7 +62,10 @@ export default class BasePeer {
     async initializeGameState() {
         const boardManager = new BoardManager(this.eventHandler.factoryManager);
         await boardManager.loadDefaultBoard();
-        this.gameState = new GameState(boardManager.board, this.eventHandler.factoryManager);
+        this.gameState = GameStateFactory.create({
+            board: boardManager.board,
+            factoryManager: this.eventHandler.factoryManager
+        });
         console.log("GameState initialized", this.gameState);
     }
 

@@ -5,7 +5,7 @@
  * and action buttons (info, settings)
  */
 import BaseUIComponent from '../BaseUIComponent.js';
-import GameState from '../../models/GameState.js';
+import GameStateFactory from '../../factories/GameStateFactory.js';
 import { createInfoIcon, createGearIcon, createIconButton } from '../../utils/IconUtils.js';
 import PlayerInfoModal from '../../controllers/modals/PlayerInfoModal.js';
 import PlayerControlModal from '../../controllers/modals/PlayerControlModal.js';
@@ -190,7 +190,7 @@ export default class PlayerListComponent extends BaseUIComponent {
         }
 
         // Store a deep copy of game state
-        this.gameState = GameState.fromJSON(gameState.toJSON(), gameState.factoryManager);
+        this.gameState = GameStateFactory.fromJSON(gameState.toJSON(), gameState.factoryManager);
 
         const settings = this.gameState.settings;
         this.allowPlayerColorChange = settings?.allowPlayerColorChange !== false;

@@ -190,6 +190,7 @@ export default class StateDelta {
 
         // Track which top-level fields changed
         const topLevelFields = [
+            'stateType',
             'remainingMoves',
             'turnPhase',
             'gamePhase'

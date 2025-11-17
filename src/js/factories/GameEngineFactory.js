@@ -111,8 +111,17 @@ export default class GameEngineFactory {
         }
 
         // 2. Check board metadata for engine configuration
-        if (dependencies.gameState?.board?.metadata?.gameEngine?.type) {
-            return dependencies.gameState.board.metadata.gameEngine.type;
+        const board = dependencies.gameState?.board;
+        if (board?.metadata?.gameEngine?.type) {
+            return board.metadata.gameEngine.type;
+        }
+
+        if (board?.gameEngine?.type) {
+            return board.gameEngine.type;
+        }
+
+        if (board?.engine?.type) {
+            return board.engine.type;
         }
 
         // 3. Default to turn-based
@@ -152,7 +161,11 @@ export default class GameEngineFactory {
      * @returns {Object} Engine configuration or empty object
      */
     static extractEngineConfig(gameState) {
-        return gameState?.board?.metadata?.gameEngine?.config || {};
+        const board = gameState?.board;
+        return board?.metadata?.gameEngine?.config ||
+            board?.gameEngine?.config ||
+            board?.engine?.config ||
+            {};
     }
 
     /**

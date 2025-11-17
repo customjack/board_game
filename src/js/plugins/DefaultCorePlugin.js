@@ -34,6 +34,8 @@ import ScoreStat from '../models/Stats/ScoreStat.js';
 // Import game engine and component classes
 import TurnBasedGameEngine from '../engines/TurnBasedGameEngine.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
+import GameState from '../models/GameState.js';
+import GameStateFactory from '../factories/GameStateFactory.js';
 import PhaseStateMachine from '../engines/components/PhaseStateMachine.js';
 import TurnManager from '../engines/components/TurnManager.js';
 import EventProcessor from '../engines/components/EventProcessor.js';
@@ -81,6 +83,7 @@ export default class DefaultCorePlugin extends Plugin {
         // Track counts for logging
         const counts = {
             gameEngines: 0,
+            gameStates: 0,
             phaseStateMachines: 0,
             turnManagers: 0,
             eventProcessors: 0,
@@ -95,6 +98,7 @@ export default class DefaultCorePlugin extends Plugin {
         };
 
         // Register all components
+        counts.gameStates += this._registerGameStates();
         counts.gameEngines += this._registerGameEngines();
         counts.phaseStateMachines += this._registerPhaseStateMachines(factoryManager);
         counts.turnManagers += this._registerTurnManagers(factoryManager);
@@ -110,7 +114,8 @@ export default class DefaultCorePlugin extends Plugin {
 
         // Output single consolidated message
         console.log(
-            `[Plugin] Core: Registered ${counts.gameEngines} game engine, ` +
+            `[Plugin] Core: Registered ${counts.gameStates} game state, ` +
+            `${counts.gameEngines} game engine, ` +
             `${counts.phaseStateMachines} phase state machine, ` +
             `${counts.turnManagers} turn manager, ` +
             `${counts.eventProcessors} event processor, ` +
@@ -130,6 +135,16 @@ export default class DefaultCorePlugin extends Plugin {
      * @private
      * @returns {number} Count of registered engines
      */
+    _registerGameStates() {
+        try {
+            GameStateFactory.register('turn-based', GameState);
+            return 1;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register game state', error);
+            return 0;
+        }
+    }
+
     _registerGameEngines() {
         try {
             GameEngineFactory.register('turn-based', TurnBasedGameEngine);

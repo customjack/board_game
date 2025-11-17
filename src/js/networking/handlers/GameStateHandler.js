@@ -10,7 +10,7 @@
 
 import MessageHandlerPlugin from './MessageHandlerPlugin.js';
 import { MessageTypes } from '../protocol/MessageTypes.js';
-import GameState from '../../models/GameState.js';
+import GameStateFactory from '../../factories/GameStateFactory.js';
 import StateDelta from '../../utils/StateDelta.js';
 
 export default class GameStateHandler extends MessageHandlerPlugin {
@@ -47,7 +47,7 @@ export default class GameStateHandler extends MessageHandlerPlugin {
         const peer = this.getPeer();
         const factoryManager = this.getFactoryManager();
 
-        peer.gameState = GameState.fromJSON(message.gameState, factoryManager);
+        peer.gameState = GameStateFactory.fromJSON(message.gameState, factoryManager);
         peer.ownedPlayers = peer.gameState.getPlayersByPeerId(peer.peer.id);
 
         console.log('Game state updated from full state');
@@ -76,7 +76,7 @@ export default class GameStateHandler extends MessageHandlerPlugin {
             const updatedStateJSON = StateDelta.applyDelta(currentStateJSON, message.delta);
 
             // Reconstruct GameState from the updated JSON
-            peer.gameState = GameState.fromJSON(updatedStateJSON, factoryManager);
+            peer.gameState = GameStateFactory.fromJSON(updatedStateJSON, factoryManager);
             peer.ownedPlayers = peer.gameState.getPlayersByPeerId(peer.peer.id);
 
             console.log(`Delta applied successfully. Version: ${peer.gameState.getVersion()}`);
@@ -96,7 +96,7 @@ export default class GameStateHandler extends MessageHandlerPlugin {
         const conn = context.connection;
         const factoryManager = this.getFactoryManager();
 
-        const proposedGameState = GameState.fromJSON(message.gameState, factoryManager);
+        const proposedGameState = GameStateFactory.fromJSON(message.gameState, factoryManager);
 
         // Validate the proposed game state
         if (this.validateProposedGameState(conn.peer, proposedGameState)) {

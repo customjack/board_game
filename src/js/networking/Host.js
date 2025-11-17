@@ -1,7 +1,7 @@
 // Host.js
 
 import BasePeer from './BasePeer.js';
-import GameState from '../models/GameState.js';
+import GameStateFactory from '../factories/GameStateFactory.js';
 import StateDelta from '../utils/StateDelta.js';
 import ModalUtil from '../utils/ModalUtil.js';
 import NetworkProtocol from './protocol/NetworkProtocol.js';
@@ -144,7 +144,7 @@ export default class Host extends BasePeer {
         newGameState.incrementVersion();
 
         const newGameStateJSON = newGameState.toJSON();
-        this.gameState = GameState.fromJSON(newGameStateJSON, this.eventHandler.factoryManager);
+        this.gameState = GameStateFactory.fromJSON(newGameStateJSON, this.eventHandler.factoryManager);
 
         // Refresh ownedPlayers to reference new Player objects
         this.ownedPlayers = this.gameState.getPlayersByPeerId(this.peer.id);
