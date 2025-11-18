@@ -134,24 +134,8 @@ export default class MultiPieceGameEngine extends BaseGameEngine {
         return 'multi-piece';
     }
 
-    /**
-     * Get engine capabilities
-     * @returns {EngineCapabilities}
-     */
-    getCapabilities() {
-        return {
-            supportsDiceRoll: true,
-            supportsCardDraw: false,
-            supportsPieceSelection: true,
-            supportsMultiplePiecesPerPlayer: true,
-            supportsResourceManagement: false,
-            supportsSimultaneousTurns: false,
-            supportsTurnPhases: true,
-            supportsPlayerVoting: false,
-            supportsRealTime: false,
-            supportsTeams: false
-        };
-    }
+    // REMOVED: getCapabilities() - No longer using capability prediction system
+    // The engine's needs are expressed through getRequiredUIComponents() and getOptionalUIComponents()
 
     /**
      * Get required UI components for this engine

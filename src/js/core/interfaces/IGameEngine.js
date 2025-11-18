@@ -3,21 +3,13 @@
  *
  * This interface ensures game engines are completely modular and can operate
  * independently of specific UI implementations.
- */
-
-/**
- * Engine capabilities descriptor
- * @typedef {Object} EngineCapabilities
- * @property {boolean} supportsDiceRoll - Can roll dice
- * @property {boolean} supportsCardDraw - Can draw cards
- * @property {boolean} supportsPieceSelection - Can select specific pieces
- * @property {boolean} supportsMultiplePiecesPerPlayer - Multiple pieces per player
- * @property {boolean} supportsResourceManagement - Can manage resources (coins, etc.)
- * @property {boolean} supportsSimultaneousTurns - Can handle simultaneous turns
- * @property {boolean} supportsTurnPhases - Uses turn phase system
- * @property {boolean} supportsPlayerVoting - Can handle player votes
- * @property {boolean} supportsRealTime - Real-time gameplay (not turn-based)
- * @property {boolean} supportsTeams - Team-based gameplay
+ *
+ * Design Philosophy:
+ * - Game engines should not declare capabilities upfront (no "supports" flags)
+ * - Instead, they expose what UI components they need via getRequiredUIComponents()
+ * - This allows for organic growth as new game types emerge
+ * - No need to predict every possible game mechanic in advance
+ * - Game engines implement what they need; the system adapts to them
  */
 
 /**
@@ -164,12 +156,19 @@ export default class IGameEngine {
     }
 
     /**
-     * Get engine capabilities
-     * @returns {EngineCapabilities} Engine capabilities descriptor
+     * REMOVED: getCapabilities()
+     *
+     * The "capabilities" system tried to predict all possible game features upfront.
+     * This was the wrong approach because:
+     * 1. It's impossible to predict all future game mechanics
+     * 2. It created coupling between engines and a central capability list
+     * 3. Adding new game types required updating the capability system
+     *
+     * Instead:
+     * - Engines expose their UI needs through getRequiredUIComponents()
+     * - Engines implement their own specific logic organically
+     * - The system adapts to engines, not the other way around
      */
-    getCapabilities() {
-        throw new Error('getCapabilities() must be implemented by game engine');
-    }
 
     /**
      * Get engine configuration schema

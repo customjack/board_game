@@ -437,24 +437,8 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         return 'turn-based';
     }
 
-    /**
-     * Get engine capabilities
-     * @returns {EngineCapabilities}
-     */
-    getCapabilities() {
-        return {
-            supportsDiceRoll: true,
-            supportsCardDraw: false,
-            supportsPieceSelection: false,
-            supportsMultiplePiecesPerPlayer: false,
-            supportsResourceManagement: false,
-            supportsSimultaneousTurns: false,
-            supportsTurnPhases: true,
-            supportsPlayerVoting: false,
-            supportsRealTime: false,
-            supportsTeams: false
-        };
-    }
+    // REMOVED: getCapabilities() - No longer using capability prediction system
+    // The engine's needs are expressed through getRequiredUIComponents() and getOptionalUIComponents()
 
     /**
      * Get required UI components for this engine
