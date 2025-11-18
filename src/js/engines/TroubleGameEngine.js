@@ -559,6 +559,9 @@ export default class TroubleGameEngine extends BaseGameEngine {
             lastRoll: this.gameState.lastRoll,
             turnPhase: this.gameState.turnPhase
         });
+
+        const delay = this.gameState?.settings?.getMoveDelay?.() ?? 0;
+        this.proposeStateChange(this.gameState, delay);
     }
 
     getSpaceIdForPiece(piece) {
