@@ -1,4 +1,4 @@
-import Plugin from '../systems/plugins/Plugin.js';
+import Plugin from './Plugin.js';
 import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
 
@@ -40,16 +40,16 @@ import PhaseStateMachine from '../../game/components/PhaseStateMachine.js';
 import TurnManager from '../../game/components/TurnManager.js';
 import EventProcessor from '../../game/components/EventProcessor.js';
 import UIController from '../../game/components/UIController.js';
-import RemainingMovesComponent from '../../../ui/components/RemainingMovesComponent.js';
-import PlayerListComponent from '../../../ui/components/PlayerListComponent.js';
-import RollButtonComponent from '../../../ui/components/RollButtonComponent.js';
-import TimerComponent from '../../../ui/components/TimerComponent.js';
-import GameLogComponent from '../../../ui/components/GameLogComponent.js';
-import BoardCanvasComponent from '../../../ui/components/BoardCanvasComponent.js';
-import ParticleAnimation from '../../../animations/ParticleAnimation.js';
-import DiceRollAnimation from '../../../animations/DiceRollAnimation.js';
-import SlotMachineAnimation from '../../../animations/SlotMachineAnimation.js';
-import TimerAnimation from '../../../animations/TimerAnimation.js';
+import RemainingMovesComponent from '../../ui/components/RemainingMovesComponent.js';
+import PlayerListComponent from '../../ui/components/PlayerListComponent.js';
+import RollButtonComponent from '../../ui/components/RollButtonComponent.js';
+import TimerComponent from '../../ui/components/TimerComponent.js';
+import GameLogComponent from '../../ui/components/GameLogComponent.js';
+import BoardCanvasComponent from '../../ui/components/BoardCanvasComponent.js';
+import ParticleAnimation from '../../animations/ParticleAnimation.js';
+import DiceRollAnimation from '../../animations/DiceRollAnimation.js';
+import SlotMachineAnimation from '../../animations/SlotMachineAnimation.js';
+import TimerAnimation from '../../animations/TimerAnimation.js';
 import PieceManager from '../../infrastructure/managers/PieceManager.js';
 
 /**

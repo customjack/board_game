@@ -1,5 +1,5 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../enums/ActionTypes.js';
+import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 
 /**
  * SetPlayerStateAction - Changes the current player's state

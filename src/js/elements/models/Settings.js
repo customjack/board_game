@@ -5,7 +5,7 @@
  * Now adding new settings only requires updating the schema!
  */
 
-import { getDefaultSettings, GAME_SETTINGS_SCHEMA, validateAllSettings } from '../config/settings-schema.js';
+import { getDefaultSettings, GAME_SETTINGS_SCHEMA, validateAllSettings } from '../../config/settings-schema.js';
 
 export default class Settings {
     /**

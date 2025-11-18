@@ -1,4 +1,4 @@
-import { DEFAULT_HEX_COLOR, normalizeToHexColor } from '../../utils/colorUtils.js';
+import { DEFAULT_HEX_COLOR, normalizeToHexColor } from '../../../../js/infrastructure/utils/colorUtils.js';
 
 /**
  * HostPlayerControlModal - Host management of other players

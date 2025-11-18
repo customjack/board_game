@@ -7,7 +7,7 @@
  * - Support for General settings and Plugins & Maps management
  */
 
-import MapStorageManager from '../../managers/MapStorageManager.js';
+import MapStorageManager from '../../../../js/systems/storage/MapStorageManager.js';
 
 export default class PersonalSettingsMenu {
     constructor(modalId, personalSettings, factoryManager, pluginManager, localStorageManager) {

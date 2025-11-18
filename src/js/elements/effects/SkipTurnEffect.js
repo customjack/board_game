@@ -1,6 +1,6 @@
 import PlayerEffect from './PlayerEffect.js';
-import TurnPhases from '../../enums/TurnPhases';
-import PlayerStates from '../../enums/PlayerStates';
+import TurnPhases from '../../game/phases/TurnPhases.js';
+import PlayerStates from '../../game/phases/PlayerStates.js';
 
 
 export default class SkipTurnEffect extends PlayerEffect {

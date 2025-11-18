@@ -7,13 +7,13 @@
  * - Events trigger based on space landings
  * - Effects are applied each turn
  */
-import BaseGameEngine from './BaseGameEngine.js';
+import BaseGameEngine from '../../core/base/BaseGameEngine.js';
 import TurnPhases from '../../game/phases/TurnPhases.js';
 import GamePhases from '../../game/phases/GamePhases.js';
 import PlayerStates from '../../game/phases/PlayerStates.js';
 import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
-import GameLogPopupController from '../controllers/GameLogPopupController.js';
-import { getVisibleElementById } from '../../infrastructure/utils/helpers'.js';
+import GameLogPopupController from '../../../deprecated/legacy/controllers/GameLogPopupController.js';
+import { getVisibleElementById } from '../../infrastructure/utils/helpers.js';
 
 export default class TurnBasedGameEngine extends BaseGameEngine {
     /**
@@ -779,6 +779,14 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         const currentSpaceId = currentPlayer.getCurrentSpaceId();
         const currentSpace = this.gameState.board.getSpace(currentSpaceId);
 
+        if (!currentSpace) {
+            console.warn(`Player ${currentPlayer.nickname} is on unknown space ${currentSpaceId}. Resetting remaining moves.`);
+            this.gameState.setRemainingMoves(0);
+            this.updateRemainingMoves(0);
+            this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
+            return;
+        }
+
         const connections = currentSpace.connections;
         const targetSpaces = connections.map(conn => conn.target);
 
@@ -913,6 +921,14 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         const currentPlayer = this.turnManager.getCurrentPlayer();
         const currentSpaceId = currentPlayer.getCurrentSpaceId();
         const currentSpace = this.gameState.board.getSpace(currentSpaceId);
+
+        if (!currentSpace) {
+            console.warn(`Player ${currentPlayer.nickname} is on unknown space ${currentSpaceId}. Resetting remaining moves.`);
+            this.gameState.setRemainingMoves(0);
+            this.updateRemainingMoves(0);
+            this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
+            return;
+        }
 
         const connections = currentSpace.connections;
 

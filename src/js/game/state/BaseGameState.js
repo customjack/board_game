@@ -1,9 +1,9 @@
-import Player from '../Player.js';
-import Board from '../Board.js';
-import Settings from '../Settings.js';
-import SharedRandomNumberGenerator from '../SharedRandomNumberGenerator.js';
-import GamePhases from '../../enums/GamePhases.js';
-import GameEventState from '../../enums/GameEventState.js';
+import Player from '../../elements/models/Player.js';
+import Board from '../../elements/models/Board.js';
+import Settings from '../../elements/models/Settings.js';
+import SharedRandomNumberGenerator from '../../elements/models/SharedRandomNumberGenerator.js';
+import GamePhases from '../phases/GamePhases.js';
+import GameEventState from '../phases/GameEventState.js';
 
 export default class BaseGameState {
     constructor({

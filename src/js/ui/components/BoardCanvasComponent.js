@@ -8,7 +8,7 @@ import Board from '../../elements/models/Board.js';
 import BoardRenderConfig from '../../rendering/BoardRenderConfig.js';
 import ConnectionRenderer from '../../rendering/ConnectionRenderer.js';
 import SpaceRenderer from '../../rendering/SpaceRenderer.js';
-import BoardSchemaValidator from '../utils/BoardSchemaValidator.js';
+import BoardSchemaValidator from '../../infrastructure/utils/BoardSchemaValidator.js';
 import BoardViewport from '../BoardViewport.js';
 
 export default class BoardCanvasComponent extends BaseUIComponent {

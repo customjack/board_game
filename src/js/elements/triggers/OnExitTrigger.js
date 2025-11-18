@@ -1,5 +1,5 @@
 import BaseTrigger from './BaseTrigger.js';
-import TriggerTypes from '../../enums/TriggerTypes.js';
+import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
 
 /**
  * OnExitTrigger - Triggered when a player exits (leaves) a space

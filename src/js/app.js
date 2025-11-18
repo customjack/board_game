@@ -2,17 +2,18 @@ import '../css/styles.css';
 import HostEventHandler from './eventHandlers/HostEventHandler';
 import ClientEventHandler from './eventHandlers/ClientEventHandler';
 import PersonalSettings from './elements/models/PersonalSettings';
-import PersonalSettingsMenu from './deprecated/legacy/controllers/menus/PersonalSettingsMenu';
-import PluginManagerModal from './deprecated/legacy/controllers/menus/PluginManagerModal';
-import PluginListPopup from './deprecated/legacy/controllers/menus/PluginListPopup';
-import PageRegistry from '../../infrastructure/registries/PageRegistry';
-import ListenerRegistry from '../../infrastructure/registries/ListenerRegistry';
-import PlaceholderRegistry from '../../infrastructure/registries/PlaceholderRegistry';
-import WindowListenerRegistry from '../../infrastructure/registries/WindowListenerRegistry';
-import PieceManagerRegistry from '../../infrastructure/registries/PieceManagerRegistry';
-import RegistryManager from '../../infrastructure/registries/RegistryManager';
+import PersonalSettingsMenu from '../deprecated/legacy/controllers/menus/PersonalSettingsMenu.js';
+import PluginManagerModal from '../deprecated/legacy/controllers/menus/PluginManagerModal.js';
+import PluginListPopup from '../deprecated/legacy/controllers/menus/PluginListPopup.js';
+import PageRegistry from './infrastructure/registries/PageRegistry.js';
+import ListenerRegistry from './infrastructure/registries/ListenerRegistry.js';
+import PlaceholderRegistry from './infrastructure/registries/PlaceholderRegistry.js';
+import WindowListenerRegistry from './infrastructure/registries/WindowListenerRegistry.js';
+import PieceManagerRegistry from './infrastructure/registries/PieceManagerRegistry.js';
+import RegistryManager from './infrastructure/registries/RegistryManager.js';
 import EventBus from './core/events/EventBus';
 import PluginManager from './systems/plugins/PluginManager';
+import Plugin from './systems/plugins/Plugin.js';
 import LocalStorageManager from './systems/storage/LocalStorageManager';
 import FactoryManager from './infrastructure/factories/FactoryManager';
 import EffectFactory from './infrastructure/factories/EffectFactory';
@@ -97,7 +98,7 @@ function initializePluginManager(eventBus, registryManager, factoryManager) {
     requirePlugin.keys().forEach((fileName) => {
         const pluginModule = requirePlugin(fileName);
         const plugin = pluginModule.default || pluginModule; // Use default export or the module itself
-        if (plugin && typeof plugin === 'function') {
+        if (plugin && typeof plugin === 'function' && plugin.prototype instanceof Plugin) {
             // Register plugin class in metadata system (if it supports it)
             if (typeof plugin.getPluginMetadata === 'function') {
                 pluginManager.registerPluginClass(plugin);

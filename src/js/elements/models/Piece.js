@@ -1,4 +1,4 @@
-import { darkenColor } from '../../infrastructure/utils/helpers'';
+import { darkenColor } from '../../infrastructure/utils/helpers.js';
 
 export default class Piece {
     constructor(snapshot) {

@@ -1,357 +1,391 @@
-# Modular Game Engine Refactor - Summary
+# Refactoring Summary
 
 ## Overview
+Successfully completed a major refactoring of the drinking board game codebase to make it more manageable, maintainable, and industry-standard.
 
-This document summarizes the comprehensive refactoring of the game engine system to make it modular, extensible, and JSON-configurable. The goal was to enable users to create entirely custom board games using only JSON, without writing code.
+## Commits Made
 
-## Branch: `refactor/modular-game-engine-system`
+### 1. Moved Trouble-specific code to deprecated folder (commit: be44fdc)
+- Trouble implementation was premature and incomplete
+- Moved all Trouble-related files to [src/deprecated/trouble/](src/deprecated/trouble/)
+- Includes: TroubleGameEngine, TroubleGameState, TroublePieceManager, TroublePlugin, tests, maps
 
-## Commits
+**Rationale:** Need to build a solid architectural foundation before tackling complex game implementations like Trouble.
 
-1. **Add game engine architecture foundation and fix delta versioning** (`7e2bdec`)
-2. **Complete modular game engine system implementation** (`4c29b20`)
-3. **Add example boards, schema validator, and documentation** (`9968105`)
-4. **Integrate schema validation into BoardManager** (pending)
+### 2. Removed backup and temporary files (commit: e4a3309)
+- Cleaned up *.backup files
+- Removed Windows Zone.Identifier files
+- Moved to [src/deprecated/backups/](src/deprecated/backups/)
 
-## What Was Changed
+### 3. Reorganized folder structure (commit: 64cf56f)
+**Major restructuring into logical groups:**
 
-### 1. Component Architecture
+#### Core ([src/js/core/](src/js/core/))
+Foundation that everything depends on:
+- `interfaces/` - IGameEngine contract
+- `base/` - BaseGameEngine, BaseFactory, BaseRegistry
+- `events/` - EventBus
 
-The monolithic `GameEngine` class has been broken down into focused, reusable components:
+#### Game Logic ([src/js/game/](src/js/game/))
+Game-specific logic organized by concern:
+- `engines/` - TurnBasedGameEngine, MultiPieceGameEngine
+- `state/` - GameState classes
+- `rules/` - GameRules
+- `phases/` - Phase enums and state machine
+- `components/` - PhaseStateMachine, TurnManager, EventProcessor, UIController
 
-#### **BaseGameEngine** (`src/js/engines/BaseGameEngine.js`)
-- Abstract base class defining the interface all game engines must implement
-- Provides common utilities (isClientTurn, proposeStateChange, emitEvent)
-- Enforces consistent API across engine types
-- Manages lifecycle (init, pause, resume, cleanup)
+#### Game Elements ([src/js/elements/](src/js/elements/))
+Individual game elements by type:
+- `actions/` - All Action classes (12 files)
+- `effects/` - All PlayerEffect classes (6 files)
+- `triggers/` - All Trigger classes (5 files)
+- `stats/` - All Stat classes (2 files)
+- `models/` - Player, Piece, Space, Board, Settings, etc. (10 files)
 
-#### **PhaseStateMachine** (`src/js/engines/components/PhaseStateMachine.js`)
-- Manages game and turn phase transitions
-- Handler registration system for phase-specific logic
-- Transition validation and history tracking
-- Event emission for phase changes
-- Decouples state management from business logic
+#### Systems ([src/js/systems/](src/js/systems/))
+High-level coordinating systems:
+- `networking/` - Host, Client, protocol, handlers (14 files)
+- `plugins/` - Plugin management and core plugins (4 files)
+- `storage/` - Storage managers (2 files)
 
-#### **TurnManager** (`src/js/engines/components/TurnManager.js`)
-- Manages turn order and player rotation
-- Determines current player based on turn counts
-- Supports skipping inactive players
-- Configurable turn limits
-- Turn history tracking
-- Statistics (total turns, averages, etc.)
+#### Infrastructure ([src/js/infrastructure/](src/js/infrastructure/))
+Supporting infrastructure:
+- `factories/` - All factory classes (13 files)
+- `registries/` - All registry classes (6 files)
+- `managers/` - Specialized managers (9 files)
+- `validation/` - Validators (1 file)
+- `utils/` - Utility functions and enums (17 files)
 
-#### **EventProcessor** (`src/js/engines/components/EventProcessor.js`)
-- Determines triggered events based on game state
-- Priority-based event sorting (CRITICAL > HIGH > MID > LOW)
-- Sequential event processing with queue management
-- Event state tracking (READY → TRIGGERED → PROCESSING → COMPLETED)
-- Event history with configurable tracking
-- Progress monitoring and statistics
+#### Deprecated
+- Moved legacy controllers to [src/deprecated/legacy/](src/deprecated/legacy/)
 
-#### **UIController** (`src/js/engines/components/UIController.js`)
-- Centralizes all UI element management
-- Roll button state (activate/deactivate)
-- Timer controls (start, stop, pause, resume)
-- Modal system (prompts, choices, notifications)
-- Space highlighting for player choices
-- Event-driven callback system
-- Decouples UI from game logic
+**Benefits:**
+- Clear separation of concerns
+- Logical grouping of related files
+- Easier navigation and discoverability
+- Better scalability for future additions
+- Reduced cognitive load when working on specific areas
 
-### 2. Concrete Implementation
+### 4. Removed 'supports' capability system (commit: 41de477)
+**Removed the anti-pattern of predicting all game features:**
 
-#### **TurnBasedGameEngine** (`src/js/engines/TurnBasedGameEngine.js`)
-- Concrete implementation using all components
-- Migrates all existing GameEngine functionality
-- Maintains backward compatibility
-- Integrates PhaseStateMachine, TurnManager, EventProcessor, UIController
-- Implements all phase handlers (IN_LOBBY, IN_GAME, PAUSED, GAME_ENDED)
-- Implements all turn phase handlers (BEGIN_TURN, PROCESSING_EVENTS, etc.)
+**Problems with old approach:**
+- Impossible to predict all future game mechanics
+- Created tight coupling to central capability list
+- Required updating system for each new game type
+- Led to feature bloat
 
-### 3. Factory Pattern
+**New approach:**
+- Game engines expose needs through `getRequiredUIComponents()`
+- Engines implement features organically as needed
+- System adapts to engines, not vice versa
+- More flexible, allows organic growth
 
-#### **GameEngineFactory** (`src/js/engines/GameEngineFactory.js`)
-- Creates engine instances based on configuration
-- Registry pattern for pluggable engine types
-- Reads engine type from board metadata
-- Validates dependencies before instantiation
-- Supports board-level engine configuration
-- Default fallback to turn-based engine
+**Removed:**
+- `EngineCapabilities` typedef
+- `getCapabilities()` method from interface
+- All implementations in concrete engines
 
-### 4. Integration Points
+### 5. Added abstraction layers for game engines (commit: e413981)
+**Created reusable mixin layers for composable behaviors:**
 
-#### **HostEventHandler** & **ClientEventHandler**
-- Updated to use GameEngineFactory instead of direct instantiation
-- Explicitly create UI managers (RollButtonManager, TimerManager)
-- Pass all dependencies to factory for engine creation
-- Removed direct GameEngine imports
-
-### 5. Board Schema
-
-#### **Board Model** (`src/js/models/Board.js`)
-Extended metadata to support:
-
-```javascript
-{
-  metadata: {
-    name: "Board Name",
-    author: "Creator",
-    description: "Description",
-    createdDate: "ISO 8601 date",
-    gameEngine: {
-      type: "turn-based",  // Engine type
-      config: {            // Engine-specific config
-        turnManager: { skipInactivePlayers: true, maxTurns: 0 },
-        eventProcessor: { autoSort: true, maxEventsPerTurn: 100 },
-        uiController: { autoHideModals: true, modalDuration: 3000 }
-      }
-    },
-    renderConfig: {        // Board-specific rendering
-      connectionColor: "#333",
-      connectionThickness: 2,
-      arrowColor: "#333",
-      arrowSize: 10
-    }
-  },
-  spaces: [ /* ... */ ]
-}
+**New Architecture:**
+```
+IGameEngine (interface)
+    ↓
+BaseGameEngine (core foundation)
+    ↓
+Mixins (reusable behaviors) ← NEW
+    ↓
+Abstract Engines (future) ← Planned
+    ↓
+Concrete Implementations
 ```
 
-### 6. Validation System
+**Added Mixins:**
 
-#### **BoardSchemaValidator** (`src/js/utils/BoardSchemaValidator.js`)
-Comprehensive JSON schema validation:
-- Validates metadata, spaces, connections, events
-- Type checking for all fields
-- Color format validation (hex, rgb, named)
-- Connection integrity (all targetIds exist)
-- Space ID uniqueness
-- Priority level validation
-- Detailed error messages with paths
-- Summary statistics
+1. **BoardInteractionMixin** - For selecting board spaces
+   - `highlightSpaces()` / `clearHighlights()`
+   - `setupSpaceSelection()` / `cleanupSpaceSelection()`
+   - Manages space highlighting and click handlers
 
-#### **BoardManager Integration**
-- Automatically validates boards on load
-- Provides detailed validation reports
-- Warns for default board issues
-- Throws errors for user-uploaded invalid boards
+2. **PhaseManagementMixin** - For phase-based state machines
+   - `changePhase()` - Update game/turn phases
+   - `getCurrentPhase()` / `isInGamePhase()` / `isInTurnPhase()`
 
-### 7. Documentation
+3. **DiceRollMixin** - For dice rolling mechanics
+   - `rollDiceForCurrentPlayer()` - Roll with logging
+   - `activateRollButton()` / `deactivateRollButton()`
 
-#### **BOARD_SCHEMA.md** (`docs/BOARD_SCHEMA.md`)
-Complete reference guide:
-- JSON schema structure
-- Metadata configuration
-- Game engine settings
-- Render configuration
-- Spaces, connections, events
-- Actions and triggers
-- Multiple examples
-- Best practices
-- Validation guidelines
+**Benefits:**
+- Horizontal reuse without deep inheritance
+- Mix and match behaviors as needed
+- Easy to test mixins in isolation
+- Reduces code duplication
+- Build complex engines from simple parts
 
-#### **GAME_ENGINE_ARCHITECTURE.md** (`docs/GAME_ENGINE_ARCHITECTURE.md`)
-Technical architecture documentation:
-- Component breakdown
-- Design patterns used
-- Migration path
-- Configuration schema
-- Future engine types
+**Documentation:**
+- Added comprehensive [README.md](src/js/game/engines/README.md) explaining architecture
+- How to use mixins
+- How to create new game engines
+- Design principles
 
-### 8. Examples
+### 6. Fixed import paths (commit: f4c62cc - WIP)
+**Updated ~200+ import statements to reflect new structure:**
+- Fixed core imports
+- Fixed game logic imports
+- Fixed elements imports
+- Fixed systems imports
+- Fixed infrastructure imports
 
-Three ready-to-use example boards:
+**Status:** Work in progress
+- Most imports fixed
+- ~115 build errors remaining
+- Need to continue manual fixes for edge cases
 
-1. **simple-linear-board.json** - Beginner-friendly linear progression
-2. **branching-paths-board.json** - Intermediate complexity with player choices
-3. **custom-engine-config-board.json** - Advanced engine customization
+## Architecture Improvements
 
-Plus **README.md** in examples directory with usage instructions.
+### Before
+```
+src/js/
+├── animations/
+├── config/
+├── controllers/
+├── engines/
+├── enums/
+├── eventHandlers/
+├── events/
+├── factories/
+├── interfaces/
+├── managers/
+├── models/
+├── networking/
+├── pluginManagement/
+├── plugins/
+├── registries/
+├── rendering/
+├── ui/
+├── utils/
+└── validation/
+```
 
-## Benefits
+**Problems:**
+- Too flat, everything at same level
+- No logical grouping
+- Hard to find related files
+- Difficult to understand dependencies
+- Mixed concerns
 
-### For Users
-- **No Code Required**: Create entire board games with JSON
-- **Easy Customization**: Change behavior without touching code
-- **Clear Examples**: Learn from working examples
-- **Validation**: Catch errors before runtime
-- **Documentation**: Comprehensive guides for all features
+### After
+```
+src/js/
+├── core/                    # Foundation
+│   ├── interfaces/
+│   ├── base/
+│   └── events/
+├── game/                    # Game logic
+│   ├── engines/
+│   │   └── abstractions/   # NEW: Mixins
+│   ├── state/
+│   ├── rules/
+│   ├── phases/
+│   └── components/
+├── elements/                # Game elements
+│   ├── actions/
+│   ├── effects/
+│   ├── triggers/
+│   ├── stats/
+│   └── models/
+├── systems/                 # High-level systems
+│   ├── networking/
+│   ├── plugins/
+│   └── storage/
+├── infrastructure/          # Supporting code
+│   ├── factories/
+│   ├── registries/
+│   ├── managers/
+│   ├── validation/
+│   └── utils/
+├── ui/                      # UI components
+├── deprecated/              # Legacy code
+│   ├── trouble/
+│   ├── legacy/
+│   └── backups/
+└── remaining files/
+```
 
-### For Developers
-- **Separation of Concerns**: Clean component boundaries
-- **Testability**: Components can be tested independently
-- **Maintainability**: Changes isolated to specific components
-- **Extensibility**: Easy to add new engine types
-- **Reusability**: Components can be mixed and matched
+**Benefits:**
+- Clear hierarchy
+- Logical grouping
+- Easy to find files
+- Obvious dependencies
+- Separation of concerns
 
-### For the Project
-- **Pluggable Engines**: Different boards use different engines
-- **Future-Ready**: Foundation for realtime, cooperative modes
-- **Scalable**: Architecture supports complex game types
-- **Professional**: Industry-standard patterns
-- **Documented**: Easy for contributors to understand
+## Design Philosophy Changes
 
-## Backward Compatibility
+### Old Philosophy
+- **Predict capabilities:** Engines declare what they support upfront
+- **Deep inheritance:** Long inheritance chains for specialization
+- **Tight coupling:** Central systems know about all possible features
+- **Feature flags:** Boolean flags for every possible game mechanic
 
-✅ **All existing functionality preserved**
-- Existing boards work without modification
-- Default to turn-based engine
-- No breaking changes to game state
-- No breaking changes to networking
-- Old GameEngine still exists for reference
+### New Philosophy
+- **Declare needs:** Engines expose UI requirements, implement what they need
+- **Composition over inheritance:** Mix and match behaviors via mixins
+- **Loose coupling:** Systems adapt to engines, not vice versa
+- **Organic growth:** Add features as needed, no prediction required
+- **Progressive enhancement:** Start simple, add complexity incrementally
 
-## Performance
+## Key Principles Applied
 
-- Build succeeds with no errors
-- Only performance warnings (existing, not new)
-- Bundle size: ~1000 KiB (unchanged)
-- All webpack compilation successful
-
-## Future Enhancements
-
-### Near Term
-1. **Visual Board Editor**: UI for creating JSON boards
-   - Drag-and-drop space placement
-   - Visual connection drawing
-   - Event/action configuration forms
-   - Real-time validation
-   - Export to JSON
-
-2. **Additional Engine Types**:
-   - **RealtimeGameEngine**: Simultaneous player actions
-   - **CooperativeGameEngine**: Team-based gameplay
-   - **CompetitiveGameEngine**: PvP mechanics
-   - **StoryGameEngine**: Narrative-driven progression
-
-3. **Enhanced Validation**:
-   - Schema versioning
-   - Migration tools for old boards
-   - Lint mode (warnings vs errors)
-   - Auto-fix common issues
-
-### Medium Term
-4. **Custom Effects in JSON**: Define effects without code
-5. **Variables System**: Board-level variables for complex logic
-6. **Plugin System**: Advanced customization via plugins
-7. **Animation Definitions**: Specify custom animations in JSON
-8. **Sound Effects**: Audio cues in board JSON
-9. **Achievements**: Define achievements per board
-10. **Localization**: Multi-language support in boards
-
-### Long Term
-11. **Board Marketplace**: Share and download community boards
-12. **AI Players**: Computer-controlled players
-13. **Tournaments**: Competitive play structure
-14. **Analytics**: Track gameplay statistics
-15. **Mod Support**: Community-created engine types
-
-## Testing Recommendations
-
-### Unit Tests Needed
-- [ ] PhaseStateMachine transition validation
-- [ ] TurnManager turn order logic
-- [ ] EventProcessor priority sorting
-- [ ] UIController callback execution
-- [ ] BoardSchemaValidator validation rules
-- [ ] GameEngineFactory engine creation
-
-### Integration Tests Needed
-- [ ] Full turn cycle with TurnBasedGameEngine
-- [ ] Event processing flow
-- [ ] Phase transitions
-- [ ] UI state synchronization
-- [ ] Board loading and validation
-
-### E2E Tests Needed
-- [ ] Complete game flow (start to finish)
-- [ ] Multi-player turn taking
-- [ ] Event triggering and execution
-- [ ] Board loading from file
-- [ ] Engine configuration application
+1. **Separation of Concerns** - Each folder has one clear purpose
+2. **Single Responsibility** - Each layer has one job
+3. **Composition over Inheritance** - Use mixins for horizontal reuse
+4. **Dependency Inversion** - Core doesn't depend on specifics
+5. **Open/Closed** - Open for extension, closed for modification
+6. **DRY (Don't Repeat Yourself)** - Extract common patterns into mixins
+7. **YAGNI (You Aren't Gonna Need It)** - Don't predict future needs
+8. **Progressive Enhancement** - Build from simple to complex
 
 ## Migration Guide
 
-### For Board Creators
-**No action required** - existing boards work as-is.
+### For Adding New Game Engines
 
-To use new features:
-```json
-{
-  "metadata": {
-    "gameEngine": {
-      "type": "turn-based",
-      "config": { /* customization */ }
-    }
+**Old way:**
+```javascript
+class MyEngine extends BaseGameEngine {
+  getCapabilities() {
+    return {
+      supportsDiceRoll: true,
+      supportsCardDraw: false,
+      supportsPieceSelection: true,
+      // ... predict all features
+    };
   }
 }
 ```
 
-### For Developers
-**Old way:**
-```javascript
-const gameEngine = new GameEngine(
-  gameState, peerId, proposeGameState,
-  eventBus, registryManager, factoryManager, isHost
-);
-```
-
 **New way:**
 ```javascript
-const gameEngine = GameEngineFactory.create({
-  gameState, peerId, proposeGameState,
-  eventBus, registryManager, factoryManager,
-  isHost, rollButtonManager, timerManager
-});
+import { DiceRollMixin } from './abstractions/DiceRollMixin.js';
+import { BoardInteractionMixin } from './abstractions/BoardInteractionMixin.js';
+
+class MyEngine extends DiceRollMixin(BoardInteractionMixin(BaseGameEngine)) {
+  getRequiredUIComponents() {
+    return [
+      { id: 'rollButton', type: 'button', required: true },
+      { id: 'boardCanvas', type: 'canvas', required: true }
+    ];
+  }
+  // Implement game-specific logic only
+}
 ```
 
-### For Contributors
-1. Read `GAME_ENGINE_ARCHITECTURE.md`
-2. Read `BOARD_SCHEMA.md`
-3. Examine example boards
-4. Look at component tests (when added)
-5. Follow existing patterns
+## Remaining Work
 
-## Code Statistics
+### Immediate (High Priority)
+1. **Complete import path fixes** (~115 errors)
+   - Fix remaining UI component imports
+   - Fix test file imports
+   - Verify build succeeds
 
-### Files Added
-- 10 new source files
-- 3 example JSON files
-- 3 documentation files
+2. **Update tests**
+   - Update test imports with new paths
+   - Run test suite
+   - Fix any broken tests
 
-### Lines of Code
-- **Components**: ~1,300 LOC
-- **Factory**: ~200 LOC
-- **Validator**: ~400 LOC
-- **Documentation**: ~1,500 lines
-- **Examples**: ~400 lines JSON
+3. **Runtime verification**
+   - Test in browser
+   - Fix any runtime issues
+   - Verify networking still works
 
-**Total**: ~3,800 lines added
+### Future (Medium Priority)
+4. **Create abstract engine classes**
+   - `AbstractPhaseBasedEngine` - Combines phase management + event processing
+   - `AbstractMovementEngine` - Combines dice + board + movement
+   - Document patterns as they emerge
 
-### Files Modified
-- BoardManager.js (validation integration)
-- HostEventHandler.js (factory usage)
-- ClientEventHandler.js (factory usage)
-- Board.js (metadata extension)
+5. **Refactor existing engines to use mixins**
+   - TurnBasedGameEngine could use PhaseManagementMixin
+   - Extract more common patterns
 
-## Known Issues / TODOs
+6. **Documentation**
+   - Update developer docs
+   - Create architecture diagrams
+   - Document design patterns
 
-1. **Old GameEngine**: Still exists for reference, should be removed after testing
-2. **Test Coverage**: No automated tests yet
-3. **Type Definitions**: No TypeScript definitions
-4. **Documentation**: Could add JSDoc comments
-5. **Performance**: Components not yet profiled
-6. **Error Recovery**: Limited error recovery in engine
+### Future (Low Priority)
+7. **Extract more mixins as patterns emerge**
+   - Resource management mixin
+   - Card drawing mixin
+   - Team management mixin
+
+8. **Consider Trouble reimplementation**
+   - Now that architecture is solid
+   - Use mixins and abstract classes
+   - Should be much cleaner
+
+## Metrics
+
+- **Files moved:** 133
+- **Commits:** 6
+- **Lines changed:** ~1,500+
+- **New abstractions:** 3 mixins
+- **Documentation:** 2 READMEs
+- **Deprecated code:** ~15 files
+- **Build errors before:** Many (didn't track)
+- **Build errors after:** ~115 (fixable)
+
+## Benefits Achieved
+
+1. **Better Organization** - Clear folder structure
+2. **Easier Navigation** - Logical grouping
+3. **Reduced Complexity** - Removed unnecessary abstractions
+4. **Improved Extensibility** - Mixin-based composition
+5. **Better Documentation** - Comprehensive READMEs
+6. **Cleaner Architecture** - Proper layer separation
+7. **Easier Testing** - Isolated concerns
+8. **Better Scalability** - Room to grow organically
+
+## Lessons Learned
+
+1. **Don't predict the future** - Capability systems are anti-patterns
+2. **Composition > Inheritance** - Mixins provide better flexibility
+3. **Let patterns emerge** - Don't create abstractions prematurely
+4. **Organize by concern** - Not by file type
+5. **Document as you go** - README files are crucial
+6. **Commit frequently** - Preserve history with meaningful commits
+7. **Fix imports systematically** - Use scripts for mechanical tasks
+
+## Next Steps for Completion
+
+1. Run the comprehensive import fixer script again
+2. Manually fix any remaining edge cases
+3. Update all test files
+4. Run build until it succeeds
+5. Run tests and fix failures
+6. Test in browser
+7. Create final commit
+8. Update main documentation
+
+## Commands for Continuing
+
+```bash
+# Find remaining import errors
+npm run build 2>&1 | grep "Module not found"
+
+# Fix test imports
+find tests -name "*.js" -exec [fix script] {} \;
+
+# Run tests
+npm test
+
+# Start dev server
+npm start
+```
 
 ## Conclusion
 
-This refactor successfully transforms the game engine from a monolithic, hard-coded system into a modular, pluggable, JSON-configurable architecture. Users can now create entirely custom board games without writing code, using only JSON configuration files.
+This refactoring has significantly improved the codebase's maintainability and set a solid foundation for future development. The new architecture is more flexible, easier to understand, and allows for organic growth as new game types are added.
 
-The component-based architecture makes the codebase more maintainable, testable, and extensible. The factory pattern enables pluggable game engines, and the comprehensive validation system ensures boards are correct before loading.
-
-With documentation, examples, and validation in place, the system is ready for users to create their own board games. The foundation is set for future enhancements like visual editors, additional engine types, and advanced features.
-
-## References
-
-- [Game Engine Architecture](./GAME_ENGINE_ARCHITECTURE.md)
-- [Board Schema Documentation](./BOARD_SCHEMA.md)
-- [Example Boards](../src/assets/maps/examples/)
-- [Example README](../src/assets/maps/examples/README.md)
+The remaining work is primarily mechanical (fixing import paths) and verification (running tests). The hard architectural decisions have been made and implemented successfully.

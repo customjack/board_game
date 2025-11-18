@@ -1,5 +1,5 @@
 import BaseTrigger from './BaseTrigger.js';
-import TriggerTypes from '../../enums/TriggerTypes.js';
+import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
 
 /**
  * OnEnterTrigger - Triggered when a player enters (moves into) a space

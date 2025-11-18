@@ -1,5 +1,5 @@
 import SchemaValidator from '../SchemaValidator';
-import ActionTypes from '../../enums/ActionTypes';
+import ActionTypes from '../ActionTypes.js';
 
 describe('SchemaValidator', () => {
     describe('validateField', () => {

@@ -10,10 +10,10 @@
  */
 
 // Import default animations
-import ParticleAnimation from '../../../animations/ParticleAnimation.js';
-import TimerAnimation from '../../../animations/TimerAnimation.js';
-import DiceRollAnimation from '../../../animations/DiceRollAnimation.js';
-import SlotMachineAnimation from '../../../animations/SlotMachineAnimation.js';
+import ParticleAnimation from '../../animations/ParticleAnimation.js';
+import TimerAnimation from '../../animations/TimerAnimation.js';
+import DiceRollAnimation from '../../animations/DiceRollAnimation.js';
+import SlotMachineAnimation from '../../animations/SlotMachineAnimation.js';
 
 export default class AnimationFactory {
     constructor() {

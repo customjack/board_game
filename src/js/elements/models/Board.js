@@ -1,6 +1,6 @@
-import Space from './Space';
-import GameRules from './GameRules.js';
-import { getVisibleElementById } from '../../infrastructure/utils/helpers'.js';
+import Space from './Space.js';
+import GameRules from '../../game/rules/GameRules.js';
+import { getVisibleElementById } from '../../infrastructure/utils/helpers.js';
 
 export default class Board {
     constructor(spaces = [], metadata = {}, gameRules = null) {
@@ -30,9 +30,13 @@ export default class Board {
         this.spaces.push(space);
     }
 
-    // Get a space by its id
+    // Get a space by its id (handles numeric/string mismatch)
     getSpace(id) {
-        return this.spaces.find(space => space.id === id);
+        if (id === undefined || id === null) {
+            return undefined;
+        }
+        const targetId = String(id);
+        return this.spaces.find(space => String(space.id) === targetId);
     }
 
     // Highlight specific spaces

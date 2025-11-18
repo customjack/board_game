@@ -1,6 +1,6 @@
 import PlayerEffect from './PlayerEffect.js';
-import TurnPhases from '../../enums/TurnPhases.js';
-import PlayerStates from '../../enums/PlayerStates.js';
+import TurnPhases from '../../game/phases/TurnPhases.js';
+import PlayerStates from '../../game/phases/PlayerStates.js';
 
 /**
  * SkipTurnsEffect - Forces a player to skip N turns

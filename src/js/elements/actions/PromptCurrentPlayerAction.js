@@ -1,6 +1,6 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../enums/ActionTypes.js';
-import InputValidator from '../utils/InputValidator.js';
+import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
+import InputValidator from '../../infrastructure/utils/InputValidator.js';
 
 /**
  * PromptCurrentPlayerAction - Shows a modal prompt to the current player only

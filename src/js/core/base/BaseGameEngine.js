@@ -1,4 +1,4 @@
-import IGameEngine from '../core/interfaces/IGameEngine.js';
+import IGameEngine from '../interfaces/IGameEngine.js';
 
 /**
  * BaseGameEngine - Abstract base class for all game engines

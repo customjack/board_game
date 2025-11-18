@@ -13,8 +13,8 @@
 import MessageHandlerPlugin from './MessageHandlerPlugin.js';
 import { MessageTypes } from '../protocol/MessageTypes.js';
 import GameStateFactory from '../../../infrastructure/factories/GameStateFactory.js';
-import InputValidator from '../utils/InputValidator.js';
-import ModalUtil from '../utils/ModalUtil.js';
+import InputValidator from '../../../infrastructure/utils/InputValidator.js';
+import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
 
 export default class ConnectionHandler extends MessageHandlerPlugin {
     register() {

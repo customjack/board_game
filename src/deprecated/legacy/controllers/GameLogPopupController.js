@@ -1,4 +1,4 @@
-import { requestAnimationFrameSafe } from '../utils/layout.js';
+import { requestAnimationFrameSafe } from '../../../js/infrastructure/utils/layout.js';
 
 export default class GameLogPopupController {
     constructor(eventBus, config = {}) {

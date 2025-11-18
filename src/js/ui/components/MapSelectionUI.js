@@ -10,8 +10,8 @@
  */
 
 import BaseUIComponent from '../BaseUIComponent.js';
-import MapStorageManager from '../../managers/MapStorageManager.js';
-import ModalUtil from '../utils/ModalUtil.js';
+import MapStorageManager from '../../systems/storage/MapStorageManager.js';
+import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
 
 export default class MapSelectionUI extends BaseUIComponent {
     constructor(config = {}) {

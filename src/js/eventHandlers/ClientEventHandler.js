@@ -1,11 +1,11 @@
 import BaseEventHandler from './BaseEventHandler.js';
 import Client from '../systems/networking/Client.js';
-import TimerAnimation from '../../../animations/TimerAnimation.js';
-import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
+import TimerAnimation from '../animations/TimerAnimation.js';
+import ModalUtil from '../infrastructure/utils/ModalUtil.js';
 import UIBinder from './UIBinder.js';
 import ActionRegistry from './ActionRegistry.js';
 import { CLIENT_UI_BINDINGS } from '../config/ui-bindings.js';
-import LoadingProgressTracker, { LOADING_STAGES } from '../../infrastructure/utils/LoadingProgressTracker.js';
+import LoadingProgressTracker, { LOADING_STAGES } from '../infrastructure/utils/LoadingProgressTracker.js';
 import LoadingBar from '../ui/LoadingBar.js';
 
 export default class ClientEventHandler extends BaseEventHandler {

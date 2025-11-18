@@ -1,5 +1,5 @@
 import PlayerEffect from './PlayerEffect.js';
-import TurnPhases from '../../enums/TurnPhases.js';
+import TurnPhases from '../../game/phases/TurnPhases.js';
 
 /**
  * RepeatTurnsEffect - Grants the player N extra consecutive turns
