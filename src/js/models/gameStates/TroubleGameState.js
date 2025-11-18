@@ -13,10 +13,30 @@ import BaseGameState from './BaseGameState.js';
 export default class TroubleGameState extends BaseGameState {
     constructor(config = {}) {
         super(config);
+        this.currentPlayerIndex = config.currentPlayerIndex || 0;
     }
 
     getStateType() {
         return 'trouble';
+    }
+
+    /**
+     * Set the current player index
+     * @param {number} index - Player index
+     */
+    setCurrentPlayerIndex(index) {
+        this.currentPlayerIndex = index;
+    }
+
+    /**
+     * Get current player based on index
+     * @returns {Player|null} Current player
+     */
+    getCurrentPlayer() {
+        if (!Array.isArray(this.players) || this.players.length === 0) {
+            return null;
+        }
+        return this.players[this.currentPlayerIndex % this.players.length] || null;
     }
 
     /**
@@ -27,18 +47,22 @@ export default class TroubleGameState extends BaseGameState {
      */
     getDeltaFields() {
         return [
-            ...super.getDeltaFields()
+            ...super.getDeltaFields(),
+            'currentPlayerIndex'
             // pluginState is handled separately by StateDelta
         ];
     }
 
     toJSON() {
         return {
-            ...super.toJSON()
+            ...super.toJSON(),
+            currentPlayerIndex: this.currentPlayerIndex
         };
     }
 
     static fromJSON(json, factoryManager) {
-        return super.fromJSON(json, factoryManager);
+        const state = super.fromJSON(json, factoryManager);
+        state.currentPlayerIndex = json.currentPlayerIndex || 0;
+        return state;
     }
 }
