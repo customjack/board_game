@@ -517,12 +517,36 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
     emitStateUpdate() {
         // Emit state update for UI components (like TroublePieceManager)
+        // Convert pieces to include spaceId for UI rendering
+        const piecesWithSpaceId = this.gameState.pieces.map(piece => ({
+            ...piece,
+            id: `${piece.playerId}-${piece.pieceIndex}`,
+            spaceId: this.getSpaceIdForPiece(piece)
+        }));
+
         this.emitEvent('trouble:stateUpdated', {
-            pieces: this.gameState.pieces,
+            pieces: piecesWithSpaceId,
             currentPlayerIndex: this.gameState.currentPlayerIndex,
+            currentPlayerId: this.gameState.getCurrentPlayer()?.playerId,
             lastRoll: this.gameState.lastRoll,
             turnPhase: this.gameState.turnPhase
         });
+    }
+
+    getSpaceIdForPiece(piece) {
+        // Convert position/status to spaceId for UI rendering
+        switch (piece.status) {
+            case PieceStatus.HOME:
+                return `home-${piece.playerIndex}-${piece.pieceIndex}`;
+            case PieceStatus.TRACK:
+                return `track-${piece.position}`;
+            case PieceStatus.FINISH:
+                return `finish-${piece.playerIndex}-${piece.position}`;
+            case PieceStatus.DONE:
+                return `done-${piece.playerIndex}-${piece.pieceIndex}`;
+            default:
+                return `home-${piece.playerIndex}-${piece.pieceIndex}`;
+        }
     }
 
     getRequiredUIComponents() {
