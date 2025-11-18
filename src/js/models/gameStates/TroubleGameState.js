@@ -72,7 +72,9 @@ export default class TroubleGameState extends BaseGameState {
      * Set current player index
      */
     setCurrentPlayerIndex(index) {
-        this.currentPlayerIndex = index;
+        if (typeof index === 'number') {
+            this.currentPlayerIndex = Math.max(0, Math.min(index, Math.max(this.players.length - 1, 0)));
+        }
     }
 
     /**
@@ -118,7 +120,9 @@ export default class TroubleGameState extends BaseGameState {
             currentPlayer.turnsTaken++;
         }
 
-        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+        if (this.players.length > 0) {
+            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+        }
         this.turnPhase = TurnPhases.BEGIN_TURN;
         this.lastRoll = null;
         this.extraTurnEarned = false;
