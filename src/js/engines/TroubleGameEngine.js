@@ -42,11 +42,19 @@ export default class TroubleGameEngine extends BaseGameEngine {
             rollButton = this.uiSystem.getComponent('rollButton');
         }
 
-        if (rollButton && rollButton.init) {
-            rollButton.init({
-                onRollDice: () => this.handleRollDiceForCurrentPlayer(),
-                onRollComplete: (result) => this.handleAfterDiceRoll(result)
-            });
+        // Setup roll button callbacks (may already be initialized by UISystem)
+        if (rollButton) {
+            // If already initialized, just update callbacks directly
+            if (rollButton.initialized) {
+                rollButton.onRollDiceCallback = () => this.handleRollDiceForCurrentPlayer();
+                rollButton.onRollCompleteCallback = (result) => this.handleAfterDiceRoll(result);
+            } else if (rollButton.init) {
+                // Otherwise initialize it
+                rollButton.init({
+                    onRollDice: () => this.handleRollDiceForCurrentPlayer(),
+                    onRollComplete: (result) => this.handleAfterDiceRoll(result)
+                });
+            }
         }
 
         // Initialize game state
