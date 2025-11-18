@@ -540,6 +540,20 @@ export default class PluginManager {
     }
 
     /**
+     * Set the event handler for all plugins
+     * Allows plugins to register custom event handlers
+     * @param {BaseEventHandler} eventHandler - Host or Client event handler instance
+     */
+    setEventHandler(eventHandler) {
+        this.eventHandler = eventHandler;
+        this.plugins.forEach(plugin => {
+            if (typeof plugin.setEventHandler === 'function') {
+                plugin.setEventHandler(eventHandler);
+            }
+        });
+    }
+
+    /**
      * Validate plugin metadata schema
      * @private
      * @param {Object} metadata - Plugin metadata to validate

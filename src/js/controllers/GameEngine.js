@@ -1,6 +1,6 @@
 // GameEngine.js
 
-import TurnBasedGameState from '../gameStates/TurnBasedGameState.js';
+import TurnBasedGameState from '../models/gameStates/TurnBasedGameState.js';
 import GameEvent from '../models/GameEvent';
 import TurnPhases from '../enums/TurnPhases';
 import GamePhases from '../enums/GamePhases';

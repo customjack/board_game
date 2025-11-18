@@ -1,6 +1,9 @@
 // Test setup file
-// Mock DOM elements that the game engine expects
-global.document.getElementById = jest.fn((id) => {
+// Enhance DOM helpers with safe fallbacks for elements that don't exist in JSDOM
+const realGetElementById = document.getElementById.bind(document);
+const mockElementCache = new Map();
+
+const createMockElement = (id) => {
   const mockElement = {
     id,
     style: {},
@@ -19,8 +22,22 @@ global.document.getElementById = jest.fn((id) => {
     },
     querySelector: jest.fn(),
     querySelectorAll: jest.fn(() => []),
+    setAttribute: jest.fn(),
   };
+
   return mockElement;
+};
+
+document.getElementById = jest.fn((id) => {
+  const realElement = realGetElementById(id);
+  if (realElement) {
+    return realElement;
+  }
+
+  if (!mockElementCache.has(id)) {
+    mockElementCache.set(id, createMockElement(id));
+  }
+  return mockElementCache.get(id);
 });
 
 global.document.createElement = jest.fn((tag) => ({

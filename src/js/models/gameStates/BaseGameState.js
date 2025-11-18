@@ -1,9 +1,9 @@
-import Player from '../models/Player.js';
-import Board from '../models/Board.js';
-import Settings from '../models/Settings.js';
-import SharedRandomNumberGenerator from '../models/SharedRandomNumberGenerator.js';
-import GamePhases from '../enums/GamePhases.js';
-import GameEventState from '../enums/GameEventState.js';
+import Player from '../Player.js';
+import Board from '../Board.js';
+import Settings from '../Settings.js';
+import SharedRandomNumberGenerator from '../SharedRandomNumberGenerator.js';
+import GamePhases from '../../enums/GamePhases.js';
+import GameEventState from '../../enums/GameEventState.js';
 
 export default class BaseGameState {
     constructor({
@@ -174,6 +174,18 @@ export default class BaseGameState {
             );
             player.currentSpaceId = startingSpaceId;
         });
+    }
+
+    /**
+     * Get list of top-level fields that should be included in delta updates
+     * Subclasses should override this to add their specific fields
+     * @returns {Array<string>} Field names to include in deltas
+     */
+    getDeltaFields() {
+        return [
+            'stateType',
+            'gamePhase'
+        ];
     }
 
     toJSON() {

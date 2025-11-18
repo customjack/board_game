@@ -10,6 +10,7 @@ import LoadingBar from '../ui/LoadingBar.js';
 import MapSelectionUI from '../ui/components/MapSelectionUI.js';
 import MapStorageManager from '../managers/MapStorageManager.js';
 import Board from '../models/Board.js';
+import GameStateFactory from '../factories/GameStateFactory.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal) {
@@ -20,6 +21,23 @@ export default class HostEventHandler extends BaseEventHandler {
         this.actionRegistry = new ActionRegistry();
         this.mapSelectionUI = null; // Initialized after peer is created
         this.pluginManagerModal = pluginManagerModal; // Plugin manager modal
+    }
+
+    init() {
+        super.init();
+
+        const hostPage = document.getElementById('hostPage');
+        if (hostPage) {
+            hostPage.style.display = 'block';
+            hostPage.setAttribute?.('style', 'display: block;');
+        }
+
+        const homePage = document.getElementById('homePage');
+        if (homePage && this.getInitialPage() !== 'homePage') {
+            homePage.style.display = 'none';
+            homePage.setAttribute?.('style', 'display: none;');
+        }
+
     }
 
     /**
@@ -51,7 +69,9 @@ export default class HostEventHandler extends BaseEventHandler {
         this.setupActions();
 
         // Bind all actions at once
-        this.actionRegistry.bindAll(this.listenerRegistry, this.uiBinder);
+        if (this.listenerRegistry) {
+            this.actionRegistry.bindAll(this.listenerRegistry, this.uiBinder);
+        }
 
         // Listen for plugin state changes and broadcast to clients
         this.eventBus.on('pluginStateChanged', (data) => {
@@ -148,6 +168,7 @@ export default class HostEventHandler extends BaseEventHandler {
         this.peer = new Host(hostName, this);
         await this.peer.init(progressTracker);
         this.pluginManager.setPeer(this.peer.peer);
+        this.pluginManager.setEventHandler(this);
 
         progressTracker.nextStage();
 
@@ -177,18 +198,37 @@ export default class HostEventHandler extends BaseEventHandler {
      * Handles displaying the buttons and elements in the lobby
      */
     displayLobbyControls() {
-        const closeGameButton = document.getElementById('closeGameButton');
-        const startGameButton = document.getElementById('startGameButton');
-        const selectMapButton = document.getElementById('selectMapButton');
-        const openSettingsButton = document.getElementById('openSettingsButton');
-        const uploadPluginButton = document.getElementById('uploadPluginButton');
+        const getRealElement = (elementId) => {
+            const element = document.getElementById(elementId);
+            if (element && typeof element.nodeType === 'number' && element.nodeType === 1) {
+                return element;
+            }
+            return null;
+        };
 
-        // Show host-specific buttons
-        if (closeGameButton) closeGameButton.style.display = 'block';
-        if (startGameButton) startGameButton.style.display = 'block';
-        if (selectMapButton) selectMapButton.style.display = 'block';
-        if (openSettingsButton) openSettingsButton.style.display = 'block';
-        if (uploadPluginButton) uploadPluginButton.style.display = 'block';
+        const setInlineDisplay = (elementId) => {
+            const element = getRealElement(elementId);
+            if (element) {
+                element.style.display = 'inline';
+                element.setAttribute?.('style', 'display: inline;');
+            }
+            return element;
+        };
+
+        const closeGameButton = setInlineDisplay('closeGameButton');
+        const startGameButton = setInlineDisplay('startGameButton');
+        const selectMapButton = setInlineDisplay('selectMapButton');
+        const openSettingsButton = setInlineDisplay('openSettingsButton');
+
+        // Support either legacy uploadBoardButton or new uploadPluginButton IDs
+        setInlineDisplay('uploadPluginButton');
+        setInlineDisplay('uploadBoardButton');
+
+        const settingsSection = getRealElement('settingsSectionHost');
+        if (settingsSection) {
+            settingsSection.style.display = 'inline';
+            settingsSection.setAttribute?.('style', 'display: inline;');
+        }
 
         // Initialize map selection UI
         this.initializeMapSelectionUI();
@@ -268,13 +308,26 @@ export default class HostEventHandler extends BaseEventHandler {
             // Create board from map data
             const board = Board.fromJSON(mapData, this.factoryManager);
 
-            // Update game state
-            this.peer.gameState.board = board;
-            this.peer.gameState.selectedMapId = mapId;
-            this.peer.gameState.selectedMapData = mapData;
+            // Rebuild the game state so we can honor the board's preferred state type
+            const previousState = this.peer.gameState;
+            const newGameState = GameStateFactory.create({
+                board,
+                factoryManager: this.factoryManager,
+                players: previousState?.players || [],
+                settings: previousState?.settings,
+                randomGenerator: previousState?.randomGenerator,
+                selectedMapId: mapId,
+                selectedMapData: mapData,
+                pluginState: previousState?.pluginState || {}
+            });
 
-            // Reset all player positions to the new board's starting spaces
-            this.peer.gameState.resetPlayerPositions();
+            newGameState.resetPlayerPositions?.();
+
+            this.peer.gameState = newGameState;
+            const hostPeerId = this.peer?.peer?.id || this.peer?.hostId || null;
+            if (hostPeerId) {
+                this.peer.ownedPlayers = newGameState.getPlayersByPeerId(hostPeerId);
+            }
 
             // Recreate the game engine so metadata/engine type reflect the new board
             this.createGameEngine((proposedGameState) =>
@@ -282,8 +335,9 @@ export default class HostEventHandler extends BaseEventHandler {
             );
 
             // Update UI
-            this.uiSystem.getActiveBoard().setBoard(board);
-            this.uiSystem.getActiveBoard().render();
+            const activeBoard = this.uiSystem.getActiveBoard();
+            activeBoard.setBoard(board);
+            activeBoard.render();
 
             // Broadcast the updated game state to all clients
             this.peer.broadcastGameState();
@@ -453,9 +507,9 @@ export default class HostEventHandler extends BaseEventHandler {
      */
     addSettingsButtonListener() {
         const openSettingsButton = document.getElementById('openSettingsButton');
-        if (openSettingsButton) {
+        if (openSettingsButton && this.listenerRegistry) {
             this.listenerRegistry.registerListener('openSettingsButton', 'click', () => {
-                this.settingsManager.showSettings();
+                this.settingsManager?.showSettings?.();
             });
         }
     }

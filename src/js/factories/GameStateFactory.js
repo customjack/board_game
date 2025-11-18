@@ -1,5 +1,5 @@
-import TurnBasedGameState from '../gameStates/TurnBasedGameState.js';
-import BaseGameState from '../gameStates/BaseGameState.js';
+import TurnBasedGameState from '../models/gameStates/TurnBasedGameState.js';
+import BaseGameState from '../models/gameStates/BaseGameState.js';
 
 export default class GameStateFactory {
     static stateRegistry = new Map([

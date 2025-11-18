@@ -40,6 +40,39 @@ export default class MapStorageManager {
                 engineType: 'turn-based'
             },
             {
+                id: 'simple-linear',
+                name: 'Simple Linear Board',
+                author: 'Example Library',
+                description: 'Straight path ideal for verifying movement logic',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/example-v3-game.json',
+                thumbnail: null,
+                createdDate: '2025-02-12T00:00:00Z',
+                engineType: 'turn-based'
+            },
+            {
+                id: 'branching-paths',
+                name: 'Branching Paths Demo',
+                author: 'Example Library',
+                description: 'Demonstrates branching connections and choice prompts',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/example-v3-game.json',
+                thumbnail: null,
+                createdDate: '2025-02-12T00:00:00Z',
+                engineType: 'turn-based'
+            },
+            {
+                id: 'custom-engine',
+                name: 'Custom Engine Stub',
+                author: 'Example Library',
+                description: 'Placeholder entry for custom engine experimentation',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/example-v3-game.json',
+                thumbnail: null,
+                createdDate: '2025-02-12T00:00:00Z',
+                engineType: 'turn-based'
+            },
+            {
                 id: 'action-effect-testing',
                 name: 'Complete Action & Effect Testing Map',
                 author: 'Game Engine',
@@ -70,6 +103,28 @@ export default class MapStorageManager {
                 path: 'assets/maps/examples/test-mini-board.json',
                 thumbnail: null,
                 createdDate: '2025-01-27T00:00:00Z',
+                engineType: 'turn-based'
+            },
+            {
+                id: 'trouble-classic',
+                name: 'Trouble (Pop-O-Matic) Prototype',
+                author: 'Trouble Plugin',
+                description: 'Classic Trouble board demonstrating the Trouble engine',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/trouble-classic.json',
+                thumbnail: null,
+                createdDate: '2025-02-01T00:00:00Z',
+                engineType: 'trouble'
+            },
+            {
+                id: 'example-multi-piece',
+                name: 'Example Multi-piece Game',
+                author: 'Game Engine',
+                description: 'Demonstrates multiple player pieces per player',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/example-multi-piece-game.json',
+                thumbnail: null,
+                createdDate: '2025-02-10T00:00:00Z',
                 engineType: 'turn-based'
             }
         ];

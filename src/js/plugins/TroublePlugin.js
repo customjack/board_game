@@ -1,9 +1,7 @@
 import Plugin from '../pluginManagement/Plugin.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
-import GameStateFactory from '../factories/GameStateFactory.js';
 import TroubleGameEngine from '../engines/TroubleGameEngine.js';
 import TroublePieceManager from '../pieceManagers/TroublePieceManager.js';
-import TroubleGameState from '../gameStates/TroubleGameState.js';
 
 /**
  * TroublePlugin - Registers the Trouble (Pop-O-Matic) engine with the modular factory.
@@ -41,6 +39,33 @@ export default class TroublePlugin extends Plugin {
         console.log(
             `[Plugin] Trouble: Registered ${engineCount} game engine, ${pieceManagerCount} piece manager, ${gameStateCount} game state`
         );
+    }
+
+    setEventHandler(eventHandler) {
+        super.setEventHandler(eventHandler);
+
+        // Register event handlers for Trouble-specific UI events
+        if (eventHandler && typeof eventHandler.registerPluginEventHandler === 'function') {
+            // When UI requests piece selection, forward as player action
+            eventHandler.registerPluginEventHandler('trouble:uiSelectPiece', ({ playerId, pieceIndex }) => {
+                eventHandler.handlePlayerAction({
+                    playerId,
+                    actionType: 'SELECT_PIECE',
+                    actionData: { pieceIndex }
+                });
+            });
+
+            // When UI requests dice roll, forward as player action
+            eventHandler.registerPluginEventHandler('trouble:uiRollRequest', ({ playerId }) => {
+                eventHandler.handlePlayerAction({
+                    playerId,
+                    actionType: 'ROLL_DICE',
+                    actionData: {}
+                });
+            });
+
+            console.log('[Plugin] Trouble: Registered event handlers');
+        }
     }
 
     cleanup() {

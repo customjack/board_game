@@ -1,7 +1,7 @@
-import TurnPhases from '../enums/TurnPhases';
-import GamePhases from '../enums/GamePhases';
-import Settings from '../models/Settings.js';
-import SharedRandomNumberGenerator from '../models/SharedRandomNumberGenerator.js';
+import TurnPhases from '../../enums/TurnPhases.js';
+import GamePhases from '../../enums/GamePhases.js';
+import Settings from '../Settings.js';
+import SharedRandomNumberGenerator from '../SharedRandomNumberGenerator.js';
 import BaseGameState from './BaseGameState.js';
 
 export default class TurnBasedGameState extends BaseGameState {
@@ -167,6 +167,18 @@ export default class TurnBasedGameState extends BaseGameState {
         } else {
             console.error(`Invalid turn phase: ${phase}`);
         }
+    }
+
+    /**
+     * Get list of top-level fields that should be included in delta updates
+     * @returns {Array<string>} Field names to include in deltas
+     */
+    getDeltaFields() {
+        return [
+            ...super.getDeltaFields(),
+            'remainingMoves',
+            'turnPhase'
+        ];
     }
 
     // Serialize the game state to JSON (using the random generator's toJSON)

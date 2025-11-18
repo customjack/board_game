@@ -4,7 +4,7 @@
  */
 
 import TurnBasedGameEngine from '../../src/js/engines/TurnBasedGameEngine.js';
-import TurnBasedGameState from '../../src/js/gameStates/TurnBasedGameState.js';
+import TurnBasedGameState from '../../src/js/models/gameStates/TurnBasedGameState.js';
 import Player from '../../src/js/models/Player.js';
 import RegistryManager from '../../src/js/registries/RegistryManager.js';
 import FactoryManager from '../../src/js/factories/FactoryManager.js';

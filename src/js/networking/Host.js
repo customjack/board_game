@@ -189,7 +189,7 @@ export default class Host extends BasePeer {
         let useDelta = false;
 
         if (this.previousGameStateJSON) {
-            delta = StateDelta.createGameStateDelta(this.previousGameStateJSON, gameStateData);
+            delta = StateDelta.createGameStateDelta(this.previousGameStateJSON, gameStateData, this.gameState);
             const stats = StateDelta.getSizeStats(gameStateData, delta);
 
             // Use delta only if it's significantly smaller (< 50% of full state)

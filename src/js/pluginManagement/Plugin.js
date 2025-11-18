@@ -27,6 +27,15 @@ export default class Plugin {
     }
 
     /**
+     * Set the event handler (Host/Client EventHandler) for the plugin.
+     * This allows plugins to register custom event handlers.
+     * @param {BaseEventHandler} eventHandler - The event handler instance.
+     */
+    setEventHandler(eventHandler) {
+        this.eventHandler = eventHandler;
+    }
+
+    /**
      * Optional cleanup method when the plugin is removed.
      */
     cleanup() {

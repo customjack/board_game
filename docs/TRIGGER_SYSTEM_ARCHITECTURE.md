@@ -170,7 +170,7 @@ const PriorityLevels = Object.freeze({
    - Prepares for next trigger check cycle
 
 ### 3.2 GameState Integration
-**File:** `/home/jack/js_projects/drinking_board_game/src/js/gameStates/TurnBasedGameState.js`
+**File:** `/home/jack/js_projects/drinking_board_game/src/js/models/gameStates/TurnBasedGameState.js`
 
 **`determineTriggeredEvents(eventBus = null, peerId = null)`**
 - Called at key game phases (usually in TurnBasedGameEngine)

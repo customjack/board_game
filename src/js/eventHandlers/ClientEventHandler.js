@@ -34,7 +34,9 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.setupActions();
 
         // Bind all actions at once
-        this.actionRegistry.bindAll(this.listenerRegistry, this.uiBinder);
+        if (this.listenerRegistry) {
+            this.actionRegistry.bindAll(this.listenerRegistry, this.uiBinder);
+        }
     }
 
     /**
@@ -94,6 +96,7 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.peer = new Client(playerName, gameCode, this);
         await this.peer.init(progressTracker);
         this.pluginManager.setPeer(this.peer.peer);
+        this.pluginManager.setEventHandler(this);
 
         progressTracker.nextStage();
 
@@ -248,9 +251,9 @@ export default class ClientEventHandler extends BaseEventHandler {
      */
     addSettingsButtonListener() {
         const openSettingsButton = document.getElementById('openSettingsButton');
-        if (openSettingsButton) {
+        if (openSettingsButton && this.listenerRegistry) {
             this.listenerRegistry.registerListener('openSettingsButton', 'click', () => {
-                this.settingsManager.showSettings();
+                this.settingsManager?.showSettings?.();
             });
         }
     }

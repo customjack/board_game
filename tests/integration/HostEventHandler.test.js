@@ -86,6 +86,7 @@ describe('HostEventHandler Integration Tests', () => {
         if (hostEventHandler) {
             hostEventHandler.cleanup?.();
         }
+        jest.restoreAllMocks();
         localStorage.clear();
     });
 

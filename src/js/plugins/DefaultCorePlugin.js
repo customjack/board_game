@@ -34,7 +34,7 @@ import ScoreStat from '../models/Stats/ScoreStat.js';
 // Import game engine and component classes
 import TurnBasedGameEngine from '../engines/TurnBasedGameEngine.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
-import TurnBasedGameState from '../gameStates/TurnBasedGameState.js';
+import TurnBasedGameState from '../models/gameStates/TurnBasedGameState.js';
 import GameStateFactory from '../factories/GameStateFactory.js';
 import PhaseStateMachine from '../engines/components/PhaseStateMachine.js';
 import TurnManager from '../engines/components/TurnManager.js';

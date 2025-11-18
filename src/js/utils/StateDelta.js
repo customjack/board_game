@@ -180,21 +180,35 @@ export default class StateDelta {
      * This optimizes for the most frequent updates in the game
      * @param {Object} oldGameState - Previous game state JSON
      * @param {Object} newGameState - New game state JSON
+     * @param {BaseGameState} [stateInstance] - Optional game state instance to get delta fields from
      * @returns {Object} Minimal delta
      */
-    static createGameStateDelta(oldGameState, newGameState) {
+    static createGameStateDelta(oldGameState, newGameState, stateInstance = null) {
         const delta = {
             _version: newGameState._version,
             _timestamp: Date.now()
         };
 
-        // Track which top-level fields changed
-        const topLevelFields = [
+        // Get top-level fields from state instance if available, otherwise use defaults
+        let topLevelFields = [
             'stateType',
-            'remainingMoves',
-            'turnPhase',
             'gamePhase'
         ];
+
+        if (stateInstance && typeof stateInstance.getDeltaFields === 'function') {
+            // Use state-defined delta fields
+            topLevelFields = stateInstance.getDeltaFields();
+        } else {
+            // Fallback: include common fields for backward compatibility
+            topLevelFields = [
+                'stateType',
+                'remainingMoves',
+                'turnPhase',
+                'gamePhase',
+                'troublePhase',
+                'currentPlayerIndex'
+            ];
+        }
 
         topLevelFields.forEach(field => {
             if (this.isDifferent(oldGameState[field], newGameState[field])) {
@@ -222,6 +236,11 @@ export default class StateDelta {
         // Random generator state changes every roll
         if (this.isDifferent(oldGameState.randomGenerator, newGameState.randomGenerator)) {
             delta.randomGenerator = newGameState.randomGenerator;
+        }
+
+        // Plugin state contains engine-specific state (e.g., Trouble game state)
+        if (this.isDifferent(oldGameState.pluginState, newGameState.pluginState)) {
+            delta.pluginState = newGameState.pluginState;
         }
 
         return delta;

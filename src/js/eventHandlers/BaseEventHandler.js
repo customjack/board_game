@@ -4,12 +4,23 @@ import SettingsManager from '../controllers/managers/SettingsManager';
 import ModalUtil from '../utils/ModalUtil.js';
 import GameEngineFactory from '../factories/GameEngineFactory.js';
 import { MessageTypes } from '../networking/protocol/MessageTypes.js';
+import PageRegistry from '../registries/PageRegistry.js';
+import ListenerRegistry from '../registries/ListenerRegistry.js';
 
 export default class BaseEventHandler {
     constructor(isHost, registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
         this.registryManager = registryManager;
         this.pageRegistry = registryManager.getPageRegistry();
+        if (!this.pageRegistry) {
+            this.pageRegistry = new PageRegistry();
+            registryManager.addRegistry('pageRegistry', this.pageRegistry);
+        }
+
         this.listenerRegistry = registryManager.getListenerRegistry();
+        if (!this.listenerRegistry) {
+            this.listenerRegistry = new ListenerRegistry();
+            registryManager.addRegistry('listenerRegistry', this.listenerRegistry);
+        }
         this.pluginManager = pluginManager;
         this.factoryManager = factoryManager;
         this.eventBus = eventBus;
@@ -29,7 +40,12 @@ export default class BaseEventHandler {
 
         this.gameEngine = null;
         this.peer = null; // This will be either client or host depending on the role
-        this.handleTroublePieceSelection = this.handleTroublePieceSelection.bind(this);
+        this.handlePlayerAction = this.handlePlayerAction.bind(this);
+        this.currentPageId = null;
+        this.registerPagesFromDOM();
+
+        // Plugin-registered event handlers
+        this.pluginEventHandlers = new Map(); // eventName -> handler
     }
 
     init() {
@@ -60,7 +76,6 @@ export default class BaseEventHandler {
             hostPeerId: hostPeerId
         });
         this.uiSystem.init();
-        this.eventBus.on('trouble:uiSelectPiece', this.handleTroublePieceSelection);
 
         // Initialize remaining managers
         this.setPieceManagerType('standard');
@@ -172,8 +187,86 @@ export default class BaseEventHandler {
     }
 
     showPage(pageId) {
-        this.pageRegistry.showPage(pageId);
+        this.ensurePagesRegistered();
+        this.pageRegistry?.showPage?.(pageId);
+        this.updatePageVisibilityFallback(pageId);
         this.eventBus.emit('pageChanged', { pageId: pageId });
+    }
+
+    ensurePagesRegistered() {
+        if (!this.pageRegistry) return;
+        const defaultPageIds = ['homePage', 'hostPage', 'loadingPage', 'lobbyPage', 'gamePage'];
+        defaultPageIds.forEach(id => {
+            if (!this.pageRegistry.get(id)) {
+                const el = document.getElementById(id);
+                if (el) {
+                    this.pageRegistry.register(id, el);
+                }
+            }
+        });
+    }
+
+    registerPagesFromDOM() {
+        if (!this.pageRegistry) return;
+        const defaultPageIds = ['homePage', 'hostPage', 'loadingPage', 'lobbyPage', 'gamePage'];
+        defaultPageIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && !this.pageRegistry.get(id)) {
+                this.pageRegistry.register(id, el);
+            }
+        });
+    }
+
+    updatePageVisibilityFallback(pageId) {
+        const defaultPageIds = ['homePage', 'hostPage', 'loadingPage', 'lobbyPage', 'gamePage'];
+        let updated = false;
+        defaultPageIds.forEach(id => {
+            const page = document.getElementById(id);
+            if (page) {
+                const value = id === pageId ? 'block' : 'none';
+                page.style.display = value;
+                if (page.setAttribute) {
+                    page.setAttribute('style', `display: ${value};`);
+                }
+                updated = true;
+            }
+        });
+
+        if (!updated) {
+            const allPages = document.querySelectorAll('[id$="Page"]');
+            if (allPages.length > 0) {
+                allPages.forEach(page => {
+                    const value = page.id === pageId ? 'block' : 'none';
+                    page.style.display = value;
+                    if (page.setAttribute) {
+                        page.setAttribute('style', `display: ${value};`);
+                    }
+                });
+                updated = true;
+            }
+        }
+
+        if (!updated) {
+            if (this.currentPageId) {
+                const previous = document.getElementById(this.currentPageId);
+                if (previous) {
+                    previous.style.display = 'none';
+                    if (previous.setAttribute) {
+                        previous.setAttribute('style', 'display: none;');
+                    }
+                }
+            }
+
+            const next = document.getElementById(pageId);
+            if (next) {
+                next.style.display = 'block';
+                if (next.setAttribute) {
+                    next.setAttribute('style', 'display: block;');
+                }
+            }
+        }
+
+        this.currentPageId = pageId;
     }
 
     displayInviteCode(code) {
@@ -216,19 +309,22 @@ export default class BaseEventHandler {
         if (!gameState) return;
 
         // Update settings
-        if (forceUpdate || this.settingsManager.shouldUpdateSettings(gameState.settings)) {
+        if (
+            this.settingsManager &&
+            (forceUpdate || this.settingsManager.shouldUpdateSettings(gameState.settings))
+        ) {
             this.settingsManager.updateSettings(gameState);
             this.updateAddPlayerButton();
             this.eventBus.emit('settingsUpdated', { gamestate: gameState });
         }
 
-        const shouldRefreshPieces = forceUpdate || this.pieceManager.shouldUpdatePieces(gameState);
+        const shouldRefreshPieces = forceUpdate || this.pieceManager?.shouldUpdatePieces?.(gameState);
 
         // Update UI components through UISystem before manipulating DOM-dependent managers
-        this.uiSystem.updateFromGameState(gameState);
+        this.uiSystem?.updateFromGameState?.(gameState);
 
         // Always refresh pieces after the board has been rendered so DOM stays in sync
-        this.pieceManager.updatePieces(gameState);
+        this.pieceManager?.updatePieces?.(gameState);
         if (shouldRefreshPieces) {
             this.eventBus.emit('piecesUpdated', { gamestate: gameState });
         }
@@ -301,23 +397,71 @@ export default class BaseEventHandler {
         this.pieceManagerType = type;
     }
 
-    handleTroublePieceSelection({ playerId, pieceIndex }) {
+    /**
+     * Generic player action handler - plugins can trigger this via events
+     * @param {Object} payload - Action payload
+     * @param {string} payload.playerId - Player ID performing action
+     * @param {string} payload.actionType - Type of action (e.g., 'SELECT_PIECE', 'ROLL_DICE')
+     * @param {Object} payload.actionData - Additional data for the action
+     */
+    handlePlayerAction({ playerId, actionType, actionData = {} }) {
         if (!this.gameEngine || typeof this.gameEngine.onPlayerAction !== 'function') {
+            console.warn('[BaseEventHandler] Cannot handle player action: no game engine');
+            return;
+        }
+
+        if (!playerId || !actionType) {
+            console.warn('[BaseEventHandler] Invalid player action: missing playerId or actionType');
             return;
         }
 
         if (this.isHost) {
-            this.gameEngine.onPlayerAction(playerId, 'SELECT_PIECE', { pieceIndex });
+            // Host processes action directly
+            this.gameEngine.onPlayerAction(playerId, actionType, actionData);
         } else {
+            // Client sends action to host
             const connection = this.peer?.conn;
             if (connection && connection.open) {
                 connection.send({
                     type: MessageTypes.PLAYER_ACTION,
                     playerId,
-                    actionType: 'SELECT_PIECE',
-                    actionData: { pieceIndex }
+                    actionType,
+                    actionData
                 });
+            } else {
+                console.warn('[BaseEventHandler] Cannot send player action: no connection to host');
             }
+        }
+    }
+
+    /**
+     * Register a plugin event handler
+     * Allows plugins to hook into the event bus without modifying BaseEventHandler
+     * @param {string} eventName - Event name to listen for
+     * @param {Function} handler - Handler function
+     */
+    registerPluginEventHandler(eventName, handler) {
+        if (this.pluginEventHandlers.has(eventName)) {
+            console.warn(`[BaseEventHandler] Event handler for '${eventName}' already registered, replacing`);
+        }
+
+        const boundHandler = handler.bind(this);
+        this.pluginEventHandlers.set(eventName, boundHandler);
+        this.eventBus.on(eventName, boundHandler);
+
+        console.log(`[BaseEventHandler] Registered plugin event handler: ${eventName}`);
+    }
+
+    /**
+     * Unregister a plugin event handler
+     * @param {string} eventName - Event name to stop listening for
+     */
+    unregisterPluginEventHandler(eventName) {
+        const handler = this.pluginEventHandlers.get(eventName);
+        if (handler) {
+            this.eventBus.off(eventName, handler);
+            this.pluginEventHandlers.delete(eventName);
+            console.log(`[BaseEventHandler] Unregistered plugin event handler: ${eventName}`);
         }
     }
 
