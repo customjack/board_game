@@ -1,4 +1,5 @@
 import BaseGameEngine from './BaseGameEngine.js';
+import PhaseStateMachine from './components/PhaseStateMachine.js';
 import TurnPhases from '../enums/TurnPhases.js';
 import GamePhases from '../enums/GamePhases.js';
 import { PieceStatus } from '../models/gameStates/TroubleGameState.js';
@@ -30,9 +31,39 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.pendingMoveOptions = null;
         this.running = false;
         this.initialized = false;
+
+        this.phaseStateMachine = new PhaseStateMachine(
+            {
+                gamePhases: Object.values(GamePhases),
+                turnPhases: [
+                    TurnPhases.BEGIN_TURN,
+                    TurnPhases.WAITING_FOR_MOVE,
+                    TurnPhases.WAITING_FOR_MOVE_CHOICE,
+                    TurnPhases.PLAYER_CHOOSING_DESTINATION,
+                    TurnPhases.PROCESSING_MOVE,
+                    TurnPhases.END_TURN
+                ]
+            },
+            this.eventBus
+        );
+        this.registerPhaseHandlers();
     }
 
     // ===== Lifecycle Methods =====
+
+    registerPhaseHandlers() {
+        this.phaseStateMachine.registerGamePhaseHandler(GamePhases.IN_LOBBY, () => this.handleInLobby());
+        this.phaseStateMachine.registerGamePhaseHandler(GamePhases.IN_GAME, () => this.handleInGame());
+        this.phaseStateMachine.registerGamePhaseHandler(GamePhases.PAUSED, () => this.handlePaused());
+        this.phaseStateMachine.registerGamePhaseHandler(GamePhases.GAME_ENDED, () => this.handleGameEnded());
+
+        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.BEGIN_TURN, () => this.handleBeginTurn());
+        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.WAITING_FOR_MOVE, () => this.handleWaitingForMove());
+        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.WAITING_FOR_MOVE_CHOICE, () => this.handleWaitingForMoveChoice());
+        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.PLAYER_CHOOSING_DESTINATION, () => this.handlePlayerChoosingDestination());
+        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.PROCESSING_MOVE, () => this.handleProcessingMove());
+        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.END_TURN, () => this.handleEndTurn());
+    }
 
     init() {
         // Initialize UI components
@@ -71,13 +102,15 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.gameState.setTurnPhase(TurnPhases.BEGIN_TURN);
         this.gameState.setCurrentPlayerIndex(0);
 
+        this.phaseStateMachine.init(this.gameState.gamePhase, this.gameState.turnPhase);
+        this.phaseStateMachine.transitionGamePhase(this.gameState.gamePhase, { gameState: this.gameState });
+
         this.initialized = true;
         this.running = true;
 
         console.log('[Trouble] Engine initialized, starting first turn');
 
-        // Start first turn
-        this.handleBeginTurn();
+        this.phaseStateMachine.transitionTurnPhase(TurnPhases.BEGIN_TURN, { gameState: this.gameState });
     }
 
     start() {
@@ -107,18 +140,24 @@ export default class TroubleGameEngine extends BaseGameEngine {
     }
 
     updateGameState(gameState) {
-        const previousPlayerId = this.gameState?.getCurrentPlayer()?.playerId;
+        const previousTurnPhase = this.gameState?.turnPhase;
+        const previousGamePhase = this.gameState?.gamePhase;
         this.gameState = gameState;
-        const currentPlayerId = this.gameState?.getCurrentPlayer()?.playerId;
 
-        if (this.initialized && currentPlayerId !== previousPlayerId) {
-            // Turn changed, update UI
-            if (this.isClientTurn()) {
-                this.activateRollButton();
-            } else {
-                this.deactivateRollButton();
-            }
+        const gamePhaseChanged = this.phaseStateMachine?.getGamePhase?.() !== gameState.gamePhase;
+        if (gamePhaseChanged) {
+            this.phaseStateMachine.transitionGamePhase(gameState.gamePhase, { gameState: this.gameState });
         }
+
+        const turnPhaseChanged = this.phaseStateMachine?.currentTurnPhase !== gameState.turnPhase
+            || previousTurnPhase !== gameState.turnPhase
+            || previousGamePhase !== gameState.gamePhase;
+
+        if (turnPhaseChanged) {
+            this.phaseStateMachine.transitionTurnPhase(gameState.turnPhase, { gameState: this.gameState });
+        }
+
+        this.updateRollButtonForClient();
     }
 
     getEngineState() {
@@ -156,7 +195,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
         switch (actionType) {
             case 'ROLL_DICE':
-                return this.handleRoll(currentPlayer);
+                return this.handleRoll(currentPlayer, actionData?.rollResult);
             case 'SELECT_PIECE':
                 return this.handlePieceSelection(currentPlayer, actionData.pieceIndex);
             default:
@@ -175,6 +214,17 @@ export default class TroubleGameEngine extends BaseGameEngine {
             return 0;
         }
 
+        if (!this.isHost) {
+            this.logPhase('ROLL_REQUEST_FORWARD', { playerId: currentPlayer.playerId });
+            this.emitEvent('playerAction', {
+                playerId: currentPlayer.playerId,
+                actionType: 'ROLL_DICE',
+                actionData: {}
+            });
+            this.deactivateRollButton();
+            return 0;
+        }
+
         const rollResult = Math.floor(Math.random() * 6) + 1;
         console.log(`[Trouble] ${currentPlayer.nickname} rolled a ${rollResult}`);
 
@@ -186,12 +236,16 @@ export default class TroubleGameEngine extends BaseGameEngine {
         const currentPlayer = this.gameState.getCurrentPlayer();
         if (!currentPlayer) return;
 
-        // Trigger the actual roll action via event bus
-        this.emitEvent('playerAction', {
-            playerId: currentPlayer.playerId,
-            actionType: 'ROLL_DICE',
-            actionData: { rollResult }
-        });
+        if (this.isHost) {
+            this.handleRoll(currentPlayer, rollResult);
+        } else {
+            // Trigger the actual roll action via event bus
+            this.emitEvent('playerAction', {
+                playerId: currentPlayer.playerId,
+                actionType: 'ROLL_DICE',
+                actionData: { rollResult }
+            });
+        }
     }
 
     isClientTurn() {
@@ -235,121 +289,164 @@ export default class TroubleGameEngine extends BaseGameEngine {
         }
     }
 
+    changeTurnPhase(newPhase, context = {}) {
+        this.gameState.setTurnPhase(newPhase);
+        this.logPhase('CHANGE_PHASE', { phase: newPhase, ...context });
+        this.emitStateUpdate();
+        if (this.phaseStateMachine) {
+            this.phaseStateMachine.transitionTurnPhase(newPhase, { ...context, gameState: this.gameState });
+        }
+    }
+
+    changeGamePhase(newPhase, context = {}) {
+        this.gameState.setGamePhase(newPhase);
+        this.logPhase('CHANGE_GAME_PHASE', { phase: newPhase, ...context });
+        if (this.phaseStateMachine) {
+            this.phaseStateMachine.transitionGamePhase(newPhase, { ...context, gameState: this.gameState });
+        }
+    }
+
+    updateRollButtonForClient() {
+        if (this.isClientTurn()) {
+            this.activateRollButton();
+        } else {
+            this.deactivateRollButton();
+        }
+    }
+
     // ===== Phase Handlers =====
+
+    handleInLobby() {
+        this.running = false;
+        this.logPhase('IN_LOBBY');
+    }
+
+    handleInGame() {
+        this.running = true;
+        this.logPhase('IN_GAME');
+    }
+
+    handlePaused() {
+        this.running = false;
+        this.logPhase('PAUSED');
+    }
+
+    handleGameEnded() {
+        this.running = false;
+        this.logPhase('GAME_ENDED');
+    }
 
     handleBeginTurn() {
         const currentPlayer = this.gameState.getCurrentPlayer();
-        console.log(`[Trouble] BEGIN_TURN: ${currentPlayer?.nickname || 'unknown'}`);
+        this.logPhase('BEGIN_TURN', { player: currentPlayer?.nickname, playerId: currentPlayer?.playerId });
 
         // Reset turn state
         this.gameState.lastRoll = null;
         this.pendingRoll = null;
         this.pendingMoveOptions = null;
 
-        // Move to waiting for roll
-        this.gameState.setTurnPhase(TurnPhases.WAITING_FOR_MOVE);
-
-        // Activate/deactivate roll button based on whose turn it is
-        if (this.isClientTurn()) {
-            this.activateRollButton();
-        } else {
-            this.deactivateRollButton();
-        }
-
-        this.emitStateUpdate();
+        this.changeTurnPhase(TurnPhases.WAITING_FOR_MOVE);
     }
 
-    handleRoll(currentPlayer) {
-        if (this.gameState.turnPhase !== TurnPhases.WAITING_FOR_MOVE) {
-            return { success: false, error: 'Not waiting for roll' };
-        }
+    handleWaitingForMove() {
+        this.logPhase('WAITING_FOR_MOVE');
+        this.updateRollButtonForClient();
+    }
 
-        const roll = Math.floor(Math.random() * 6) + 1;
-        this.gameState.lastRoll = roll;
-        this.pendingRoll = roll;
+    handleWaitingForMoveChoice() {
+        this.logPhase('WAITING_FOR_MOVE_CHOICE', { options: this.pendingMoveOptions?.length || 0 });
+        this.updateRollButtonForClient();
+    }
 
-        console.log(`[Trouble] ${currentPlayer.nickname} rolled ${roll}`);
-
-        // Move to processing move
-        this.gameState.setTurnPhase(TurnPhases.PROCESSING_MOVE);
-        this.handleProcessingMove();
-
-        this.emitStateUpdate();
-        return { success: true, roll };
+    handlePlayerChoosingDestination() {
+        this.logPhase('PLAYER_CHOOSING_DESTINATION', { options: this.pendingMoveOptions?.length || 0 });
+        this.updateRollButtonForClient();
     }
 
     handleProcessingMove() {
-        const currentPlayer = this.gameState.getCurrentPlayer();
+        this.logPhase('PROCESSING_MOVE', { pendingRoll: this.pendingRoll });
+        if (!this.isHost) {
+            return;
+        }
+        this.processPendingRoll();
+    }
+
+    processPendingRoll() {
         const roll = this.pendingRoll;
+        const currentPlayer = this.gameState.getCurrentPlayer();
 
-        console.log(`[Trouble] PROCESSING_MOVE: roll=${roll}`);
+        if (typeof roll !== 'number' || !currentPlayer) {
+            this.pendingRoll = null;
+            this.pendingMoveOptions = null;
+            this.changeTurnPhase(TurnPhases.END_TURN);
+            return;
+        }
 
-        // Find all movable pieces
-        const moveOptions = this.findMoveOptions(currentPlayer, roll);
+        console.log(`[Trouble] ${currentPlayer.nickname} rolled ${roll}`);
 
-        // Case 1: No pieces out and didn't roll 6 - no moves possible
         const piecesAtHome = this.gameState.getPlayerPieces(currentPlayer.playerId)
             .filter(p => p.status === PieceStatus.HOME);
         const piecesOut = this.gameState.getPlayerPieces(currentPlayer.playerId)
             .filter(p => p.status !== PieceStatus.HOME && p.status !== PieceStatus.DONE);
+        const moveOptions = this.findMoveOptions(currentPlayer, roll);
+
+        this.pendingRoll = null;
+        this.pendingMoveOptions = null;
 
         if (piecesOut.length === 0 && roll !== 6) {
-            // No moves possible, end turn
             console.log('[Trouble] No pieces out and no 6 rolled, ending turn');
-            this.gameState.setTurnPhase(TurnPhases.END_TURN);
-            this.handleEndTurn();
+            this.changeTurnPhase(TurnPhases.END_TURN);
             return;
         }
 
-        // Case 2: No pieces out, rolled 6 - automatically move one piece out
         if (piecesOut.length === 0 && roll === 6) {
-            console.log('[Trouble] Moving piece out to start');
+            console.log('[Trouble] Auto-moving piece out to start (rolled 6)');
             const piece = piecesAtHome[0];
             this.movePieceOut(currentPlayer, piece.pieceIndex);
-
-            // Give extra turn for rolling 6
             this.gameState.extraTurnEarned = true;
-            this.gameState.setTurnPhase(TurnPhases.END_TURN);
-            this.handleEndTurn();
+            this.changeTurnPhase(TurnPhases.END_TURN);
             return;
         }
 
-        // Case 3: Pieces out, didn't roll 6 - show move options
         if (roll !== 6) {
             if (moveOptions.length === 0) {
-                // No valid moves (blocked or can't finish exactly)
                 console.log('[Trouble] No valid moves available, ending turn');
-                this.gameState.setTurnPhase(TurnPhases.END_TURN);
-                this.handleEndTurn();
+                this.changeTurnPhase(TurnPhases.END_TURN);
                 return;
             }
 
             this.pendingMoveOptions = moveOptions;
-            this.gameState.setTurnPhase(TurnPhases.PLAYER_CHOOSING_DESTINATION);
-            this.emitStateUpdate();
+            this.changeTurnPhase(TurnPhases.PLAYER_CHOOSING_DESTINATION);
             return;
         }
 
-        // Case 4 & 5: Rolled 6 with pieces out
-        // For now, just show move options (TODO: add modal for move-out choice)
         if (moveOptions.length === 0) {
-            // Can only move a piece out
-            console.log('[Trouble] Moving piece out to start (rolled 6)');
+            console.log('[Trouble] Moving piece out to start (rolled 6 - forced)');
             const piece = piecesAtHome[0];
             this.movePieceOut(currentPlayer, piece.pieceIndex);
-
             this.gameState.extraTurnEarned = true;
-            this.gameState.setTurnPhase(TurnPhases.END_TURN);
-            this.handleEndTurn();
+            this.changeTurnPhase(TurnPhases.END_TURN);
             return;
         }
 
-        // TODO: Show modal to choose between moving out or moving existing piece
-        // For now, just show move options
         this.pendingMoveOptions = moveOptions;
-        this.gameState.setTurnPhase(TurnPhases.PLAYER_CHOOSING_DESTINATION);
         this.gameState.extraTurnEarned = true;
-        this.emitStateUpdate();
+        this.changeTurnPhase(TurnPhases.PLAYER_CHOOSING_DESTINATION);
+    }
+
+    handleRoll(currentPlayer, forcedRoll = null) {
+        if (this.gameState.turnPhase !== TurnPhases.WAITING_FOR_MOVE) {
+            return { success: false, error: 'Not waiting for roll' };
+        }
+
+        const roll = typeof forcedRoll === 'number' ? forcedRoll : currentPlayer.rollDice(1, 6);
+        this.gameState.lastRoll = roll;
+        this.pendingRoll = roll;
+
+        this.logPhase('ROLL_RESOLVED', { roll });
+
+        this.changeTurnPhase(TurnPhases.PROCESSING_MOVE, { roll });
+        return { success: true, roll };
     }
 
     handlePieceSelection(currentPlayer, pieceIndex) {
@@ -370,17 +467,19 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
         // Move the piece
         this.movePiece(currentPlayer, pieceIndex, option.newPosition, option.newStatus);
+        this.pendingMoveOptions = null;
 
         // End turn
-        this.gameState.setTurnPhase(TurnPhases.END_TURN);
-        this.handleEndTurn();
-
-        this.emitStateUpdate();
+        this.changeTurnPhase(TurnPhases.END_TURN);
         return { success: true };
     }
 
     handleEndTurn() {
-        console.log('[Trouble] END_TURN');
+        this.logPhase('END_TURN');
+        if (!this.isHost) {
+            this.updateRollButtonForClient();
+            return;
+        }
 
         // Check for win condition
         const currentPlayer = this.gameState.getCurrentPlayer();
@@ -389,8 +488,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
         if (donePieces.length === this.piecesPerPlayer) {
             console.log(`[Trouble] ${currentPlayer.nickname} wins!`);
-            this.gameState.gamePhase = GamePhases.GAME_ENDED;
-            this.emitStateUpdate();
+            this.changeGamePhase(GamePhases.GAME_ENDED);
             return;
         }
 
@@ -398,14 +496,12 @@ export default class TroubleGameEngine extends BaseGameEngine {
         if (this.gameState.extraTurnEarned) {
             console.log('[Trouble] Extra turn earned!');
             this.gameState.giveExtraTurn();
-            this.handleBeginTurn();
+            this.changeTurnPhase(TurnPhases.BEGIN_TURN);
         } else {
-            // Next player's turn
+            this.gameState.extraTurnEarned = false;
             this.gameState.nextPlayerTurn();
-            this.handleBeginTurn();
+            this.changeTurnPhase(TurnPhases.BEGIN_TURN);
         }
-
-        this.emitStateUpdate();
     }
 
     // ===== Game Logic Methods =====
@@ -552,13 +648,17 @@ export default class TroubleGameEngine extends BaseGameEngine {
             spaceId: this.getSpaceIdForPiece(piece)
         }));
 
-        this.emitEvent('trouble:stateUpdated', {
+        const troubleState = {
             pieces: piecesWithSpaceId,
             currentPlayerIndex: this.gameState.currentPlayerIndex,
             currentPlayerId: this.gameState.getCurrentPlayer()?.playerId,
             lastRoll: this.gameState.lastRoll,
             turnPhase: this.gameState.turnPhase
-        });
+        };
+
+        this.logPhase('EMIT_STATE', troubleState);
+
+        this.emitEvent('trouble:stateUpdated', troubleState);
 
         const delay = this.gameState?.settings?.getMoveDelay?.() ?? 0;
         this.proposeStateChange(this.gameState, delay);
@@ -578,6 +678,17 @@ export default class TroubleGameEngine extends BaseGameEngine {
             default:
                 return `home-${piece.playerIndex}-${piece.pieceIndex}`;
         }
+    }
+
+    logPhase(label, extra = {}) {
+        const currentPlayer = this.gameState.getCurrentPlayer();
+        console.debug(`[Trouble][${label}]`, {
+            phase: this.gameState.turnPhase,
+            player: currentPlayer?.nickname,
+            playerId: currentPlayer?.playerId,
+            pendingRoll: this.pendingRoll,
+            ...extra
+        });
     }
 
     getRequiredUIComponents() {

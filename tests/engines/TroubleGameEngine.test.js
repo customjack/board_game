@@ -103,10 +103,8 @@ describe('TroubleGameEngine turn flow', () => {
     test('advances to the next player when no moves are available', () => {
         const { engine, gameState, proposeGameState } = createHostEngine();
 
-        jest.spyOn(global.Math, 'random').mockReturnValue(0.0); // roll = 1
-
         const currentPlayer = gameState.getCurrentPlayer();
-        const response = engine.handleRoll(currentPlayer);
+        const response = engine.handleRoll(currentPlayer, 1);
 
         expect(response.success).toBe(true);
         expect(gameState.currentPlayerIndex).toBe(1);
@@ -119,9 +117,8 @@ describe('TroubleGameEngine turn flow', () => {
         const initialJSON = hostCtx.gameState.toJSON();
         const clientCtx = createClientEngine(initialJSON);
 
-        jest.spyOn(global.Math, 'random').mockReturnValue(0.0);
         const currentPlayer = hostCtx.gameState.getCurrentPlayer();
-        hostCtx.engine.handleRoll(currentPlayer);
+        hostCtx.engine.handleRoll(currentPlayer, 1);
 
         const updatedJSON = hostCtx.gameState.toJSON();
         const updatedClientState = GameStateFactory.fromJSON(updatedJSON, clientCtx.factoryManager);
