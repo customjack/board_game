@@ -44,17 +44,26 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
         // Setup roll button callbacks (may already be initialized by UISystem)
         if (rollButton) {
-            // If already initialized, just update callbacks directly
-            if (rollButton.initialized) {
-                rollButton.onRollDiceCallback = () => this.handleRollDiceForCurrentPlayer();
-                rollButton.onRollCompleteCallback = (result) => this.handleAfterDiceRoll(result);
-            } else if (rollButton.init) {
-                // Otherwise initialize it
+            console.log('[Trouble] Setting up roll button callbacks, initialized:', rollButton.initialized);
+
+            // Always update callbacks directly to ensure they're set
+            rollButton.onRollDiceCallback = () => this.handleRollDiceForCurrentPlayer();
+            rollButton.onRollCompleteCallback = (result) => this.handleAfterDiceRoll(result);
+
+            // If not yet initialized, also call init
+            if (!rollButton.initialized && rollButton.init) {
                 rollButton.init({
                     onRollDice: () => this.handleRollDiceForCurrentPlayer(),
                     onRollComplete: (result) => this.handleAfterDiceRoll(result)
                 });
             }
+
+            console.log('[Trouble] Roll button callbacks set:', {
+                onRollDice: !!rollButton.onRollDiceCallback,
+                onRollComplete: !!rollButton.onRollCompleteCallback
+            });
+        } else {
+            console.warn('[Trouble] No roll button found!');
         }
 
         // Initialize game state
@@ -64,6 +73,8 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
         this.initialized = true;
         this.running = true;
+
+        console.log('[Trouble] Engine initialized, starting first turn');
 
         // Start first turn
         this.handleBeginTurn();
@@ -190,16 +201,23 @@ export default class TroubleGameEngine extends BaseGameEngine {
     }
 
     activateRollButton() {
+        console.log('[Trouble] Attempting to activate roll button');
         const rollButton = this.getUIComponent('rollButton');
         if (rollButton && rollButton.activate) {
+            console.log('[Trouble] Activating roll button via getUIComponent');
             rollButton.activate();
             return;
         }
         if (this.uiSystem) {
             const btn = this.uiSystem.getComponent('rollButton');
             if (btn && btn.activate) {
+                console.log('[Trouble] Activating roll button via uiSystem');
                 btn.activate();
+            } else {
+                console.warn('[Trouble] Roll button not found in uiSystem or no activate method');
             }
+        } else {
+            console.warn('[Trouble] No uiSystem available');
         }
     }
 
