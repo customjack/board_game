@@ -223,9 +223,11 @@ export default class TroubleGameEngine extends BaseGameEngine {
         // Move to waiting for roll
         this.gameState.setTurnPhase(TurnPhases.WAITING_FOR_MOVE);
 
-        // Activate roll button if it's this client's turn
+        // Activate/deactivate roll button based on whose turn it is
         if (this.isClientTurn()) {
             this.activateRollButton();
+        } else {
+            this.deactivateRollButton();
         }
 
         this.emitStateUpdate();
