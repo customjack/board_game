@@ -197,7 +197,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
     isClientTurn() {
         const currentPlayer = this.gameState.getCurrentPlayer();
         if (!currentPlayer) return false;
-        return currentPlayer.playerId === this.peerId;
+        return currentPlayer.peerId === this.peerId;
     }
 
     activateRollButton() {
