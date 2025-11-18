@@ -247,8 +247,18 @@ export default class TroubleGameEngine extends BaseGameEngine {
 
     isClientTurn() {
         const currentPlayer = this.gameState.getCurrentPlayer();
-        if (!currentPlayer) return false;
-        return currentPlayer.peerId === this.peerId;
+        if (!currentPlayer) {
+            console.log('[Trouble] isClientTurn: No current player');
+            return false;
+        }
+        const isMyTurn = currentPlayer.peerId === this.peerId;
+        console.log('[Trouble] isClientTurn:', {
+            currentPlayer: currentPlayer.nickname,
+            playerPeerId: currentPlayer.peerId,
+            enginePeerId: this.peerId,
+            isMyTurn
+        });
+        return isMyTurn;
     }
 
     activateRollButton() {
