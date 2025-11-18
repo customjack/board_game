@@ -143,32 +143,42 @@ class TroubleGameEngine extends BaseGameEngine {
 
 ## Implementation Steps
 
-### Phase 1: Fix Immediate Bugs (DONE)
+### Phase 1: Fix Immediate Bugs (✅ DONE)
 - [x] Fix `fallbackId` reference error
 - [x] Sync turnIndex with currentPlayerIndex
 
-### Phase 2: Add Piece State to GameState (DONE)
+### Phase 2: Add Piece State to GameState (✅ DONE)
 - [x] Add `pieces` array to TroubleGameState
 - [x] Include `pieces` in `getDeltaFields()`
 - [x] Serialize/deserialize piece positions
 - [x] Add `lastRoll` field for tracking dice rolls
+- [x] Add `currentPlayerIndex`, `turnPhase`, `extraTurnEarned`
+- [x] Add helper methods: `nextPlayerTurn()`, `giveExtraTurn()`, `updatePiece()`
 
-### Phase 3: Refactor to TurnPhases (DONE)
+### Phase 3: Refactor to Simpler State Machine (✅ DONE)
 - [x] Removed custom `TroubleTurnPhases`
 - [x] Use standard `TurnPhases` enum
-- [x] Implemented all phase handlers
-- [x] Use PhaseStateMachine (like TurnBasedGameEngine)
+- [x] Implemented all phase handlers (BEGIN_TURN, WAITING_FOR_MOVE, PROCESSING_MOVE, PLAYER_CHOOSING_DESTINATION, END_TURN)
+- [x] Simplified engine to ~570 lines (removed 750 lines)
+- [x] Removed PhaseStateMachine dependency (too complex for Trouble)
+- [x] Direct phase management similar to but simpler than TurnBasedGameEngine
 
-### Phase 4: Add Missing UI (TODO)
-- [ ] Modal for "move out vs move existing piece" on 6
-- [ ] Highlight valid destination spaces
-- [ ] Fix client roll animation (always shows 0)
+### Phase 4: UI Integration (✅ DONE)
+- [x] Add `spaceId` mapping for TroublePieceManager rendering
+- [x] Convert `position`/`status` to board space IDs
+- [x] Emit proper state updates with piece data
 
-### Phase 5: Remove Duplicate State (DONE)
+### Phase 5: Remove Duplicate State (✅ DONE)
 - [x] Removed `this.turnIndex` entirely
-- [x] Use only TurnBasedGameState's turn management
+- [x] Removed `this.playerState` Map
 - [x] Removed `pluginState.trouble` (use game state pieces array directly)
 - [x] Single source of truth: TroubleGameState
+- [x] No duplicate roll logic
+
+### Phase 6: Missing UI Features (TODO - Future Enhancement)
+- [ ] Modal for "move out vs move existing piece" when rolling 6 with pieces out
+- [ ] Highlight valid destination spaces on board
+- [ ] Piece selection UI when multiple pieces can move
 
 ## Testing Checklist
 

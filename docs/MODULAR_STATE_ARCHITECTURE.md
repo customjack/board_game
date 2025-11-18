@@ -101,39 +101,37 @@ const gameState = new StateClass({ board, factoryManager, players, ... });
 
 **Purpose:** State for Trouble (Pop-O-Matic) game
 
-**Current Implementation:**
-- Lightweight type marker
-- Returns `'trouble'` from `getStateType()`
-- Compatible with existing TroubleGameEngine
+**Additional Features:**
+- `currentPlayerIndex` - Index of current player
+- `turnPhase` - Current phase of turn (BEGIN_TURN, WAITING_FOR_MOVE, etc.)
+- `pieces` - Array of piece objects stored directly in state
+- `lastRoll` - Last dice roll value
+- `extraTurnEarned` - Whether player gets another turn (rolled 6)
+- `getCurrentPlayer()` - Returns current player object
+- `nextPlayerTurn()` - Advances to next player
+- `giveExtraTurn()` - Resets for extra turn (same player)
+- `updatePiece()` - Updates piece position and status
 
-**Actual Game Data:**
-Currently stored in `gameState.pluginState.trouble`:
+**Piece Structure:**
 ```javascript
 {
-  currentPlayerId: string,
-  pendingRoll: number | null,
-  pendingSelection: boolean,
-  pieces: [
-    {
-      id: string,
-      playerId: string,
-      pieceIndex: number,
-      status: 'HOME' | 'TRACK' | 'FINISH' | 'DONE',
-      spaceId: string,  // e.g., "home-0-0", "track-5", "finish-1-2"
-      stepsFromStart: number
-    }
-  ]
+  playerId: string,
+  playerIndex: number,
+  pieceIndex: number,      // 0-3 for each player
+  status: 'HOME' | 'TRACK' | 'FINISH' | 'DONE',
+  position: number         // -1=HOME, 0-27=TRACK, 0-3=FINISH, 4=DONE
 }
 ```
 
-**Why `pluginState.trouble`?**
-- TroublePieceManager expects this structure
-- Pieces need `spaceId` mappings to board spaces
-- Preserves working UI integration
-- Allows incremental refactoring
+**Delta Fields:**
+```javascript
+['stateType', 'gamePhase', 'currentPlayerIndex', 'turnPhase', 'pieces', 'lastRoll', 'extraTurnEarned']
+```
 
-**Future Enhancement:**
-Can gradually move data from `pluginState` to class properties while maintaining compatibility.
+**UI Integration:**
+- TroubleGameEngine converts `position`/`status` to `spaceId` strings for rendering
+- UI components receive pieces with `spaceId` (e.g., "home-0-0", "track-5", "finish-1-2")
+- State synchronization includes all piece positions across network
 
 **Used By:** TroubleGameEngine
 
@@ -281,8 +279,8 @@ export default class MyGamePlugin extends Plugin {
 
 - ✅ BaseGameState - Complete
 - ✅ TurnBasedGameState - Complete
-- ✅ TroubleGameState - Basic implementation, uses `pluginState.trouble`
-- ⏳ Future: Move Trouble data from `pluginState` to class properties
+- ✅ TroubleGameState - Complete (stores pieces directly in state)
+- ✅ TroubleGameEngine - Simplified, uses TroubleGameState directly
 
 ## See Also
 
