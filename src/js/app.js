@@ -1,32 +1,32 @@
 import '../css/styles.css';
 import HostEventHandler from './eventHandlers/HostEventHandler';
 import ClientEventHandler from './eventHandlers/ClientEventHandler';
-import PersonalSettings from './models/PersonalSettings';
-import PersonalSettingsMenu from './controllers/menus/PersonalSettingsMenu';
-import PluginManagerModal from './controllers/menus/PluginManagerModal';
-import PluginListPopup from './controllers/menus/PluginListPopup';
-import PageRegistry from './registries/PageRegistry';
-import ListenerRegistry from './registries/ListenerRegistry';
-import PlaceholderRegistry from './registries/PlaceholderRegistry';
-import WindowListenerRegistry from './registries/WindowListenerRegistry';
-import PieceManagerRegistry from './registries/PieceManagerRegistry';
-import RegistryManager from './registries/RegistryManager';
-import EventBus from './events/EventBus';
-import PluginManager from './pluginManagement/PluginManager';
-import LocalStorageManager from './managers/LocalStorageManager';
-import FactoryManager from './factories/FactoryManager';
-import EffectFactory from './factories/EffectFactory';
-import ActionFactory from './factories/ActionFactory';
-import TriggerFactory from './factories/TriggerFactory';
-import StatFactory from './factories/StatFactory';
-import PhaseStateMachineFactory from './factories/PhaseStateMachineFactory';
-import TurnManagerFactory from './factories/TurnManagerFactory';
-import EventProcessorFactory from './factories/EventProcessorFactory';
-import UIControllerFactory from './factories/UIControllerFactory';
-import UIComponentFactory from './factories/UIComponentFactory';
-import AnimationFactory from './factories/AnimationFactory';
+import PersonalSettings from './elements/models/PersonalSettings';
+import PersonalSettingsMenu from './deprecated/legacy/controllers/menus/PersonalSettingsMenu';
+import PluginManagerModal from './deprecated/legacy/controllers/menus/PluginManagerModal';
+import PluginListPopup from './deprecated/legacy/controllers/menus/PluginListPopup';
+import PageRegistry from './infrastructure/registries/PageRegistry';
+import ListenerRegistry from './infrastructure/registries/ListenerRegistry';
+import PlaceholderRegistry from './infrastructure/registries/PlaceholderRegistry';
+import WindowListenerRegistry from './infrastructure/registries/WindowListenerRegistry';
+import PieceManagerRegistry from './infrastructure/registries/PieceManagerRegistry';
+import RegistryManager from './infrastructure/registries/RegistryManager';
+import EventBus from './core/events/EventBus';
+import PluginManager from './systems/plugins/PluginManager';
+import LocalStorageManager from './systems/storage/LocalStorageManager';
+import FactoryManager from './infrastructure/factories/FactoryManager';
+import EffectFactory from './infrastructure/factories/EffectFactory';
+import ActionFactory from './infrastructure/factories/ActionFactory';
+import TriggerFactory from './infrastructure/factories/TriggerFactory';
+import StatFactory from './infrastructure/factories/StatFactory';
+import PhaseStateMachineFactory from './infrastructure/factories/PhaseStateMachineFactory';
+import TurnManagerFactory from './infrastructure/factories/TurnManagerFactory';
+import EventProcessorFactory from './infrastructure/factories/EventProcessorFactory';
+import UIControllerFactory from './infrastructure/factories/UIControllerFactory';
+import UIComponentFactory from './infrastructure/factories/UIComponentFactory';
+import AnimationFactory from './infrastructure/factories/AnimationFactory';
 
-import { randomNumber, randomWord, randomColor, randomSong } from './utils/PlaceholderFunctions';
+import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
 
 // Initialize personal settings
 function initializePersonalSettings(factoryManager, pluginManager, localStorageManager) {
@@ -93,7 +93,7 @@ function initializePluginManager(eventBus, registryManager, factoryManager) {
     const pluginManager = new PluginManager(eventBus, registryManager, factoryManager);
 
     // Register plugins
-    const requirePlugin = require.context('./plugins', true, /\.js$/);
+    const requirePlugin = require.context('./systems/plugins', true, /\.js$/);
     requirePlugin.keys().forEach((fileName) => {
         const pluginModule = requirePlugin(fileName);
         const plugin = pluginModule.default || pluginModule; // Use default export or the module itself

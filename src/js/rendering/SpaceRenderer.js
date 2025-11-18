@@ -1,4 +1,4 @@
-import { getVisibleElementById } from '../utils/helpers.js';
+import { getVisibleElementById } from '../infrastructure/utils/helpers.js';
 
 /**
  * SpaceRenderer - Handles rendering of board spaces

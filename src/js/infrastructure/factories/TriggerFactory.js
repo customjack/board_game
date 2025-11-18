@@ -1,5 +1,5 @@
 import BaseFactory from './BaseFactory.js';
-import BaseTrigger from '../models/Triggers/BaseTrigger.js';
+import BaseTrigger from '../elements/triggers/BaseTrigger.js';
 
 /**
  * TriggerFactory - Factory for creating and managing trigger instances

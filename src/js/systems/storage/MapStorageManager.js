@@ -5,7 +5,7 @@
  * including built-in maps and custom uploads.
  */
 
-import BoardSchemaValidator from '../utils/BoardSchemaValidator.js';
+import BoardSchemaValidator from '../infrastructure/utils/BoardSchemaValidator.js';
 
 export default class MapStorageManager {
     static STORAGE_KEY = 'customMaps';

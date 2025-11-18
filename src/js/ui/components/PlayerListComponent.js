@@ -7,9 +7,9 @@
 import BaseUIComponent from '../BaseUIComponent.js';
 import GameStateFactory from '../../factories/GameStateFactory.js';
 import { createInfoIcon, createGearIcon, createIconButton } from '../../utils/IconUtils.js';
-import PlayerInfoModal from '../../controllers/modals/PlayerInfoModal.js';
-import PlayerControlModal from '../../controllers/modals/PlayerControlModal.js';
-import HostPlayerControlModal from '../../controllers/modals/HostPlayerControlModal.js';
+import PlayerInfoModal from '../../deprecated/legacy/controllers/modals/PlayerInfoModal.js';
+import PlayerControlModal from '../../deprecated/legacy/controllers/modals/PlayerControlModal.js';
+import HostPlayerControlModal from '../../deprecated/legacy/controllers/modals/HostPlayerControlModal.js';
 
 // Shared modal instances (singletons) across all PlayerListComponent instances
 let sharedPlayerInfoModal = null;

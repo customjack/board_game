@@ -8,12 +8,12 @@
  * - Effects are applied each turn
  */
 import BaseGameEngine from './BaseGameEngine.js';
-import TurnPhases from '../enums/TurnPhases.js';
-import GamePhases from '../enums/GamePhases.js';
-import PlayerStates from '../enums/PlayerStates.js';
-import ActionTypes from '../enums/ActionTypes.js';
+import TurnPhases from '../game/phases/TurnPhases.js';
+import GamePhases from '../game/phases/GamePhases.js';
+import PlayerStates from '../game/phases/PlayerStates.js';
+import ActionTypes from '../infrastructure/utils/ActionTypes.js';
 import GameLogPopupController from '../controllers/GameLogPopupController.js';
-import { getVisibleElementById } from '../utils/helpers.js';
+import { getVisibleElementById } from '../infrastructure/utils/helpers.js';
 
 export default class TurnBasedGameEngine extends BaseGameEngine {
     /**

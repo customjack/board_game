@@ -1,5 +1,5 @@
 import BaseFactory from './BaseFactory';
-import PlayerEffect from '../models/PlayerEffects/PlayerEffect';
+import PlayerEffect from '../elements/effects/PlayerEffect';
 
 export default class EffectFactory extends BaseFactory {
     constructor() {

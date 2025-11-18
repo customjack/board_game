@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import ColorAssigner from '../utils/ColorAssigner';
-import RollEngine from '../utils/RollEngine';
+import ColorAssigner from '../infrastructure/utils/ColorAssigner';
+import RollEngine from '../infrastructure/utils/RollEngine';
 import PlayerMovementHistory from './PlayerMovementHistory';
-import PlayerStates from '../enums/PlayerStates';
+import PlayerStates from '../game/phases/PlayerStates';
 
 export default class Player {
     /**

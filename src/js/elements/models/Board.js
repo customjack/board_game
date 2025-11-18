@@ -1,6 +1,6 @@
 import Space from './Space';
 import GameRules from './GameRules.js';
-import { getVisibleElementById } from '../utils/helpers.js';
+import { getVisibleElementById } from '../infrastructure/utils/helpers.js';
 
 export default class Board {
     constructor(spaces = [], metadata = {}, gameRules = null) {

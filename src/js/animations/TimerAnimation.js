@@ -1,4 +1,4 @@
-import {interpolateColor} from '../utils/helpers.js';
+import {interpolateColor} from '../infrastructure/utils/helpers.js';
 
 export default class TimerAnimation extends Animation {
     constructor(isHost = false) {

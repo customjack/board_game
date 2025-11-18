@@ -8,7 +8,7 @@
  * - Manual disconnect option
  */
 
-import ModalUtil from '../utils/ModalUtil.js';
+import ModalUtil from '../infrastructure/utils/ModalUtil.js';
 
 export default class ConnectionStatusManager {
     constructor(peer) {
