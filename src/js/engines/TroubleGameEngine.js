@@ -137,6 +137,7 @@ export default class TroubleGameEngine extends BaseGameEngine {
         this.stop();
         this.pendingRoll = null;
         this.pendingMoveOptions = null;
+        this.pendingLocalRoll = null;
     }
 
     updateGameState(gameState) {
@@ -214,20 +215,9 @@ export default class TroubleGameEngine extends BaseGameEngine {
             return 0;
         }
 
-        if (!this.isHost) {
-            this.logPhase('ROLL_REQUEST_FORWARD', { playerId: currentPlayer.playerId });
-            this.emitEvent('playerAction', {
-                playerId: currentPlayer.playerId,
-                actionType: 'ROLL_DICE',
-                actionData: {}
-            });
-            this.deactivateRollButton();
-            return 0;
-        }
-
         const rollResult = Math.floor(Math.random() * 6) + 1;
-        console.log(`[Trouble] ${currentPlayer.nickname} rolled a ${rollResult}`);
-
+        this.pendingLocalRoll = rollResult;
+        this.logPhase('ROLL_POPPED', { roll: rollResult, byHost: this.isHost });
         this.deactivateRollButton();
         return rollResult;
     }
@@ -236,14 +226,21 @@ export default class TroubleGameEngine extends BaseGameEngine {
         const currentPlayer = this.gameState.getCurrentPlayer();
         if (!currentPlayer) return;
 
+        const resolvedRoll = typeof rollResult === 'number' ? rollResult : this.pendingLocalRoll;
+        this.pendingLocalRoll = null;
+        if (typeof resolvedRoll !== 'number') {
+            console.warn('[Trouble] Could not resolve roll result');
+            return;
+        }
+
         if (this.isHost) {
-            this.handleRoll(currentPlayer, rollResult);
+            this.handleRoll(currentPlayer, resolvedRoll);
         } else {
             // Trigger the actual roll action via event bus
             this.emitEvent('playerAction', {
                 playerId: currentPlayer.playerId,
                 actionType: 'ROLL_DICE',
-                actionData: { rollResult }
+                actionData: { rollResult: resolvedRoll }
             });
         }
     }

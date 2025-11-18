@@ -77,11 +77,17 @@ const createClientEngine = (initialStateJSON) => {
         getComponent: jest.fn((id) => (id === 'rollButton' ? rollButton : null))
     };
 
+    const eventBus = {
+        emit: jest.fn(),
+        on: jest.fn(),
+        off: jest.fn()
+    };
+
     const engine = new TroubleGameEngine({
         gameState: initialState,
         peerId: CLIENT_PEER_ID,
         proposeGameState: jest.fn(),
-        eventBus: new EventBus(),
+        eventBus,
         registryManager,
         factoryManager,
         isHost: false,
@@ -92,7 +98,7 @@ const createClientEngine = (initialStateJSON) => {
     rollButton.activate.mockClear();
     rollButton.deactivate.mockClear();
 
-    return { engine, rollButton, registryManager, factoryManager };
+    return { engine, rollButton, registryManager, factoryManager, eventBus };
 };
 
 describe('TroubleGameEngine turn flow', () => {
@@ -126,5 +132,30 @@ describe('TroubleGameEngine turn flow', () => {
 
         expect(clientCtx.engine.isClientTurn()).toBe(true);
         expect(clientCtx.rollButton.activate).toHaveBeenCalled();
+    });
+
+    test('client roll forwards rolled value to host', () => {
+        const hostCtx = createHostEngine();
+        const clientCtx = createClientEngine(hostCtx.gameState.toJSON());
+
+        hostCtx.engine.handleRoll(hostCtx.gameState.getCurrentPlayer(), 1);
+
+        const updatedClientState = GameStateFactory.fromJSON(hostCtx.gameState.toJSON(), clientCtx.factoryManager);
+        clientCtx.engine.updateGameState(updatedClientState);
+
+        const rollValue = clientCtx.engine.handleRollDiceForCurrentPlayer();
+        expect(rollValue).toBeGreaterThanOrEqual(1);
+        expect(rollValue).toBeLessThanOrEqual(6);
+        expect(clientCtx.rollButton.deactivate).toHaveBeenCalled();
+
+        clientCtx.engine.handleAfterDiceRoll(rollValue);
+
+        expect(clientCtx.eventBus.emit).toHaveBeenCalledWith(
+            'playerAction',
+            expect.objectContaining({
+                actionType: 'ROLL_DICE',
+                actionData: { rollResult: rollValue }
+            })
+        );
     });
 });

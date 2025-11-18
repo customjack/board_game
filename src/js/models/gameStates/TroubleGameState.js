@@ -24,6 +24,7 @@ export default class TroubleGameState extends BaseGameState {
         // Turn tracking (similar to TurnBasedGameState)
         this.currentPlayerIndex = config.currentPlayerIndex || 0;
         this.turnPhase = config.turnPhase || TurnPhases.BEGIN_TURN;
+        this.currentPlayerId = config.currentPlayerId || (this.players[this.currentPlayerIndex]?.playerId ?? null);
 
         // Trouble-specific state
         this.pieces = config.pieces || [];
@@ -74,6 +75,7 @@ export default class TroubleGameState extends BaseGameState {
     setCurrentPlayerIndex(index) {
         if (typeof index === 'number') {
             this.currentPlayerIndex = Math.max(0, Math.min(index, Math.max(this.players.length - 1, 0)));
+            this.currentPlayerId = this.players[this.currentPlayerIndex]?.playerId || null;
         }
     }
 
@@ -122,10 +124,12 @@ export default class TroubleGameState extends BaseGameState {
 
         if (this.players.length > 0) {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+            this.currentPlayerId = this.players[this.currentPlayerIndex]?.playerId || null;
         }
         this.turnPhase = TurnPhases.BEGIN_TURN;
         this.lastRoll = null;
         this.extraTurnEarned = false;
+        this.currentPlayerId = this.players[this.currentPlayerIndex]?.playerId || null;
     }
 
     /**
@@ -135,6 +139,7 @@ export default class TroubleGameState extends BaseGameState {
         this.turnPhase = TurnPhases.BEGIN_TURN;
         this.lastRoll = null;
         this.extraTurnEarned = false;
+        this.currentPlayerId = this.players[this.currentPlayerIndex]?.playerId || null;
     }
 
     /**
@@ -145,6 +150,8 @@ export default class TroubleGameState extends BaseGameState {
             ...super.getDeltaFields(),
             'currentPlayerIndex',
             'turnPhase',
+            'currentPlayerIndex',
+            'currentPlayerId',
             'pieces',
             'lastRoll',
             'extraTurnEarned'
@@ -156,6 +163,8 @@ export default class TroubleGameState extends BaseGameState {
             ...super.toJSON(),
             currentPlayerIndex: this.currentPlayerIndex,
             turnPhase: this.turnPhase,
+            currentPlayerIndex: this.currentPlayerIndex,
+            currentPlayerId: this.currentPlayerId,
             pieces: this.pieces,
             lastRoll: this.lastRoll,
             extraTurnEarned: this.extraTurnEarned
@@ -169,6 +178,7 @@ export default class TroubleGameState extends BaseGameState {
         state.pieces = json.pieces || [];
         state.lastRoll = json.lastRoll || null;
         state.extraTurnEarned = json.extraTurnEarned || false;
+        state.currentPlayerId = json.currentPlayerId || (state.players[state.currentPlayerIndex]?.playerId ?? null);
         return state;
     }
 }
