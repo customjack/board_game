@@ -1,6 +1,6 @@
 // PlayerListManager.js
 
-import GameStateFactory from '../../factories/GameStateFactory.js';
+import GameStateFactory from '../../../infrastructure/factories/GameStateFactory.js';
 
 export default class PlayerListManager {
     constructor(defaultListElement, isHost, currentPlayerPeerId, hostPeerId) {

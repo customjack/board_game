@@ -5,8 +5,8 @@
  * automatic UI generation and validation.
  */
 
-import Settings from '../../models/Settings.js';
-import SettingsModal from '../../ui/components/SettingsModal.js';
+import Settings from '../../elements/models/Settings.js';
+import SettingsModal from '../../../ui/components/SettingsModal.js';
 import { validateAllSettings, GAME_SETTINGS_SCHEMA } from '../../config/settings-schema.js';
 
 export default class SettingsManager {

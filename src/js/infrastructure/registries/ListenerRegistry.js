@@ -1,4 +1,4 @@
-import BaseRegistry from './BaseRegistry';
+import BaseRegistry from '../../core/base/BaseRegistry';
 
 export default class ListenerRegistry extends BaseRegistry {
     constructor() {

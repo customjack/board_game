@@ -1,9 +1,9 @@
 // Host.js
 
 import BasePeer from './BasePeer.js';
-import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
-import StateDelta from '../infrastructure/utils/StateDelta.js';
-import ModalUtil from '../infrastructure/utils/ModalUtil.js';
+import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
+import StateDelta from '../../infrastructure/utils/StateDelta.js';
+import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
 import NetworkProtocol from './protocol/NetworkProtocol.js';
 import { MessageTypes } from './protocol/MessageTypes.js';
 import GameStateHandler from './handlers/GameStateHandler.js';

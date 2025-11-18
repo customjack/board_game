@@ -1,7 +1,7 @@
-import { PriorityLevels } from '../infrastructure/utils/PriorityLevels.js';
-import { processStringToEnum } from '../infrastructure/utils/helpers.js';
-import TurnPhases from '../game/phases/TurnPhases';
-import GameEventState from '../game/phases/GameEventState.js';
+import { PriorityLevels } from '../../infrastructure/utils/PriorityLevels'.js';
+import { processStringToEnum } from '../../infrastructure/utils/helpers'.js';
+import TurnPhases from '../../game/phases/TurnPhases';
+import GameEventState from '../../game/phases/GameEventState'.js';
 
 /**
  * GameEvent - Combines a trigger condition with an action to execute

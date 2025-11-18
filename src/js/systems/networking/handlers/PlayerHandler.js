@@ -10,8 +10,8 @@
 
 import MessageHandlerPlugin from './MessageHandlerPlugin.js';
 import { MessageTypes } from '../protocol/MessageTypes.js';
-import InputValidator from '../../utils/InputValidator.js';
-import ModalUtil from '../../utils/ModalUtil.js';
+import InputValidator from '../utils/InputValidator.js';
+import ModalUtil from '../utils/ModalUtil.js';
 
 export default class PlayerHandler extends MessageHandlerPlugin {
     register() {

@@ -1,6 +1,6 @@
 // controllers/RollButtonManager.js
 
-import Animation from '../../animations/Animation'; // Import the base Animation class
+import Animation from '../../../animations/Animation'; // Import the base Animation class
 
 export default class RollButtonManager {
     /**

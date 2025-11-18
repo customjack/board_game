@@ -1,5 +1,5 @@
-import BaseFactory from './BaseFactory.js';
-import BaseAction from '../elements/actions/BaseAction.js';
+import BaseFactory from '../../core/base/BaseFactory.js';
+import BaseAction from '../../elements/actions/BaseAction.js';
 
 /**
  * ActionFactory - Factory for creating and managing action instances

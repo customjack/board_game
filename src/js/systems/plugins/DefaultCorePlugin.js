@@ -1,56 +1,56 @@
 import Plugin from '../systems/plugins/Plugin.js';
-import ActionTypes from '../infrastructure/utils/ActionTypes.js';
-import TriggerTypes from '../infrastructure/utils/TriggerTypes.js';
+import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
+import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
 
 // Import all built-in action classes
-import PromptAllPlayersAction from '../elements/actions/PromptAllPlayersAction.js';
-import PromptCurrentPlayerAction from '../elements/actions/PromptCurrentPlayerAction.js';
-import SetPlayerStateAction from '../elements/actions/SetPlayerStateAction.js';
-import DisplacePlayerAction from '../elements/actions/DisplacePlayerAction.js';
-import ApplyEffectAction from '../elements/actions/ApplyEffectAction.js';
-import SetPlayerSpaceAction from '../elements/actions/SetPlayerSpaceAction.js';
-import ForceStopAction from '../elements/actions/ForceStopAction.js';
-import SwapPlacesAction from '../elements/actions/SwapPlacesAction.js';
-import SetStatAction from '../elements/actions/SetStatAction.js';
-import ChangeStatAction from '../elements/actions/ChangeStatAction.js';
-import CustomAction from '../elements/actions/CustomAction.js';
+import PromptAllPlayersAction from '../../elements/actions/PromptAllPlayersAction.js';
+import PromptCurrentPlayerAction from '../../elements/actions/PromptCurrentPlayerAction.js';
+import SetPlayerStateAction from '../../elements/actions/SetPlayerStateAction.js';
+import DisplacePlayerAction from '../../elements/actions/DisplacePlayerAction.js';
+import ApplyEffectAction from '../../elements/actions/ApplyEffectAction.js';
+import SetPlayerSpaceAction from '../../elements/actions/SetPlayerSpaceAction.js';
+import ForceStopAction from '../../elements/actions/ForceStopAction.js';
+import SwapPlacesAction from '../../elements/actions/SwapPlacesAction.js';
+import SetStatAction from '../../elements/actions/SetStatAction.js';
+import ChangeStatAction from '../../elements/actions/ChangeStatAction.js';
+import CustomAction from '../../elements/actions/CustomAction.js';
 
 // Import all built-in trigger classes
-import OnEnterTrigger from '../elements/triggers/OnEnterTrigger.js';
-import OnLandTrigger from '../elements/triggers/OnLandTrigger.js';
-import OnExitTrigger from '../elements/triggers/OnExitTrigger.js';
-import CodeTrigger from '../elements/triggers/CodeTrigger.js';
+import OnEnterTrigger from '../../elements/triggers/OnEnterTrigger.js';
+import OnLandTrigger from '../../elements/triggers/OnLandTrigger.js';
+import OnExitTrigger from '../../elements/triggers/OnExitTrigger.js';
+import CodeTrigger from '../../elements/triggers/CodeTrigger.js';
 
 // Import all built-in effect classes
-import SkipTurnEffect from '../elements/effects/SkipTurnEffect.js';
-import DoubleTurnEffect from '../elements/effects/DoubleTurnEffect.js';
-import ChangeDirectionEffect from '../elements/effects/ChangeDirectionEffect.js';
-import SkipTurnsEffect from '../elements/effects/SkipTurnsEffect.js';
-import RepeatTurnsEffect from '../elements/effects/RepeatTurnsEffect.js';
+import SkipTurnEffect from '../../elements/effects/SkipTurnEffect.js';
+import DoubleTurnEffect from '../../elements/effects/DoubleTurnEffect.js';
+import ChangeDirectionEffect from '../../elements/effects/ChangeDirectionEffect.js';
+import SkipTurnsEffect from '../../elements/effects/SkipTurnsEffect.js';
+import RepeatTurnsEffect from '../../elements/effects/RepeatTurnsEffect.js';
 
 // Import all built-in stat classes
-import ScoreStat from '../elements/stats/ScoreStat.js';
+import ScoreStat from '../../elements/stats/ScoreStat.js';
 
 // Import game engine and component classes
-import TurnBasedGameEngine from '../game/engines/TurnBasedGameEngine.js';
-import GameEngineFactory from '../infrastructure/factories/GameEngineFactory.js';
-import TurnBasedGameState from '../game/state/TurnBasedGameState.js';
-import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
-import PhaseStateMachine from '../game/components/PhaseStateMachine.js';
-import TurnManager from '../game/components/TurnManager.js';
-import EventProcessor from '../game/components/EventProcessor.js';
-import UIController from '../game/components/UIController.js';
-import RemainingMovesComponent from '../ui/components/RemainingMovesComponent.js';
-import PlayerListComponent from '../ui/components/PlayerListComponent.js';
-import RollButtonComponent from '../ui/components/RollButtonComponent.js';
-import TimerComponent from '../ui/components/TimerComponent.js';
-import GameLogComponent from '../ui/components/GameLogComponent.js';
-import BoardCanvasComponent from '../ui/components/BoardCanvasComponent.js';
-import ParticleAnimation from '../animations/ParticleAnimation.js';
-import DiceRollAnimation from '../animations/DiceRollAnimation.js';
-import SlotMachineAnimation from '../animations/SlotMachineAnimation.js';
-import TimerAnimation from '../animations/TimerAnimation.js';
-import PieceManager from '../infrastructure/managers/PieceManager.js';
+import TurnBasedGameEngine from '../../game/engines/TurnBasedGameEngine.js';
+import GameEngineFactory from '../../infrastructure/factories/GameEngineFactory.js';
+import TurnBasedGameState from '../../game/state/TurnBasedGameState.js';
+import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
+import PhaseStateMachine from '../../game/components/PhaseStateMachine.js';
+import TurnManager from '../../game/components/TurnManager.js';
+import EventProcessor from '../../game/components/EventProcessor.js';
+import UIController from '../../game/components/UIController.js';
+import RemainingMovesComponent from '../../../ui/components/RemainingMovesComponent.js';
+import PlayerListComponent from '../../../ui/components/PlayerListComponent.js';
+import RollButtonComponent from '../../../ui/components/RollButtonComponent.js';
+import TimerComponent from '../../../ui/components/TimerComponent.js';
+import GameLogComponent from '../../../ui/components/GameLogComponent.js';
+import BoardCanvasComponent from '../../../ui/components/BoardCanvasComponent.js';
+import ParticleAnimation from '../../../animations/ParticleAnimation.js';
+import DiceRollAnimation from '../../../animations/DiceRollAnimation.js';
+import SlotMachineAnimation from '../../../animations/SlotMachineAnimation.js';
+import TimerAnimation from '../../../animations/TimerAnimation.js';
+import PieceManager from '../../infrastructure/managers/PieceManager.js';
 
 /**
  * DefaultCorePlugin - Registers all core/default components as a single plugin

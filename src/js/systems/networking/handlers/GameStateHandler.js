@@ -10,8 +10,8 @@
 
 import MessageHandlerPlugin from './MessageHandlerPlugin.js';
 import { MessageTypes } from '../protocol/MessageTypes.js';
-import GameStateFactory from '../../factories/GameStateFactory.js';
-import StateDelta from '../../utils/StateDelta.js';
+import GameStateFactory from '../../../infrastructure/factories/GameStateFactory.js';
+import StateDelta from '../utils/StateDelta.js';
 
 export default class GameStateHandler extends MessageHandlerPlugin {
     register() {

@@ -4,11 +4,11 @@
  * Manages the board canvas, rendering spaces, connections, and pieces
  */
 import BaseUIComponent from '../BaseUIComponent.js';
-import Board from '../../models/Board.js';
+import Board from '../../elements/models/Board.js';
 import BoardRenderConfig from '../../rendering/BoardRenderConfig.js';
 import ConnectionRenderer from '../../rendering/ConnectionRenderer.js';
 import SpaceRenderer from '../../rendering/SpaceRenderer.js';
-import BoardSchemaValidator from '../../utils/BoardSchemaValidator.js';
+import BoardSchemaValidator from '../utils/BoardSchemaValidator.js';
 import BoardViewport from '../BoardViewport.js';
 
 export default class BoardCanvasComponent extends BaseUIComponent {

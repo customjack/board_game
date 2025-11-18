@@ -1,4 +1,4 @@
-import Plugin from '../systems/plugins/Plugin';
+import Plugin from './Plugin';
 
 export default class ExamplePlugin extends Plugin {
     initialize(eventBus, registryManager, factoryManager) {
@@ -31,7 +31,7 @@ export default class ExamplePlugin extends Plugin {
         // uiComponentFactory.register('CustomGameLog', CustomGameLogComponent);
 
         // Register custom game engines
-        // import GameEngineFactory from '../infrastructure/factories/GameEngineFactory.js';
+        // import GameEngineFactory from '../../infrastructure/factories/GameEngineFactory.js';
         // GameEngineFactory.register('realtime', RealtimeGameEngine);
 
         // Register custom player effects

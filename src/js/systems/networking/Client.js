@@ -1,7 +1,7 @@
 // Client.js
 
 import BasePeer from './BasePeer.js';
-import ModalUtil from '../infrastructure/utils/ModalUtil.js';
+import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
 import NetworkProtocol from './protocol/NetworkProtocol.js';
 import { MessageTypes } from './protocol/MessageTypes.js';
 import GameStateHandler from './handlers/GameStateHandler.js';

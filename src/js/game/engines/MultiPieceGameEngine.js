@@ -10,9 +10,9 @@
  * This demonstrates how the modular architecture supports different game types.
  */
 import BaseGameEngine from './BaseGameEngine.js';
-import TurnPhases from '../game/phases/TurnPhases.js';
-import GamePhases from '../game/phases/GamePhases.js';
-import PlayerStates from '../game/phases/PlayerStates.js';
+import TurnPhases from '../../game/phases/TurnPhases.js';
+import GamePhases from '../../game/phases/GamePhases.js';
+import PlayerStates from '../../game/phases/PlayerStates.js';
 
 export default class MultiPieceGameEngine extends BaseGameEngine {
     /**

@@ -1,4 +1,4 @@
-import BaseRegistry from './BaseRegistry';  // Import the base registry class
+import BaseRegistry from '../../core/base/BaseRegistry';  // Import the base registry class
 
 export default class PlaceholderRegistry extends BaseRegistry {
     constructor() {

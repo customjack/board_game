@@ -11,7 +11,7 @@ import RemainingMovesComponent from './components/RemainingMovesComponent.js';
 import RollButtonComponent from './components/RollButtonComponent.js';
 import TimerComponent from './components/TimerComponent.js';
 import GameLogComponent from './components/GameLogComponent.js';
-import GameLogManager from '../infrastructure/managers/GameLogManager.js';
+import GameLogManager from '../../infrastructure/managers/GameLogManager.js';
 
 export default class UISystem {
     /**

@@ -4,12 +4,12 @@
  * Allows plugins to register custom UI component implementations
  * such as custom player lists, timers, game logs, etc.
  */
-import RemainingMovesComponent from '../ui/components/RemainingMovesComponent.js';
-import PlayerListComponent from '../ui/components/PlayerListComponent.js';
-import RollButtonComponent from '../ui/components/RollButtonComponent.js';
-import TimerComponent from '../ui/components/TimerComponent.js';
-import GameLogComponent from '../ui/components/GameLogComponent.js';
-import BoardCanvasComponent from '../ui/components/BoardCanvasComponent.js';
+import RemainingMovesComponent from '../../../ui/components/RemainingMovesComponent.js';
+import PlayerListComponent from '../../../ui/components/PlayerListComponent.js';
+import RollButtonComponent from '../../../ui/components/RollButtonComponent.js';
+import TimerComponent from '../../../ui/components/TimerComponent.js';
+import GameLogComponent from '../../../ui/components/GameLogComponent.js';
+import BoardCanvasComponent from '../../../ui/components/BoardCanvasComponent.js';
 
 export default class UIComponentFactory {
     constructor() {

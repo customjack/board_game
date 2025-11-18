@@ -3,7 +3,7 @@
  *
  * Allows plugins to register custom UI controller implementations
  */
-import UIController from '../game/components/UIController.js';
+import UIController from '../../game/components/UIController.js';
 
 export default class UIControllerFactory {
     constructor() {

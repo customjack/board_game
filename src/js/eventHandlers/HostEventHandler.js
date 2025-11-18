@@ -1,16 +1,16 @@
 import BaseEventHandler from './BaseEventHandler.js';
 import Host from '../systems/networking/Host.js';
-import TimerAnimation from '../animations/TimerAnimation.js';
-import ModalUtil from '../infrastructure/utils/ModalUtil.js';
+import TimerAnimation from '../../../animations/TimerAnimation.js';
+import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
 import UIBinder from './UIBinder.js';
 import ActionRegistry from './ActionRegistry.js';
 import { HOST_UI_BINDINGS } from '../config/ui-bindings.js';
-import LoadingProgressTracker, { LOADING_STAGES } from '../infrastructure/utils/LoadingProgressTracker.js';
+import LoadingProgressTracker, { LOADING_STAGES } from '../../infrastructure/utils/LoadingProgressTracker.js';
 import LoadingBar from '../ui/LoadingBar.js';
-import MapSelectionUI from '../ui/components/MapSelectionUI.js';
+import MapSelectionUI from '../../../ui/components/MapSelectionUI.js';
 import MapStorageManager from '../systems/storage/MapStorageManager.js';
 import Board from '../elements/models/Board.js';
-import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
+import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal) {

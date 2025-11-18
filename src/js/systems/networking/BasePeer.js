@@ -1,8 +1,8 @@
 // BasePeer.js
 
 import Peer from 'peerjs';
-import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
-import BoardManager from '../infrastructure/managers/BoardManager';
+import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
+import BoardManager from '../../infrastructure/managers/BoardManager';
 import { PEER_CONFIG, getPerformanceLabel, PERFORMANCE_THRESHOLDS } from './NetworkConfig.js';
 
 export default class BasePeer {

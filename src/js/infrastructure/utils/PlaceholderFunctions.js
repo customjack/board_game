@@ -1,6 +1,6 @@
-import randomColors from '../../assets/random_samples/random_colors.json';
-import randomSongs from '../../assets/random_samples/random_songs.json';
-import randomWords from '../../assets/random_samples/random_words.json';
+import randomColors from '../../../assets/random_samples/random_colors.json';
+import randomSongs from '../../../assets/random_samples/random_songs.json';
+import randomWords from '../../../assets/random_samples/random_words.json';
 
 export function randomNumber(min, max, context) {
     const randomValue = context.gameState.randomGenerator.getNextRandomNumber();

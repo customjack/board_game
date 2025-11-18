@@ -1,11 +1,11 @@
 import UISystem from '../ui/UISystem.js';
-import PieceManager from '../infrastructure/managers/PieceManager';
-import SettingsManager from '../infrastructure/managers/SettingsManager';
-import ModalUtil from '../infrastructure/utils/ModalUtil.js';
-import GameEngineFactory from '../infrastructure/factories/GameEngineFactory.js';
+import PieceManager from '../../infrastructure/managers/PieceManager';
+import SettingsManager from '../../infrastructure/managers/SettingsManager';
+import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
+import GameEngineFactory from '../../infrastructure/factories/GameEngineFactory.js';
 import { MessageTypes } from '../systems/networking/protocol/MessageTypes.js';
-import PageRegistry from './infrastructure/registries/PageRegistry.js';
-import ListenerRegistry from './infrastructure/registries/ListenerRegistry.js';
+import PageRegistry from '../../infrastructure/registries/PageRegistry.js';
+import ListenerRegistry from '../../infrastructure/registries/ListenerRegistry.js';
 
 export default class BaseEventHandler {
     constructor(isHost, registryManager, pluginManager, factoryManager, eventBus, personalSettings) {

@@ -1,5 +1,5 @@
-import BaseFactory from './BaseFactory.js';
-import BaseStat from '../elements/stats/BaseStat.js';
+import BaseFactory from '../../core/base/BaseFactory.js';
+import BaseStat from '../../elements/stats/BaseStat.js';
 
 /**
  * StatFactory - Factory for creating and managing player stat instances

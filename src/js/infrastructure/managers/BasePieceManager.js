@@ -1,5 +1,5 @@
-import Piece from '../../models/Piece.js';
-import { getVisibleElementById } from '../../utils/helpers.js';
+import Piece from '../../elements/models/Piece.js';
+import { getVisibleElementById } from '../utils/helpers.js';
 
 /**
  * BasePieceManager - Provides shared logic for rendering pieces on the board.

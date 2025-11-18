@@ -1,10 +1,10 @@
 // BoardManager.js
 
-import Board from '../../models/Board.js';
+import Board from '../../elements/models/Board.js';
 import BoardRenderConfig from '../../rendering/BoardRenderConfig.js';
 import ConnectionRenderer from '../../rendering/ConnectionRenderer.js';
 import SpaceRenderer from '../../rendering/SpaceRenderer.js';
-import BoardSchemaValidator from '../../utils/BoardSchemaValidator.js';
+import BoardSchemaValidator from '../utils/BoardSchemaValidator.js';
 
 export default class BoardManager {
     constructor(factoryManager = null) {
