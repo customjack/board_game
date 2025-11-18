@@ -233,16 +233,9 @@ export default class TroubleGameEngine extends BaseGameEngine {
             return;
         }
 
-        if (this.isHost) {
-            this.handleRoll(currentPlayer, resolvedRoll);
-        } else {
-            // Trigger the actual roll action via event bus
-            this.emitEvent('playerAction', {
-                playerId: currentPlayer.playerId,
-                actionType: 'ROLL_DICE',
-                actionData: { rollResult: resolvedRoll }
-            });
-        }
+        // Both host and client process the roll directly
+        // State will be synced via proposeStateChange
+        this.handleRoll(currentPlayer, resolvedRoll);
     }
 
     isClientTurn() {
