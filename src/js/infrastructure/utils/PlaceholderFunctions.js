@@ -12,9 +12,33 @@ export function randomWord(context) {
     return randomWords[Math.floor(randomValue * randomWords.length)];
 }
 
-export function randomColor(context) {
-    const randomValue = context.gameState.randomGenerator.getNextRandomNumber();
-    return randomColors[Math.floor(randomValue * randomColors.length)];
+export function randomColor(textOrContext, context) {
+    // Handle both calling patterns:
+    // 1. randomColor(context) - when called without text argument
+    // 2. randomColor(text, context) - when called with text argument
+    let text;
+    let gameEngine;
+
+    if (context === undefined) {
+        // Called with just context: randomColor(context)
+        gameEngine = textOrContext;
+        text = undefined;
+    } else {
+        // Called with text and context: randomColor(text, context)
+        text = textOrContext;
+        gameEngine = context;
+    }
+
+    const randomValue = gameEngine.gameState.randomGenerator.getNextRandomNumber();
+    const color = randomColors[Math.floor(randomValue * randomColors.length)];
+
+    // If text is provided, wrap it in a colored span
+    if (text !== undefined && text !== null && text !== '') {
+        return `<span style="color: ${color};">${text}</span>`;
+    }
+
+    // Otherwise, just return the color hex code
+    return color;
 }
 
 export function randomSong(context) {

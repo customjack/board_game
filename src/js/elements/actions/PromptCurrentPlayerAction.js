@@ -43,8 +43,8 @@ export default class PromptCurrentPlayerAction extends BaseAction {
                 // Replace placeholders in the message and pass gameEngine as context
                 processed_message = placeholderRegistry.replacePlaceholders(processed_message, gameEngine);
 
-                // Sanitize the message to prevent XSS attacks
-                processed_message = InputValidator.sanitizeMessage(processed_message);
+                // Sanitize but keep trusted placeholder markup (e.g. colored spans)
+                processed_message = InputValidator.sanitizeMessage(processed_message, 500, true);
 
                 // After message editing, unregister CURRENT_PLAYER_NAME to prevent future use
                 placeholderRegistry.unregister('CURRENT_PLAYER_NAME');

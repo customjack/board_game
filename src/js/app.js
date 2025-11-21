@@ -27,8 +27,6 @@ import UIControllerFactory from './infrastructure/factories/UIControllerFactory'
 import UIComponentFactory from './infrastructure/factories/UIComponentFactory';
 import AnimationFactory from './infrastructure/factories/AnimationFactory';
 
-import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
-
 // Initialize personal settings
 function initializePersonalSettings(factoryManager, pluginManager, localStorageManager) {
     const personalSettings = new PersonalSettings();
@@ -73,20 +71,6 @@ function registerPages(pageRegistry) {
         'loadingPage',
     ];
     pages.forEach((page) => pageRegistry.registerPage(page));
-}
-
-// Register placeholders
-function registerPlaceholders(placeholderRegistry) {
-    const placeholders = {
-        RANDOM_NUMBER: randomNumber,
-        RANDOM_WORD: randomWord,
-        RANDOM_COLOR: randomColor,
-        RANDOM_SONG: randomSong,
-    };
-
-    Object.entries(placeholders).forEach(([key, value]) => {
-        placeholderRegistry.register(key, value);
-    });
 }
 
 // Initialize the EventBus and PluginManager
@@ -304,12 +288,11 @@ function initializeApp() {
     const factoryManager = initializeFactories();
 
     // Registries and manager
-    const { registryManager, pageRegistry, listenerRegistry, windowListenerRegistry, placeholderRegistry } =
+    const { registryManager, pageRegistry, listenerRegistry, windowListenerRegistry } =
         initializeRegistryManager();
 
-    // Register pages and placeholders
+    // Register pages
     registerPages(pageRegistry);
-    registerPlaceholders(placeholderRegistry);
 
     // EventBus and PluginManager
     const eventBus = new EventBus();

@@ -202,12 +202,15 @@ export default class InputValidator {
      * @param {number} maxLength - Maximum message length
      * @returns {string} Sanitized message
      */
-    static sanitizeMessage(message, maxLength = 500) {
+    static sanitizeMessage(message, maxLength = 500, allowTrustedHtml = false) {
         if (typeof message !== 'string') {
             return '';
         }
 
-        let sanitized = this.sanitizeString(message);
+        // When allowTrustedHtml is true we assume upstream callers have fully
+        // controlled the HTML (e.g. placeholder-generated spans) and want to keep
+        // the markup intact. Otherwise, escape everything to prevent XSS.
+        let sanitized = allowTrustedHtml ? message : this.sanitizeString(message);
 
         // Truncate if too long
         if (sanitized.length > maxLength) {

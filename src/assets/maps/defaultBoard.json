@@ -143,7 +143,7 @@
               "action": {
                 "type": "PROMPT_ALL_PLAYERS",
                 "payload": {
-                  "message": "You take a drink! {{CURRENT_PLAYER_NAME}}. Your random word is {{RANDOM_WORD}}, your random color is {{RANDOM_COLOR}}, your random number between 1 and 10 is {{RANDOM_NUMBER(1,10)}} and the song you should play is {{RANDOM_SONG}}."
+                  "message": "{{CURRENT_PLAYER_NAME}} takes a drink! Say the word {{RANDOM_COLOR({{RANDOM_WORD}})}} {{RANDOM_NUMBER(1,10)}} times, then play the song {{RANDOM_SONG}}!"
                 }
               },
               "priority": "MID"
@@ -460,7 +460,7 @@
               "action": {
                 "type": "PROMPT_ALL_PLAYERS",
                 "payload": {
-                  "message": "All players drink double!"
+                  "message": "{{RANDOM_COLOR(All players drink double!)}} 🍺🍺"
                 }
               },
               "priority": "MID"
@@ -541,7 +541,7 @@
               "action": {
                 "type": "PROMPT_CURRENT_PLAYER",
                 "payload": {
-                  "message": "Congratulations! You have finished the game, now finish your drink!"
+                  "message": "{{RANDOM_COLOR(🎉 Congratulations!)}} You have finished the game, now finish your drink! 🏆"
                 }
               },
               "priority": "MID"

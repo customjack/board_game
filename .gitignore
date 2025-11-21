@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 
+# artifacts/
+artifacts/
+
 # Don't include deprecated directory
 deprecated/
 
