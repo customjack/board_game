@@ -7,7 +7,7 @@
  * - Events trigger based on space landings
  * - Effects are applied each turn
  */
-import BaseGameEngine from '../../core/base/BaseGameEngine.js';
+import AbstractTurnEngine from './AbstractTurnEngine.js';
 import TurnPhases from '../../game/phases/TurnPhases.js';
 import GamePhases from '../../game/phases/GamePhases.js';
 import PlayerStates from '../../game/phases/PlayerStates.js';
@@ -15,7 +15,7 @@ import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 import GameLogPopupController from '../../../deprecated/legacy/controllers/GameLogPopupController.js';
 import { getVisibleElementById } from '../../infrastructure/utils/helpers.js';
 
-export default class TurnBasedGameEngine extends BaseGameEngine {
+export default class TurnBasedGameEngine extends AbstractTurnEngine {
     /**
      * Create a turn-based game engine
      * @param {Object} dependencies - Core dependencies from BaseGameEngine
@@ -673,12 +673,11 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             PlayerStates.SPECTATING, PlayerStates.DISCONNECTED].includes(currentPlayer.getState());
 
         if (this.isClientTurn()) {
-            // Check if player should be skipped
-            if (shouldSkipTurn) {
-                this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
-            } else {
-                this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 });
-            }
+            this.handleTurnChangeDecision({
+                shouldSkip: shouldSkipTurn,
+                onSkip: () => this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 }),
+                onProceed: () => this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 })
+            });
         }
     }
 
@@ -744,25 +743,26 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         const triggeredEvents = this.gameState.determineTriggeredEvents(this.eventBus, this.peerId);
         const currentPlayer = this.turnManager.getCurrentPlayer();
 
-        if (triggeredEvents.length === 0) {
-            // No events to process, reset all events and move on
-            this.gameState.resetEvents();
-            if (this.isClientTurn()) {
-                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
-            }
-        } else {
-            triggeredEvents.forEach(({ event, space }) => {
-                const description = this.describeTriggeredEvent(event, space);
-                this.logPlayerAction(currentPlayer, description, {
-                    type: 'event-processing',
-                    metadata: { spaceId: space?.id, actionType: event?.action?.type }
+        this.processTriggeredEventsFlow(triggeredEvents, {
+            onEmpty: () => {
+                this.gameState.resetEvents();
+                if (this.isClientTurn()) {
+                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
+                }
+            },
+            onProcess: () => {
+                triggeredEvents.forEach(({ event, space }) => {
+                    const description = this.describeTriggeredEvent(event, space);
+                    this.logPlayerAction(currentPlayer, description, {
+                        type: 'event-processing',
+                        metadata: { spaceId: space?.id, actionType: event?.action?.type }
+                    });
                 });
-            });
-            if (this.isClientTurn()) {
-                // Transition to process the first event
-                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
+                if (this.isClientTurn()) {
+                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
+                }
             }
-        }
+        });
     }
 
     handleProcessingEvent() {
@@ -1246,7 +1246,8 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             return;
         }
 
-        modalMessage.innerHTML = message;
+        // Allow trusted placeholder markup
+        this.setModalMessage(modalMessage, message, { trustedHtml: true });
         if (countdownEl) {
             countdownEl.style.display = 'none';
             countdownEl.textContent = '';

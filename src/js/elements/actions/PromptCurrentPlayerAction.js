@@ -1,6 +1,6 @@
 import BaseAction from './BaseAction.js';
 import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
-import InputValidator from '../../infrastructure/utils/InputValidator.js';
+import { sanitizePromptMessage } from '../../infrastructure/utils/PromptMessage.js';
 
 /**
  * PromptCurrentPlayerAction - Shows a modal prompt to the current player only
@@ -43,11 +43,10 @@ export default class PromptCurrentPlayerAction extends BaseAction {
                 // Replace placeholders in the message and pass gameEngine as context
                 processed_message = placeholderRegistry.replacePlaceholders(processed_message, gameEngine);
 
-                // Sanitize but keep trusted placeholder markup (e.g. colored spans)
-                processed_message = InputValidator.sanitizeMessage(processed_message, 500, true);
-
                 // After message editing, unregister CURRENT_PLAYER_NAME to prevent future use
                 placeholderRegistry.unregister('CURRENT_PLAYER_NAME');
+
+                processed_message = sanitizePromptMessage(processed_message, { trustedHtml: true });
 
                 if (currentPlayer.peerId === gameEngine.peerId) {
                     gameEngine.showPromptModal(processed_message, postExecutionCallback);
