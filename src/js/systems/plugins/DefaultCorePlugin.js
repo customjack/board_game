@@ -51,6 +51,7 @@ import DiceRollAnimation from '../../animations/DiceRollAnimation.js';
 import SlotMachineAnimation from '../../animations/SlotMachineAnimation.js';
 import TimerAnimation from '../../animations/TimerAnimation.js';
 import PieceManager from '../../infrastructure/managers/PieceManager.js';
+import { randomNumber, randomWord, randomColor, randomSong } from '../../infrastructure/utils/PlaceholderFunctions.js';
 
 /**
  * DefaultCorePlugin - Registers all core/default components as a single plugin
@@ -94,7 +95,8 @@ export default class DefaultCorePlugin extends Plugin {
             triggers: 0,
             effects: 0,
             stats: 0,
-            pieceManagers: 0
+            pieceManagers: 0,
+            placeholders: 0
         };
 
         // Register all components
@@ -111,6 +113,7 @@ export default class DefaultCorePlugin extends Plugin {
         counts.effects += this._registerEffects(factoryManager);
         counts.stats += this._registerStats(factoryManager);
         counts.pieceManagers += this._registerPieceManagers(registryManager);
+        counts.placeholders += this._registerPlaceholders(registryManager);
 
         // Output single consolidated message
         console.log(
@@ -126,7 +129,8 @@ export default class DefaultCorePlugin extends Plugin {
             `${counts.triggers} triggers, ` +
             `${counts.effects} effects, ` +
             `${counts.stats} stats, ` +
-            `${counts.pieceManagers} piece manager`
+            `${counts.pieceManagers} piece manager, ` +
+            `${counts.placeholders} placeholders`
         );
     }
 
@@ -443,6 +447,34 @@ export default class DefaultCorePlugin extends Plugin {
     }
 
     /**
+     * Register all built-in placeholders
+     * @private
+     * @param {RegistryManager} registryManager
+     * @returns {number} Count of registered placeholders
+     */
+    _registerPlaceholders(registryManager) {
+        const placeholderRegistry = registryManager.getRegistry('placeholderRegistry');
+        if (!placeholderRegistry) return 0;
+
+        const placeholders = {
+            RANDOM_NUMBER: randomNumber,
+            RANDOM_WORD: randomWord,
+            RANDOM_COLOR: randomColor,
+            RANDOM_SONG: randomSong,
+        };
+
+        try {
+            Object.entries(placeholders).forEach(([key, value]) => {
+                placeholderRegistry.register(key, value);
+            });
+            return Object.keys(placeholders).length;
+        } catch (error) {
+            console.error('[Plugin] Core: Failed to register placeholders', error);
+            return 0;
+        }
+    }
+
+    /**
      * Optional cleanup method when the plugin is removed
      */
     cleanup() {
@@ -488,6 +520,12 @@ export default class DefaultCorePlugin extends Plugin {
                     'ChangeDirectionEffect',
                     'SkipTurnsEffect',
                     'RepeatTurnsEffect'
+                ],
+                placeholders: [
+                    'RANDOM_NUMBER',
+                    'RANDOM_WORD',
+                    'RANDOM_COLOR',
+                    'RANDOM_SONG'
                 ],
                 components: [
                     'GameEngine (turn-based)',

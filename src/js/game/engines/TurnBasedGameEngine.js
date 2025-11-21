@@ -1246,7 +1246,7 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
             return;
         }
 
-        modalMessage.textContent = message;
+        modalMessage.innerHTML = message;
         if (countdownEl) {
             countdownEl.style.display = 'none';
             countdownEl.textContent = '';

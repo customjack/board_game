@@ -143,7 +143,7 @@
               "action": {
                 "type": "PROMPT_ALL_PLAYERS",
                 "payload": {
-                  "message": "You take a drink! {{CURRENT_PLAYER_NAME}}. Your random word is {{RANDOM_WORD}}, your random color is {{RANDOM_COLOR}}, your random number between 1 and 10 is {{RANDOM_NUMBER(1,10)}} and the song you should play is {{RANDOM_SONG}}."
+                  "message": "You take a drink! {{CURRENT_PLAYER_NAME}}. Your random word is {{RANDOM_COLOR({{RANDOM_WORD}})}}, your random number between 1 and 10 is {{RANDOM_NUMBER(1,10)}} and the song you should play is {{RANDOM_SONG}}."
                 }
               },
               "priority": "MID"
