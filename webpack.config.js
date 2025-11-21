@@ -18,10 +18,12 @@ module.exports = (env, argv) => {
         'process.env.PEERJS_SECURE': JSON.stringify(process.env.PEERJS_SECURE || ''),
     };
 
+    const outputDir = process.env.OUTPUT_DIR || 'dist';
+
     return {
     entry: './src/js/app.js', // Entry point of your application
     output: {
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, outputDir),
         filename: 'bundle.js', // Output bundle file
         clean: true, // Clean the output directory before emit
     },

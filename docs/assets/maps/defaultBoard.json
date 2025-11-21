@@ -1,0 +1,556 @@
+{
+  "$schema": "https://boardgame.example.com/schemas/game-v3.json",
+  "version": "1.0.0",
+  "type": "game",
+  "metadata": {
+    "name": "Drinking Board Game",
+    "author": "Jack Carlton",
+    "description": "Game to drink with your friends while playing",
+    "created": "2024-10-28T12:00:00Z",
+    "modified": "2025-11-09T19:05:24.067Z",
+    "tags": [
+      "default",
+      "party",
+      "drinking"
+    ]
+  },
+  "requirements": {
+    "plugins": [
+      {
+        "id": "core",
+        "version": "^1.0.0",
+        "source": "builtin",
+        "description": "Core game functionality"
+      }
+    ],
+    "minPlayers": 2,
+    "maxPlayers": 8
+  },
+  "engine": {
+    "type": "turn-based",
+    "config": {}
+  },
+  "ui": {
+    "layout": "standard-board",
+    "components": [
+      {
+        "id": "rollButton",
+        "enabled": true,
+        "position": {
+          "bottom": 20,
+          "centerX": true
+        },
+        "config": {
+          "label": "Roll",
+          "hotkey": "space"
+        }
+      },
+      {
+        "id": "timer",
+        "enabled": true,
+        "position": {
+          "top": 20,
+          "right": 20
+        },
+        "config": {}
+      },
+      {
+        "id": "remainingMoves",
+        "enabled": true,
+        "position": {
+          "top": 80,
+          "right": 20
+        },
+        "config": {}
+      }
+    ],
+    "theme": {}
+  },
+  "rules": {
+    "turnOrder": "sequential",
+    "startingPositions": {
+      "mode": "single",
+      "spaceIds": [
+        "1"
+      ]
+    },
+    "recommendedPlayers": {
+      "min": 3,
+      "max": 6
+    },
+    "diceRolling": {
+      "enabled": true,
+      "diceCount": 1,
+      "diceSides": 6,
+      "rollAgainOn": []
+    },
+    "winCondition": {}
+  },
+  "board": {
+    "topology": {
+      "spaces": [
+        {
+          "id": "1",
+          "name": "Start",
+          "type": "start",
+          "position": {
+            "x": 300,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ffcccc",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "2",
+              "draw": true
+            }
+          ],
+          "triggers": []
+        },
+        {
+          "id": "2",
+          "name": "Take a Drink",
+          "type": "action",
+          "position": {
+            "x": 400,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ccffcc",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "3",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "{{CURRENT_PLAYER_NAME}} takes a drink! Say the word {{RANDOM_COLOR({{RANDOM_WORD}})}} {{RANDOM_NUMBER(1,10)}} times, then play the song {{RANDOM_SONG}}!"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "Displace Player",
+          "type": "action",
+          "position": {
+            "x": 400,
+            "y": 200
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ffcccc",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "4",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "You move back 2 spaces!"
+                }
+              },
+              "priority": "MID"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "DISPLACE_PLAYER",
+                "payload": {
+                  "steps": -2
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "4",
+          "name": "Skip a turn",
+          "type": "action",
+          "position": {
+            "x": 300,
+            "y": 200
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ffcccc",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "5",
+              "draw": true
+            },
+            {
+              "targetId": "6",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Your next turn will be skipped!"
+                }
+              },
+              "priority": "MID"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "APPLY_EFFECT",
+                "payload": {
+                  "effect": {
+                    "type": "SkipTurnEffect",
+                    "args": [
+                      {
+                        "id": "SkipTurnEffect_1"
+                      },
+                      {
+                        "duration": 1
+                      }
+                    ]
+                  }
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "5",
+          "name": "Teleport to Space 10",
+          "type": "action",
+          "position": {
+            "x": 200,
+            "y": 200
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ffdddd",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "6",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "You have been teleported to space 10!"
+                }
+              },
+              "priority": "MID"
+            },
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "SET_PLAYER_SPACE",
+                "payload": {
+                  "spaceId": 10
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "name": "Move Back 1",
+          "type": "action",
+          "position": {
+            "x": 200,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ccccff",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "7",
+              "draw": true
+            },
+            {
+              "targetId": "8",
+              "draw": true
+            },
+            {
+              "targetId": "1",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_EXIT"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "You move back 1 space!"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "name": "Skip a Drink",
+          "type": "action",
+          "position": {
+            "x": 200,
+            "y": 400
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ddffdd",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "8",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "You skip taking a drink this round."
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "8",
+          "name": "Move Forward 3",
+          "type": "action",
+          "position": {
+            "x": 300,
+            "y": 400
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ccffcc",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "9",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "You can move forward 3 spaces!"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "9",
+          "name": "Double Drinks",
+          "type": "action",
+          "position": {
+            "x": 400,
+            "y": 400
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ffcccc",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "10",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "{{RANDOM_COLOR(All players drink double!)}} 🍺🍺"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "10",
+          "name": "Move Back 2",
+          "type": "action",
+          "position": {
+            "x": 500,
+            "y": 400
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ccccff",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [
+            {
+              "targetId": "11",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_EXIT"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "You move back 2 spaces!"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "11",
+          "name": "Finish",
+          "type": "end",
+          "position": {
+            "x": 600,
+            "y": 400
+          },
+          "visual": {
+            "size": 60,
+            "color": "#ffffcc",
+            "textColor": "#000000",
+            "font": "12px Arial",
+            "textAlign": "center",
+            "textBaseline": "middle"
+          },
+          "connections": [],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "SET_PLAYER_STATE",
+                "payload": {
+                  "state": "COMPLETED_GAME"
+                }
+              },
+              "priority": "MID"
+            },
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "{{RANDOM_COLOR(🎉 Congratulations!)}} You have finished the game, now finish your drink! 🏆"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "rendering": {}
+  }
+}

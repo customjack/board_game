@@ -1,0 +1,5105 @@
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* base.css */
+
+/* Import variables */
+
+/* Reset Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body Styles */
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  background-color: var(--background-body);
+  color: var(--text-color);
+  text-align: center;
+  margin-top: 50px;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-color);
+  text-align: center;
+  font-family: var(--font-family-header, var(--font-family-base));
+  margin: calc(var(--spacing-unit) * 2) 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+h1::after, h2::after, h3::after, h4::after, h5::after, h6::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+}
+
+h1 {
+  font-size: 2.5em;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+h2 {
+  font-size: 2em;
+}
+
+h3 {
+  font-size: 1.75em;
+}
+
+h4 {
+  font-size: 1.5em;
+}
+
+h5 {
+  font-size: 1.25em;
+}
+
+h6 {
+  font-size: 1em;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Input Fields */
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  padding: calc(var(--spacing-unit) * 1);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Labels */
+label {
+  text-align: center; /* Center all labels by default */
+  display: block; /* Ensure label spans full width */
+  font-family: var(--font-family-label, var(--font-family-base)); /* Allow labels font family to be themed */
+  margin-bottom: calc(var(--spacing-unit) * 1); /* Add some margin below the label */
+  color: var(--label-color, var(--text-color)); /* Allow theme to customize label color */
+}
+
+/* List Styles */
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  padding: 0; /* Ensure no padding inside list items */
+  margin: 0;  /* Ensure no margin for list items unless explicitly added */
+}
+
+/* Default Span */
+span {
+  font-family: var(--font-family-base); /* Use base font family */
+  font-size: var(--font-size-base); /* Use base font size */
+  color: var(--text-color); /* Use base text color */
+  display: inline; /* Default to inline element */
+  margin: 0; /* No default margin */
+  padding: 0; /* No default padding */
+}
+
+/* Buttons */
+button {
+  padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 2); /* Add more padding around buttons */
+  font-size: 1rem;
+  font-family: inherit;
+  background-color: var(--color-primary);
+  color: var(--text-color-light);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: calc(var(--spacing-unit) * 1.5); /* Space below buttons */
+}
+
+button:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* General Sections and Containers */
+section, .container {
+  padding: calc(var(--spacing-unit) * 2); /* General container padding */
+  margin-bottom: calc(var(--spacing-unit) * 3); /* Space between sections */
+}
+
+/* Paragraphs */
+p, div {
+  margin-bottom: calc(var(--spacing-unit) * 2); /* Ensure space below paragraphs and divs */
+}
+
+/* utilities.css */
+
+/* Text Alignment */
+.text-center {
+    text-align: center;
+  }
+  
+  .text-left {
+    text-align: left;
+  }
+  
+  .text-right {
+    text-align: right;
+  }
+  
+  /* Margin Helpers */
+  .mt-1 { margin-top: calc(var(--spacing-unit) * 1); }
+  .mb-1 { margin-bottom: calc(var(--spacing-unit) * 1); }
+  .ml-1 { margin-left: calc(var(--spacing-unit) * 1); }
+  .mr-1 { margin-right: calc(var(--spacing-unit) * 1); }
+  .mx-1 { margin-left: calc(var(--spacing-unit) * 1); margin-right: calc(var(--spacing-unit) * 1); }
+  .my-1 { margin-top: calc(var(--spacing-unit) * 1); margin-bottom: calc(var(--spacing-unit) * 1); }
+  
+  /* Padding Helpers */
+  .pt-1 { padding-top: calc(var(--spacing-unit) * 1); }
+  .pb-1 { padding-bottom: calc(var(--spacing-unit) * 1); }
+  .pl-1 { padding-left: calc(var(--spacing-unit) * 1); }
+  .pr-1 { padding-right: calc(var(--spacing-unit) * 1); }
+  .px-1 { padding-left: calc(var(--spacing-unit) * 1); padding-right: calc(var(--spacing-unit) * 1); }
+  .py-1 { padding-top: calc(var(--spacing-unit) * 1); padding-bottom: calc(var(--spacing-unit) * 1); }
+  
+  /* Display Utilities */
+  .d-flex {
+    display: flex;
+  }
+  
+  .d-none {
+    display: none;
+  }
+
+  .highlight {
+    position: relative; /* Ensure the glow is positioned correctly */
+    z-index: 1; /* Bring the highlighted element above others */
+    transition: box-shadow 0.3s ease; /* Smooth transition for the glow effect */
+  }
+
+  .highlight::after {
+      content: ''; /* Empty content for the pseudo-element */
+      position: absolute; /* Position it relative to the parent */
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: inherit; /* Match the parent's border-radius */
+      box-shadow: 0 0 20px var(--highlight-glow); /* Use the theme-dependent glow color */
+      opacity: 0.7; /* Semi-transparent glow */
+      pointer-events: none; /* Prevent interaction with the pseudo-element */
+      transition: opacity 0.3s ease; /* Smooth transition for the opacity */
+  }
+
+  /* Optional: Reduce opacity on hover to make it more dynamic */
+  .highlight:hover::after {
+      opacity: 1; /* Full glow on hover */
+  }
+
+
+  
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* layout.css */
+
+/* Import variables */
+
+/* Container Styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: calc(var(--spacing-unit) * 2);
+}
+
+/* Flex Layouts */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+/* Header and Footer */
+.header, .footer {
+  background-color: var(--background-sidebar);
+  padding: calc(var(--spacing-unit) * 2);
+  text-align: center;
+}
+
+/* Main Content Area */
+.main-content {
+  padding: calc(var(--spacing-unit) * 2);
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--background-sidebar);
+  width: 250px;
+  padding: calc(var(--spacing-unit) * 2);
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+  }
+}
+
+/* Game Sidebar */
+.game-sidebar {
+  background-color: var(--background-sidebar);
+  width: 250px;
+  padding: calc(var(--spacing-unit) * 2);
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .game-sidebar {
+    width: 100%;
+  }
+}
+
+/* Board Container */
+.board-container {
+  position: relative;
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--background-board);
+  border: 1px solid var(--border-color);
+  overflow: auto;
+  height: 100%;
+}
+
+/* Game Container */
+.game-container {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+/* Board Wrapper */
+.board-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  max-height: 900px;
+  aspect-ratio: 4 / 3;
+  overflow: visible; /* Ensure board controls aren't clipped */
+}
+
+/* Board Content */
+.board-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible; /* Ensure board controls aren't clipped */
+}
+
+/* Settings Row Styles */
+#settingsSectionHost .settings-row,
+#settingsSectionClient .settings-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-unit);
+}
+
+#settingsSectionHost .settings-label,
+#settingsSectionClient .settings-label {
+    flex: 0 0 auto;
+    margin-right: var(--spacing-unit);
+    min-width: 200px; /* Adjust this value as needed */
+}
+
+#settingsSectionHost .settings-input,
+#settingsSectionClient .settings-display {
+    flex: 1 1 auto;
+    max-width: 100px;
+}
+
+/* Compact Settings Styles */
+.compact-settings {
+    background-color: var(--background-light);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-unit);
+    margin-bottom: var(--spacing-unit);
+}
+
+.compact-settings h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-unit);
+}
+
+/* Sidebar Button Group */
+.sidebar-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.5);
+    margin-top: auto;
+    padding-top: calc(var(--spacing-unit) * 1);
+}
+
+.sidebar-button-group .button {
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+/* Lobby Container - Two column layout (25% left, 75% right) */
+.lobby-container {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: calc(var(--spacing-unit) * 2);
+    margin-bottom: calc(var(--spacing-unit) * 2);
+}
+
+.lobby-section-left,
+.lobby-section-right {
+    background-color: var(--background-light);
+    border-radius: var(--border-radius);
+    padding: calc(var(--spacing-unit) * 1.5);
+    border: 1px solid var(--border-color);
+}
+
+.lobby-section-left h3,
+.lobby-section-right h3 {
+    margin-top: 0;
+    margin-bottom: calc(var(--spacing-unit) * 1);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.lobby-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.75);
+}
+
+.lobby-button-group .button {
+    width: 100%;
+    text-align: center;
+    padding: calc(var(--spacing-unit) * 0.75);
+    font-size: 0.85rem;
+}
+
+/* Responsive: Stack on mobile */
+@media (max-width: 768px) {
+    .lobby-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* components/box.css */
+
+/* General Box Container */
+.box-container {
+    padding: calc(var(--spacing-unit) * 1.5);
+    background-color: var(--background-box);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transform-origin: top;
+}
+
+/* Optional animation class triggered via JavaScript */
+.flip-animate {
+    animation: flip-down 0.3s ease-out;
+}
+
+/* Invite Code Box */
+.invite-code-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border: 1px solid transparent;
+    transform-origin: top;
+}
+
+/* Invite Code Content - Glassmorphism Style */
+.invite-code-box-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 40px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.03);
+    backdrop-filter: blur(8px);
+    margin-bottom: 10px;
+}
+
+/* Invite Code Text */
+#inviteCode {
+    font-size: 1.25rem;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    color: var(--text-color-light);
+    font-family: 'Courier New', Courier, monospace;
+    text-align: center;
+}
+
+/* Combined Section Layout */
+.combined-section {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--background-box);
+    border-radius: 10px;
+    padding: calc(var(--spacing-unit) * 2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    gap: calc(var(--spacing-unit) * 2);
+    transform-origin: top;
+}
+
+/* Compact Settings Section */
+.compact-settings {
+    flex: 1;
+    padding: calc(var(--spacing-unit) * 2);
+    border-right: 3px solid var(--border-color);
+    text-align: left;
+    background-color: var(--background-sidebar);
+}
+
+/* Compact Player List Section */
+.compact-player-list {
+    flex: 2;
+    padding: calc(var(--spacing-unit) * 2);
+    background-color: var(--background-box);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.compact-player-list h3 {
+    margin: 0 0 calc(var(--spacing-unit) * 1) 0;
+    font-size: 1.2em;
+    color: var(--text-color);
+}
+
+/* Info Box */
+.info-box {
+    text-align: center;
+    font-weight: bold;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+/* Log Box */
+.log-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.log-box h4,
+.info-box h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+/* Disable animation for static info/log boxes */
+.box-container.info-box,
+.box-container.log-box {
+    animation: none;
+}
+
+/* Flip-down animation keyframes */
+@keyframes flip-down {
+    0% {
+        transform: scaleY(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/button.css */
+
+/* Import variables */
+
+/* Base Button Styles */
+.button {
+  display: inline-block;
+  font-weight: 400;
+  text-align: center;
+  color: var(--text-color-light);
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  padding: calc(var(--spacing-unit) * 1) calc(var(--spacing-unit) * 2);
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* Secondary Button */
+.button-secondary {
+  background-color: var(--color-secondary);
+  border-color: var(--color-secondary);
+}
+
+.button-secondary:hover {
+  background-color: var(--color-secondary-hover);
+}
+
+/* Success Button */
+.button-success {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.button-success:hover {
+  background-color: var(--color-success-hover);
+}
+
+/* Danger Button */
+.button-danger {
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.button-danger:hover {
+  background-color: var(--color-danger-hover);
+}
+
+/* Disabled State */
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Roll Button */
+.button-roll {
+    /* Styles specific to the roll button */
+    background-color: #555;
+    color: #aaa;
+    padding: 20px 40px;
+    font-size: 24px;
+    border: none;
+    border-radius: 12px;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .button-roll.active {
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    background-size: 200% 200%;
+    color: #fff;
+    cursor: pointer;
+    opacity: 1;
+    animation: gradientShift 5s ease infinite, pulseGlow 2s infinite;
+  }
+  
+  .button-roll.active:hover {
+    box-shadow: 0 0 25px rgba(255, 75, 43, 0.8), inset 0 0 25px rgba(255, 75, 43, 0.8);
+  }
+  
+  .button-roll.active::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -75%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(25deg);
+    animation: shine 3s ease-in-out infinite;
+  }
+  
+  .button-roll:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    animation: none;
+    background-color: #555;
+    box-shadow: none;
+  }
+  
+  /* Pause Button Styles */
+  .button-pause {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      background-color: transparent;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 3;
+      color: var(--text-color);
+      cursor: pointer;
+  }
+
+  .timer-container:hover .button-pause {
+      opacity: 1;
+      pointer-events: auto;
+  }
+
+  .button-pause svg {
+      width: 24px;
+      height: 24px;
+      pointer-events: none;
+  }
+  .button-pause:hover  {
+    background-color: rgba(0, 0, 0, 0.1);
+    opacity: 1;
+  }
+  
+  .button-pause:focus {
+    outline: none;
+  }
+
+/* Gear Button */
+.gear-button {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 50px;
+    height: 50px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.3);  /* Increased opacity for better visibility */
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);  /* Add a default subtle shadow */
+}
+
+/* Image within the gear button */
+.gear-button img {
+    width: 30px;
+    height: 30px;
+}
+
+/* Hover Effect - Make the background more prominent */
+.gear-button:hover {
+    background-color: rgba(255, 255, 255, 0.6); /* Brighter on hover for better visibility */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);  /* Stronger shadow for added contrast */
+}
+
+/* Active/Pressed State */
+.gear-button:active {
+    transform: scale(0.95);
+    background-color: rgba(255, 255, 255, 0.7); /* Slightly darker when pressed */
+}
+
+/* Focus outline for accessibility */
+.gear-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);  /* Visible focus outline */
+}
+
+/* Copy Button */
+.button-invite-code {
+    background-color: rgba(0, 0, 0, 0.7); /* Dark background for better contrast */
+    color: #fff; /* White text */
+    border: none;
+    border-radius: 40px; /* Smaller pill shape */
+    padding: 8px 20px; /* Reduced padding */
+    font-weight: bold;
+    font-size: 0.9rem; /* Reduced font size */
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.button-invite-code:hover {
+    background-color: rgba(0, 0, 0, 0.9); /* Slightly darker hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px); /* Slight lift */
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/form.css */
+
+/* Import variables */
+
+/* Form Group */
+.form-group {
+  margin-bottom: calc(var(--spacing-unit) * 2);
+}
+
+/* Input Fields */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 80%;
+  max-width: 300px;
+  padding: calc(var(--spacing-unit) * 1);
+  margin: calc(var(--spacing-unit) * 1) 0;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Labels */
+.form-group label {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+/* Centering */
+.form-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing-unit) * 1.2);
+  margin: calc(var(--spacing-unit) * 1.5) auto;
+  max-width: 340px;
+  width: 100%;
+}
+
+.input-group label {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.input-group .input {
+  width: 100%;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--spacing-unit) * 0.5);
+  width: 100%;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: calc(var(--spacing-unit) * 1.5);
+  margin-top: calc(var(--spacing-unit) * 1.5);
+  flex-wrap: wrap;
+}
+
+.button-row .button {
+  min-width: 140px;
+}
+
+
+/* components/icon.css */
+
+/* Pause Icon */
+.pause-icon::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 18px;
+    border-left: 5px solid black;
+    border-right: 5px solid black;
+}
+
+/* Play Icon */
+.play-icon::before {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 15px solid black;
+}
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/input.css */
+
+/* Import variables */
+
+/* Base Input Styles */
+.input {
+    width: 100%;
+    max-width: 300px;
+    padding: calc(var(--spacing-unit) * 1);
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    background-color: var(--input-background);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* Input Focused State */
+.input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Disabled State */
+.input:disabled {
+    background-color: var(--background-disabled);
+    color: var(--text-color-disabled);
+    cursor: not-allowed;
+}
+
+/* Hover Effect */
+.input:hover {
+    border-color: var(--color-primary-hover);
+}
+
+/* Checkbox/Radio Inputs */
+.input-checkbox,
+.input-radio {
+    width: auto;
+    margin-right: 8px;
+}
+
+/* Range Slider */
+.input-range {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    background-color: var(--input-background);
+    border-radius: 3px;
+    outline: none;
+    transition: background 0.3s ease;
+}
+
+.input-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background-color: var(--color-primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.input-range::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background-color: var(--color-primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Slider on hover/focus */
+.input-range:hover {
+    background-color: var(--input-background-hover);
+}
+
+.input-range:focus::-webkit-slider-thumb,
+.input-range:focus::-moz-range-thumb {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Textarea */
+.input-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.settings-input {
+    width: 60px; /* Adjust input width */
+    padding: 5px;
+    font-size: 0.9em;
+    border-radius: 4px;
+    text-align: right; /* Align text inside the input to the right */
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* Import variables */
+
+/* Base Label Styles */
+.label {
+  display: block;
+  font-size: 1rem;
+  color: var(--label-color);
+  margin-bottom: calc(var(--spacing-unit) * 1);
+  text-align: center; /* Centering by default */
+  font-family: var(--font-family-label);
+  transition: color 0.3s ease;
+}
+
+/* Larger Labels */
+.label-lg {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+S
+/* Smaller Labels */
+.label-sm {
+  font-size: 0.875rem;
+  font-weight: normal;
+}
+
+/* Hover Effect for Labels (Optional) */
+.label:hover {
+  color: var(--color-primary);
+}
+
+/* Label Alignment Utilities */
+.label-left {
+  text-align: left;
+}
+
+.label-right {
+  text-align: right;
+}
+
+.label-center {
+  text-align: center;
+}
+
+/* Ensure the label is aligned to the left */
+.settings-label {
+    width: 200px; /* Fixed width for consistent alignment */
+    font-size: 0.9em;
+    text-align: left;
+    margin-right: 10px; /* Space between label and input */
+}
+
+/* Responsive Adjustment */
+@media (max-width: 768px) {
+  .label {
+    font-size: 0.875rem; /* Adjust label size on smaller screens */
+  }
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/modal.css */
+
+/* Import variables */
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: var(--z-index-modal);
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: var(--background-modal);
+  margin: 5% auto;
+  padding: calc(var(--spacing-unit) * 2);
+  border: 1px solid var(--border-color);
+  width: 90%;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.close-button {
+  margin-top: calc(var(--spacing-unit) * 2);
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/navbar.css */
+
+/* Import variables */
+
+/* Navbar */
+.navbar {
+  background-color: var(--background-sidebar);
+  padding: calc(var(--spacing-unit) * 2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  color: var(--text-color);
+}
+
+.navbar-menu {
+  display: flex;
+  gap: calc(var(--spacing-unit) * 2);
+}
+
+.navbar-item {
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.navbar-item:hover {
+  color: var(--color-primary);
+}
+
+/* Player Container */
+.player-container {
+  display: flex;
+  align-items: center; /* Vertically center the items */
+  justify-content: space-between;
+  padding: calc(var(--spacing-unit) * 1.5);
+  background-color: var(--background-modal);
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 50px; /* Set a fixed height to ensure equal size */
+  margin-bottom: calc(var(--spacing-unit) * 1); /* Add space between list items */
+}
+
+/* Player Name and Badges */
+.player-name-badges {
+  display: flex;
+  align-items: center; /* Vertically center the badges and name */
+  justify-content: center; /* Center horizontally */
+  gap: calc(var(--spacing-unit) * 0.5); /* Space between name and badges */
+  flex-grow: 1; /* Allow this container to take up available space */
+}
+
+/* Player Buttons */
+.player-buttons {
+  display: flex;
+  align-items: center; /* Ensure buttons are vertically centered */
+  justify-content: flex-end; /* Align buttons to the right */
+  gap: calc(var(--spacing-unit) * 0.5); /* Add space between buttons */
+}
+
+/* Reset margins and paddings */
+.player-container,
+.player-name-badges,
+.player-buttons,
+.player-name {
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure consistent line height */
+.player-name {
+  line-height: 1; /* Set line height to reduce extra space */
+}
+
+/* Buttons */
+.edit-button,
+.kick-button,
+.remove-button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  width: 24px;  /* Define a fixed width */
+  height: 24px; /* Define a fixed height */
+  color: var(--color-primary);
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the button content */
+  padding: 0; /* Reset padding */
+}
+
+.edit-button:hover {
+  color: var(--color-primary-hover);
+}
+
+.kick-button:hover,
+.remove-button:hover {
+  color: var(--color-danger-hover);
+}
+
+/* Ensure consistent height for list items */
+#lobbyPlayerList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 50px; /* Apply a fixed height to all list items */
+  padding: calc(var(--spacing-unit) * 0.5); /* Add some internal padding */
+  margin: 0;
+  background-color: var(--background-modal);
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: calc(var(--spacing-unit) * 1); /* Add spacing between items */
+}
+
+/* Game player list - scrollable with flex */
+#gamePlayerList {
+  flex: 1; /* Take available space in flex container */
+  overflow-y: auto; /* Scroll when content exceeds height */
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  min-height: 0; /* Allow flex shrinking */
+}
+
+/* Badges */
+.host-badge,
+.you-badge {
+  background-color: var(--color-primary);
+  color: var(--text-color-light);
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center; /* Ensure badge text is centered vertically */
+  justify-content: center; /* Center the content horizontally */
+}
+
+/* Specific colors for success badge */
+.you-badge {
+  background-color: var(--color-success);
+}
+
+/* Box sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Highlighting the player on the current turn */
+.current-turn {
+  background-color: var(--background-modal); /* Base background color */
+  border: 1px solid var(--border-color); /* Keep the original border */
+  box-shadow: 0 0 10px 4px rgba(0, 0, 0, 0.2); /* Optional subtle shadow */
+  transition: box-shadow 0.3s ease;
+  animation: backgroundGlow 3s infinite ease-in-out; /* Slower, smoother glowing animation */
+}
+
+/* Player Count Validation */
+.player-count-validation {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing-unit) * 1);
+  padding: calc(var(--spacing-unit) * 1.5);
+  margin-top: calc(var(--spacing-unit) * 1);
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.validation-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.validation-content {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing-unit) * 0.25);
+  flex-grow: 1;
+}
+
+.validation-status {
+  font-weight: 600;
+  margin: 0;
+}
+
+.validation-messages {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing-unit) * 0.5);
+}
+
+.validation-message {
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Invalid state - red */
+.validation-invalid {
+  background-color: rgba(231, 76, 60, 0.1);
+  border: 2px solid #e74c3c;
+  color: #c0392b;
+}
+
+.validation-icon.invalid {
+  color: #e74c3c;
+}
+
+/* Warning state - yellow/orange */
+.validation-warning {
+  background-color: rgba(243, 156, 18, 0.1);
+  border: 2px solid #f39c12;
+  color: #d68910;
+}
+
+.validation-icon.warning {
+  color: #f39c12;
+}
+
+/* Valid state - green */
+.validation-valid {
+  background-color: rgba(46, 204, 113, 0.1);
+  border: 2px solid #2ecc71;
+  color: #27ae60;
+}
+
+.validation-icon.valid {
+  color: #2ecc71;
+}
+
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* Import variables */
+
+/* Base Select Styles */
+.select {
+  width: 100%;
+  max-width: 300px;
+  padding: calc(var(--spacing-unit) * 1);
+  margin: calc(var(--spacing-unit) * 1) 0;
+  font-size: 16px;
+  color: var(--input-text-color);
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border-color);
+  border-radius: 4px;
+  appearance: none; /* Hide default OS-specific dropdown arrow */
+  background-image: url("data:image/svg+xml;utf8,<svg fill=\"%23333\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.select:hover {
+  border-color: var(--color-primary-hover);
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+}
+
+/* Disabled State */
+.select:disabled {
+  background-color: var(--input-bg-disabled);
+  color: var(--input-text-color-disabled);
+  border-color: var(--input-border-color-disabled);
+  cursor: not-allowed;
+}
+
+/* Adjusting width for narrow layouts */
+@media (max-width: 768px) {
+  .select {
+    max-width: 100%;
+  }
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/span.css */
+
+/* Import variables */
+
+.settings-display {
+    display: inline-block;
+    padding: 5px 10px;
+    
+    /* Background and border colors should be theme-aware */
+    background-color: var(--input-bg);  /* Use theme-specific input background */
+    color: var(--input-text-color);     /* Use theme-specific input text color */
+    border: 1px solid var(--input-border-color); /* Use theme-specific input border color */
+    
+    border-radius: 4px;         /* Rounded corners */
+    min-width: 50px;            /* Minimum width to give enough space */
+    text-align: center;         /* Center the text */
+    font-size: 0.9em;
+    
+    margin-left: 10px;          /* Space between label and value */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/toggle-switch.css */
+
+/* Import variables */
+
+/* Toggle Switch Container */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px; /* Default width */
+    height: 24px; /* Default height */
+}
+
+/* Hide the default checkbox */
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Slider (background) */
+.toggle-switch .slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--background-box); /* Use box background as default */
+    border-radius: 24px;
+    transition: background-color 0.3s ease;
+    border: 1px solid var(--border-color); /* Match input border */
+}
+
+/* When the input is checked, change the slider color */
+.toggle-switch input:checked + .slider {
+    background-color: var(--color-success); /* Success green for active state */
+}
+
+/* Slider's Knob */
+.toggle-switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 16px; /* Slightly smaller than the height */
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--text-color);
+    border-radius: 50%;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+/* When checked, move the knob */
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(26px); /* Moves the knob to the right */
+}
+
+/* Add the transition for disabled state as well */
+.toggle-switch input:disabled:checked + .slider:before {
+    transform: translateX(26px); /* Knob still moves even when disabled */
+}
+
+/* Disabled State */
+.toggle-switch input:disabled + .slider {
+    background-color: var(--color-disabled); /* Soft disabled background */
+    cursor: not-allowed;
+}
+
+.toggle-switch input:disabled + .slider:before {
+    background-color: var(--color-disabled-text); /* Disabled knob color */
+}
+
+/* Optional focus state for accessibility */
+.toggle-switch input:focus + .slider {
+    box-shadow: 0 0 3px var(--highlight-glow); /* Highlight for focus */
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+.timer-container {
+    width: 120px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    margin: 0 auto;
+}
+
+/* Timer Cap - "T" shape */
+.timer-cap {
+    position: relative;
+    width: 13px; /* vertical stem */
+    height: 5px;
+    top: -3px;
+    background-color: var(--color-primary);
+    margin-bottom: -5px;
+    z-index: 3;
+}
+
+/* Horizontal bar of the "T" */
+.timer-cap::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 25px; /* horizontal bar width */
+    height: 10px;
+    background-color: var(--color-primary);
+    border-radius: 3px;
+}
+
+/* Main timer body shifted downward */
+.timer-body {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px; /* Shift body down to make space for cap */
+}
+
+/* Circle 1: Container (largest, static background) */
+.timer-container-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 6px solid var(--color-primary);
+    border-radius: 50%;
+    box-sizing: border-box;
+    z-index: 0;
+    background-color: var(--color-light); /* Background color */
+}
+
+/* Circle 2: Progress (animated, second largest) */
+.timer-progress-ring {
+  position: absolute;
+  width: 88%;
+  height: 88%;
+  border-radius: 50%;
+  background: conic-gradient(var(--color-success) 0%, transparent 0%);
+  z-index: 1;
+}
+
+
+/* Circle 3: Block (static, third largest) */
+.timer-block-ring {
+    position: absolute;
+    width: 75%;
+    height: 75%;
+    border: 6px solid var(--background-body);
+    border-radius: 50%;
+    box-sizing: border-box;
+    z-index: 2;
+    background-color: var(--color-light); /* Static color */
+}
+
+/* Center timer text */
+.timer-text {
+    font-family: var(--font-family-base);
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 16px;
+    z-index: 3; /* Text sits on top */
+    position: relative;
+}
+
+.game-log-popup {
+    position: fixed;
+    width: 320px;
+    height: 400px;
+    min-width: 200px;
+    min-height: 150px;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: none;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.5);
+    padding: calc(var(--spacing-unit) * 0.75);
+    background: var(--background-box);
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    /* Center using margins instead of transform so resize works from bottom-right */
+    top: 50%;
+    left: 50%;
+    margin-top: -200px; /* Half of initial height */
+    margin-left: -160px; /* Half of initial width */
+    resize: both;
+    overflow: hidden;
+}
+
+.game-log-popup.visible {
+    display: flex;
+}
+
+.game-log-popup::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+}
+
+.game-log-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing-unit) * 0.5);
+    color: var(--text-color);
+    cursor: move;
+    padding: calc(var(--spacing-unit) * 0.25) calc(var(--spacing-unit) * 0.5);
+    margin: calc(var(--spacing-unit) * -0.25) calc(var(--spacing-unit) * -0.25) 0;
+    border-radius: 0.25rem;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.game-log-popup-header:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.game-log-popup-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.game-log-popup-content {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--background-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    padding: calc(var(--spacing-unit) * 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.4);
+}
+
+.log-entry {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.15);
+    padding: calc(var(--spacing-unit) * 0.3) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-entry-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: calc(var(--spacing-unit) * 0.35);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--label-color);
+    line-height: 1.2;
+}
+
+.log-entry-header .log-header-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.log-entry-header .log-header-separator {
+    opacity: 0.3;
+    font-size: 0.6rem;
+}
+
+.log-entry-header .log-turn-number {
+    font-weight: 600;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.log-entry-message {
+    font-size: 0.8rem;
+    line-height: 1.25;
+    color: var(--text-color);
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .game-log-popup {
+        width: 90vw;
+        max-width: 320px;
+    }
+}
+
+/* Loading Bar Styles */
+
+#loadingPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: calc(var(--spacing-unit) * 2);
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing-unit) * 1.5);
+    padding: calc(var(--spacing-unit) * 2);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-progress-container {
+    width: 100%;
+    height: 8px;
+    background: var(--background-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 4px;
+    transition: width 0.3s ease-out;
+    width: 0%;
+}
+
+.loading-message {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    text-align: center;
+}
+
+.loading-details {
+    font-size: 0.85rem;
+    color: var(--label-color);
+    text-align: center;
+    font-family: monospace;
+}
+
+/* Board Camera Controls */
+
+.board-controls {
+    position: absolute;
+    top: calc(var(--spacing-unit) * 2);
+    right: calc(var(--spacing-unit) * 2);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.5);
+    z-index: 100;
+}
+
+.board-control-btn {
+    background: var(--background-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.board-control-btn:hover {
+    background: var(--primary-color);
+    color: var(--button-text-color);
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.board-control-btn:active {
+    transform: scale(0.95);
+}
+
+.board-control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.board-control-btn.recenter {
+    font-size: 1rem;
+}
+
+/* Zoom level indicator */
+.board-zoom-indicator {
+    position: absolute;
+    top: calc(var(--spacing-unit) * 2);
+    left: calc(var(--spacing-unit) * 2);
+    background: var(--background-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1);
+    font-size: 0.85rem;
+    color: var(--label-color);
+    font-family: monospace;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+}
+
+/* Panning hint */
+.board-pan-hint {
+    position: absolute;
+    bottom: calc(var(--spacing-unit) * 2);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--background-color);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1.5);
+    font-size: 0.85rem;
+    color: var(--label-color);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.board-pan-hint.show {
+    opacity: 1;
+}
+
+/* Canvas cursor states */
+.board-canvas {
+    cursor: default;
+}
+
+.board-canvas.panning {
+    cursor: grabbing;
+}
+
+.board-canvas.can-pan {
+    cursor: grab;
+}
+
+/* Connection Status Modal */
+
+.connection-status-modal {
+    text-align: center;
+    padding: calc(var(--spacing-unit) * 3);
+    max-width: 400px;
+}
+
+.connection-status-icon {
+    font-size: 4rem;
+    margin-bottom: calc(var(--spacing-unit) * 2);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.connection-status-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-color);
+    margin-bottom: calc(var(--spacing-unit) * 1);
+}
+
+.connection-status-message {
+    font-size: 1rem;
+    color: var(--label-color);
+    margin-bottom: calc(var(--spacing-unit) * 2);
+    line-height: 1.5;
+}
+
+.connection-status-progress {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: calc(var(--spacing-unit) * 2);
+}
+
+.connection-status-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.connection-status-actions {
+    display: flex;
+    gap: calc(var(--spacing-unit) * 1);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.connection-status-actions .button {
+    min-width: 120px;
+}
+
+/* Success state */
+.connection-status-modal.success .connection-status-icon {
+    color: var(--success-color, #28a745);
+    animation: none;
+}
+
+.connection-status-modal.success .connection-status-icon::before {
+    content: '✓';
+}
+
+/* Error state */
+.connection-status-modal.error .connection-status-icon {
+    color: var(--error-color, #dc3545);
+    animation: none;
+}
+
+.connection-status-modal.error .connection-status-icon::before {
+    content: '✗';
+}
+
+/* Map Selection Modal Styles */
+
+.map-selection-modal {
+    z-index: 1000;
+}
+
+.map-selection-content {
+    max-width: 900px;
+    width: 90%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+/* Header */
+.map-selection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.map-selection-header h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.button-close {
+    background: none;
+    border: none;
+    font-size: 32px;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.button-close:hover {
+    background-color: var(--background-hover, rgba(0, 0, 0, 0.1));
+}
+
+/* Search Bar */
+.map-search-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.map-search-input {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+}
+
+/* Map Grid Container */
+.map-grid-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    min-height: 300px;
+    max-height: 500px;
+}
+
+.map-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    padding: 5px;
+}
+
+/* No Results */
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted, #666);
+    font-size: 16px;
+}
+
+/* Map Card */
+.map-card {
+    border: 2px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: var(--background-box, #fff);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.map-card:hover {
+    border-color: var(--primary-color, #007bff);
+    box-shadow: var(--shadow-small, 0 4px 8px rgba(0, 0, 0, 0.1));
+    transform: translateY(-2px);
+}
+
+.map-card.selected {
+    border-color: var(--primary-color, #007bff);
+    background-color: var(--background-secondary, #e3f2fd);
+    box-shadow: 0 0 10px var(--color-primary, rgba(0, 123, 255, 0.3));
+}
+
+/* Map Thumbnail */
+.map-thumbnail {
+    width: 100%;
+    height: 120px;
+    background-color: var(--background-secondary, #f5f5f5);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Map Info */
+.map-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.map-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0;
+    color: var(--text-color, #333);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.map-author {
+    font-size: 12px;
+    color: var(--text-color-secondary, #666);
+    margin: 0;
+    font-style: italic;
+}
+
+.map-description {
+    font-size: 13px;
+    color: var(--text-secondary, #555);
+    margin: 0;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    min-height: 36px;
+}
+
+/* Map Requirements */
+.map-requirements {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.map-requirement {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary, #555);
+    padding: 4px 8px;
+    background-color: var(--background-secondary, rgba(0, 123, 255, 0.05));
+    border-radius: 4px;
+    border-left: 3px solid var(--primary-color, #007bff);
+}
+
+.req-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+/* Map Tags */
+.map-tags {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.map-tag {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.map-tag.built-in {
+    background-color: var(--color-success, #28a745);
+    color: white;
+}
+
+/* Map Actions */
+.map-actions {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.button-small {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* Modal Buttons */
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color, #ddd);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .map-selection-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .map-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    .map-search-container {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .map-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Theme-specific styles are now handled by CSS variables */
+
+/* Settings UI Component Styles */
+
+.settings-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: calc(var(--spacing-unit) * 1.5);
+  padding: 0;
+}
+
+.settings-toggle-all {
+  font-size: 13px;
+  padding: calc(var(--spacing-unit) * 0.75) calc(var(--spacing-unit) * 1.5);
+}
+
+.settings-category {
+  margin-bottom: calc(var(--spacing-unit) * 1);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--background-modal);
+}
+
+.settings-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--spacing-unit) * 1.5);
+  background-color: var(--background-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-category-header:hover {
+  background-color: var(--background-hover, rgba(0, 0, 0, 0.05));
+}
+
+.settings-category-header.collapsed {
+  border-bottom: none;
+}
+
+.settings-category-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.settings-category-icon {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  transition: transform 0.2s ease;
+}
+
+.settings-category-content {
+  padding: calc(var(--spacing-unit) * 1.5);
+  padding-top: calc(var(--spacing-unit) * 1);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--spacing-unit) * 1.25) 0;
+  gap: calc(var(--spacing-unit) * 2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-label {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-color);
+  cursor: help;
+  user-select: none;
+}
+
+.settings-label[title] {
+  border-bottom: 1px dotted var(--border-color);
+}
+
+.settings-input {
+  flex: 0 0 auto;
+  min-width: 100px;
+  max-width: 200px;
+}
+
+.settings-display {
+  flex: 0 0 auto;
+  min-width: 100px;
+  padding: calc(var(--spacing-unit) * 0.5);
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+  text-align: center;
+}
+
+.settings-checkbox-container {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.settings-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.settings-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing-unit) * 0.5);
+  }
+
+  .settings-label {
+    width: 100%;
+  }
+
+  .settings-input,
+  .settings-display,
+  .settings-checkbox-container {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Range input styling */
+input[type="range"].settings-input {
+  min-width: 150px;
+}
+
+/* Select styling */
+select.settings-input {
+  min-width: 150px;
+}
+
+/* Settings Modal Styles */
+
+/* Modal backdrop */
+.settings-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--modal-backdrop, rgba(0, 0, 0, 0.6));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+/* Modal container - Fixed size */
+.settings-modal-container {
+  background-color: var(--background-modal, #ffffff);
+  border-radius: 8px;
+  box-shadow: var(--modal-shadow, 0 4px 20px rgba(0, 0, 0, 0.3));
+  width: 900px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Modal header */
+.settings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: calc(var(--spacing-unit) * 2);
+  border-bottom: 2px solid var(--border-color);
+  background-color: var(--background-secondary, #f5f5f5);
+}
+
+.settings-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.settings-modal-header-buttons {
+  display: flex;
+  gap: calc(var(--spacing-unit) * 1);
+  align-items: center;
+}
+
+.settings-modal-apply {
+  padding: calc(var(--spacing-unit) * 0.75) calc(var(--spacing-unit) * 1.5);
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  border: 1px solid var(--primary-color, #007bff);
+  transition: all 0.2s ease;
+}
+
+.settings-modal-apply:hover {
+  background-color: var(--primary-hover, #0056b3);
+  border-color: var(--primary-hover, #0056b3);
+}
+
+.settings-modal-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-modal-close {
+  font-size: 28px;
+  line-height: 1;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  transition: all 0.2s ease;
+}
+
+.settings-modal-close:hover {
+  background-color: var(--danger-color, #dc3545);
+  color: white;
+  border-color: var(--danger-color, #dc3545);
+}
+
+/* Modal body (two-column layout) */
+.settings-modal-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left sidebar navigation */
+.settings-modal-sidebar {
+  width: 200px;
+  background-color: var(--background-secondary, #f5f5f5);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  padding: calc(var(--spacing-unit) * 1);
+}
+
+.settings-nav-item {
+  padding: calc(var(--spacing-unit) * 1.25) calc(var(--spacing-unit) * 1.5);
+  margin-bottom: calc(var(--spacing-unit) * 0.5);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.settings-nav-item:hover {
+  background-color: var(--background-hover, rgba(0, 0, 0, 0.05));
+  color: var(--text-color);
+}
+
+.settings-nav-item.active {
+  background-color: var(--primary-color, #007bff);
+  color: white;
+  font-weight: 600;
+}
+
+/* Right content area */
+.settings-modal-content {
+  flex: 1;
+  padding: calc(var(--spacing-unit) * 2);
+  overflow-y: auto;
+  background-color: var(--background-modal, #ffffff);
+}
+
+.settings-content-title {
+  margin: 0 0 calc(var(--spacing-unit) * 2) 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+  padding-bottom: calc(var(--spacing-unit) * 1);
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* Settings rows (reuse from settings.css) */
+.settings-modal-content .settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--spacing-unit) * 1.5) 0;
+  gap: calc(var(--spacing-unit) * 2);
+  border-bottom: 1px solid var(--border-light, rgba(0, 0, 0, 0.05));
+}
+
+.settings-modal-content .settings-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-modal-content .settings-label {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-color);
+  cursor: help;
+  user-select: none;
+}
+
+.settings-modal-content .settings-label[title] {
+  border-bottom: 1px dotted var(--border-color);
+}
+
+.settings-modal-content .settings-input {
+  flex: 0 0 auto;
+  min-width: 100px;
+  max-width: 200px;
+}
+
+.settings-input-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing-unit) * 0.75);
+}
+
+.settings-input-unit {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  min-width: 48px;
+  text-transform: lowercase;
+}
+
+.settings-modal-content .settings-display {
+  flex: 0 0 auto;
+  min-width: 100px;
+  padding: calc(var(--spacing-unit) * 0.5);
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+  text-align: center;
+}
+
+.settings-modal-content .settings-checkbox-container {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.settings-modal-content .settings-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.settings-modal-content .settings-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .settings-modal-container {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .settings-modal-body {
+    flex-direction: column;
+  }
+
+  .settings-modal-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    max-height: 150px;
+    display: flex;
+    gap: calc(var(--spacing-unit) * 0.5);
+    padding: calc(var(--spacing-unit) * 1);
+  }
+
+  .settings-nav-item {
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
+  .settings-modal-content .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--spacing-unit) * 0.5);
+  }
+
+  .settings-modal-content .settings-label {
+    width: 100%;
+  }
+
+  .settings-modal-content .settings-input,
+  .settings-modal-content .settings-display,
+  .settings-modal-content .settings-checkbox-container {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Range input styling */
+.settings-modal-content input[type="range"].settings-input {
+  min-width: 150px;
+}
+
+/* Select styling */
+.settings-modal-content select.settings-input {
+  min-width: 150px;
+}
+
+/* Custom scrollbar for modal content */
+.settings-modal-content::-webkit-scrollbar,
+.settings-modal-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.settings-modal-content::-webkit-scrollbar-track,
+.settings-modal-sidebar::-webkit-scrollbar-track {
+  background: var(--background-secondary, #f5f5f5);
+  border-radius: 4px;
+}
+
+.settings-modal-content::-webkit-scrollbar-thumb,
+.settings-modal-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-color, #ccc);
+  border-radius: 4px;
+}
+
+.settings-modal-content::-webkit-scrollbar-thumb:hover,
+.settings-modal-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-color-secondary, #999);
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/plugin-manager.css */
+
+/* Import variables */
+
+/* Plugin List Container */
+.plugin-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+/* Plugin Row (similar to settings items) */
+.plugin-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-light, #eee);
+    transition: background-color 0.2s ease;
+}
+
+.plugin-row:hover {
+    background-color: var(--background-hover, rgba(0, 0, 0, 0.02));
+}
+
+.plugin-row:last-child {
+    border-bottom: none;
+}
+
+/* Plugin Info Container */
+.plugin-info {
+    flex: 1;
+}
+
+.plugin-name-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.plugin-name {
+    font-weight: 500;
+    font-size: 1em;
+    color: var(--text-color);
+}
+
+.plugin-badge {
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.65em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.plugin-description {
+    font-size: 0.85em;
+    color: var(--text-secondary, #666);
+    margin-bottom: 4px;
+}
+
+.plugin-provides {
+    font-size: 0.75em;
+    color: var(--text-tertiary, #888);
+}
+
+.plugin-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+
+.plugin-tag {
+    display: inline-block;
+    font-size: 0.7em;
+    padding: 2px 8px;
+    background: var(--background-box, #f0f0f0);
+    border: 1px solid var(--border-light, #e0e0e0);
+    border-radius: 12px;
+    color: var(--text-secondary, #666);
+    font-weight: 500;
+}
+
+/* Plugin Control Container */
+.plugin-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 16px;
+}
+
+.plugin-status {
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.plugin-status.enabled {
+    color: var(--color-success, #28a745);
+}
+
+.plugin-status.disabled {
+    color: var(--color-danger, #dc3545);
+}
+
+/* Custom Toggle Switch for Plugin Manager */
+.plugin-toggle {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.plugin-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.plugin-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color, #ccc);
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.plugin-toggle-slider.active {
+    background-color: var(--color-success, #28a745);
+}
+
+.plugin-toggle-button {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: var(--shadow-small, 0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.plugin-toggle-button.active {
+    left: 26px;
+}
+
+.plugin-toggle-button.inactive {
+    left: 3px;
+}
+
+/* Add Plugin Section */
+.add-plugin-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.add-plugin-section h3 {
+    font-size: 1em;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+.add-plugin-section p {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* components/player-modals.css */
+
+/* Modal Backdrop - Match settings modal style */
+#playerInfoModal,
+#playerControlModal,
+#hostPlayerControlModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--modal-backdrop, rgba(0, 0, 0, 0.6));
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+/* Ensure modals using settings-modal-container get full size */
+#playerControlModal .settings-modal-container,
+#hostPlayerControlModal .settings-modal-container {
+    width: 900px;
+    height: 600px;
+    max-width: 95vw;
+    max-height: 90vh;
+}
+
+/* Player Info Modal - Larger size like settings modal */
+.player-info-modal-content {
+    background-color: var(--background-modal, #ffffff);
+    border-radius: 8px;
+    box-shadow: var(--modal-shadow, 0 4px 20px rgba(0, 0, 0, 0.3));
+    width: 1000px;
+    height: 700px;
+    max-width: 95vw;
+    max-height: 90vh;
+    display: flex;
+    overflow: hidden;
+}
+
+.player-info-sidebar {
+    width: 250px;
+    background-color: var(--background-secondary, #f5f5f5);
+    border-right: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.player-info-header {
+    padding: calc(var(--spacing-unit) * 2);
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.player-info-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.player-info-tabs {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 5px;
+}
+
+.tab-btn {
+    padding: 12px 16px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    background: var(--background-hover, rgba(0, 0, 0, 0.05));
+    border-color: var(--border-color);
+}
+
+.tab-btn.active {
+    background: var(--primary-color, #007bff);
+    color: white;
+    font-weight: 600;
+    border-color: var(--primary-color, #007bff);
+}
+
+.player-info-main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.player-info-display {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.player-badge-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2em;
+    font-weight: bold;
+    box-shadow: var(--shadow-medium);
+}
+
+.player-badge-medium {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5em;
+    font-weight: bold;
+    box-shadow: var(--shadow-medium);
+}
+
+.player-info-display h3 {
+    margin: 0;
+    font-size: 1.8em;
+    color: var(--text-color);
+}
+
+/* Stats List */
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--background-box);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+}
+
+.stat-row:hover {
+    background: var(--background-hover);
+    transform: translateX(5px);
+}
+
+.stat-name {
+    font-weight: 500;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+.stat-value {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-visibility-indicator {
+    font-size: 0.7em;
+    font-weight: normal;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Inventory Grid */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px;
+}
+
+.empty-message {
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 40px;
+}
+
+/* Player Control Modal and Host Player Control Modal now use settings-modal-container */
+/* No additional styles needed - inherits from settings-modal.css */
+
+/* Icon Buttons */
+.icon-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.icon-btn:hover {
+    background: var(--background-hover);
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.icon-btn svg {
+    display: block;
+}
+
+.icon-btn-info {
+    color: var(--primary-color);
+}
+
+.icon-btn-settings {
+    color: var(--text-secondary);
+}
+
+.icon-btn-settings:hover {
+    color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .player-info-modal-content {
+        flex-direction: column;
+        width: 95%;
+        height: 90vh;
+    }
+
+    .player-info-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .player-info-tabs {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+
+    .player-control-modal-content {
+        width: 95%;
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* animations.css */
+
+/* Import variables */
+
+/* Spinner Animation */
+.spinner {
+  margin: 100px auto 20px auto;
+  width: 50px;
+  height: 50px;
+  border: 6px solid var(--border-color);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Gradient Shift Animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Pulse Glow Animation */
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 75, 43, 0.5), inset 0 0 10px rgba(255, 75, 43, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 65, 108, 0.7), inset 0 0 20px rgba(255, 65, 108, 0.7);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255, 75, 43, 0.5), inset 0 0 10px rgba(255, 75, 43, 0.5);
+    transform: scale(1);
+  }
+}
+
+/* Shine Animation */
+@keyframes shine {
+  0% {
+    transform: rotate(25deg) translateX(-100%);
+  }
+  100% {
+    transform: rotate(25deg) translateX(100%);
+  }
+}
+
+/* Rainbow Border Animation */
+@keyframes rainbowBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes backgroundGlow {
+  0% {
+    background-color: rgba(var(--highlight-glow-rgb), 0.5); /* 50% opacity */
+    box-shadow: 0 0 20px 8px rgba(var(--highlight-glow-rgb), 0.5); /* 50% opacity shadow */
+  }
+  50% {
+    background-color: var(--highlight-glow); /* Full intensity (100% opacity) */
+    box-shadow: 0 0 20px 8px var(--highlight-glow); /* Full intensity shadow */
+  }
+  100% {
+    background-color: rgba(var(--highlight-glow-rgb), 0.5); /* 50% opacity */
+    box-shadow: 0 0 20px 8px rgba(var(--highlight-glow-rgb), 0.5); /* 50% opacity shadow */
+  }
+}
+
+@keyframes timer-flash {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.timer-flashing {
+  animation: timer-flash 0.8s infinite;
+}
+
+
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* themes/light.css */
+
+/* Import variables */
+
+/* Since the default variables are for the light theme, no overrides are necessary. */
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* Import variables */
+
+/* Override variables for dark theme */
+.dark-theme {
+  --background-body: #0a0a0a;
+  --background-box: #1a1a1a;
+  --background-secondary: #1e1e1e;
+  --text-color: #d0d0d0;
+  --text-color-secondary: #a0a0a0;
+  --text-secondary: #999999;
+  --text-tertiary: #888888;
+  --background-sidebar: #141414;
+  --background-modal: #141414;
+  --background-board: #141414;
+  --background-hover: rgba(255, 255, 255, 0.05);
+  --border-color: #333333;
+  --border-light: #2a2a2a;
+
+
+  --color-primary: #2c3e50;
+  --color-primary-hover: #34495e;
+  --color-secondary: #2ecc71;
+  --color-secondary-hover: #27ae60;
+  --color-success: #27ae60;
+  --color-success-hover: #219a52;
+  --color-danger: #c0392b;
+  --color-danger-hover: #a93226;
+  --color-warning: #f39c12;
+  --color-info: #3498db;
+  --color-disabled: #555555; /* Dim gray for disabled background */
+  --color-disabled-text: #888888; /* Lighter gray for disabled text */
+
+  --input-bg: #1a1a1a;
+  --input-text-color: #d0d0d0;
+  --input-border-color: #333333;
+
+  --text-color-light: #e0e0e0;
+
+  /* Modal-specific */
+  --modal-backdrop: rgba(0, 0, 0, 0.8);
+  --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.4);
+
+  /* Aliases for backwards compatibility */
+  --primary-color: var(--color-primary);
+  --primary-hover: var(--color-primary-hover);
+  --danger-color: var(--color-danger);
+
+  /* Headers and Labels */
+  --font-family-header: 'Arial', sans-serif;
+  --header-color: #d0d0d0;
+
+  --font-family-label: 'Arial', sans-serif;
+  --label-color: #a0a0a0;
+
+  --highlight-glow: rgba(144, 238, 144, 0.8);
+  --highlight-glow-rgb: 144, 238, 144;
+
+  /* Board Rendering - Dark Theme */
+  --board-connection-color: #888888;
+  --board-arrow-color: #888888;
+  --board-space-border-color: #333333;
+  --board-space-border-width: 1px;
+  --board-default-text-color: #d0d0d0;
+}
+
+/* Additional styles for dark theme */
+body {
+  background-color: var(--background-body);
+  color: var(--text-color);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary);
+  border-radius: 4px;
+}
+
+/* variables.css */
+
+/* Color Palette */
+:root {
+    /* Primary Colors */
+    --color-primary: #007bff;
+    --color-primary-hover: #0056b3;
+    --color-secondary: #6c757d;
+    --color-secondary-hover: #5a6268;
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #ffc107;
+    --color-info: #17a2b8;
+    --color-light: #f8f9fa;
+    --color-dark: #343a40;
+
+    /* Disabled Colors */
+    --color-disabled: #e0e0e0; /* Light gray for disabled state */
+    --color-disabled-text: #b0b0b0; /* Slightly darker gray for disabled text */
+  
+    /* Background Colors */
+    --background-body: var(--color-light);
+    --background-sidebar: #f0f0f0;
+    --background-secondary: #f5f5f5;
+    --background-modal: var(--color-light);
+    --background-board: #f4f4f4;
+    --background-hover: rgba(0, 0, 0, 0.05);
+
+    /*Headers*/
+    --font-family-header: 'Arial', sans-serif; /* Default header font */
+    --header-color: #333; /* Default header color */
+    
+    /*Labels*/
+    --font-family-label: 'Arial', sans-serif; /* Default label font */
+    --label-color: #333; /* Default label color */
+  
+    /* Text Colors */
+    --text-color: #212529;
+    --text-color-light: #ffffff;
+    --text-color-secondary: #666666;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+
+    /* Input Background and Text */
+    --input-bg: #ffffff;
+    --input-text-color: #000000;
+    --input-border-color: #cccccc;
+
+    /* Box backgrounds */
+    --background-box: #f4f4f4;
+  
+    /* Borders */
+    --border-color: #cccccc;
+    --border-light: #eeeeee;
+  
+    /* Fonts */
+    --font-family-base: 'Arial', sans-serif;
+    --font-size-base: 16px;
+  
+    /* Spacing */
+    --spacing-unit: 8px;
+  
+    /* Z-Index Levels */
+    --z-index-modal: 1000;
+    --z-index-tooltip: 1100;
+
+    /* Modal-specific */
+    --modal-backdrop: rgba(0, 0, 0, 0.6);
+    --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    /* Aliases for backwards compatibility */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --danger-color: var(--color-danger);
+
+    /* Highlight */
+    --highlight-glow: rgba(255, 255, 0, 0.8); /* Default yellow glow */
+    --highlight-glow-rgb: 255, 255, 0;
+
+    /* Board Rendering */
+    --board-connection-color: #333333;
+    --board-connection-thickness: 2px;
+    --board-arrow-color: #333333;
+    --board-arrow-size: 10px;
+    --board-space-border-color: transparent;
+    --board-space-border-width: 0px;
+    --board-default-text-color: #000000;
+  }
+  
+/* Import variables */
+
+/* Override variables for retro theme */
+.retro-theme {
+  --background-body: #f4ecd8;
+  --background-box: #f0e4d8;
+  --background-secondary: #ffe8c0;
+  --text-color: #5c5b5a;
+  --text-color-secondary: #8a7a6a;
+  --text-secondary: #9a8a7a;
+  --text-tertiary: #b0a090;
+  --background-sidebar: #fff0d4;
+  --background-modal: #fff0d4;
+  --background-board: #ffcc5c;
+  --background-hover: rgba(230, 190, 138, 0.2);
+  --border-color: #e6be8a;
+  --border-light: #f0d4aa;
+
+  --color-primary: #e6be8a;
+  --color-primary-hover: #d4a572;
+  --color-secondary: #d4a572;
+  --color-secondary-hover: #c0935f;
+  --color-success: #c97b63;
+  --color-success-hover: #b76553;
+  --color-danger: #b76553;
+  --color-danger-hover: #a35245;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  --color-disabled: #d0b37a;
+  --color-disabled-text: #9e9e9e;
+
+  --input-bg: #ffcc5c;
+  --input-text-color: #5c5b5a;
+  --input-border-color: #e6be8a;
+
+  --text-color-light: #333333;
+
+  /* Modal-specific */
+  --modal-backdrop: rgba(92, 91, 90, 0.6);
+  --modal-shadow: 0 4px 20px rgba(92, 91, 90, 0.3);
+  --shadow-small: 0 2px 4px rgba(92, 91, 90, 0.2);
+
+  /* Aliases for backwards compatibility */
+  --primary-color: var(--color-primary);
+  --primary-hover: var(--color-primary-hover);
+  --danger-color: var(--color-danger);
+
+  /* Headers and Labels */
+  --font-family-header: 'Courier New', Courier, monospace;
+  --header-color: #5c5b5a;
+
+  --font-family-label: 'Courier New', Courier, monospace;
+  --label-color: #5c5b5a;
+
+  --highlight-glow: rgba(255, 0, 255, 0.8); /* Pink glow for retro theme */
+  --highlight-glow-rgb: 255, 0, 255;
+}
+
+/* Additional styles for retro theme */
+body {
+  background-color: var(--background-body);
+  color: var(--text-color);
+  font-family: var(--font-family-base);
+}
+
+/* Optional Background Texture */
+/*
+body {
+  background-image: url('../assets/images/retro-pattern.png');
+  background-size: cover;
+  background-attachment: fixed;
+}
+*/
+
+/* In your main CSS file, include all themes */
+/* styles.scss */
+
+/* Import all themes */
+.add-player-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.add-player-container .button {
+    min-width: 220px;
+    text-align: center;
+}
+

@@ -30,101 +30,13 @@ export default class MapStorageManager {
         return [
             {
                 id: 'default',
-                name: 'Default Board',
+                name: 'Demo Drinking Board',
                 author: 'Jack Carlton',
-                description: 'Standard drinking board game',
+                description: 'Standard drinking board game (GitHub Pages default)',
                 isBuiltIn: true,
-                path: 'assets/maps/defaultBoard.json',
+                path: 'assets/maps/demo_drinking_board.json',
                 thumbnail: null,
                 createdDate: '2024-10-28T12:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'simple-linear',
-                name: 'Simple Linear Board',
-                author: 'Example Library',
-                description: 'Straight path ideal for verifying movement logic',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/example-v3-game.json',
-                thumbnail: null,
-                createdDate: '2025-02-12T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'branching-paths',
-                name: 'Branching Paths Demo',
-                author: 'Example Library',
-                description: 'Demonstrates branching connections and choice prompts',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/example-v3-game.json',
-                thumbnail: null,
-                createdDate: '2025-02-12T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'custom-engine',
-                name: 'Custom Engine Stub',
-                author: 'Example Library',
-                description: 'Placeholder entry for custom engine experimentation',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/example-v3-game.json',
-                thumbnail: null,
-                createdDate: '2025-02-12T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'action-effect-testing',
-                name: 'Complete Action & Effect Testing Map',
-                author: 'Game Engine',
-                description: 'A comprehensive testing map covering ALL core actions and effects',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/action-effect-testing.json',
-                thumbnail: null,
-                createdDate: '2025-01-15T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'circular-party',
-                name: 'Circular Party Board',
-                author: 'Test Creator',
-                description: 'A circular board with 6 spaces - players spread across starting positions',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/test-circular-board.json',
-                thumbnail: null,
-                createdDate: '2025-01-27T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'mini-test',
-                name: 'Mini Test Board',
-                author: 'Test Creator',
-                description: 'A tiny 3-space board for quick testing',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/test-mini-board.json',
-                thumbnail: null,
-                createdDate: '2025-01-27T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'trouble-classic',
-                name: 'Trouble (Pop-O-Matic) Prototype',
-                author: 'Trouble Plugin',
-                description: 'Classic Trouble board demonstrating the Trouble engine',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/trouble-classic.json',
-                thumbnail: null,
-                createdDate: '2025-02-01T00:00:00Z',
-                engineType: 'trouble'
-            },
-            {
-                id: 'example-multi-piece',
-                name: 'Example Multi-piece Game',
-                author: 'Game Engine',
-                description: 'Demonstrates multiple player pieces per player',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/example-multi-piece-game.json',
-                thumbnail: null,
-                createdDate: '2025-02-10T00:00:00Z',
                 engineType: 'turn-based'
             }
         ];

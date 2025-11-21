@@ -1,0 +1,257 @@
+{
+  "$schema": "https://boardgame.example.com/schemas/game-v3.json",
+  "version": "1.0.0",
+  "type": "game",
+  "metadata": {
+    "name": "Placeholder Feature Showcase",
+    "author": "Claude",
+    "description": "A demo board showcasing the enhanced placeholder system with colored text",
+    "created": "2025-11-21T00:00:00Z",
+    "tags": [
+      "example",
+      "demo",
+      "placeholders"
+    ]
+  },
+  "requirements": {
+    "plugins": [
+      {
+        "id": "core",
+        "version": "^1.0.0",
+        "source": "builtin",
+        "description": "Core game functionality"
+      }
+    ],
+    "minPlayers": 2,
+    "maxPlayers": 8
+  },
+  "engine": {
+    "type": "turn-based",
+    "config": {}
+  },
+  "rules": {
+    "turnOrder": "sequential",
+    "startingPositions": {
+      "mode": "single",
+      "spaceIds": ["1"]
+    },
+    "diceRolling": {
+      "enabled": true,
+      "diceCount": 1,
+      "diceSides": 6
+    }
+  },
+  "board": {
+    "topology": {
+      "spaces": [
+        {
+          "id": "1",
+          "name": "Start",
+          "type": "start",
+          "position": { "x": 100, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ffcccc"
+          },
+          "connections": [{ "targetId": "2", "draw": true }],
+          "triggers": [
+            {
+              "when": { "type": "ON_ENTER" },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "Welcome to the Placeholder Showcase! {{CURRENT_PLAYER_NAME}} starts the game!"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "name": "RANDOM_NUMBER Demo",
+          "type": "action",
+          "position": { "x": 200, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ccffcc"
+          },
+          "connections": [{ "targetId": "3", "draw": true }],
+          "triggers": [
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Roll a {{RANDOM_NUMBER(1, 6)}}? You got {{RANDOM_NUMBER(1, 6)}}! Now take {{RANDOM_NUMBER(1, 3)}} drinks!"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "name": "RANDOM_WORD Demo",
+          "type": "action",
+          "position": { "x": 300, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ccccff"
+          },
+          "connections": [{ "targetId": "4", "draw": true }],
+          "triggers": [
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Quick! Name 3 things related to: {{RANDOM_WORD}}!"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "4",
+          "name": "RANDOM_COLOR (hex) Demo",
+          "type": "action",
+          "position": { "x": 400, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ffffcc"
+          },
+          "connections": [{ "targetId": "5", "draw": true }],
+          "triggers": [
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Point to something in the room that's this color: {{RANDOM_COLOR}}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "5",
+          "name": "RANDOM_COLOR (text) Demo",
+          "type": "action",
+          "position": { "x": 500, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ffccff"
+          },
+          "connections": [{ "targetId": "6", "draw": true }],
+          "triggers": [
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "Everyone shout: {{RANDOM_COLOR(I LOVE THIS GAME!)}}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "name": "Nested Placeholders Demo",
+          "type": "action",
+          "position": { "x": 600, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ccffff"
+          },
+          "connections": [{ "targetId": "7", "draw": true }],
+          "triggers": [
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Say {{RANDOM_COLOR({{RANDOM_WORD}})}} out loud {{RANDOM_NUMBER(2, 5)}} times!"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "name": "RANDOM_SONG Demo",
+          "type": "action",
+          "position": { "x": 700, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ffddcc"
+          },
+          "connections": [{ "targetId": "8", "draw": true }],
+          "triggers": [
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Play this song and take a drink: {{RANDOM_SONG}} 🎵"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "8",
+          "name": "Kitchen Sink Demo",
+          "type": "action",
+          "position": { "x": 800, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ddffcc"
+          },
+          "connections": [{ "targetId": "9", "draw": true }],
+          "triggers": [
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "{{CURRENT_PLAYER_NAME}} landed on the {{RANDOM_COLOR(MEGA CHALLENGE)}}! Say '{{RANDOM_WORD}}' {{RANDOM_NUMBER(3, 7)}} times while listening to {{RANDOM_SONG}}! 🎉"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "9",
+          "name": "Colorful Finish",
+          "type": "end",
+          "position": { "x": 900, "y": 100 },
+          "visual": {
+            "size": 50,
+            "color": "#ffffcc"
+          },
+          "connections": [],
+          "triggers": [
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "{{RANDOM_COLOR(🎊 CONGRATULATIONS!)}} You've seen all the placeholder features! {{RANDOM_COLOR(Finish your drink!)}} 🏆"
+                }
+              }
+            },
+            {
+              "when": { "type": "ON_LAND" },
+              "action": {
+                "type": "SET_PLAYER_STATE",
+                "payload": {
+                  "state": "COMPLETED_GAME"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

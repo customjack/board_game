@@ -1,0 +1,282 @@
+{
+  "$schema": "https://boardgame.example.com/schemas/game-v3.json",
+  "version": "1.0.0",
+  "type": "game",
+  "metadata": {
+    "name": "Circular Party Board",
+    "author": "Test Creator",
+    "description": "A circular board with 6 spaces - players spread across starting positions",
+    "created": "2025-01-27T00:00:00.000Z",
+    "modified": "2025-11-09T19:05:24.068Z",
+    "tags": [
+      "party",
+      "circular",
+      "test"
+    ]
+  },
+  "requirements": {
+    "plugins": [
+      {
+        "id": "core",
+        "version": "^1.0.0",
+        "source": "builtin",
+        "description": "Core game functionality"
+      }
+    ],
+    "minPlayers": 2,
+    "maxPlayers": 12
+  },
+  "engine": {
+    "type": "turn-based",
+    "config": {
+      "turnManager": {
+        "skipInactivePlayers": true,
+        "maxTurns": 0
+      }
+    }
+  },
+  "ui": {
+    "layout": "standard-board",
+    "components": [
+      {
+        "id": "rollButton",
+        "enabled": true,
+        "position": {
+          "bottom": 20,
+          "centerX": true
+        },
+        "config": {
+          "label": "Roll",
+          "hotkey": "space"
+        }
+      },
+      {
+        "id": "timer",
+        "enabled": true,
+        "position": {
+          "top": 20,
+          "right": 20
+        },
+        "config": {}
+      },
+      {
+        "id": "remainingMoves",
+        "enabled": true,
+        "position": {
+          "top": 80,
+          "right": 20
+        },
+        "config": {}
+      }
+    ],
+    "theme": {}
+  },
+  "rules": {
+    "turnOrder": "sequential",
+    "startingPositions": {
+      "mode": "spread",
+      "spaceIds": [
+        "start",
+        "space2",
+        "space4"
+      ]
+    },
+    "recommendedPlayers": {
+      "min": 4,
+      "max": 8
+    },
+    "diceRolling": {
+      "enabled": true,
+      "diceCount": 1,
+      "diceSides": 6,
+      "rollAgainOn": []
+    },
+    "winCondition": {}
+  },
+  "board": {
+    "topology": {
+      "spaces": [
+        {
+          "id": "start",
+          "name": "Start",
+          "type": "start",
+          "position": {
+            "x": 400,
+            "y": 200
+          },
+          "visual": {
+            "size": 60,
+            "color": "#2ecc71",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "space1",
+              "draw": true
+            }
+          ],
+          "triggers": []
+        },
+        {
+          "id": "space1",
+          "name": "Dance Floor",
+          "type": "action",
+          "position": {
+            "x": 550,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#e74c3c",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "space2",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "{{CURRENT_PLAYER_NAME}} hits the dance floor! Everyone take a sip."
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "space2",
+          "name": "Bar",
+          "type": "action",
+          "position": {
+            "x": 550,
+            "y": 450
+          },
+          "visual": {
+            "size": 60,
+            "color": "#8B4513",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "space3",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "You're at the bar! Take 2 drinks."
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "space3",
+          "name": "Lounge",
+          "type": "action",
+          "position": {
+            "x": 400,
+            "y": 550
+          },
+          "visual": {
+            "size": 60,
+            "color": "#9b59b6",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "space4",
+              "draw": true
+            }
+          ],
+          "triggers": []
+        },
+        {
+          "id": "space4",
+          "name": "Game Room",
+          "type": "action",
+          "position": {
+            "x": 250,
+            "y": 450
+          },
+          "visual": {
+            "size": 60,
+            "color": "#3498db",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "space5",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_ENTER"
+              },
+              "action": {
+                "type": "PROMPT_CURRENT_PLAYER",
+                "payload": {
+                  "message": "Game room! Roll a {{RANDOM_NUMBER(1,6)}}."
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        },
+        {
+          "id": "space5",
+          "name": "Garden",
+          "type": "action",
+          "position": {
+            "x": 250,
+            "y": 300
+          },
+          "visual": {
+            "size": 60,
+            "color": "#27ae60",
+            "textColor": "#ffffff"
+          },
+          "connections": [
+            {
+              "targetId": "start",
+              "draw": true
+            }
+          ],
+          "triggers": [
+            {
+              "when": {
+                "type": "ON_LAND"
+              },
+              "action": {
+                "type": "PROMPT_ALL_PLAYERS",
+                "payload": {
+                  "message": "{{CURRENT_PLAYER_NAME}} enjoys the garden. Back to start!"
+                }
+              },
+              "priority": "MID"
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "rendering": {}
+  }
+}
