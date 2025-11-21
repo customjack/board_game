@@ -168,8 +168,25 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
      * Handle kick (Client)
      */
     async handleKick(message, context) {
-        await ModalUtil.alert('You have been kicked from the game.');
-        location.reload();
+        // Immediately route to home and close the session without showing the browser "leave page" prompt
+        const peer = this.getPeer();
+        if (peer) {
+            peer.isKicked = true;
+            peer.stopHeartbeat?.();
+            if (peer.connectionStatusManager) {
+                peer.connectionStatusManager.reconnectDisabled = true;
+            }
+            if (peer.conn) {
+                try { peer.conn.close(); } catch (_) {}
+            }
+        }
+        peer?.eventHandler?.showPage?.('homePage');
+        try {
+            await ModalUtil.alert('You have been kicked from the game.');
+        } finally {
+            window.onbeforeunload = null;
+            window.location.replace(window.location.origin + window.location.pathname);
+        }
     }
 
     /**

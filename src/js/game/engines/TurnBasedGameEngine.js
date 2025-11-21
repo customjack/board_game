@@ -682,6 +682,32 @@ export default class TurnBasedGameEngine extends BaseGameEngine {
         }
     }
 
+    /**
+     * Handle players being removed mid-game (e.g., kicked/disconnected).
+     * If the active player was removed, immediately advance to the next turn.
+     * @param {Array} removedPlayers - Players that were removed from state
+     */
+    handlePlayersRemoved(removedPlayers = [], options = {}) {
+        if (!Array.isArray(removedPlayers) || removedPlayers.length === 0) return;
+
+        const removedIds = new Set(removedPlayers.map(p => p.playerId));
+        const current = this.turnManager?.getCurrentPlayer?.();
+        const wasCurrent = options.wasCurrent || (current && removedIds.has(current.playerId));
+        if (!current || !wasCurrent) return;
+
+        // Clear any remaining moves and advance turn immediately
+        this.gameState.setRemainingMoves?.(0);
+
+        // Advance turn order if there are players left
+        if (this.gameState.players.length > 0) {
+            this.turnManager?.nextTurn?.({ reason: 'playerRemoved' });
+            this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 });
+        } else {
+            // No players left; just ensure phase machine doesn't stay stuck
+            this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 });
+        }
+    }
+
     handleBeginTurn() {
         this.emitEvent('beginTurn', { gameState: this.gameState });
 

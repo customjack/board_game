@@ -85,9 +85,15 @@ export default class BasePeer {
     }
 
     removePlayer(playerId) {
+        const currentPlayer = this.gameState.getCurrentPlayer?.();
+        const wasCurrent = currentPlayer?.playerId === playerId;
+        const removedPlayer = this.gameState.getPlayerByPlayerId?.(playerId);
         this.ownedPlayers = this.ownedPlayers.filter(player => player.playerId !== playerId);
         this.gameState.removePlayer(playerId);
         this.eventHandler.updateGameState();
+        if (removedPlayer) {
+            this.eventHandler.gameEngine?.handlePlayersRemoved?.([removedPlayer], { wasCurrent });
+        }
     }
 
     broadcastGameState() {

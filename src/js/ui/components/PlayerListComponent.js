@@ -259,6 +259,11 @@ export default class PlayerListComponent extends BaseUIComponent {
             return true;
         }
 
+        // Check game phase changes (e.g., entering game should refresh highlights)
+        if (this.gameState.gamePhase !== newGameState.gamePhase) {
+            return true;
+        }
+
         const prevSettings = this.gameState.settings;
         const nextSettings = newGameState.settings;
         if (
@@ -464,8 +469,12 @@ export default class PlayerListComponent extends BaseUIComponent {
         }
 
         // Highlight current turn
-        if (this.gameState.isGameStarted() &&
-            this.gameState.getCurrentPlayer().playerId === player.playerId) {
+        const shouldHighlightCurrent =
+            this.currentListElementId === 'gamePlayerList' &&
+            this.gameState.isGameStarted?.() &&
+            this.gameState.getCurrentPlayer?.()?.playerId === player.playerId;
+
+        if (shouldHighlightCurrent) {
             li.classList.add('current-turn');
         }
 

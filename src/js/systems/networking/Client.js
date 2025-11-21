@@ -166,6 +166,11 @@ export default class Client extends BasePeer {
     async handleDisconnection() {
         this.stopHeartbeat();
 
+        if (this.isKicked) {
+            this.eventHandler?.showPage?.('homePage');
+            return;
+        }
+
         if (this.connectionStatusManager) {
             this.connectionStatusManager.handleDisconnection();
         } else {

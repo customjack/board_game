@@ -16,6 +16,7 @@ export default class ConnectionStatusManager {
 
         // Connection state
         this.isConnected = true;
+        this.reconnectDisabled = false;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 3;
         this.reconnectDelay = 1000; // Start with 1 second
@@ -65,6 +66,7 @@ export default class ConnectionStatusManager {
     }
 
     async handleDisconnection() {
+        if (this.reconnectDisabled) return;
         if (this.isReconnecting) return; // Already handling it
 
         this.isConnected = false;
@@ -187,6 +189,7 @@ export default class ConnectionStatusManager {
         console.error('[ConnectionStatus] ✗ Reconnection failed after max attempts');
 
         this.isReconnecting = false;
+        if (this.reconnectDisabled) return;
 
         this.updateModalStatus(
             'Connection Failed',
