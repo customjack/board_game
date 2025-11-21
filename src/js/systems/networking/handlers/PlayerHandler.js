@@ -142,8 +142,21 @@ export default class PlayerHandler extends MessageHandlerPlugin {
 
         const player = peer.gameState.players.find(p => p.playerId === message.playerId);
         if (player) {
-            player.nickname = nicknameValidation.sanitized;
-            peer.updateAndBroadcastGameState(peer.gameState);
+            // Check permissions
+            const isHost = peer.id === peer.gameState.hostPeerId;
+            const isOwnPlayer = player.peerId === peer.id;
+            const allowNameChange = peer.gameState.settings.allowPlayerNameChange !== false;
+
+            if (!isHost && isOwnPlayer && !allowNameChange) {
+                console.warn(`Player ${peer.id} attempted to change name but setting is disabled`);
+                return;
+            }
+
+            // Allow if host, or if own player and setting is enabled
+            if (isHost || (isOwnPlayer && allowNameChange)) {
+                player.nickname = nicknameValidation.sanitized;
+                peer.updateAndBroadcastGameState(peer.gameState);
+            }
         }
     }
 

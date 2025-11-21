@@ -7,9 +7,9 @@
 import BaseUIComponent from '../BaseUIComponent.js';
 import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
 import { createInfoIcon, createGearIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
-import PlayerInfoModal from '../../../deprecated/legacy/controllers/modals/PlayerInfoModal.js';
-import PlayerControlModal from '../../../deprecated/legacy/controllers/modals/PlayerControlModal.js';
-import HostPlayerControlModal from '../../../deprecated/legacy/controllers/modals/HostPlayerControlModal.js';
+import PlayerInfoModal from '../modals/PlayerInfoModal.js';
+import PlayerControlModal from '../modals/PlayerControlModal.js';
+import HostPlayerControlModal from '../modals/HostPlayerControlModal.js';
 
 // Shared modal instances (singletons) across all PlayerListComponent instances
 let sharedPlayerInfoModal = null;
@@ -37,6 +37,7 @@ export default class PlayerListComponent extends BaseUIComponent {
         this.gameState = null;
         this.allowPlayerColorChange = true;
         this.allowPeerColorChange = true;
+        this.allowPlayerNameChange = true;
 
         // Store list element ID for switching contexts (lobby vs game)
         this.currentListElementId = config.listElementId || 'lobbyPlayerList';
@@ -195,10 +196,11 @@ export default class PlayerListComponent extends BaseUIComponent {
         const settings = this.gameState.settings;
         this.allowPlayerColorChange = settings?.allowPlayerColorChange !== false;
         this.allowPeerColorChange = settings?.allowPeerColorChange !== false;
+        this.allowPlayerNameChange = settings?.allowPlayerNameChange !== false;
 
-        if (this.playerControlModal?.setColorPermissions) {
-            this.playerControlModal.setColorPermissions(
-                this.getPlayerColorPermissions(this.currentPlayerPeerId)
+        if (this.playerControlModal?.setPermissions) {
+            this.playerControlModal.setPermissions(
+                this.getPlayerPermissions(this.currentPlayerPeerId)
             );
         }
 
@@ -383,13 +385,14 @@ export default class PlayerListComponent extends BaseUIComponent {
         }
     }
 
-    getPlayerColorPermissions(peerId) {
+    getPlayerPermissions(peerId) {
         const hostPeerId = this.hostPeerId || this.currentPlayerPeerId;
         const isHostEditingOwnPlayer = this.isHost && hostPeerId && peerId === hostPeerId;
         const isCurrentPeer = peerId === this.currentPlayerPeerId;
 
         if (!isHostEditingOwnPlayer && (!this.isHost || !isCurrentPeer)) {
             return {
+                nameChange: this.allowPlayerNameChange,
                 playerColor: this.allowPlayerColorChange,
                 peerColor: this.allowPeerColorChange
             };
@@ -397,6 +400,7 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         // Hosts can always edit their own players regardless of settings
         return {
+            nameChange: true,
             playerColor: true,
             peerColor: true
         };
@@ -513,9 +517,9 @@ export default class PlayerListComponent extends BaseUIComponent {
         }
 
         this.playerControlModal.player = player;
-        if (this.playerControlModal.setColorPermissions) {
-            this.playerControlModal.setColorPermissions(
-                this.getPlayerColorPermissions(player.peerId)
+        if (this.playerControlModal.setPermissions) {
+            this.playerControlModal.setPermissions(
+                this.getPlayerPermissions(player.peerId)
             );
         }
         this.playerControlModal.open();

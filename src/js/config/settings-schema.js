@@ -64,6 +64,16 @@ export const GAME_SETTINGS_SCHEMA = [
         readonly: false
     },
     {
+        id: 'allowPlayerNameChange',
+        type: SETTING_TYPES.BOOLEAN,
+        label: 'Allow Player Name Changes',
+        description: 'Players can change their own nicknames',
+        defaultValue: true,
+        category: SETTING_CATEGORIES.PLAYERS,
+        constraints: {},
+        readonly: false
+    },
+    {
         id: 'allowPlayerColorChange',
         type: SETTING_TYPES.BOOLEAN,
         label: 'Allow Player Color Changes',
