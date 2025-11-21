@@ -41,7 +41,18 @@ const buildPeerConfig = () => {
     const customKey = process.env.PEERJS_KEY;
     const customSecure = process.env.PEERJS_SECURE;
 
-    if (customHost) {
+    // If a local PeerServer is configured but we're not running on localhost,
+    // ignore it so public builds (e.g., GitHub Pages) fall back to the cloud server.
+    const isLocalHost =
+        customHost === 'localhost' ||
+        customHost === '127.0.0.1';
+    const isRunningLocal =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    const shouldUseCustom = customHost && !(isLocalHost && !isRunningLocal);
+
+    if (shouldUseCustom) {
         console.log('[NetworkConfig] Using custom PeerJS server:', customHost);
         config.host = customHost;
 
