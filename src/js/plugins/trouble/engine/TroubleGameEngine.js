@@ -3,6 +3,7 @@ import TurnPhases from '../../../game/phases/TurnPhases.js';
 import GamePhases from '../../../game/phases/GamePhases.js';
 import GameLogPopupController from '../../../../deprecated/legacy/controllers/GameLogPopupController.js';
 import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
+import { getVisibleElementById } from '../../../infrastructure/utils/helpers.js';
 
 export default class TroubleGameEngine extends MultiPieceGameEngine {
     /**
@@ -191,14 +192,15 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.handlePieceSelection(pieceId);
     }
 
-    handleSpaceClick({ spaceId }) {
+    handleSpaceClick({ space, spaceId }) {
         if (!this.awaitingMoveChoice || !this.isClientTurn()) return;
         const currentPlayer = this.gameState.getCurrentPlayer();
         if (!currentPlayer) return;
 
-        const move = this.findMoveByTarget(spaceId);
+        const targetId = spaceId || space?.id || space?.spaceId || null;
+        const move = targetId ? this.findMoveByTarget(targetId) : null;
         if (move) {
-            console.log(`[Trouble] Space clicked ${spaceId}, resolving move for piece ${move.pieceId}`);
+            console.log(`[Trouble] Space clicked ${targetId}, resolving move for piece ${move.pieceId}`);
             this.handleMovePiece(currentPlayer.playerId, {
                 pieceId: move.pieceId,
                 targetSpaceId: move.targetSpaceId
@@ -627,8 +629,11 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
     setupManualSpaceSelection(spaceIds = []) {
         this.cleanupManualSpaceChoice();
         spaceIds.forEach(id => {
-            const el = document.getElementById(`space-${id}`);
-            if (!el) return;
+            const el = getVisibleElementById(`space-${id}`);
+            if (!el) {
+                console.warn(`[Trouble] No visible element found for space ${id}`);
+                return;
+            }
             el.classList.add('highlight');
             const handler = () => {
                 const currentPlayer = this.gameState.getCurrentPlayer();
@@ -641,16 +646,15 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
                 }
             };
             el.addEventListener('click', handler);
-            this.manualSpaceHandlers.set(id, handler);
+            this.manualSpaceHandlers.set(id, { element: el, handler });
         });
     }
 
     cleanupManualSpaceChoice() {
-        this.manualSpaceHandlers.forEach((handler, id) => {
-            const el = document.getElementById(`space-${id}`);
-            if (el && handler) {
-                el.classList.remove('highlight');
-                el.removeEventListener('click', handler);
+        this.manualSpaceHandlers.forEach(({ element, handler }) => {
+            if (element && handler) {
+                element.classList.remove('highlight');
+                element.removeEventListener('click', handler);
             }
         });
         this.manualSpaceHandlers.clear();
