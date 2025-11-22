@@ -2,7 +2,7 @@ import '../css/styles.css';
 import HostEventHandler from './eventHandlers/HostEventHandler';
 import ClientEventHandler from './eventHandlers/ClientEventHandler';
 import PersonalSettings from './elements/models/PersonalSettings';
-import PersonalSettingsMenu from '../deprecated/legacy/controllers/menus/PersonalSettingsMenu.js';
+import PersonalSettingsModal from './ui/modals/PersonalSettingsModal.js';
 import PluginManagerModal from './ui/modals/PluginManagerModal.js';
 import PageRegistry from './infrastructure/registries/PageRegistry.js';
 import ListenerRegistry from './infrastructure/registries/ListenerRegistry.js';
@@ -34,13 +34,14 @@ import { randomNumber, randomWord, randomColor, randomSong } from './infrastruct
 // Initialize personal settings
 function initializePersonalSettings(factoryManager, pluginManager, localStorageManager) {
     const personalSettings = new PersonalSettings();
-    const personalSettingsMenu = new PersonalSettingsMenu(
-        'settingsModal',
+    const personalSettingsMenu = new PersonalSettingsModal({
+        id: 'settingsModal',
         personalSettings,
         factoryManager,
         pluginManager,
         localStorageManager
-    );
+    });
+    personalSettingsMenu.init();
     return { personalSettings, personalSettingsMenu };
 }
 
@@ -281,7 +282,7 @@ function registerListeners(
     }
 
     listenerRegistry.registerListener('gearButton', 'click', () => {
-        personalSettingsMenu.show();
+        personalSettingsMenu.open();
     });
 
     // Plugin List button in lobby (for clients to view enabled plugins)

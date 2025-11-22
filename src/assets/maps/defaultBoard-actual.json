@@ -28,7 +28,8 @@
   },
   "engine": {
     "type": "turn-based",
-    "config": {}
+    "config": {
+    }
   },
   "ui": {
     "layout": "standard-board",

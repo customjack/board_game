@@ -1,6 +1,7 @@
 import Plugin from '../../systems/plugins/Plugin.js';
 import GameEngineFactory from '../../infrastructure/factories/GameEngineFactory.js';
 import TroubleGameEngine from './engine/TroubleGameEngine.js';
+import MultiPieceManager from '../../infrastructure/managers/MultiPieceManager.js';
 
 export default class TroublePlugin extends Plugin {
     /**
@@ -18,6 +19,17 @@ export default class TroublePlugin extends Plugin {
         if (!GameEngineFactory.isRegistered('trouble')) {
             GameEngineFactory.register('trouble', TroubleGameEngine);
             console.log('[TroublePlugin] Registered TroubleGameEngine');
+        }
+
+        // Register multi-piece manager for rendering multiple pawns
+        const pieceRegistry = registryManager.getPieceManagerRegistry?.();
+        if (pieceRegistry) {
+            if (!pieceRegistry.get('multi-piece')) {
+                pieceRegistry.register('multi-piece', MultiPieceManager);
+            }
+            if (!pieceRegistry.get('trouble')) {
+                pieceRegistry.register('trouble', MultiPieceManager);
+            }
         }
     }
 

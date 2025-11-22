@@ -32,6 +32,7 @@ export default class Player {
 
         this.rollEngine = new RollEngine(this.generateSeedFromId(this.playerId));
         this.turnsTaken = 0;
+        this.pieces = [];
 
         this.movementHistory = new PlayerMovementHistory();
 
@@ -246,6 +247,7 @@ export default class Player {
             stats: this.stats.map(stat => stat.toJSON()), // Serialize stat instances
             playerId: this.playerId,
             currentSpaceId: this.currentSpaceId,
+            pieces: this.pieces,
             rollEngine: this.rollEngine.toJSON(),  // Serialize the RollEngine
             turnsTaken: this.turnsTaken,            // Serialize the number of turns taken
             movementHistory: this.movementHistory.toJSON(),  // Serialize movement history
@@ -284,6 +286,7 @@ export default class Player {
         }
 
         player.currentSpaceId = json.currentSpaceId;
+        player.pieces = Array.isArray(json.pieces) ? json.pieces.map(piece => ({ ...piece })) : [];
         player.rollEngine = RollEngine.fromJSON(json.rollEngine);  // Rebuild the RollEngine from JSON
         player.turnsTaken = json.turnsTaken;                       // Rebuild the turns taken
         player.movementHistory = PlayerMovementHistory.fromJSON(json.movementHistory);  // Rebuild movement history

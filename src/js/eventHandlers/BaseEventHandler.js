@@ -484,6 +484,7 @@ export default class BaseEventHandler {
         }
 
         const engineStart = performance.now();
+        const engineConfig = GameEngineFactory.extractEngineConfig(this.peer.gameState);
         this.gameEngine = GameEngineFactory.create({
             gameState: this.peer.gameState,
             peerId: this.peer.peer.id,
@@ -494,7 +495,7 @@ export default class BaseEventHandler {
             isHost: this.isHost,
             uiSystem: this.uiSystem,
             gameLogManager: this.uiSystem?.gameLogManager
-        });
+        }, { engineConfig });
         console.log(`[Performance] Game engine created in ${(performance.now() - engineStart).toFixed(0)}ms`);
 
         const pieceManagerType =
