@@ -41,11 +41,50 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
     }
 
     async promptStartOrBoardMove() {
-        if (ModalUtil?.confirm) {
-            return ModalUtil.confirm('Move a new piece out to start? (Cancel to move an existing piece)', 'Choose your move');
-        }
-        // Fallback to native confirm if custom modal unavailable
-        return window.confirm?.('Move a new piece out to start? Click Cancel to move an existing piece.') ?? true;
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal custom-modal';
+            modal.style.display = 'block';
+
+            const content = document.createElement('div');
+            content.className = 'modal-content';
+
+            const title = document.createElement('h2');
+            title.textContent = 'Choose your action';
+            content.appendChild(title);
+
+            const message = document.createElement('p');
+            message.textContent = 'Pick whether to move a new piece out of home or move an existing piece on the board.';
+            content.appendChild(message);
+
+            const buttons = document.createElement('div');
+            buttons.className = 'modal-buttons';
+            buttons.style.display = 'flex';
+            buttons.style.justifyContent = 'center';
+            buttons.style.gap = '12px';
+
+            const startBtn = document.createElement('button');
+            startBtn.className = 'button button-primary';
+            startBtn.textContent = 'Move piece out of home';
+            startBtn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(true);
+            });
+
+            const boardBtn = document.createElement('button');
+            boardBtn.className = 'button button-secondary';
+            boardBtn.textContent = 'Move piece on board';
+            boardBtn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(false);
+            });
+
+            buttons.appendChild(startBtn);
+            buttons.appendChild(boardBtn);
+            content.appendChild(buttons);
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        });
     }
 
     /**
@@ -159,6 +198,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
 
         const move = this.findMoveByTarget(spaceId);
         if (move) {
+            console.log(`[Trouble] Space clicked ${spaceId}, resolving move for piece ${move.pieceId}`);
             this.handleMovePiece(currentPlayer.playerId, {
                 pieceId: move.pieceId,
                 targetSpaceId: move.targetSpaceId
@@ -205,7 +245,9 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         if (!currentPlayer) {
             return;
         }
+        console.log(`[Trouble] Roll result ${rollResult} for ${currentPlayer.nickname}`);
         const validMoves = this.getValidMovesForPlayer(currentPlayer, rollResult);
+        console.log('[Trouble] Valid moves', validMoves);
 
         this.availableMoves = new Map(validMoves.map(move => [move.pieceId, move]));
         this.markSelectablePieces(currentPlayer, validMoves);
@@ -537,8 +579,9 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
     }
 
     highlightAllValidMoves(validMoves) {
-        const boardInteraction = this.getUIComponent('boardInteraction');
+        const boardInteraction = this.getBoardComponent();
         const uniqueTargets = Array.from(new Set(validMoves.map(m => m.targetSpaceId)));
+        console.log('[Trouble] Highlighting targets', uniqueTargets);
         if (boardInteraction?.highlightValidMoves) {
             boardInteraction.highlightValidMoves(uniqueTargets);
         } else {
@@ -574,6 +617,13 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.proposeStateChange(this.gameState);
 
         // Player must click a piece or highlighted space to resolve
+    }
+
+    getBoardComponent() {
+        return this.getUIComponent('boardInteraction') ||
+            this.getUIComponent('boardCanvas') ||
+            this.uiSystem?.getComponent?.('boardCanvas') ||
+            null;
     }
 
     setupManualSpaceSelection(spaceIds = []) {
