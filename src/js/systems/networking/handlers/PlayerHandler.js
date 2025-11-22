@@ -142,21 +142,30 @@ export default class PlayerHandler extends MessageHandlerPlugin {
 
         const player = peer.gameState.players.find(p => p.playerId === message.playerId);
         if (player) {
-            // Check permissions
-            const isHost = peer.id === peer.gameState.hostPeerId;
-            const isOwnPlayer = player.peerId === peer.id;
+            const requesterPeerId = context?.connection?.peer || null;
+            const hostPeerId = peer.gameState.hostPeerId;
             const allowNameChange = peer.gameState.settings.allowPlayerNameChange !== false;
 
-            if (!isHost && isOwnPlayer && !allowNameChange) {
-                console.warn(`Player ${peer.id} attempted to change name but setting is disabled`);
-                return;
+            // Treat missing connection (e.g., host-side invocation) as host
+            const isHostRequest = !requesterPeerId || requesterPeerId === hostPeerId;
+            const isOwnPlayer = requesterPeerId
+                ? player.peerId === requesterPeerId
+                : player.peerId === hostPeerId;
+
+            if (!isHostRequest) {
+                if (!isOwnPlayer) {
+                    console.warn(`Peer ${requesterPeerId} attempted to rename another player's profile`);
+                    return;
+                }
+
+                if (!allowNameChange) {
+                    console.warn(`Peer ${requesterPeerId} attempted to change name but setting is disabled`);
+                    return;
+                }
             }
 
-            // Allow if host, or if own player and setting is enabled
-            if (isHost || (isOwnPlayer && allowNameChange)) {
-                player.nickname = nicknameValidation.sanitized;
-                peer.updateAndBroadcastGameState(peer.gameState);
-            }
+            player.nickname = nicknameValidation.sanitized;
+            peer.updateAndBroadcastGameState(peer.gameState);
         }
     }
 

@@ -44,3 +44,9 @@
     min-width: 220px;
     text-align: center;
 }
+
+.blurred-text {
+    filter: blur(8px);
+    user-select: none;
+    cursor: default;
+}

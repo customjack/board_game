@@ -3,8 +3,7 @@ import HostEventHandler from './eventHandlers/HostEventHandler';
 import ClientEventHandler from './eventHandlers/ClientEventHandler';
 import PersonalSettings from './elements/models/PersonalSettings';
 import PersonalSettingsMenu from '../deprecated/legacy/controllers/menus/PersonalSettingsMenu.js';
-import PluginManagerModal from '../deprecated/legacy/controllers/menus/PluginManagerModal.js';
-import PluginListPopup from '../deprecated/legacy/controllers/menus/PluginListPopup.js';
+import PluginManagerModal from './ui/modals/PluginManagerModal.js';
 import PageRegistry from './infrastructure/registries/PageRegistry.js';
 import ListenerRegistry from './infrastructure/registries/ListenerRegistry.js';
 import PlaceholderRegistry from './infrastructure/registries/PlaceholderRegistry.js';
@@ -14,8 +13,11 @@ import RegistryManager from './infrastructure/registries/RegistryManager.js';
 import EventBus from './core/events/EventBus';
 import PluginManager from './systems/plugins/PluginManager';
 import Plugin from './systems/plugins/Plugin.js';
+import DefaultCorePlugin from './systems/plugins/DefaultCorePlugin.js';
+import TroublePlugin from './plugins/trouble/TroublePlugin.js';
 import LocalStorageManager from './systems/storage/LocalStorageManager';
 import FactoryManager from './infrastructure/factories/FactoryManager';
+import GameEngineFactory from './infrastructure/factories/GameEngineFactory.js';
 import EffectFactory from './infrastructure/factories/EffectFactory';
 import ActionFactory from './infrastructure/factories/ActionFactory';
 import TriggerFactory from './infrastructure/factories/TriggerFactory';
@@ -59,7 +61,7 @@ function initializeRegistryManager() {
     registryManager.addRegistry('windowListenerRegistry', windowListenerRegistry);
     registryManager.addRegistry('pieceManagerRegistry', pieceManagerRegistry);
 
-    return { registryManager, pageRegistry, listenerRegistry, placeholderRegistry, windowListenerRegistry, pieceManagerRegistry};
+    return { registryManager, pageRegistry, listenerRegistry, placeholderRegistry, windowListenerRegistry, pieceManagerRegistry };
 }
 
 // Register pages in the PageRegistry
@@ -109,6 +111,10 @@ function initializePluginManager(eventBus, registryManager, factoryManager) {
             pluginManager.registerPlugin(pluginInstance);
         }
     });
+
+    // Register Trouble plugin (temporary manual registration)
+    const troublePlugin = new TroublePlugin();
+    pluginManager.registerPlugin(troublePlugin);
 
     return pluginManager;
 }
@@ -180,10 +186,7 @@ function registerListeners(
     const joinBackButton = document.getElementById('joinBackButton');
 
     // Initialize Plugin Manager Modal
-    const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager, false, eventBus);
-
-    // Initialize Plugin List Popup (for clients in-game)
-    const pluginListPopup = new PluginListPopup(pluginManager);
+    const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager);
 
     const resetHomePage = () => {
         pageRegistry.showPage('homePage');
@@ -231,7 +234,6 @@ function registerListeners(
             }
             try {
                 pluginManager.setHost(true);
-                pluginManagerModal.setHost(true);
                 hostEventHandlerInstance = new HostEventHandler(
                     registryManager,
                     pluginManager,
@@ -264,7 +266,8 @@ function registerListeners(
                     pluginManager,
                     factoryManager,
                     eventBus,
-                    personalSettings
+                    personalSettings,
+                    pluginManagerModal
                 );
                 clientEventHandlerInstance.init();
                 await clientEventHandlerInstance.startJoinGame();
@@ -283,7 +286,7 @@ function registerListeners(
 
     // Plugin List button in lobby (for clients to view enabled plugins)
     listenerRegistry.registerListener('viewPluginListButton', 'click', () => {
-        pluginManagerModal.show(false); // Don't show "Add Plugin" section for clients
+        pluginManagerModal.open(); // Don't show "Add Plugin" section for clients
     });
 
     // Add refresh/back button warning
@@ -295,6 +298,24 @@ function registerListeners(
         // Custom logic: You could add more specific checks to ensure that the user is in a game before warning them
         alert('You are about to leave the game. If you refresh or go back, you will be kicked out!');
     });
+
+    // Register Streamer Mode listener
+    personalSettings.addStreamerModeListener((enabled) => {
+        const inviteCodeElement = document.getElementById('inviteCode');
+        if (inviteCodeElement) {
+            if (enabled) {
+                inviteCodeElement.classList.add('blurred-text');
+            } else {
+                inviteCodeElement.classList.remove('blurred-text');
+            }
+        }
+    });
+
+    // Initialize Streamer Mode state
+    const inviteCodeElement = document.getElementById('inviteCode');
+    if (inviteCodeElement && personalSettings.getStreamerMode()) {
+        inviteCodeElement.classList.add('blurred-text');
+    }
 }
 
 

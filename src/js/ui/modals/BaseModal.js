@@ -38,8 +38,9 @@ export default class BaseModal extends BaseUIComponent {
         }
 
         this.modal = modal;
-        this.content = modal.querySelector('.modal-content');
-        this.container = modal; // BaseUIComponent expects this.container
+        // Default content to body if specific content area not found
+        this.content = modal.querySelector('.settings-modal-content') || modal.querySelector('.settings-modal-body');
+        this.container = modal;
 
         this.attachCommonListeners();
 
@@ -48,21 +49,26 @@ export default class BaseModal extends BaseUIComponent {
 
     /**
      * Create the basic modal DOM structure
+     * Matches SettingsModal.js structure
      * @returns {HTMLElement} The modal element
      */
     createModalStructure() {
         const modal = document.createElement('div');
         modal.id = this.id;
-        modal.className = 'modal';
+        modal.className = 'settings-modal-backdrop'; // Use settings modal class
         modal.style.display = 'none';
 
         modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
+            <div class="settings-modal-container">
+                <div class="settings-modal-header">
                     <h2>${this.title}</h2>
-                    <button class="close-btn">&times;</button>
+                    <div class="settings-modal-header-buttons">
+                        <button class="button button-secondary settings-modal-close">×</button>
+                    </div>
                 </div>
-                <div class="modal-body"></div>
+                <div class="settings-modal-body">
+                    <!-- Content injected by subclasses -->
+                </div>
             </div>
         `;
 
@@ -74,7 +80,7 @@ export default class BaseModal extends BaseUIComponent {
      */
     attachCommonListeners() {
         // Close button
-        const closeBtn = this.modal.querySelector('.close-btn');
+        const closeBtn = this.modal.querySelector('.settings-modal-close');
         if (closeBtn) {
             this.addEventListener(closeBtn, 'click', () => this.close());
         }
@@ -85,6 +91,13 @@ export default class BaseModal extends BaseUIComponent {
                 this.close();
             }
         });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.modal && this.modal.style.display === 'flex') {
+                this.close();
+            }
+        });
     }
 
     /**
@@ -92,7 +105,7 @@ export default class BaseModal extends BaseUIComponent {
      */
     open() {
         if (!this.initialized) this.init();
-        this.show();
+        super.show();
         this.modal.style.display = 'flex';
         this.onOpen();
     }
@@ -101,7 +114,7 @@ export default class BaseModal extends BaseUIComponent {
      * Close the modal
      */
     close() {
-        this.hide();
+        super.hide();
         if (this.modal) {
             this.modal.style.display = 'none';
         }
@@ -120,53 +133,6 @@ export default class BaseModal extends BaseUIComponent {
      */
     onClose() {
         // Override in subclasses
-    }
-
-    /**
-     * Render tab navigation
-     * @param {Array<{id: string, label: string}>} tabs - List of tabs
-     * @param {HTMLElement} container - Container to append tabs to
-     */
-    renderTabs(tabs, container) {
-        const tabsContainer = document.createElement('div');
-        tabsContainer.className = 'modal-tabs';
-
-        tabs.forEach(tab => {
-            const btn = document.createElement('button');
-            btn.className = `tab-btn ${this.selectedTab === tab.id ? 'active' : ''}`;
-            btn.textContent = tab.label;
-            btn.dataset.tab = tab.id;
-
-            this.addEventListener(btn, 'click', () => this.switchTab(tab.id));
-
-            tabsContainer.appendChild(btn);
-        });
-
-        container.appendChild(tabsContainer);
-    }
-
-    /**
-     * Switch active tab
-     * @param {string} tabId - ID of the tab to switch to
-     */
-    switchTab(tabId) {
-        this.selectedTab = tabId;
-        this.updateTabDisplay();
-        this.renderContent();
-    }
-
-    /**
-     * Update tab buttons visual state
-     */
-    updateTabDisplay() {
-        const tabBtns = this.modal.querySelectorAll('.tab-btn');
-        tabBtns.forEach(btn => {
-            if (btn.dataset.tab === this.selectedTab) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
     }
 
     /**

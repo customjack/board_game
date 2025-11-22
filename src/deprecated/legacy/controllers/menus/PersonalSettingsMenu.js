@@ -25,7 +25,8 @@ export default class PersonalSettingsMenu {
             GRAPHICS: 'graphics',
             GAMEPLAY: 'gameplay',
             PLUGINS: 'plugins',
-            MAPS: 'maps'
+            MAPS: 'maps',
+            MISC: 'miscellaneous'
         };
 
         this.selectedCategory = this.categories.GRAPHICS;
@@ -92,6 +93,10 @@ export default class PersonalSettingsMenu {
         // Maps
         const mapsNav = this.createNavItem('Maps', this.categories.MAPS);
         this.sidebar.appendChild(mapsNav);
+
+        // Miscellaneous
+        const miscNav = this.createNavItem('Miscellaneous', this.categories.MISC);
+        this.sidebar.appendChild(miscNav);
     }
 
     /**
@@ -146,6 +151,8 @@ export default class PersonalSettingsMenu {
             this.renderPluginsSettings();
         } else if (this.selectedCategory === this.categories.MAPS) {
             this.renderMapsSettings();
+        } else if (this.selectedCategory === this.categories.MISC) {
+            this.renderMiscellaneousSettings();
         }
     }
 
@@ -304,6 +311,31 @@ export default class PersonalSettingsMenu {
     }
 
     /**
+     * Render Miscellaneous Settings content
+     */
+    renderMiscellaneousSettings() {
+        this.content.innerHTML = '';
+
+        const title = document.createElement('h3');
+        title.className = 'settings-content-title';
+        title.textContent = 'Miscellaneous';
+        this.content.appendChild(title);
+
+        // Streamer Mode
+        const streamerModeRow = this.createSettingRow(
+            'Streamer Mode (Blur Invite Code)',
+            this.createCheckbox('streamerMode')
+        );
+        this.content.appendChild(streamerModeRow);
+
+        // Load current settings
+        this.loadSettingsIntoUI();
+
+        // Set up event listeners
+        this.setupMiscellaneousListeners();
+    }
+
+    /**
      * Create a settings row
      */
     createSettingRow(label, inputElement) {
@@ -414,6 +446,18 @@ export default class PersonalSettingsMenu {
         if (autoRoll) {
             autoRoll.addEventListener('change', (e) => {
                 this.personalSettings.setAutoRoll(e.target.checked);
+            });
+        }
+    }
+
+    /**
+     * Set up event listeners for miscellaneous settings
+     */
+    setupMiscellaneousListeners() {
+        const streamerMode = this.elements.get('streamerMode');
+        if (streamerMode) {
+            streamerMode.addEventListener('change', (e) => {
+                this.personalSettings.setStreamerMode(e.target.checked);
             });
         }
     }
@@ -712,7 +756,8 @@ export default class PersonalSettingsMenu {
             this.modal.style.display = 'flex';
             this.renderContent(); // Re-render current content
             if (this.selectedCategory === this.categories.GRAPHICS ||
-                this.selectedCategory === this.categories.GAMEPLAY) {
+                this.selectedCategory === this.categories.GAMEPLAY ||
+                this.selectedCategory === this.categories.MISC) {
                 this.loadSettingsIntoUI();
             }
         }

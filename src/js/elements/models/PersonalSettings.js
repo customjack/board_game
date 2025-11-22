@@ -1,5 +1,8 @@
 export default class PersonalSettings {
     constructor() {
+        // Listeners
+        this.streamerModeListeners = [];
+
         // Attempt to load from local storage
         const savedSettings = PersonalSettings.loadFromLocalStorage();
 
@@ -10,6 +13,7 @@ export default class PersonalSettings {
             this.showTips = savedSettings.showTips;
             this.autoRoll = savedSettings.autoRoll;
             this.rollAnimation = savedSettings.rollAnimation || 'dice-roll'; // Default if not set
+            this.streamerMode = savedSettings.streamerMode || false;
         } else {
             // Default settings if nothing is saved
             this.theme = 'light';
@@ -17,6 +21,7 @@ export default class PersonalSettings {
             this.showTips = true;
             this.autoRoll = false;
             this.rollAnimation = 'dice-roll'; // Default animation
+            this.streamerMode = false;
         }
     }
 
@@ -70,6 +75,25 @@ export default class PersonalSettings {
         this.saveToLocalStorage();
     }
 
+    // Getter and Setter for streamer mode
+    getStreamerMode() {
+        return this.streamerMode;
+    }
+
+    setStreamerMode(enabled) {
+        this.streamerMode = enabled;
+        this.saveToLocalStorage();
+        this.notifyStreamerModeListeners(enabled);
+    }
+
+    addStreamerModeListener(callback) {
+        this.streamerModeListeners.push(callback);
+    }
+
+    notifyStreamerModeListeners(enabled) {
+        this.streamerModeListeners.forEach(callback => callback(enabled));
+    }
+
     // Convert the settings object to JSON format
     toJSON() {
         return {
@@ -78,6 +102,7 @@ export default class PersonalSettings {
             showTips: this.showTips,
             autoRoll: this.autoRoll,
             rollAnimation: this.rollAnimation,
+            streamerMode: this.streamerMode,
         };
     }
 
@@ -89,6 +114,7 @@ export default class PersonalSettings {
         settings.showTips = json.showTips;
         settings.autoRoll = json.autoRoll;
         settings.rollAnimation = json.rollAnimation || 'dice-roll';
+        settings.streamerMode = json.streamerMode || false;
         return settings;
     }
 

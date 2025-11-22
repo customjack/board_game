@@ -1,0 +1,253 @@
+{
+    "version": "1.0.0",
+    "metadata": {
+        "name": "Trouble Classic",
+        "author": "Antigravity",
+        "description": "The classic Pop-O-Matic game board.",
+        "created": "2025-11-22T00:00:00.000Z",
+        "tags": [
+            "trouble",
+            "classic",
+            "4-player"
+        ],
+        "modified": "2025-11-22T00:00:00.000Z"
+    },
+    "requirements": {
+        "minPlayers": 2,
+        "maxPlayers": 4,
+        "plugins": [
+            "trouble-plugin"
+        ]
+    },
+    "engine": {
+        "type": "trouble",
+        "config": {
+            "piecesPerPlayer": 4,
+            "allowCapture": true
+        }
+    },
+    "board": {
+        "topology": {
+            "spaces": [
+                {
+                    "id": "0",
+                    "type": "track",
+                    "connections": [
+                        "1"
+                    ]
+                },
+                {
+                    "id": "1",
+                    "type": "track",
+                    "connections": [
+                        "2"
+                    ]
+                },
+                {
+                    "id": "2",
+                    "type": "track",
+                    "connections": [
+                        "3"
+                    ]
+                },
+                {
+                    "id": "3",
+                    "type": "track",
+                    "connections": [
+                        "4"
+                    ]
+                },
+                {
+                    "id": "4",
+                    "type": "track",
+                    "connections": [
+                        "5"
+                    ]
+                },
+                {
+                    "id": "5",
+                    "type": "track",
+                    "connections": [
+                        "6"
+                    ]
+                },
+                {
+                    "id": "6",
+                    "type": "track",
+                    "connections": [
+                        "7"
+                    ]
+                },
+                {
+                    "id": "7",
+                    "type": "track",
+                    "connections": [
+                        "8"
+                    ]
+                },
+                {
+                    "id": "8",
+                    "type": "track",
+                    "connections": [
+                        "9"
+                    ]
+                },
+                {
+                    "id": "9",
+                    "type": "track",
+                    "connections": [
+                        "10"
+                    ]
+                },
+                {
+                    "id": "10",
+                    "type": "track",
+                    "connections": [
+                        "11"
+                    ]
+                },
+                {
+                    "id": "11",
+                    "type": "track",
+                    "connections": [
+                        "12"
+                    ]
+                },
+                {
+                    "id": "12",
+                    "type": "track",
+                    "connections": [
+                        "13"
+                    ]
+                },
+                {
+                    "id": "13",
+                    "type": "track",
+                    "connections": [
+                        "14"
+                    ]
+                },
+                {
+                    "id": "14",
+                    "type": "track",
+                    "connections": [
+                        "15"
+                    ]
+                },
+                {
+                    "id": "15",
+                    "type": "track",
+                    "connections": [
+                        "16"
+                    ]
+                },
+                {
+                    "id": "16",
+                    "type": "track",
+                    "connections": [
+                        "17"
+                    ]
+                },
+                {
+                    "id": "17",
+                    "type": "track",
+                    "connections": [
+                        "18"
+                    ]
+                },
+                {
+                    "id": "18",
+                    "type": "track",
+                    "connections": [
+                        "19"
+                    ]
+                },
+                {
+                    "id": "19",
+                    "type": "track",
+                    "connections": [
+                        "20"
+                    ]
+                },
+                {
+                    "id": "20",
+                    "type": "track",
+                    "connections": [
+                        "21"
+                    ]
+                },
+                {
+                    "id": "21",
+                    "type": "track",
+                    "connections": [
+                        "22"
+                    ]
+                },
+                {
+                    "id": "22",
+                    "type": "track",
+                    "connections": [
+                        "23"
+                    ]
+                },
+                {
+                    "id": "23",
+                    "type": "track",
+                    "connections": [
+                        "24"
+                    ]
+                },
+                {
+                    "id": "24",
+                    "type": "track",
+                    "connections": [
+                        "25"
+                    ]
+                },
+                {
+                    "id": "25",
+                    "type": "track",
+                    "connections": [
+                        "26"
+                    ]
+                },
+                {
+                    "id": "26",
+                    "type": "track",
+                    "connections": [
+                        "27"
+                    ]
+                },
+                {
+                    "id": "27",
+                    "type": "track",
+                    "connections": [
+                        "0"
+                    ]
+                }
+            ]
+        },
+        "rendering": {
+            "backgroundImage": "assets/images/boards/trouble_bg.png",
+            "gridSize": 50
+        }
+    },
+    "rules": {
+        "recommendedPlayers": 4,
+        "startingPositions": {
+            "0": "home-0",
+            "1": "home-1",
+            "2": "home-2",
+            "3": "home-3"
+        },
+        "diceRolling": {
+            "diceSides": 6
+        },
+        "victory": {
+            "type": "all_pieces_finish",
+            "config": {
+                "count": 4
+            }
+        }
+    }
+}

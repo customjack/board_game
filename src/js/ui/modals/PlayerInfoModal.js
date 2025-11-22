@@ -1,9 +1,9 @@
 /**
  * PlayerInfoModal - Displays player information (stats and inventory)
  */
-import BaseModal from './BaseModal.js';
+import SettingsBaseModal from './SettingsBaseModal.js';
 
-export default class PlayerInfoModal extends BaseModal {
+export default class PlayerInfoModal extends SettingsBaseModal {
     constructor(id, gameState) {
         super({
             id: id || 'playerInfoModal',
@@ -27,36 +27,28 @@ export default class PlayerInfoModal extends BaseModal {
     }
 
     onOpen() {
+        this.renderTabs([
+            { id: 'general', label: 'Stats' },
+            { id: 'inventory', label: 'Inventory' }
+        ]);
         this.renderContent();
     }
 
     renderContent() {
-        if (!this.content || !this.currentPlayer) return;
+        const contentContainer = this.content;
+        if (!contentContainer || !this.currentPlayer) return;
 
-        this.content.innerHTML = `
-            <div class="modal-layout">
-                <div class="modal-sidebar">
-                    <div class="player-profile-header">
-                        <div class="player-badge-large" style="background-color: ${this.currentPlayer.playerColor}">
-                            ${this.currentPlayer.nickname.charAt(0).toUpperCase()}
-                        </div>
-                        <h3>${this.currentPlayer.nickname}</h3>
+        contentContainer.innerHTML = `
+            <div class="settings-content-title">
+                <div class="player-profile-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div class="player-badge-large" style="background-color: ${this.currentPlayer.playerColor}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                        ${this.currentPlayer.nickname.charAt(0).toUpperCase()}
                     </div>
-                    <div class="settings-nav">
-                        <button class="settings-nav-item ${this.selectedTab === 'general' ? 'active' : ''}" data-tab="general">Stats</button>
-                        <button class="settings-nav-item ${this.selectedTab === 'inventory' ? 'active' : ''}" data-tab="inventory">Inventory</button>
-                    </div>
+                    <h3>${this.currentPlayer.nickname}</h3>
                 </div>
-                <div class="modal-main">
-                    <div class="modal-main-header">
-                        <h2>${this.selectedTab === 'general' ? 'Stats' : 'Inventory'}</h2>
-                        <button class="close-btn">&times;</button>
-                    </div>
-                    <div class="modal-main-content">
-                        ${this.getTabContent()}
-                    </div>
-                </div>
+                <h4>${this.selectedTab === 'general' ? 'Stats' : 'Inventory'}</h4>
             </div>
+            ${this.getTabContent()}
         `;
 
         this.attachListeners();
@@ -91,9 +83,9 @@ export default class PlayerInfoModal extends BaseModal {
         const showTrueValue = isViewingSelf && stat.getTrueValue() !== stat.getDisplayValue();
 
         return `
-            <div class="stat-row">
-                <div class="stat-name">${this.formatStatName(stat.id)}</div>
-                <div class="stat-value">
+            <div class="settings-row">
+                <div class="settings-label">${this.formatStatName(stat.id)}</div>
+                <div class="settings-display">
                     ${displayValue}
                     ${showTrueValue ? `<span class="stat-visibility-indicator" title="Others see: ${stat.getDisplayValue()}">(hidden)</span>` : ''}
                 </div>
@@ -109,19 +101,6 @@ export default class PlayerInfoModal extends BaseModal {
     }
 
     attachListeners() {
-        // Tab navigation
-        const navItems = this.modal.querySelectorAll('.settings-nav-item');
-        navItems.forEach(item => {
-            this.addEventListener(item, 'click', () => {
-                this.selectedTab = item.dataset.tab;
-                this.renderContent();
-            });
-        });
-
-        // Close button
-        const closeBtn = this.modal.querySelector('.close-btn');
-        if (closeBtn) {
-            this.addEventListener(closeBtn, 'click', () => this.close());
-        }
+        // No specific listeners for now besides tabs which are handled by BaseModal
     }
 }

@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Board Game</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script> <!-- PeerJS CDN -->
 </head>
+
 <body>
     <h1>Board Game</h1>
 
@@ -12,7 +14,7 @@
     <button id="gearButton" class="button gear-button">
         <img src="assets/images/gear-icon.png" alt="Settings" width="30" height="30">
     </button>
-    
+
 
     <!-- Modal Popup for Personal Settings (Sidebar Layout) -->
     <div id="settingsModal" class="settings-modal-backdrop" style="display: none;">
@@ -40,33 +42,12 @@
         </div>
     </div>
 
-    <!-- Modal Popup for Plugin Manager (Host Only) -->
-    <div id="pluginManagerModal" class="modal">
-        <div class="modal-content">
-            <h2>Plugin Manager</h2>
-
-            <!-- Plugin List -->
-            <div id="pluginList" class="plugin-list">
-                <!-- Plugins will be populated here by JS -->
-            </div>
-
-            <!-- Add Plugin Section (Coming Soon) -->
-            <div id="addPluginSection" class="add-plugin-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc;">
-                <h3>Add New Plugin (Coming Soon)</h3>
-                <p style="font-size: 0.9em; color: #666;">External plugin loading will be available in a future update.</p>
-            </div>
-
-            <!-- Buttons -->
-            <button id="closePluginManagerButton" class="button">Close</button>
-        </div>
-    </div>
-
     <!-- Home Page with Host and Join buttons -->
     <div id="homePage">
         <button id="hostButton" class="button">Host Game</button>
         <button id="joinButton" class="button">Join Game</button>
     </div>
-    
+
     <!-- Host Game Page -->
     <div id="hostPage" style="display: none;">
         <h2>Host Game</h2>
@@ -237,20 +218,10 @@
     <div id="gameLogPopup" class="game-log-popup">
         <div class="game-log-popup-header" id="gameLogPopupHeader">
             <h3>Game Log</h3>
-            <button id="closeGameLogButton" class="button button-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">✕</button>
+            <button id="closeGameLogButton" class="button button-secondary"
+                style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">✕</button>
         </div>
         <div id="gameLogContainer" class="game-log-popup-content"></div>
-    </div>
-
-    <!-- Plugin List Popup (Read-Only for Clients) -->
-    <div id="pluginListPopup" class="game-log-popup">
-        <div class="game-log-popup-header" id="pluginListPopupHeader">
-            <h3>Plugin List</h3>
-            <button id="closePluginListButton" class="button button-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">✕</button>
-        </div>
-        <div id="pluginListContainer" class="game-log-popup-content">
-            <!-- Plugin list will be populated here -->
-        </div>
     </div>
 
     <!-- Game prompt Modal Structure -->
@@ -262,13 +233,14 @@
 
             <!-- Dismiss Button with danger class -->
             <button id="gamePromptModalDismissButton" class="button button-danger">
-                    Dismiss
-                </button>
+                Dismiss
+            </button>
         </div>
     </div>
 
 
 
-</div>
+    </div>
 </body>
+
 </html>

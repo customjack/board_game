@@ -1,14 +1,4 @@
-/**
- * SettingsModal - Modal-based settings interface with sidebar navigation
- *
- * Provides a modal dialog with:
- * - Left sidebar showing category navigation
- * - Right content area showing settings for selected category
- * - Scrollable sections supporting indefinite length
- * - Read-only mode for clients
- */
-
-import BaseUIComponent from '../BaseUIComponent.js';
+import SettingsBaseModal from '../modals/SettingsBaseModal.js';
 import {
     GAME_SETTINGS_SCHEMA,
     SETTING_CATEGORIES,
@@ -16,10 +6,11 @@ import {
     getSettingsByCategory
 } from '../../config/settings-schema.js';
 
-export default class SettingsModal extends BaseUIComponent {
+export default class SettingsModal extends SettingsBaseModal {
     constructor(config = {}) {
         super({
             id: 'SettingsModal',
+            title: config.isHost ? 'Game Settings' : 'Game Settings (Read Only)',
             ...config
         });
 
@@ -31,10 +22,8 @@ export default class SettingsModal extends BaseUIComponent {
         this.elements = new Map();
 
         // Current selected category
-        this.selectedCategory = SETTING_CATEGORIES.PLAYERS;
+        this.selectedTab = SETTING_CATEGORIES.PLAYERS;
 
-        // Modal element reference
-        this.modalElement = null;
         this.applyButton = null;
 
         // Snapshots for dirty tracking/tab persistence
@@ -47,17 +36,15 @@ export default class SettingsModal extends BaseUIComponent {
     }
 
     /**
-     * Render the modal (creates the modal structure, but keeps it hidden)
+     * Initialize the modal
      */
-    render() {
-        // Create modal if it doesn't exist
-        if (!this.modalElement) {
-            this.createModal();
-        }
+    init() {
+        super.init();
 
-        // Populate the content
-        this.renderSidebar();
-        this.renderContent();
+        // Add Apply button if host
+        if (this.isHost && !this.applyButton) {
+            this.createApplyButton();
+        }
 
         // Sync with current settings if available
         if (this.settings) {
@@ -66,102 +53,70 @@ export default class SettingsModal extends BaseUIComponent {
     }
 
     /**
-     * Create the modal structure
+     * Render sidebar/content without opening (maintains legacy API)
      */
-    createModal() {
-        // Create modal backdrop
-        const modal = document.createElement('div');
-        modal.className = 'settings-modal-backdrop';
-        modal.id = 'settingsModalBackdrop';
-        modal.style.display = 'none';
-
-        // Create modal container
-        const modalContainer = document.createElement('div');
-        modalContainer.className = 'settings-modal-container';
-
-        // Create modal header
-        const modalHeader = document.createElement('div');
-        modalHeader.className = 'settings-modal-header';
-
-        const modalTitle = document.createElement('h2');
-        modalTitle.textContent = this.isHost ? 'Game Settings' : 'Game Settings (Read Only)';
-
-        // Header buttons container
-        const headerButtons = document.createElement('div');
-        headerButtons.className = 'settings-modal-header-buttons';
-
-        // Apply button (only for host)
-        if (this.isHost) {
-            const applyButton = document.createElement('button');
-            applyButton.className = 'button settings-modal-apply';
-            applyButton.textContent = 'Apply Settings';
-            applyButton.id = 'settingsModalApplyButton';
-            applyButton.disabled = true;
-            applyButton.addEventListener('click', () => this.applySettings());
-            headerButtons.appendChild(applyButton);
-            this.applyButton = applyButton;
+    render() {
+        if (!this.initialized) {
+            this.init();
         }
 
-        const closeButton = document.createElement('button');
-        closeButton.className = 'button button-secondary settings-modal-close';
-        closeButton.textContent = '×';
-        closeButton.addEventListener('click', () => this.hide());
+        this.renderSidebar();
+        this.renderContent();
 
-        headerButtons.appendChild(closeButton);
+        if (this.settings) {
+            this.updateFromSettings(this.settings);
+        } else if (this.pendingValues) {
+            this.applyValuesToInputs(this.pendingValues);
+        }
 
-        modalHeader.appendChild(modalTitle);
-        modalHeader.appendChild(headerButtons);
+        return this;
+    }
 
-        // Create modal body (two-column layout)
-        const modalBody = document.createElement('div');
-        modalBody.className = 'settings-modal-body';
+    /**
+     * Create and attach the Apply button
+     */
+    createApplyButton() {
+        const headerButtons = this.modal.querySelector('.settings-modal-header-buttons');
+        if (!headerButtons) return;
 
-        // Left sidebar for navigation
-        const sidebar = document.createElement('div');
-        sidebar.className = 'settings-modal-sidebar';
-        sidebar.id = 'settingsModalSidebar';
+        // Check if already exists
+        if (headerButtons.querySelector('#settingsModalApplyButton')) return;
 
-        // Right content area
-        const content = document.createElement('div');
-        content.className = 'settings-modal-content';
-        content.id = 'settingsModalContent';
+        const applyButton = document.createElement('button');
+        applyButton.className = 'button settings-modal-apply';
+        applyButton.textContent = 'Apply Settings';
+        applyButton.id = 'settingsModalApplyButton';
+        applyButton.disabled = true;
+        applyButton.addEventListener('click', () => this.applySettings());
 
-        modalBody.appendChild(sidebar);
-        modalBody.appendChild(content);
+        // Insert before close button
+        const closeButton = headerButtons.querySelector('.settings-modal-close');
+        if (closeButton) {
+            headerButtons.insertBefore(applyButton, closeButton);
+        } else {
+            headerButtons.appendChild(applyButton);
+        }
 
-        // Assemble modal
-        modalContainer.appendChild(modalHeader);
-        modalContainer.appendChild(modalBody);
-        modal.appendChild(modalContainer);
+        this.applyButton = applyButton;
+    }
 
-        // Add to DOM
-        document.body.appendChild(modal);
-        this.modalElement = modal;
+    /**
+     * Lifecycle hook: called when modal opens
+     */
+    onOpen() {
+        this.renderSidebar();
+        this.renderContent();
 
-        // Close on backdrop click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                this.hide();
-            }
-        });
-
-        // Close on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.modalElement.style.display === 'flex') {
-                this.hide();
-            }
-        });
+        // Update from current settings
+        if (this.settings) {
+            this.updateFromSettings(this.settings);
+        }
     }
 
     /**
      * Render the sidebar navigation
      */
     renderSidebar() {
-        const sidebar = document.getElementById('settingsModalSidebar');
-        if (!sidebar) return;
-
-        sidebar.innerHTML = '';
-
         const categoryOrder = [
             SETTING_CATEGORIES.PLAYERS,
             SETTING_CATEGORIES.TIMING,
@@ -169,73 +124,36 @@ export default class SettingsModal extends BaseUIComponent {
             SETTING_CATEGORIES.ADVANCED
         ];
 
+        const tabs = [];
         categoryOrder.forEach(category => {
             const settings = getSettingsByCategory(category);
             if (settings.length > 0) {
-                const navItem = this.createNavItem(category);
-                sidebar.appendChild(navItem);
-            }
-        });
-    }
-
-    /**
-     * Create a navigation item for the sidebar
-     * @param {string} category - Category ID
-     * @returns {HTMLElement} Navigation item
-     */
-    createNavItem(category) {
-        const navItem = document.createElement('div');
-        navItem.className = 'settings-nav-item';
-        navItem.setAttribute('data-category', category);
-
-        if (category === this.selectedCategory) {
-            navItem.classList.add('active');
-        }
-
-        navItem.textContent = this.getCategoryLabel(category);
-
-        navItem.addEventListener('click', () => this.selectCategory(category));
-
-        return navItem;
-    }
-
-    /**
-     * Select a category and update the content area
-     * @param {string} category - Category to select
-     */
-    selectCategory(category) {
-        this.selectedCategory = category;
-
-        // Update active state in sidebar
-        const navItems = document.querySelectorAll('.settings-nav-item');
-        navItems.forEach(item => {
-            if (item.getAttribute('data-category') === category) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
+                tabs.push({
+                    id: category,
+                    label: this.getCategoryLabel(category)
+                });
             }
         });
 
-        // Re-render content
-        this.renderContent();
+        this.renderTabs(tabs);
     }
 
     /**
      * Render the content area for the selected category
      */
     renderContent() {
-        const content = document.getElementById('settingsModalContent');
+        const content = this.content; // Provided by BaseModal
         if (!content) return;
 
         content.innerHTML = '';
 
-        // Get settings for selected category
-        const settings = getSettingsByCategory(this.selectedCategory);
+        // Get settings for selected category (using selectedTab from BaseModal)
+        const settings = getSettingsByCategory(this.selectedTab);
 
         // Create category title
         const categoryTitle = document.createElement('h3');
         categoryTitle.className = 'settings-content-title';
-        categoryTitle.textContent = this.getCategoryLabel(this.selectedCategory);
+        categoryTitle.textContent = this.getCategoryLabel(this.selectedTab);
         content.appendChild(categoryTitle);
 
         // Create settings rows
@@ -304,6 +222,11 @@ export default class SettingsModal extends BaseUIComponent {
                 elementToStore = inputElement.querySelector('input') || inputElement;
             } else if (inputElement && inputElement.__inputRef) {
                 elementToStore = inputElement.__inputRef;
+            }
+        } else {
+            // Client side
+            if (schema.type === SETTING_TYPES.BOOLEAN) {
+                elementToStore = inputElement.querySelector('input') || inputElement;
             }
         }
 
@@ -608,29 +531,17 @@ export default class SettingsModal extends BaseUIComponent {
     }
 
     /**
-     * Show the modal
+     * Show the modal (Alias for open to maintain API compatibility)
      */
     show() {
-        if (this.modalElement) {
-            this.modalElement.style.display = 'flex';
-
-            // Re-render to ensure latest settings are shown
-            this.renderContent();
-
-            // Update from current settings
-            if (this.settings) {
-                this.updateFromSettings(this.settings);
-            }
-        }
+        this.open();
     }
 
     /**
-     * Hide the modal
+     * Hide the modal (Alias for close to maintain API compatibility)
      */
     hide() {
-        if (this.modalElement) {
-            this.modalElement.style.display = 'none';
-        }
+        this.close();
     }
 
     /**
@@ -730,10 +641,6 @@ export default class SettingsModal extends BaseUIComponent {
      * Clean up component
      */
     cleanup() {
-        if (this.modalElement) {
-            this.modalElement.remove();
-            this.modalElement = null;
-        }
         this.elements.clear();
         super.cleanup();
     }

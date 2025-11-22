@@ -198,10 +198,12 @@ export default class PlayerListComponent extends BaseUIComponent {
         this.allowPeerColorChange = settings?.allowPeerColorChange !== false;
         this.allowPlayerNameChange = settings?.allowPlayerNameChange !== false;
 
-        if (this.playerControlModal?.setPermissions) {
-            this.playerControlModal.setPermissions(
-                this.getPlayerPermissions(this.currentPlayerPeerId)
-            );
+        if (this.playerControlModal) {
+            const permissions = this.getPlayerPermissions(this.currentPlayerPeerId);
+            // Update permissions on the modal instance
+            if (typeof this.playerControlModal.setPermissions === 'function') {
+                this.playerControlModal.setPermissions(permissions);
+            }
         }
 
         // Re-render player list
@@ -270,7 +272,8 @@ export default class PlayerListComponent extends BaseUIComponent {
         const nextSettings = newGameState.settings;
         if (
             prevSettings?.allowPlayerColorChange !== nextSettings?.allowPlayerColorChange ||
-            prevSettings?.allowPeerColorChange !== nextSettings?.allowPeerColorChange
+            prevSettings?.allowPeerColorChange !== nextSettings?.allowPeerColorChange ||
+            prevSettings?.allowPlayerNameChange !== nextSettings?.allowPlayerNameChange
         ) {
             return true;
         }

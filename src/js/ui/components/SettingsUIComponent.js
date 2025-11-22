@@ -250,7 +250,13 @@ export default class SettingsUIComponent extends BaseUIComponent {
             ? this.createInputElement(schema)
             : this.createDisplayElement(schema);
 
-        this.elements.set(schema.id, inputElement);
+        let elementToStore = inputElement;
+
+        if (!this.isHost && schema.type === SETTING_TYPES.BOOLEAN) {
+            elementToStore = inputElement.querySelector('input') || inputElement;
+        }
+
+        this.elements.set(schema.id, elementToStore);
         row.appendChild(inputElement);
 
         return row;

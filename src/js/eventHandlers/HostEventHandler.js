@@ -7,7 +7,7 @@ import ActionRegistry from './ActionRegistry.js';
 import { HOST_UI_BINDINGS } from '../config/ui-bindings.js';
 import LoadingProgressTracker, { LOADING_STAGES } from '../infrastructure/utils/LoadingProgressTracker.js';
 import LoadingBar from '../ui/LoadingBar.js';
-import MapSelectionUI from '../ui/components/MapSelectionUI.js';
+import MapManagerModal from '../ui/modals/MapManagerModal.js';
 import MapStorageManager from '../systems/storage/MapStorageManager.js';
 import Board from '../elements/models/Board.js';
 import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
@@ -19,7 +19,7 @@ export default class HostEventHandler extends BaseEventHandler {
         // Initialize UI systems
         this.uiBinder = new UIBinder(HOST_UI_BINDINGS);
         this.actionRegistry = new ActionRegistry();
-        this.mapSelectionUI = null; // Initialized after peer is created
+        this.mapManagerModal = null; // Initialized after peer is created
         this.pluginManagerModal = pluginManagerModal; // Plugin manager modal
     }
 
@@ -131,6 +131,11 @@ export default class HostEventHandler extends BaseEventHandler {
             elementId: 'uploadPluginButton',
             description: 'Open plugin manager'
         });
+
+        this.actionRegistry.register('openPluginList', () => this.openPluginManager(), {
+            elementId: 'openPluginListButton',
+            description: 'Open plugin list'
+        });
     }
 
     /**
@@ -138,7 +143,7 @@ export default class HostEventHandler extends BaseEventHandler {
      */
     openPluginManager() {
         if (this.pluginManagerModal) {
-            this.pluginManagerModal.show();
+            this.pluginManagerModal.open();
         }
     }
 
@@ -231,7 +236,7 @@ export default class HostEventHandler extends BaseEventHandler {
         }
 
         // Initialize map selection UI
-        this.initializeMapSelectionUI();
+        this.initializeMapManager();
 
         // Load the default or previously selected map
         this.loadInitialMap();
@@ -244,17 +249,17 @@ export default class HostEventHandler extends BaseEventHandler {
     }
 
     /**
-     * Initialize the map selection UI component
+     * Initialize the map manager modal
      */
-    initializeMapSelectionUI() {
-        if (!this.mapSelectionUI) {
-            this.mapSelectionUI = new MapSelectionUI({
-                eventBus: this.eventBus,
+    initializeMapManager() {
+        if (!this.mapManagerModal) {
+            this.mapManagerModal = new MapManagerModal('mapManagerModal', {
                 isHost: true,
                 onMapSelected: async (mapId) => await this.handleMapSelected(mapId),
-                onMapUploaded: (mapObject) => this.handleMapUploaded(mapObject)
+                onMapUploaded: (mapObject) => this.handleMapUploaded(mapObject),
+                factoryManager: this.factoryManager
             });
-            this.mapSelectionUI.init();
+            this.mapManagerModal.init();
         }
     }
 
@@ -275,8 +280,8 @@ export default class HostEventHandler extends BaseEventHandler {
      * Open the map selection modal
      */
     openMapSelection() {
-        if (this.mapSelectionUI) {
-            this.mapSelectionUI.showMapSelectionModal();
+        if (this.mapManagerModal) {
+            this.mapManagerModal.open();
         }
     }
 
@@ -420,7 +425,7 @@ export default class HostEventHandler extends BaseEventHandler {
             }
         });
     }
-    
+
 
     async confirmAndKickPlayer(playerId) {
         const player = this.peer.gameState.players.find((p) => p.playerId === playerId);

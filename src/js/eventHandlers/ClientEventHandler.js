@@ -9,12 +9,13 @@ import LoadingProgressTracker, { LOADING_STAGES } from '../infrastructure/utils/
 import LoadingBar from '../ui/LoadingBar.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
-    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
+    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal) {
         super(false, registryManager, pluginManager, factoryManager, eventBus, personalSettings);
 
         // Initialize UI systems
         this.uiBinder = new UIBinder(CLIENT_UI_BINDINGS);
         this.actionRegistry = new ActionRegistry();
+        this.pluginManagerModal = pluginManagerModal;
     }
 
     /**
@@ -61,6 +62,11 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.actionRegistry.register('addPlayer', () => this.addNewOwnedPlayer(), {
             elementId: 'addPlayerButton',
             description: 'Add a new player'
+        });
+
+        this.actionRegistry.register('openPluginList', () => this.openPluginManager(), {
+            elementId: 'openPluginListButton',
+            description: 'Open plugin list'
         });
     }
 
@@ -255,6 +261,15 @@ export default class ClientEventHandler extends BaseEventHandler {
             this.listenerRegistry.registerListener('openSettingsButton', 'click', () => {
                 this.settingsManager?.showSettings?.();
             });
+        }
+    }
+
+    /**
+     * Open the plugin manager modal
+     */
+    openPluginManager() {
+        if (this.pluginManagerModal) {
+            this.pluginManagerModal.open();
         }
     }
 }

@@ -6,10 +6,10 @@
  * - Change any player's color
  * - Kick players
  */
-import BaseModal from './BaseModal.js';
-import { normalizeToHexColor, DEFAULT_HEX_COLOR } from '../../infrastructure/utils/ColorUtils.js';
+import SettingsBaseModal from './SettingsBaseModal.js';
+import { normalizeToHexColor, DEFAULT_HEX_COLOR } from '../../infrastructure/utils/colorUtils.js';
 
-export default class HostPlayerControlModal extends BaseModal {
+export default class HostPlayerControlModal extends SettingsBaseModal {
     constructor(id, player, onNicknameChange, onKickPlayer, onColorChange, onPeerColorChange) {
         super({
             id: id || 'hostPlayerControlModal',
@@ -21,6 +21,43 @@ export default class HostPlayerControlModal extends BaseModal {
         this.onKickPlayer = onKickPlayer;
         this.onColorChange = onColorChange;
         this.onPeerColorChange = onPeerColorChange;
+
+        this.applyButton = null;
+    }
+
+    /**
+     * Initialize the modal
+     */
+    init() {
+        super.init();
+        this.createApplyButton();
+    }
+
+    /**
+     * Create and attach the Apply button
+     */
+    createApplyButton() {
+        const headerButtons = this.modal.querySelector('.settings-modal-header-buttons');
+        if (!headerButtons) return;
+
+        // Check if already exists
+        if (headerButtons.querySelector('#applyHostPlayerSettings')) return;
+
+        const applyButton = document.createElement('button');
+        applyButton.className = 'button settings-modal-apply';
+        applyButton.textContent = 'Apply Changes';
+        applyButton.id = 'applyHostPlayerSettings';
+        applyButton.addEventListener('click', () => this.applyChanges());
+
+        // Insert before close button
+        const closeButton = headerButtons.querySelector('.settings-modal-close');
+        if (closeButton) {
+            headerButtons.insertBefore(applyButton, closeButton);
+        } else {
+            headerButtons.appendChild(applyButton);
+        }
+
+        this.applyButton = applyButton;
     }
 
     /**
@@ -33,36 +70,22 @@ export default class HostPlayerControlModal extends BaseModal {
     }
 
     onOpen() {
+        this.renderTabs([
+            { id: 'general', label: 'General' },
+            { id: 'kick', label: 'Kick Player' }
+        ]);
         this.renderContent();
     }
 
     renderContent() {
-        if (!this.content || !this.targetPlayer) return;
+        const contentContainer = this.content;
+        if (!contentContainer || !this.targetPlayer) return;
 
-        this.content.innerHTML = `
-            <div class="modal-layout">
-                <div class="modal-sidebar">
-                    <div class="modal-header-simple">
-                        <h3>Manage</h3>
-                    </div>
-                    <div class="settings-nav">
-                        <button class="settings-nav-item ${this.selectedTab === 'general' ? 'active' : ''}" data-tab="general">General</button>
-                        <button class="settings-nav-item ${this.selectedTab === 'kick' ? 'active' : ''}" data-tab="kick">Kick Player</button>
-                    </div>
-                </div>
-                <div class="modal-main">
-                    <div class="modal-main-header">
-                        <h2>${this.selectedTab === 'general' ? 'Edit Player' : 'Kick Player'}</h2>
-                        <button class="close-btn">&times;</button>
-                    </div>
-                    <div class="modal-main-content">
-                        ${this.getTabContent()}
-                    </div>
-                    <div class="modal-footer">
-                        <button id="applyHostPlayerSettings" class="button button-primary">Apply Changes</button>
-                    </div>
-                </div>
+        contentContainer.innerHTML = `
+            <div class="settings-content-title">
+                <h3>${this.selectedTab === 'general' ? 'Edit Player' : 'Kick Player'}</h3>
             </div>
+            ${this.getTabContent()}
         `;
 
         this.attachListeners();
@@ -72,18 +95,20 @@ export default class HostPlayerControlModal extends BaseModal {
     getTabContent() {
         if (this.selectedTab === 'kick') {
             return `
-                <div class="settings-section">
-                    <h3>Kick ${this.targetPlayer.nickname}</h3>
-                    <p class="help-text">Are you sure you want to kick this player from the game?</p>
-                    <button id="hostKickPlayerBtn" class="button button-danger">Kick Player</button>
+                <div class="settings-row">
+                    <div class="settings-label">Kick ${this.targetPlayer.nickname}</div>
+                    <div class="settings-input-wrapper">
+                        <p class="help-text" style="margin-bottom: 10px;">Are you sure you want to kick this player from the game?</p>
+                        <button id="hostKickPlayerBtn" class="button button-danger">Kick Player</button>
+                    </div>
                 </div>
             `;
         }
 
         return `
-            <div class="settings-section">
-                <div class="settings-row">
-                    <label class="settings-label">Nickname:</label>
+            <div class="settings-row">
+                <label class="settings-label">Nickname:</label>
+                <div class="settings-input-wrapper">
                     <input
                         type="text"
                         id="hostPlayerNicknameInput"
@@ -94,9 +119,9 @@ export default class HostPlayerControlModal extends BaseModal {
                 </div>
             </div>
 
-            <div class="settings-section">
-                <div class="settings-row">
-                    <label class="settings-label">Player Color:</label>
+            <div class="settings-row">
+                <label class="settings-label">Player Color:</label>
+                <div class="settings-input-wrapper">
                     <input
                         type="color"
                         id="hostPlayerColorInput"
@@ -105,9 +130,9 @@ export default class HostPlayerControlModal extends BaseModal {
                 </div>
             </div>
 
-            <div class="settings-section">
-                <div class="settings-row">
-                    <label class="settings-label">Border Color:</label>
+            <div class="settings-row">
+                <label class="settings-label">Border Color:</label>
+                <div class="settings-input-wrapper">
                     <input
                         type="color"
                         id="hostPeerColorInput"
@@ -137,27 +162,6 @@ export default class HostPlayerControlModal extends BaseModal {
     }
 
     attachListeners() {
-        // Tab navigation
-        const navItems = this.modal.querySelectorAll('.settings-nav-item');
-        navItems.forEach(item => {
-            this.addEventListener(item, 'click', () => {
-                this.selectedTab = item.dataset.tab;
-                this.renderContent();
-            });
-        });
-
-        // Close button
-        const closeBtn = this.modal.querySelector('.close-btn');
-        if (closeBtn) {
-            this.addEventListener(closeBtn, 'click', () => this.close());
-        }
-
-        // Apply button
-        const applyBtn = this.modal.querySelector('#applyHostPlayerSettings');
-        if (applyBtn) {
-            this.addEventListener(applyBtn, 'click', () => this.applyChanges());
-        }
-
         // Kick button
         const kickBtn = this.modal.querySelector('#hostKickPlayerBtn');
         if (kickBtn) {
