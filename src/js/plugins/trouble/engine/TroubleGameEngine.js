@@ -614,9 +614,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         validMoves.forEach(move => this.targetMoves.set(move.targetSpaceId, move));
         this.highlightAllValidMoves(validMoves);
         this.setRollButtonActive(false);
-        this.proposeStateChange(this.gameState);
-
-        // Player must click a piece or highlighted space to resolve
+        // Wait for user click on highlighted space (or piece)
     }
 
     getBoardComponent() {
