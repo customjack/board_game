@@ -19,7 +19,7 @@ export default class Host extends BasePeer {
 
         // Store the previous game state for delta calculation
         this.previousGameStateJSON = null;
-        this.connectionHeartbeatIntervalMs = 10000;
+        this.connectionHeartbeatIntervalMs = 15000;
 
         // Initialize protocol and handlers
         this.protocol = new NetworkProtocol({

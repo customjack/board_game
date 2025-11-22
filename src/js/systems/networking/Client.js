@@ -19,8 +19,8 @@ export default class Client extends BasePeer {
         this.conn = null;
         this.heartbeatInterval = null;
         this.heartbeatTimeout = null;
-        this.heartbeatIntervalMs = 10000; // 10 seconds
-        this.heartbeatTimeoutMs = 25000;  // consider connection lost if no response within 25s
+        this.heartbeatIntervalMs = 15000; // 15 seconds (slower to survive throttling)
+        this.heartbeatTimeoutMs = 120000;  // allow up to 2 minutes for background tabs
 
         // Connection status manager for reconnection
         this.connectionStatusManager = null;
@@ -88,6 +88,13 @@ export default class Client extends BasePeer {
 
         if (progressTracker) progressTracker.nextStage('Connecting to host...');
         this.connectToHost();
+
+        // Keep heartbeat alive when tab visibility changes (helps with throttled timers)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                this.sendHeartbeat();
+            }
+        });
     }
 
     connectToHost() {
@@ -195,10 +202,7 @@ export default class Client extends BasePeer {
         this.stopHeartbeat();
         this.markHeartbeatReceived();
         this.heartbeatInterval = setInterval(() => {
-            if (this.conn && this.conn.open) {
-                this.conn.send({ type: MessageTypes.HEARTBEAT, timestamp: Date.now() });
-                this.scheduleHeartbeatTimeout();
-            }
+            this.sendHeartbeat();
         }, this.heartbeatIntervalMs);
     }
 
@@ -244,5 +248,12 @@ export default class Client extends BasePeer {
             this.conn.send({ type: MessageTypes.HEARTBEAT_ACK, timestamp: Date.now() });
         }
         this.markHeartbeatReceived();
+    }
+
+    sendHeartbeat() {
+        if (this.conn && this.conn.open) {
+            this.conn.send({ type: MessageTypes.HEARTBEAT, timestamp: Date.now() });
+            this.scheduleHeartbeatTimeout();
+        }
     }
 }
