@@ -29,6 +29,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.gameLogPopupController = new GameLogPopupController(this.eventBus);
         this.awaitingMoveChoice = false;
         this.targetMoves = new Map(); // spaceId -> move descriptor
+        this.manualSpaceHandlers = new Map(); // spaceId -> handler
         this.devManualRoll = Boolean(
             config.debugChooseRoll ||
             (typeof window !== 'undefined' && window.__TROUBLE_DEV_MANUAL_ROLL__) ||
@@ -320,6 +321,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.availableMoves.clear();
         this.awaitingMoveChoice = false;
         this.targetMoves.clear();
+        this.cleanupManualSpaceChoice();
 
         const winner = this.checkForWinner(player);
         const extraTurn = roll === 6;
@@ -357,6 +359,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.availableMoves.clear();
         this.awaitingMoveChoice = false;
         this.targetMoves.clear();
+        this.cleanupManualSpaceChoice();
         this.currentRoll = null;
         this.markSelectablePieces(null, []);
         this.emitEvent('turnEnded', { playerId: player?.playerId });
@@ -535,9 +538,12 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
 
     highlightAllValidMoves(validMoves) {
         const boardInteraction = this.getUIComponent('boardInteraction');
-        if (!boardInteraction?.highlightValidMoves) return;
         const uniqueTargets = Array.from(new Set(validMoves.map(m => m.targetSpaceId)));
-        boardInteraction.highlightValidMoves(uniqueTargets);
+        if (boardInteraction?.highlightValidMoves) {
+            boardInteraction.highlightValidMoves(uniqueTargets);
+        } else {
+            this.setupManualSpaceSelection(uniqueTargets);
+        }
     }
 
     findMoveByTarget(spaceId) {
@@ -568,6 +574,38 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.proposeStateChange(this.gameState);
 
         // Player must click a piece or highlighted space to resolve
+    }
+
+    setupManualSpaceSelection(spaceIds = []) {
+        this.cleanupManualSpaceChoice();
+        spaceIds.forEach(id => {
+            const el = document.getElementById(`space-${id}`);
+            if (!el) return;
+            el.classList.add('highlight');
+            const handler = () => {
+                const currentPlayer = this.gameState.getCurrentPlayer();
+                const move = this.findMoveByTarget(id);
+                if (currentPlayer && move) {
+                    this.handleMovePiece(currentPlayer.playerId, {
+                        pieceId: move.pieceId,
+                        targetSpaceId: move.targetSpaceId
+                    });
+                }
+            };
+            el.addEventListener('click', handler);
+            this.manualSpaceHandlers.set(id, handler);
+        });
+    }
+
+    cleanupManualSpaceChoice() {
+        this.manualSpaceHandlers.forEach((handler, id) => {
+            const el = document.getElementById(`space-${id}`);
+            if (el && handler) {
+                el.classList.remove('highlight');
+                el.removeEventListener('click', handler);
+            }
+        });
+        this.manualSpaceHandlers.clear();
     }
 
     isSpaceBlockedByOwn(playerIndex, spaceId) {
