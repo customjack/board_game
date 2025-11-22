@@ -28,6 +28,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.availableMoves = new Map(); // pieceId -> move descriptor
         this.gameLogPopupController = new GameLogPopupController(this.eventBus);
         this.awaitingMoveChoice = false;
+        this.targetMoves = new Map(); // spaceId -> move descriptor
         this.devManualRoll = Boolean(
             config.debugChooseRoll ||
             (typeof window !== 'undefined' && window.__TROUBLE_DEV_MANUAL_ROLL__) ||
@@ -208,6 +209,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.availableMoves = new Map(validMoves.map(move => [move.pieceId, move]));
         this.markSelectablePieces(currentPlayer, validMoves);
         this.awaitingMoveChoice = false;
+        this.targetMoves.clear();
         this.setRollButtonActive(false);
 
         if (validMoves.length === 0) {
@@ -317,6 +319,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.selectedPieceId = null;
         this.availableMoves.clear();
         this.awaitingMoveChoice = false;
+        this.targetMoves.clear();
 
         const winner = this.checkForWinner(player);
         const extraTurn = roll === 6;
@@ -353,6 +356,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.selectedPieceId = null;
         this.availableMoves.clear();
         this.awaitingMoveChoice = false;
+        this.targetMoves.clear();
         this.currentRoll = null;
         this.markSelectablePieces(null, []);
         this.emitEvent('turnEnded', { playerId: player?.playerId });
@@ -537,12 +541,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
     }
 
     findMoveByTarget(spaceId) {
-        for (const move of this.availableMoves.values()) {
-            if (move.targetSpaceId === spaceId) {
-                return move;
-            }
-        }
-        return null;
+        return this.targetMoves.get(spaceId) || null;
     }
 
     async awaitMoveSelection(validMoves, currentPlayer) {
@@ -562,6 +561,8 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
 
         // Waiting for player choice: highlight all possible targets and allow piece/space clicks
         this.awaitingMoveChoice = true;
+        this.targetMoves.clear();
+        validMoves.forEach(move => this.targetMoves.set(move.targetSpaceId, move));
         this.highlightAllValidMoves(validMoves);
         this.setRollButtonActive(false);
         this.proposeStateChange(this.gameState);
