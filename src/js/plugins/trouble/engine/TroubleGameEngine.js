@@ -563,15 +563,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.setRollButtonActive(false);
         this.proposeStateChange(this.gameState);
 
-        // Offer modal chooser as a fallback for clients
-        if (!this.isClientTurn()) return;
-
-        const selected = await this.promptMoveChoice(validMoves, currentPlayer);
-        const moveToApply = selected || validMoves[0];
-        this.handleMovePiece(currentPlayer.playerId, {
-            pieceId: moveToApply.pieceId,
-            targetSpaceId: moveToApply.targetSpaceId
-        });
+        // Player must click a piece or highlighted space to resolve
     }
 
     isSpaceBlockedByOwn(playerIndex, spaceId) {
@@ -622,74 +614,6 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
 
     getRollButtonComponent() {
         return this.getUIComponent('rollButton') || this.uiSystem?.getComponent?.('rollButton') || null;
-    }
-
-    async promptMoveChoice(validMoves, player) {
-        if (!Array.isArray(validMoves) || validMoves.length === 0) return null;
-
-        // Build modal content
-        const modal = document.createElement('div');
-        modal.className = 'modal custom-modal';
-        modal.style.display = 'block';
-
-        const content = document.createElement('div');
-        content.className = 'modal-content';
-
-        const title = document.createElement('h2');
-        title.textContent = 'Choose Your Move';
-        content.appendChild(title);
-
-        const message = document.createElement('p');
-        message.textContent = `${player.nickname || 'Player'}, pick a move for your roll of ${this.currentRoll}.`;
-        content.appendChild(message);
-
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'modal-buttons';
-
-        const result = await new Promise((resolve) => {
-            validMoves.forEach(move => {
-                const btn = document.createElement('button');
-                btn.className = 'button button-primary';
-                btn.textContent = this.describeMove(move);
-                btn.addEventListener('click', () => {
-                    document.body.removeChild(modal);
-                    resolve(move);
-                });
-                buttonContainer.appendChild(btn);
-            });
-
-            const cancel = document.createElement('button');
-            cancel.className = 'button button-secondary';
-            cancel.textContent = 'Cancel';
-            cancel.addEventListener('click', () => {
-                document.body.removeChild(modal);
-                resolve(null);
-            });
-            buttonContainer.appendChild(cancel);
-
-            content.appendChild(buttonContainer);
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-        });
-
-        return result;
-    }
-
-    describeMove(move) {
-        if (!move) return 'Move';
-        if (move.targetState === 'track' && move.progress === 0) {
-            return 'Move new piece to Start';
-        }
-        if (move.targetState === 'track') {
-            return `Advance piece to ${move.targetSpaceId}`;
-        }
-        if (move.targetState === 'finish') {
-            return `Move into finish ${move.finishIndex + 1}`;
-        }
-        if (move.targetState === 'done') {
-            return 'Finish a piece!';
-        }
-        return 'Move piece';
     }
 
     wireRollButtonCallbacks() {
