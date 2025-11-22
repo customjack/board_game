@@ -4,6 +4,7 @@ import GamePhases from '../../../game/phases/GamePhases.js';
 import GameLogPopupController from '../../../../deprecated/legacy/controllers/GameLogPopupController.js';
 import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
 import { getVisibleElementById } from '../../../infrastructure/utils/helpers.js';
+import PlayerStates from '../../../game/phases/PlayerStates.js';
 
 export default class TroubleGameEngine extends MultiPieceGameEngine {
     /**
@@ -39,6 +40,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
 
         this.handlePieceClick = this.handlePieceClick.bind(this);
         this.handleSpaceClick = this.handleSpaceClick.bind(this);
+        this.winners = new Set();
     }
 
     async promptStartOrBoardMove() {
@@ -247,7 +249,13 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         if (!currentPlayer) {
             return;
         }
+        if (this.winners.has(currentPlayer.playerId)) {
+            console.log('[Trouble] Skipping turn for winner', currentPlayer.nickname);
+            this.endTurnForPlayer(currentPlayer);
+            return;
+        }
         console.log(`[Trouble] Roll result ${rollResult} for ${currentPlayer.nickname}`);
+        this.log(`Rolled a ${rollResult}`, { player: currentPlayer.nickname, type: 'roll' });
         const validMoves = this.getValidMovesForPlayer(currentPlayer, rollResult);
         console.log('[Trouble] Valid moves', validMoves);
 
@@ -256,6 +264,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.awaitingMoveChoice = false;
         this.targetMoves.clear();
         this.setRollButtonActive(false);
+        this.startTurnTimer();
 
         if (validMoves.length === 0) {
             // No legal moves: either roll again on 6 or pass turn
@@ -321,6 +330,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
                 const move = validMoves[0];
                 const player = this.gameState.getCurrentPlayer();
                 if (player) {
+                    this.logPlayerAction(player, `auto-moving piece ${pieceId} to ${move.targetSpaceId}`, { type: 'movement' });
                     this.handleMovePiece(player.playerId, {
                         pieceId,
                         targetSpaceId: move.targetSpaceId
@@ -368,12 +378,12 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.cleanupManualSpaceChoice();
 
         const winner = this.checkForWinner(player);
-        const extraTurn = roll === 6;
+        let extraTurn = roll === 6;
         this.currentRoll = null;
 
         if (winner) {
-            this.gameState.setGamePhase(GamePhases.GAME_ENDED);
-            this.emitEvent('gameEnded', { winner: player });
+            this.handleWinner(player);
+            extraTurn = false;
         }
 
         if (!winner && !extraTurn) {
@@ -409,6 +419,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.emitEvent('turnEnded', { playerId: player?.playerId });
         this.getUIComponent('boardInteraction')?.clearHighlights?.();
         this.setRollButtonActive(this.isClientTurn());
+        this.stopTurnTimer();
         this.proposeStateChange(this.gameState);
     }
 
@@ -441,6 +452,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
      */
     getValidMovesForPlayer(player, roll = this.currentRoll) {
         if (!player || !Array.isArray(player.pieces) || !roll) return [];
+        if (this.winners.has(player.playerId)) return [];
         const playerIndex = this.getPlayerIndex(player.playerId);
         if (playerIndex === -1) return [];
 
@@ -551,6 +563,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
             toSpaceId: move.targetSpaceId,
             state: piece.state
         });
+        this.logPlayerAction(player, `moved to ${move.targetSpaceId}`, { type: 'movement' });
 
         this.proposeStateChange(this.gameState);
         const boardInteraction = this.getUIComponent('boardInteraction');
@@ -589,6 +602,19 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         } else {
             this.setupManualSpaceSelection(uniqueTargets);
         }
+    }
+
+    startTurnTimer() {
+        const timer = this.getUIComponent('timer') || this.uiSystem?.getComponent?.('timer');
+        if (timer) {
+            timer.gameState = this.gameState;
+            timer.startTimer?.();
+        }
+    }
+
+    stopTurnTimer() {
+        const timer = this.getUIComponent('timer') || this.uiSystem?.getComponent?.('timer');
+        timer?.stopTimer?.();
     }
 
     findMoveByTarget(spaceId) {
@@ -658,6 +684,20 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
             }
         });
         this.manualSpaceHandlers.clear();
+    }
+
+    handleWinner(player) {
+        if (!player) return;
+        this.winners.add(player.playerId);
+        try {
+            player.setState?.(PlayerStates.WON || PlayerStates.WAITING);
+        } catch (e) {
+            player.state = 'won';
+        }
+
+        this.logPlayerAction(player, 'won the game!', { type: 'victory' });
+        this.emitEvent('gameWon', { winner: player });
+        ModalUtil.alert?.(`${player.nickname} has won the game! Players may continue moving remaining pieces.`, 'Game Won');
     }
 
     isSpaceBlockedByOwn(playerIndex, spaceId) {
