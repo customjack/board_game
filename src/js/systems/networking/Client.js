@@ -20,7 +20,7 @@ export default class Client extends BasePeer {
         this.heartbeatInterval = null;
         this.heartbeatTimeout = null;
         this.heartbeatIntervalMs = 15000; // 15 seconds (slower to survive throttling)
-        this.heartbeatTimeoutMs = 120000;  // allow up to 2 minutes for background tabs
+        this.heartbeatTimeoutMs = 120000;  // allow up to 2 minutes for background tabs (overridden by settings)
 
         // Connection status manager for reconnection
         this.connectionStatusManager = null;
@@ -85,6 +85,12 @@ export default class Client extends BasePeer {
 
         // Update UI with initial game state (including board)
         this.eventHandler.updateGameState(true);
+
+        // Apply connection timeout from settings (seconds -> ms)
+        const idleTimeoutSec = this.gameState?.settings?.connectionIdleTimeoutSeconds;
+        if (Number.isFinite(idleTimeoutSec)) {
+            this.heartbeatTimeoutMs = idleTimeoutSec * 1000;
+        }
 
         if (progressTracker) progressTracker.nextStage('Connecting to host...');
         this.connectToHost();

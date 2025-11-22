@@ -151,6 +151,21 @@ export const GAME_SETTINGS_SCHEMA = [
         },
         unit: 'seconds',
         readonly: false
+    },
+    {
+        id: 'connectionIdleTimeoutSeconds',
+        type: SETTING_TYPES.NUMBER,
+        label: 'Connection Idle Timeout',
+        description: 'Seconds without heartbeat before reconnect is attempted (set higher to survive background tabs)',
+        defaultValue: 900,
+        category: SETTING_CATEGORIES.ADVANCED,
+        constraints: {
+            min: 60,
+            max: 3600,
+            step: 30
+        },
+        unit: 'seconds',
+        readonly: false
     }
 ];
 
