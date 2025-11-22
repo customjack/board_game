@@ -24,6 +24,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
         });
 
         this.board = null;
+        this.highlightedSpaceIds = new Set();
 
         // Rendering components
         this.renderConfig = new BoardRenderConfig();
@@ -316,6 +317,34 @@ export default class BoardCanvasComponent extends BaseUIComponent {
 
         console.log(`Space clicked: ${space.name || 'Unnamed'} (id: ${space.id}, type: ${space.type})`, space);
         this.emit('spaceClicked', { space });
+    }
+
+    /**
+     * Highlight a list of space IDs
+     * @param {string[]} spaceIds
+     */
+    highlightValidMoves(spaceIds = []) {
+        this.clearHighlights();
+        (spaceIds || []).forEach(id => {
+            const el = SpaceRenderer.getSpaceElement(id);
+            if (el) {
+                el.classList.add('highlight');
+                this.highlightedSpaceIds.add(id);
+            }
+        });
+    }
+
+    /**
+     * Clear any highlighted spaces
+     */
+    clearHighlights() {
+        this.highlightedSpaceIds.forEach(id => {
+            const el = SpaceRenderer.getSpaceElement(id);
+            if (el) {
+                el.classList.remove('highlight');
+            }
+        });
+        this.highlightedSpaceIds.clear();
     }
 
     /**

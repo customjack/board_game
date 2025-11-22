@@ -356,6 +356,7 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         this.currentRoll = null;
         this.markSelectablePieces(null, []);
         this.emitEvent('turnEnded', { playerId: player?.playerId });
+        this.getUIComponent('boardInteraction')?.clearHighlights?.();
         this.setRollButtonActive(this.isClientTurn());
         this.proposeStateChange(this.gameState);
     }
@@ -501,6 +502,8 @@ export default class TroubleGameEngine extends MultiPieceGameEngine {
         });
 
         this.proposeStateChange(this.gameState);
+        const boardInteraction = this.getUIComponent('boardInteraction');
+        boardInteraction?.clearHighlights?.();
     }
 
     sendPieceHome(piece, playerIndex) {
