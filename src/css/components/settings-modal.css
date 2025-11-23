@@ -50,7 +50,8 @@
 }
 
 .settings-modal-apply {
-  padding: calc(var(--spacing-unit) * 0.75) calc(var(--spacing-unit) * 1.5);
+  padding: 0 calc(var(--spacing-unit) * 1.5);
+  height: 36px;
   font-size: 14px;
   border-radius: 4px;
   cursor: pointer;
@@ -58,6 +59,9 @@
   color: white;
   border: 1px solid var(--primary-color, #007bff);
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .settings-modal-apply:hover {
@@ -68,6 +72,18 @@
 .settings-modal-apply:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.settings-modal-action {
+  padding: 0 calc(var(--spacing-unit) * 1.5);
+  height: 36px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .settings-modal-close {

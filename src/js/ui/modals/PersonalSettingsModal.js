@@ -4,8 +4,6 @@ import MapStorageManager from '../../systems/storage/MapStorageManager.js';
 const CATEGORIES = {
     GRAPHICS: 'graphics',
     GAMEPLAY: 'gameplay',
-    PLUGINS: 'plugins',
-    MAPS: 'maps',
     MISC: 'misc'
 };
 
@@ -25,6 +23,10 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         this.selectedTab = CATEGORIES.GRAPHICS;
         this.inputs = new Map();
         this.applyButton = null;
+
+        // Callbacks for external managers
+        this.openPluginManager = null;
+        this.openMapManager = null;
     }
 
     init() {
@@ -43,30 +45,97 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         return [
             { id: CATEGORIES.GRAPHICS, label: 'Graphics' },
             { id: CATEGORIES.GAMEPLAY, label: 'Gameplay' },
-            { id: CATEGORIES.PLUGINS, label: 'Plugins' },
-            { id: CATEGORIES.MAPS, label: 'Maps' },
             { id: CATEGORIES.MISC, label: 'Misc' }
         ];
     }
 
     createApplyButton() {
         const headerButtons = this.modal.querySelector('.settings-modal-header-buttons');
-        if (!headerButtons || headerButtons.querySelector('#personalSettingsApplyButton')) return;
+        if (!headerButtons) return;
 
-        const applyButton = document.createElement('button');
-        applyButton.className = 'button settings-modal-apply';
-        applyButton.textContent = 'Apply';
-        applyButton.id = 'personalSettingsApplyButton';
-        applyButton.addEventListener('click', () => this.applySettings());
+        // Helper to create button if not exists
+        const createOrGetButton = (id, text, className, onClick) => {
+            let btn = headerButtons.querySelector(`#${id}`);
+            if (!btn) {
+                btn = document.createElement('button');
+                btn.id = id;
+                btn.className = className;
+                btn.textContent = text;
+                btn.addEventListener('click', onClick);
+            }
+            return btn;
+        };
 
-        const closeButton = headerButtons.querySelector('.settings-modal-close');
-        if (closeButton) {
-            headerButtons.insertBefore(applyButton, closeButton);
-        } else {
-            headerButtons.appendChild(applyButton);
+        // 1. Apply Button
+        const applyButton = createOrGetButton(
+            'personalSettingsApplyButton',
+            'Apply',
+            'button settings-modal-apply',
+            () => this.applySettings()
+        );
+
+        // 2. Plugins Button
+        let pluginsBtn = null;
+        if (this.openPluginManager) {
+            pluginsBtn = createOrGetButton(
+                'personalSettingsPluginsButton',
+                'Plugins',
+                'button button-secondary settings-modal-action',
+                () => {
+                    this.close();
+                    this.openPluginManager();
+                }
+            );
         }
 
+        // 3. Maps Button
+        let mapsBtn = null;
+        if (this.openMapManager) {
+            mapsBtn = createOrGetButton(
+                'personalSettingsMapsButton',
+                'Maps',
+                'button button-secondary settings-modal-action',
+                () => {
+                    this.close();
+                    this.openMapManager();
+                }
+            );
+        }
+
+        // Clear existing buttons to re-order them correctly
+        // We want: [Maps] [Plugins] [Apply] [Close]
+        // Note: Close button is usually already there or added by BaseModal. 
+        // BaseModal adds close button to header-buttons.
+
+        const closeButton = headerButtons.querySelector('.settings-modal-close');
+
+        // Remove our managed buttons if they are already attached to re-append in order
+        if (mapsBtn) mapsBtn.remove();
+        if (pluginsBtn) pluginsBtn.remove();
+        applyButton.remove();
+
+        // Append in order
+        if (mapsBtn) headerButtons.insertBefore(mapsBtn, closeButton);
+        if (pluginsBtn) headerButtons.insertBefore(pluginsBtn, closeButton);
+        headerButtons.insertBefore(applyButton, closeButton);
+
         this.applyButton = applyButton;
+    }
+
+    setOpenPluginManager(callback) {
+        this.openPluginManager = callback;
+        // Re-render buttons if modal is already initialized
+        if (this.modal) {
+            this.createApplyButton();
+        }
+    }
+
+    setOpenMapManager(callback) {
+        this.openMapManager = callback;
+        // Re-render buttons if modal is already initialized
+        if (this.modal) {
+            this.createApplyButton();
+        }
     }
 
     renderContent() {
@@ -83,12 +152,7 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
             case CATEGORIES.GAMEPLAY:
                 this.renderGameplaySettings(content);
                 break;
-            case CATEGORIES.PLUGINS:
-                this.renderPluginsSettings(content);
-                break;
-            case CATEGORIES.MAPS:
-                this.renderMapsSettings(content);
-                break;
+
             case CATEGORIES.MISC:
                 this.renderMiscSettings(content);
                 break;
@@ -130,82 +194,7 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         container.appendChild(this.createRangeRow('Sound Volume (Not Functional)', 'soundVolume', 0, 1, 0.1));
     }
 
-    renderPluginsSettings(container) {
-        const title = this.createTitle('Plugins');
-        container.appendChild(title);
 
-        const list = document.createElement('div');
-        list.className = 'plugin-list';
-        list.style.maxHeight = '400px';
-        list.style.overflowY = 'auto';
-        list.style.border = '1px solid var(--border-color)';
-        list.style.borderRadius = '4px';
-        list.style.padding = '8px';
-
-        const plugins = this.pluginManager?.getAllPlugins?.() || [];
-        if (plugins.length === 0) {
-            list.textContent = 'No plugins loaded yet.';
-        } else {
-            plugins.forEach(plugin => {
-                const row = document.createElement('div');
-                row.className = 'plugin-row';
-                row.style.display = 'flex';
-                row.style.justifyContent = 'space-between';
-                row.style.alignItems = 'center';
-                row.style.padding = '6px 0';
-                row.style.borderBottom = '1px solid var(--border-color)';
-
-                const info = document.createElement('div');
-                info.style.display = 'flex';
-                info.style.flexDirection = 'column';
-                info.innerHTML = `<strong>${plugin.name}</strong><span style="font-size: 0.85em; color: var(--text-secondary, #666);">${plugin.description || ''}</span>`;
-
-                row.appendChild(info);
-
-                const tag = document.createElement('span');
-                tag.style.fontSize = '0.8em';
-                tag.textContent = plugin.enabled ? 'Enabled' : 'Disabled';
-                row.appendChild(tag);
-
-                list.appendChild(row);
-            });
-        }
-
-        container.appendChild(list);
-    }
-
-    renderMapsSettings(container) {
-        const title = this.createTitle('Maps');
-        container.appendChild(title);
-
-        const uploadBtn = document.createElement('button');
-        uploadBtn.className = 'button button-secondary';
-        uploadBtn.textContent = 'Upload Map';
-        uploadBtn.style.marginBottom = '12px';
-        uploadBtn.style.width = '100%';
-
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.json';
-        fileInput.style.display = 'none';
-
-        uploadBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => this.handleMapUpload(e.target.files[0]));
-
-        container.appendChild(uploadBtn);
-        container.appendChild(fileInput);
-
-        const list = document.createElement('div');
-        list.className = 'plugin-list';
-        list.style.maxHeight = '400px';
-        list.style.overflowY = 'auto';
-        list.style.border = '1px solid var(--border-color)';
-        list.style.borderRadius = '4px';
-        list.style.padding = '8px';
-
-        this.populateMapList(list);
-        container.appendChild(list);
-    }
 
     renderMiscSettings(container) {
         const title = this.createTitle('Miscellaneous');
@@ -297,7 +286,9 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         const soundVolume = parseFloat(this.inputs.get('soundVolume')?.value);
         const streamerMode = this.inputs.get('streamerMode')?.checked ?? false;
 
-        if (theme) this.personalSettings.setTheme(theme);
+        if (theme) {
+            this.personalSettings.setTheme(theme);
+        }
         if (rollAnimation) this.personalSettings.setRollAnimation(rollAnimation);
         if (showTips !== undefined) this.personalSettings.setShowTips(showTips);
         if (autoRoll !== undefined) this.personalSettings.setAutoRoll(autoRoll);
@@ -319,67 +310,5 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         })) || [{ value: 'dice-roll', label: 'Dice Roll' }];
     }
 
-    populateMapList(container) {
-        container.innerHTML = '';
-        const maps = MapStorageManager.getAllMaps();
-        if (!maps || maps.length === 0) {
-            container.textContent = 'No maps found.';
-            return;
-        }
 
-        maps.forEach(map => {
-            const row = document.createElement('div');
-            row.style.display = 'flex';
-            row.style.justifyContent = 'space-between';
-            row.style.alignItems = 'center';
-            row.style.padding = '6px 0';
-            row.style.borderBottom = '1px solid var(--border-color)';
-
-            const info = document.createElement('div');
-            info.style.display = 'flex';
-            info.style.flexDirection = 'column';
-            info.innerHTML = `<strong>${map.name}</strong><span style="font-size: 0.85em; color: var(--text-secondary, #666);">By ${map.author || 'Unknown'}</span>`;
-            if (map.description) {
-                const desc = document.createElement('div');
-                desc.style.fontSize = '0.8em';
-                desc.style.color = 'var(--text-secondary, #999)';
-                desc.textContent = map.description;
-                info.appendChild(desc);
-            }
-            row.appendChild(info);
-
-            if (!map.isBuiltIn) {
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'button button-danger button-small';
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.addEventListener('click', () => {
-                    if (confirm(`Delete map "${map.name}"?`)) {
-                        if (MapStorageManager.deleteCustomMap(map.id)) {
-                            this.populateMapList(container);
-                        }
-                    }
-                });
-                row.appendChild(deleteBtn);
-            }
-
-            container.appendChild(row);
-        });
-    }
-
-    async handleMapUpload(file) {
-        if (!file) return;
-        try {
-            const text = await file.text();
-            const mapData = JSON.parse(text);
-            const mapObject = MapStorageManager.addCustomMap(mapData);
-            alert(`Map "${mapObject.name}" uploaded successfully!`);
-            const list = this.modal.querySelector('.settings-modal-content .plugin-list');
-            if (list) {
-                this.populateMapList(list);
-            }
-        } catch (error) {
-            console.error('Failed to upload map:', error);
-            alert(`Failed to upload map: ${error.message}`);
-        }
-    }
 }
