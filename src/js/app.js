@@ -15,7 +15,6 @@ import PluginManager from './systems/plugins/PluginManager';
 import MapManagerModal from './ui/modals/MapManagerModal.js';
 import Plugin from './systems/plugins/Plugin.js';
 import DefaultCorePlugin from './systems/plugins/DefaultCorePlugin.js';
-import TroublePlugin from './plugins/trouble/TroublePlugin.js';
 import LocalStorageManager from './systems/storage/LocalStorageManager';
 import FactoryManager from './infrastructure/factories/FactoryManager';
 import GameEngineFactory from './infrastructure/factories/GameEngineFactory.js';
@@ -113,10 +112,6 @@ function initializePluginManager(eventBus, registryManager, factoryManager) {
             pluginManager.registerPlugin(pluginInstance);
         }
     });
-
-    // Register Trouble plugin (temporary manual registration)
-    const troublePlugin = new TroublePlugin();
-    pluginManager.registerPlugin(troublePlugin);
 
     return pluginManager;
 }

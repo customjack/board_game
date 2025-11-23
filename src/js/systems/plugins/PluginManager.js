@@ -1,4 +1,5 @@
 import Plugin from './Plugin.js';
+import PluginLoader from './PluginLoader.js';
 
 /**
  * PluginManager - Centralized management for all game plugins
@@ -35,6 +36,17 @@ export default class PluginManager {
 
         // Loaded plugin URLs
         this.loadedPluginUrls = new Set();
+
+        // Map of plugin ID -> Source URL (for removal)
+        this.pluginUrls = new Map();
+
+        // Initialize PluginLoader
+        this.pluginLoader = new PluginLoader({
+            registryManager: this.registryManager,
+            // Pass base classes if needed by plugins
+            baseClasses: { Plugin }
+        });
+
         this.loadSavedPlugins();
     }
 
@@ -178,6 +190,13 @@ export default class PluginManager {
         this.pluginClasses.delete(pluginId);
         this.pluginStates.delete(pluginId);
 
+        // Remove from persistence if it was loaded from a URL
+        if (this.pluginUrls.has(pluginId)) {
+            const url = this.pluginUrls.get(pluginId);
+            this.removeSavedPluginUrl(url);
+            this.pluginUrls.delete(pluginId);
+        }
+
         console.log(`[PluginManager] Unregistered plugin: ${pluginId}`);
         return true;
     }
@@ -234,6 +253,11 @@ export default class PluginManager {
      * @param {string} url - URL to the plugin module
      * @returns {Promise<boolean>} Success status
      */
+    /**
+     * Load a plugin from a remote URL
+     * @param {string} url - URL to the plugin module
+     * @returns {Promise<boolean>} Success status
+     */
     async loadPluginFromUrl(url) {
         try {
             if (this.loadedPluginUrls.has(url)) {
@@ -243,7 +267,27 @@ export default class PluginManager {
 
             console.log(`[PluginManager] Loading plugin from ${url}...`);
 
-            // Dynamic import
+            const pluginInfo = {
+                id: `remote-${Date.now()}`, // Temporary ID, will be updated from metadata
+                name: 'Remote Plugin',
+                url: url,
+                loadMethod: 'ES' // Default to ES module
+            };
+
+            // Use PluginLoader to load the plugin
+            // We use loadPluginWithFallback to try ES module first, then others if needed
+            const result = await this.pluginLoader.loadPluginWithFallback(pluginInfo);
+
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+
+            // The plugin loader registers the plugin with the registry manager (if it uses the new system)
+            // But for our current architecture, we expect the module to export a Plugin class
+            // Let's handle the module export manually for now to maintain compatibility with our Plugin class system
+
+            // Re-import to get the class (since PluginLoader might just execute side effects)
+            // Note: This is a bit redundant but ensures we get the class reference
             const module = await import(/* webpackIgnore: true */ url);
             const PluginClass = module.default;
 
@@ -257,6 +301,7 @@ export default class PluginManager {
                 const metadata = PluginClass.getPluginMetadata();
                 if (this.initializePlugin(metadata.id)) {
                     this.loadedPluginUrls.add(url);
+                    this.pluginUrls.set(metadata.id, url);
                     this.savePluginUrl(url);
                     return true;
                 }
