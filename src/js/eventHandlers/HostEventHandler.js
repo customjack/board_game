@@ -13,14 +13,15 @@ import Board from '../elements/models/Board.js';
 import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
 
 export default class HostEventHandler extends BaseEventHandler {
-    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal) {
+    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal, mapManagerModal) {
         super(true, registryManager, pluginManager, factoryManager, eventBus, personalSettings);
 
         // Initialize UI systems
         this.uiBinder = new UIBinder(HOST_UI_BINDINGS);
         this.actionRegistry = new ActionRegistry();
-        this.mapManagerModal = null; // Initialized after peer is created
+        this.mapManagerModal = mapManagerModal;
         this.pluginManagerModal = pluginManagerModal; // Plugin manager modal
+        this.personalSettingsModal = personalSettingsModal;
     }
 
     init() {
@@ -252,14 +253,14 @@ export default class HostEventHandler extends BaseEventHandler {
      * Initialize the map manager modal
      */
     initializeMapManager() {
-        if (!this.mapManagerModal) {
-            this.mapManagerModal = new MapManagerModal('mapManagerModal', {
+        if (this.mapManagerModal) {
+            this.mapManagerModal.updateConfig({
                 isHost: true,
                 onMapSelected: async (mapId) => await this.handleMapSelected(mapId),
                 onMapUploaded: (mapObject) => this.handleMapUploaded(mapObject),
                 factoryManager: this.factoryManager
             });
-            this.mapManagerModal.init();
+            // It's already initialized in app.js
         }
     }
 

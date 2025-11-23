@@ -116,8 +116,7 @@ export default class PluginManagerModal extends BaseModal {
         const sub = document.createElement('div');
         sub.style.color = 'var(--text-color-secondary, #aaa)';
         sub.style.fontSize = '0.9em';
-        const enabledCount = this.plugins.filter(p => p.enabled).length;
-        sub.textContent = `${enabledCount} enabled • ${this.plugins.length} total`;
+        sub.textContent = `${this.plugins.length} total`;
 
         title.appendChild(heading);
         title.appendChild(sub);
@@ -167,12 +166,9 @@ export default class PluginManagerModal extends BaseModal {
 
         const uploadButton = document.createElement('button');
         uploadButton.className = 'button button-primary';
-        uploadButton.textContent = 'Add Plugin (Coming Soon)';
-        uploadButton.disabled = true;
-        uploadButton.style.opacity = '0.6';
-        uploadButton.style.cursor = 'not-allowed';
+        uploadButton.textContent = 'Add Plugin';
         uploadButton.style.display = this.isHost ? '' : 'none';
-        // uploadButton.addEventListener('click', () => this.handleUpload());
+        uploadButton.addEventListener('click', () => this.handleAddPlugin());
 
         searchContainer.appendChild(searchInput);
         searchContainer.appendChild(uploadButton);
@@ -222,18 +218,16 @@ export default class PluginManagerModal extends BaseModal {
     createPluginRow(plugin) {
         const row = document.createElement('div');
         row.className = 'plugin-row';
-        row.style.display = 'grid';
-        row.style.gridTemplateColumns = 'auto 1fr auto';
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
         row.style.alignItems = 'center';
         row.style.padding = '14px 16px';
         row.style.borderBottom = '1px solid var(--border-color, #242424)';
         row.style.gap = '12px';
 
-        const icon = document.createElement('div');
-        icon.className = 'plugin-icon';
-        icon.style.fontSize = '24px';
-        icon.textContent = plugin.isDefault ? '📦' : '🧩';
-        icon.title = plugin.isDefault ? 'Core Plugin' : 'Custom Plugin';
+        // Icon removed as per request
+        // const icon = document.createElement('div');
+        // ...
 
         const info = document.createElement('div');
         info.className = 'plugin-info';
@@ -273,15 +267,6 @@ export default class PluginManagerModal extends BaseModal {
         chips.style.gap = '6px';
         chips.style.flexWrap = 'wrap';
 
-        const statusChip = document.createElement('span');
-        statusChip.textContent = plugin.enabled ? 'Enabled' : 'Disabled';
-        statusChip.style.backgroundColor = plugin.enabled ? 'var(--color-success, #1f3d26)' : 'var(--color-danger, #3a2f2f)';
-        statusChip.style.color = plugin.enabled ? '#fff' : '#fff';
-        statusChip.style.fontSize = '0.75em';
-        statusChip.style.padding = '2px 6px';
-        statusChip.style.borderRadius = '4px';
-        chips.appendChild(statusChip);
-
         const usedByMap = this.currentMapPluginIds.has(plugin.id);
         const mapChip = document.createElement('span');
         mapChip.textContent = usedByMap ? 'Used by map' : 'Not in map';
@@ -299,8 +284,32 @@ export default class PluginManagerModal extends BaseModal {
         const controls = document.createElement('div');
         controls.className = 'plugin-controls';
         controls.style.display = 'flex';
-        controls.style.alignItems = 'center';
-        controls.style.gap = '10px';
+        controls.style.flexDirection = 'column';
+        controls.style.alignItems = 'flex-end';
+        controls.style.gap = '8px';
+        controls.style.minWidth = '120px';
+
+        // Top row: Remove button (if applicable)
+        if (!plugin.isDefault && this.isHost) {
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'button button-danger button-small';
+            removeBtn.textContent = 'Remove';
+            removeBtn.title = 'Remove Plugin';
+            removeBtn.style.padding = '2px 8px';
+            removeBtn.style.fontSize = '0.8em';
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.handleRemovePlugin(plugin);
+            });
+            controls.appendChild(removeBtn);
+        }
+
+        // Bottom row: Status indicators
+        const statusContainer = document.createElement('div');
+        statusContainer.style.display = 'flex';
+        statusContainer.style.flexDirection = 'column';
+        statusContainer.style.alignItems = 'flex-end';
+        statusContainer.style.gap = '4px';
 
         if (plugin.isDefault) {
             const badge = document.createElement('span');
@@ -308,31 +317,26 @@ export default class PluginManagerModal extends BaseModal {
             badge.style.color = 'var(--text-color-secondary, #888)';
             badge.style.fontSize = '0.85em';
             badge.style.fontStyle = 'italic';
-            controls.appendChild(badge);
+            statusContainer.appendChild(badge);
         } else {
             const usedByMap = this.currentMapPluginIds.has(plugin.id);
-
             const statusBadge = document.createElement('span');
             statusBadge.style.fontSize = '0.85em';
-            statusBadge.style.padding = '4px 8px';
-            statusBadge.style.borderRadius = '4px';
             statusBadge.style.fontWeight = '500';
 
             if (usedByMap) {
                 statusBadge.textContent = 'Active (Map Requirement)';
-                statusBadge.style.backgroundColor = 'var(--color-success, #1f3d26)';
-                statusBadge.style.color = '#fff';
-                statusBadge.style.border = '1px solid var(--color-success-border, #2f5d36)';
+                statusBadge.style.color = 'var(--color-success, #4caf50)';
             } else {
                 statusBadge.textContent = 'Not Used';
                 statusBadge.style.color = 'var(--text-color-secondary, #888)';
                 statusBadge.style.fontStyle = 'italic';
             }
-
-            controls.appendChild(statusBadge);
+            statusContainer.appendChild(statusBadge);
         }
 
-        row.appendChild(icon);
+        controls.appendChild(statusContainer);
+
         row.appendChild(info);
         row.appendChild(controls);
 
@@ -367,47 +371,48 @@ export default class PluginManagerModal extends BaseModal {
         }
 
         if (!success) {
-            this.loadPlugins();
-            const listElement = this.modal.querySelector('[data-plugin-list]');
-            if (listElement) {
-                this.populatePluginList(listElement);
-            }
             await ModalUtil.alert(`Failed to ${enabled ? 'enable' : 'disable'} plugin. Check console for details.`);
-        } else {
-            this.loadPlugins();
-            const listElement = this.modal.querySelector('[data-plugin-list]');
-            if (listElement) {
-                this.populatePluginList(listElement);
-            }
+        }
+
+        this.loadPlugins();
+        const listElement = this.modal.querySelector('[data-plugin-list]');
+        if (listElement) {
+            this.populatePluginList(listElement);
         }
     }
 
-    handleUpload() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.js';
-        input.style.display = 'none';
+    async handleAddPlugin() {
+        const url = await ModalUtil.prompt('Enter the URL of the plugin module (CDN link):', '', 'Add Plugin');
+        if (!url) return;
 
-        input.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                try {
-                    await this.pluginManager.initializePluginFromFile(file);
-                    this.loadPlugins();
-                    const listElement = this.modal.querySelector('[data-plugin-list]');
-                    if (listElement) {
-                        this.populatePluginList(listElement);
-                    }
-                    await ModalUtil.alert('Plugin uploaded successfully!');
-                } catch (error) {
-                    console.error('Error uploading plugin:', error);
-                    await ModalUtil.alert(`Failed to upload plugin: ${error.message}`);
+        try {
+            const success = await this.pluginManager.loadPluginFromUrl(url);
+            if (success) {
+                await ModalUtil.alert('Plugin loaded successfully!');
+                this.loadPlugins();
+                const listElement = this.modal.querySelector('[data-plugin-list]');
+                if (listElement) {
+                    this.populatePluginList(listElement);
+                }
+            } else {
+                await ModalUtil.alert('Failed to load plugin. Check console for details.');
+            }
+        } catch (error) {
+            console.error('Error loading plugin:', error);
+            await ModalUtil.alert('Error loading plugin: ' + error.message);
+        }
+    }
+
+    async handleRemovePlugin(plugin) {
+        const confirmed = await ModalUtil.confirm(`Are you sure you want to remove plugin "${plugin.name}"?`, 'Remove Plugin');
+        if (confirmed) {
+            if (this.pluginManager.unregisterPlugin(plugin.id)) {
+                this.loadPlugins();
+                const listElement = this.modal.querySelector('[data-plugin-list]');
+                if (listElement) {
+                    this.populatePluginList(listElement);
                 }
             }
-        });
-
-        document.body.appendChild(input);
-        input.click();
-        document.body.removeChild(input);
+        }
     }
 }

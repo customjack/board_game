@@ -2,6 +2,7 @@ export default class PersonalSettings {
     constructor() {
         // Listeners
         this.streamerModeListeners = [];
+        this.themeListeners = [];
 
         // Attempt to load from local storage
         const savedSettings = PersonalSettings.loadFromLocalStorage();
@@ -33,6 +34,15 @@ export default class PersonalSettings {
     setTheme(theme) {
         this.theme = theme;
         this.saveToLocalStorage();
+        this.notifyThemeListeners(theme);
+    }
+
+    addThemeListener(callback) {
+        this.themeListeners.push(callback);
+    }
+
+    notifyThemeListeners(theme) {
+        this.themeListeners.forEach(callback => callback(theme));
     }
 
     // Getter and Setter for sound volume

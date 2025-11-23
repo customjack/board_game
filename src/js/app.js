@@ -12,6 +12,7 @@ import PieceManagerRegistry from './infrastructure/registries/PieceManagerRegist
 import RegistryManager from './infrastructure/registries/RegistryManager.js';
 import EventBus from './core/events/EventBus';
 import PluginManager from './systems/plugins/PluginManager';
+import MapManagerModal from './ui/modals/MapManagerModal.js';
 import Plugin from './systems/plugins/Plugin.js';
 import DefaultCorePlugin from './systems/plugins/DefaultCorePlugin.js';
 import TroublePlugin from './plugins/trouble/TroublePlugin.js';
@@ -189,6 +190,23 @@ function registerListeners(
     // Initialize Plugin Manager Modal
     const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager);
 
+    // Initialize Map Manager Modal
+    const mapManagerModal = new MapManagerModal('mapManagerModal', {
+        isHost: false, // Default to false, updated when host starts
+        factoryManager: factoryManager
+    });
+    mapManagerModal.init();
+
+    // Wire up Personal Settings to open Plugin Manager
+    personalSettingsMenu.setOpenPluginManager(() => {
+        pluginManagerModal.open();
+    });
+
+    // Wire up Personal Settings to open Map Manager
+    personalSettingsMenu.setOpenMapManager(() => {
+        mapManagerModal.open();
+    });
+
     const resetHomePage = () => {
         pageRegistry.showPage('homePage');
         if (hostButton) hostButton.disabled = false;
@@ -241,7 +259,9 @@ function registerListeners(
                     factoryManager,
                     eventBus,
                     personalSettings,
-                    pluginManagerModal
+                    pluginManagerModal,
+                    personalSettingsMenu,
+                    mapManagerModal
                 );
                 hostEventHandlerInstance.init();
                 await hostEventHandlerInstance.startHostGame();
@@ -268,7 +288,8 @@ function registerListeners(
                     factoryManager,
                     eventBus,
                     personalSettings,
-                    pluginManagerModal
+                    pluginManagerModal,
+                    personalSettingsMenu
                 );
                 clientEventHandlerInstance.init();
                 await clientEventHandlerInstance.startJoinGame();
@@ -340,12 +361,20 @@ function initializeApp() {
     // Local Storage Manager
     const localStorageManager = new LocalStorageManager();
 
-    // Personal settings (needs factoryManager, pluginManager, and localStorageManager)
+    // Personal settings (needs factoryManager, pluginManager,    // Initialize Personal Settings
     const { personalSettings, personalSettingsMenu } = initializePersonalSettings(
         factoryManager,
         pluginManager,
         localStorageManager
     );
+
+    // Apply initial theme
+    document.documentElement.setAttribute('data-theme', personalSettings.getTheme());
+
+    // Listen for theme changes
+    personalSettings.addThemeListener((theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+    });
 
     // Register listeners
     registerListeners(

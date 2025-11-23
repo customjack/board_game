@@ -9,13 +9,14 @@ import LoadingProgressTracker, { LOADING_STAGES } from '../infrastructure/utils/
 import LoadingBar from '../ui/LoadingBar.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
-    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal) {
+    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal) {
         super(false, registryManager, pluginManager, factoryManager, eventBus, personalSettings);
 
         // Initialize UI systems
         this.uiBinder = new UIBinder(CLIENT_UI_BINDINGS);
         this.actionRegistry = new ActionRegistry();
         this.pluginManagerModal = pluginManagerModal;
+        this.personalSettingsModal = personalSettingsModal;
     }
 
     /**

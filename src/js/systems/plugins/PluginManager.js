@@ -32,6 +32,10 @@ export default class PluginManager {
         // Host/peer status
         this.isHost = false;
         this.peer = null;
+
+        // Loaded plugin URLs
+        this.loadedPluginUrls = new Set();
+        this.loadSavedPlugins();
     }
 
     /**
@@ -223,6 +227,90 @@ export default class PluginManager {
         }
 
         return pluginConstructor;
+    }
+
+    /**
+     * Load a plugin from a remote URL
+     * @param {string} url - URL to the plugin module
+     * @returns {Promise<boolean>} Success status
+     */
+    async loadPluginFromUrl(url) {
+        try {
+            if (this.loadedPluginUrls.has(url)) {
+                console.warn(`Plugin from ${url} already loaded`);
+                return true;
+            }
+
+            console.log(`[PluginManager] Loading plugin from ${url}...`);
+
+            // Dynamic import
+            const module = await import(/* webpackIgnore: true */ url);
+            const PluginClass = module.default;
+
+            if (!PluginClass || !(PluginClass.prototype instanceof Plugin)) {
+                throw new Error('Module must export a default class extending Plugin');
+            }
+
+            // Register the class
+            if (this.registerPluginClass(PluginClass)) {
+                // Initialize it
+                const metadata = PluginClass.getPluginMetadata();
+                if (this.initializePlugin(metadata.id)) {
+                    this.loadedPluginUrls.add(url);
+                    this.savePluginUrl(url);
+                    return true;
+                }
+            }
+            return false;
+        } catch (error) {
+            console.error(`Failed to load plugin from ${url}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Save a plugin URL to local storage
+     * @param {string} url - URL to save
+     */
+    savePluginUrl(url) {
+        try {
+            const urls = JSON.parse(localStorage.getItem('custom_plugin_urls') || '[]');
+            if (!urls.includes(url)) {
+                urls.push(url);
+                localStorage.setItem('custom_plugin_urls', JSON.stringify(urls));
+            }
+        } catch (e) {
+            console.warn('Failed to save plugin URL to localStorage', e);
+        }
+    }
+
+    /**
+     * Load saved plugins from local storage
+     */
+    async loadSavedPlugins() {
+        try {
+            const urls = JSON.parse(localStorage.getItem('custom_plugin_urls') || '[]');
+            for (const url of urls) {
+                await this.loadPluginFromUrl(url);
+            }
+        } catch (e) {
+            console.warn('Failed to load saved plugins from localStorage', e);
+        }
+    }
+
+    /**
+     * Remove a saved plugin URL
+     * @param {string} url - URL to remove
+     */
+    removeSavedPluginUrl(url) {
+        try {
+            const urls = JSON.parse(localStorage.getItem('custom_plugin_urls') || '[]');
+            const newUrls = urls.filter(u => u !== url);
+            localStorage.setItem('custom_plugin_urls', JSON.stringify(newUrls));
+            this.loadedPluginUrls.delete(url);
+        } catch (e) {
+            console.warn('Failed to remove plugin URL from localStorage', e);
+        }
     }
 
     /**

@@ -105,3 +105,6 @@ coverage/
 # Yarn
 .yarn/
 .pnp.*
+
+# Plugins directory
+/plugins/

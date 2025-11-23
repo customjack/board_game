@@ -34,6 +34,55 @@
 @import 'themes/light.css';
 @import 'themes/dark.css';
 @import 'themes/retro.css';
+
+.add-player-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.add-player-container .button {
+    min-width: 220px;
+    text-align: center;
+}
+
+/* In your main CSS file, include all themes */
+/* styles.scss */
+@import 'variables.css';
+@import 'base.css';
+@import 'utilities.css';
+@import 'layout.css';
+@import 'components/box.css';
+@import 'components/button.css';
+@import 'components/form.css';
+@import 'components/header.css';
+@import 'components/icon.css';
+@import 'components/input.css';
+@import 'components/label.css';
+@import 'components/modal.css';
+@import 'components/navbar.css';
+@import 'components/player-list.css';
+@import 'components/select.css';
+@import 'components/span.css';
+@import 'components/toggle-switch.css';
+@import 'components/game-timer.css';
+@import 'components/game-log.css';
+@import 'components/loading-bar.css';
+@import 'components/board-controls.css';
+@import 'components/connection-status.css';
+@import 'components/map-selection.css';
+@import 'components/settings.css';
+@import 'components/settings-modal.css';
+@import 'components/plugin-manager.css';
+@import 'components/player-modals.css';
+
+@import 'animations.css';
+
+/* Import all themes */
+@import 'themes/light.css';
+@import 'themes/dark.css';
+@import 'themes/retro.css';
+
 .add-player-container {
     display: flex;
     justify-content: center;
@@ -49,4 +98,9 @@
     filter: blur(8px);
     user-select: none;
     cursor: default;
+}
+
+.custom-modal {
+    z-index: 20000 !important;
+    /* Ensure it's above other modals (settings modal is 10000) */
 }
