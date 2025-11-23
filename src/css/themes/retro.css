@@ -2,7 +2,7 @@
 @import '../variables.css';
 
 /* Override variables for retro theme */
-.retro-theme {
+:root[data-theme="retro"] {
   --background-body: #f4ecd8;
   --background-box: #f0e4d8;
   --background-secondary: #ffe8c0;

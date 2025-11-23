@@ -2,7 +2,7 @@
 @import '../variables.css';
 
 /* Override variables for dark theme */
-.dark-theme {
+:root[data-theme="dark"] {
   --background-body: #0a0a0a;
   --background-box: #1a1a1a;
   --background-secondary: #1e1e1e;

@@ -26,6 +26,13 @@ export default class MapManagerModal extends BaseModal {
         this.loadMaps();
     }
 
+    updateConfig(config = {}) {
+        if (config.isHost !== undefined) this.isHost = config.isHost;
+        if (config.onMapSelected !== undefined) this.onMapSelected = config.onMapSelected;
+        if (config.onMapUploaded !== undefined) this.onMapUploaded = config.onMapUploaded;
+        if (config.factoryManager !== undefined) this.factoryManager = config.factoryManager;
+    }
+
     loadMaps() {
         this.maps = MapStorageManager.getAllMaps();
         this.filteredMaps = [...this.maps];
