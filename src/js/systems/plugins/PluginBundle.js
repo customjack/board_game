@@ -29,6 +29,7 @@ export default class PluginBundle {
         this.eventBus = dependencies.eventBus || null;
         this.registryManager = dependencies.registryManager || null;
         this.factoryManager = dependencies.factoryManager || null;
+        this.MapStorageManager = dependencies.MapStorageManager || null;
     }
     
     /**

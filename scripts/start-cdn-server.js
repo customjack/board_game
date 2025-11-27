@@ -11,6 +11,7 @@ const path = require('path');
 
 const PORT = 8080;
 const PLUGINS_DIR = path.join(__dirname, '..', 'dist', 'plugins');
+const MAPS_DIR = path.join(__dirname, '..', 'dist', 'maps');
 
 // MIME types
 const mimeTypes = {
@@ -37,11 +38,14 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Map /plugins/* to dist/plugins/*
+    // Map /plugins/* to dist/plugins/* and /maps/* to dist/maps/*
     let filePath;
     if (urlPath.startsWith('/plugins/')) {
         const fileName = urlPath.replace('/plugins/', '');
         filePath = path.join(PLUGINS_DIR, fileName);
+    } else if (urlPath.startsWith('/maps/')) {
+        const fileName = urlPath.replace('/maps/', '');
+        filePath = path.join(MAPS_DIR, fileName);
     } else {
         filePath = path.join(PLUGINS_DIR, urlPath);
     }
@@ -82,18 +86,23 @@ const server = http.createServer((req, res) => {
     });
 });
 
-// Check if plugins directory exists
+// Check if directories exist
 if (!fs.existsSync(PLUGINS_DIR)) {
     console.log(`Creating plugins directory: ${PLUGINS_DIR}`);
     fs.mkdirSync(PLUGINS_DIR, { recursive: true });
+}
+if (!fs.existsSync(MAPS_DIR)) {
+    console.log(`Creating maps directory: ${MAPS_DIR}`);
+    fs.mkdirSync(MAPS_DIR, { recursive: true });
 }
 
 server.listen(PORT, () => {
     console.log(`\n🚀 CDN Server running at http://localhost:${PORT}`);
     console.log(`📁 Serving plugins from: ${PLUGINS_DIR}`);
+    console.log(`📁 Serving maps from: ${MAPS_DIR}`);
     console.log(`\nAvailable endpoints:`);
     console.log(`  - http://localhost:${PORT}/plugins/trouble-plugin.js`);
-    console.log(`  - http://localhost:${PORT}/plugins/example-plugin.js`);
+    console.log(`  - http://localhost:${PORT}/maps/trouble-classic.json`);
     console.log(`\nPress Ctrl+C to stop the server\n`);
 });
 

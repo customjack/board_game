@@ -26,6 +26,9 @@ export default class MapStorageManager {
      * Get built-in maps metadata
      * @returns {Array} Array of built-in map metadata
      */
+    // Plugin-registered maps (dynamically added by plugins)
+    static pluginMaps = [];
+
     static getBuiltInMaps() {
         return [
             {
@@ -40,39 +43,6 @@ export default class MapStorageManager {
                 engineType: 'turn-based'
             },
             {
-                id: 'simple-linear',
-                name: 'Simple Linear Board',
-                author: 'Example Library',
-                description: 'Straight path ideal for verifying movement logic',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/example-v3-game.json',
-                thumbnail: null,
-                createdDate: '2025-02-12T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'branching-paths',
-                name: 'Branching Paths Demo',
-                author: 'Example Library',
-                description: 'Demonstrates branching connections and choice prompts',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/example-v3-game.json',
-                thumbnail: null,
-                createdDate: '2025-02-12T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'custom-engine',
-                name: 'Custom Engine Stub',
-                author: 'Example Library',
-                description: 'Placeholder entry for custom engine experimentation',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/example-v3-game.json',
-                thumbnail: null,
-                createdDate: '2025-02-12T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
                 id: 'action-effect-testing',
                 name: 'Complete Action & Effect Testing Map',
                 author: 'Game Engine',
@@ -81,50 +51,6 @@ export default class MapStorageManager {
                 path: 'assets/maps/examples/action-effect-testing.json',
                 thumbnail: null,
                 createdDate: '2025-01-15T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'circular-party',
-                name: 'Circular Party Board',
-                author: 'Test Creator',
-                description: 'A circular board with 6 spaces - players spread across starting positions',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/test-circular-board.json',
-                thumbnail: null,
-                createdDate: '2025-01-27T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'mini-test',
-                name: 'Mini Test Board',
-                author: 'Test Creator',
-                description: 'A tiny 3-space board for quick testing',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/test-mini-board.json',
-                thumbnail: null,
-                createdDate: '2025-01-27T00:00:00Z',
-                engineType: 'turn-based'
-            },
-            {
-                id: 'trouble-classic',
-                name: 'Trouble (Pop-O-Matic) Prototype',
-                author: 'Trouble Plugin',
-                description: 'Classic Trouble board demonstrating the Trouble engine',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/trouble-classic.json',
-                thumbnail: null,
-                createdDate: '2025-02-01T00:00:00Z',
-                engineType: 'trouble'
-            },
-            {
-                id: 'example-multi-piece',
-                name: 'Example Multi-piece Game',
-                author: 'Game Engine',
-                description: 'Demonstrates multiple player pieces per player',
-                isBuiltIn: true,
-                path: 'assets/maps/examples/example-multi-piece-game.json',
-                thumbnail: null,
-                createdDate: '2025-02-10T00:00:00Z',
                 engineType: 'turn-based'
             },
             {
@@ -137,8 +63,51 @@ export default class MapStorageManager {
                 thumbnail: null,
                 createdDate: '2025-11-26T00:00:00Z',
                 engineType: 'turn-based'
-            }
+            },
+            ...this.pluginMaps
         ];
+    }
+
+    /**
+     * Register a map from a plugin
+     * @param {Object} mapData - The board JSON data
+     * @param {Object} metadata - Optional metadata override
+     * @returns {Object} The registered map object
+     */
+    static registerPluginMap(mapData, metadata = {}) {
+        // Validate the map data
+        const validation = BoardSchemaValidator.validate(mapData);
+        if (!validation.valid) {
+            throw new Error(`Invalid map data: ${validation.errors.join(', ')}`);
+        }
+
+        // Extract metadata from the map data (v2.0 format) or use provided metadata
+        const sourceMetadata = mapData.metadata || {};
+        const mergedMetadata = { ...sourceMetadata, ...metadata };
+        const engineType = this.getEngineType(mapData, mergedMetadata);
+
+        const mapObject = {
+            id: mergedMetadata.id || `plugin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            name: mergedMetadata.name || mapData.name || 'Untitled Map',
+            author: mergedMetadata.author || mapData.author || 'Unknown',
+            description: mergedMetadata.description || mapData.description || '',
+            isBuiltIn: true, // Plugin maps are treated as built-in
+            boardData: mapData, // Store the entire board JSON
+            thumbnail: mergedMetadata.thumbnail || null,
+            createdDate: mergedMetadata.created || mapData.created || new Date().toISOString(),
+            metadata: mergedMetadata,
+            engineType: engineType || 'turn-based'
+        };
+
+        // Check if already registered
+        const existingIndex = this.pluginMaps.findIndex(m => m.id === mapObject.id);
+        if (existingIndex >= 0) {
+            this.pluginMaps[existingIndex] = mapObject;
+        } else {
+            this.pluginMaps.push(mapObject);
+        }
+
+        return mapObject;
     }
 
     /**
@@ -267,6 +236,11 @@ export default class MapStorageManager {
 
         if (!map) {
             throw new Error(`Map not found: ${mapId}`);
+        }
+
+        // If map has boardData (plugin-registered map), return it directly
+        if (map.boardData) {
+            return map.boardData;
         }
 
         // If it's a custom map, return the stored board data

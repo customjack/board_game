@@ -36,6 +36,7 @@ import EventProcessorFactory from './infrastructure/factories/EventProcessorFact
 import UIControllerFactory from './infrastructure/factories/UIControllerFactory';
 import UIComponentFactory from './infrastructure/factories/UIComponentFactory';
 import AnimationFactory from './infrastructure/factories/AnimationFactory';
+import MapStorageManager from './systems/storage/MapStorageManager.js';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
 
@@ -390,7 +391,8 @@ function initializeApp() {
         TurnPhases,
         GamePhases,
         PhaseStateMachine,
-        getVisibleElementById
+        getVisibleElementById,
+        MapStorageManager
     });
 
     // Register listeners
