@@ -273,8 +273,18 @@ export default class HostEventHandler extends BaseEventHandler {
         try {
             await this.loadMapById(selectedMapId);
         } catch (error) {
-            console.error('Error loading initial map, falling back to default:', error);
-            await this.loadMapById('default');
+            // Map not found is expected if user cleared data - just warn and fallback
+            if (error.message && error.message.includes('Map not found')) {
+                console.warn(`Map "${selectedMapId}" not found (may have been removed), falling back to default map`);
+            } else {
+                console.error('Error loading initial map, falling back to default:', error);
+            }
+            try {
+                await this.loadMapById('default');
+            } catch (fallbackError) {
+                console.error('Failed to load default map:', fallbackError);
+                // Don't throw - let the game continue without a map
+            }
         }
     }
 
@@ -380,11 +390,19 @@ export default class HostEventHandler extends BaseEventHandler {
                 selectedMapData: mapData,
                 pluginState: previousState?.pluginState || {}
             });
+            
+            // Set plugin requirements for the new map
+            newGameState.setPluginRequirements(requiredPlugins);
+            
+            // Mark host as ready (we just loaded the plugins)
+            const hostPeerId = this.peer?.peer?.id || this.peer?.hostId || null;
+            if (hostPeerId) {
+                newGameState.setPluginReadiness(hostPeerId, true, []);
+            }
 
             newGameState.resetPlayerPositions?.();
 
             this.peer.gameState = newGameState;
-            const hostPeerId = this.peer?.peer?.id || this.peer?.hostId || null;
             if (hostPeerId) {
                 this.peer.ownedPlayers = newGameState.getPlayersByPeerId(hostPeerId);
             }
@@ -412,8 +430,41 @@ export default class HostEventHandler extends BaseEventHandler {
         }
     }
 
-    startGame() {
+    async startGame() {
         console.log('Host is starting the game...');
+        
+        // Check if all players have required plugins
+        const allReady = this.peer.gameState.allPlayersPluginsReady();
+        console.log('[Host] Plugin readiness check:', { allReady, players: this.peer.gameState.players.length });
+        
+        if (!allReady) {
+            const notReadyPlayers = this.peer.gameState.players.filter(player => {
+                const readiness = this.peer.gameState.getPluginReadiness(player.peerId);
+                const isNotReady = !readiness || !readiness.ready;
+                console.log(`[Host] Player ${player.nickname} (${player.peerId}):`, { readiness, isNotReady });
+                return isNotReady;
+            });
+            
+            // Build detailed message
+            let message = 'Cannot start game. The following players are not ready:\n\n';
+            notReadyPlayers.forEach(player => {
+                const readiness = this.peer.gameState.getPluginReadiness(player.peerId);
+                if (!readiness) {
+                    message += `• ${player.nickname}: Loading game data...\n`;
+                } else if (!readiness.ready && readiness.missingPlugins && readiness.missingPlugins.length > 0) {
+                    message += `• ${player.nickname}: Missing game data (${readiness.missingPlugins.join(', ')})\n`;
+                } else {
+                    message += `• ${player.nickname}: Missing game data\n`;
+                }
+            });
+            message += '\nPlease wait for all players to load the required game data before starting.';
+            
+            await ModalUtil.alert(message, 'Cannot Start Game');
+            console.log('[Host] Game start blocked - players not ready');
+            return; // Explicitly return to prevent game start
+        }
+        
+        console.log('[Host] All players ready, starting game...');
         if (this.peer) {
             this.peer.broadcastStartGame();
         }

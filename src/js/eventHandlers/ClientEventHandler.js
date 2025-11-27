@@ -7,6 +7,8 @@ import ActionRegistry from './ActionRegistry.js';
 import { CLIENT_UI_BINDINGS } from '../config/ui-bindings.js';
 import LoadingProgressTracker, { LOADING_STAGES } from '../infrastructure/utils/LoadingProgressTracker.js';
 import LoadingBar from '../ui/LoadingBar.js';
+import PluginLoadingModal from '../ui/modals/PluginLoadingModal.js';
+import { MessageTypes } from '../systems/networking/protocol/MessageTypes.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal) {
@@ -17,6 +19,9 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.actionRegistry = new ActionRegistry();
         this.pluginManagerModal = pluginManagerModal;
         this.personalSettingsModal = personalSettingsModal;
+        
+        // Track previous map ID to detect map changes
+        this.previousMapId = null;
     }
 
     /**
@@ -125,7 +130,24 @@ export default class ClientEventHandler extends BaseEventHandler {
         progressTracker.nextStage();
         progressTracker.complete();
 
+        // Set initial map ID to trigger plugin check
+        this.previousMapId = this.peer.gameState?.selectedMapId || null;
+
         this.showLobbyPage();
+        
+        // Check plugins for current map if one is already selected
+        // Wait for connection to be open before checking plugins
+        if (this.peer.gameState?.selectedMapId && this.peer.conn) {
+            if (this.peer.conn.open) {
+                // Connection is already open
+                this.checkAndLoadPlugins(this.peer.gameState);
+            } else {
+                // Wait for connection to open
+                this.peer.conn.once('open', () => {
+                    this.checkAndLoadPlugins(this.peer.gameState);
+                });
+            }
+        }
     }
 
     displayLobbyControls() {
@@ -173,6 +195,135 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.displayLobbyControls();
 
         this.updateGameState(true); //force update
+    }
+    
+    /**
+     * Override updateGameState to check for map changes and plugin requirements
+     */
+    updateGameState(forceUpdate = false) {
+        const gameState = this.peer?.gameState;
+        if (!gameState) {
+            super.updateGameState(forceUpdate);
+            return;
+        }
+        
+        // Check if map has changed
+        const currentMapId = gameState.selectedMapId;
+        const mapChanged = this.previousMapId !== currentMapId;
+        
+        if (mapChanged && currentMapId) {
+            this.previousMapId = currentMapId;
+            // Check plugins for new map
+            this.checkAndLoadPlugins(gameState);
+        }
+        
+        // Call parent update
+        super.updateGameState(forceUpdate);
+    }
+    
+    /**
+     * Check if client has required plugins and load if needed
+     */
+    async checkAndLoadPlugins(gameState) {
+        const requiredPlugins = gameState.pluginRequirements || [];
+        
+        if (requiredPlugins.length === 0) {
+            // No plugins required, mark as ready
+            if (this.peer?.gameState && this.peer?.peer?.id) {
+                this.peer.gameState.setPluginReadiness(this.peer.peer.id, true, []);
+                this.updateGameState();
+            }
+            this.sendPluginReadiness(true, []);
+            return;
+        }
+        
+        // Check which plugins are missing
+        const pluginCheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
+        
+        if (pluginCheck.allLoaded) {
+            // All plugins loaded, mark as ready
+            if (this.peer?.gameState && this.peer?.peer?.id) {
+                this.peer.gameState.setPluginReadiness(this.peer.peer.id, true, []);
+                this.updateGameState();
+            }
+            this.sendPluginReadiness(true, []);
+            return;
+        }
+        
+        // Show plugin loading modal
+        const pluginLoadingModal = new PluginLoadingModal(
+            'clientPluginLoadingModal',
+            this.pluginManager,
+            this.personalSettings,
+            { isHost: false }
+        );
+        pluginLoadingModal.init();
+        pluginLoadingModal.setRequiredPlugins(pluginCheck.missing);
+        
+        const autoLoad = this.personalSettings?.getAutoLoadPlugins() ?? true;
+        
+        // Show modal and wait for completion (or cancellation)
+        const result = await new Promise((resolve) => {
+            pluginLoadingModal.onComplete = (result) => {
+                // Re-check after loading completes (even if some failed)
+                const recheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
+                const isReady = recheck.allLoaded;
+                const missingPlugins = isReady ? [] : recheck.missing.map(p => p.id || p.name || p.pluginId);
+                
+                // Update local game state immediately so UI reflects readiness
+                if (this.peer?.gameState && this.peer?.peer?.id) {
+                    this.peer.gameState.setPluginReadiness(this.peer.peer.id, isReady, missingPlugins);
+                    // Trigger UI update
+                    this.updateGameState();
+                }
+                
+                // Send readiness to host
+                this.sendPluginReadiness(isReady, missingPlugins);
+                resolve({ completed: true, result });
+            };
+            pluginLoadingModal.onCancel = () => {
+                // User cancelled, mark as not ready
+                const missingPlugins = pluginCheck.missing.map(p => p.id || p.name);
+                
+                // Update local game state immediately
+                if (this.peer?.gameState && this.peer?.peer?.id) {
+                    this.peer.gameState.setPluginReadiness(this.peer.peer.id, false, missingPlugins);
+                    // Trigger UI update
+                    this.updateGameState();
+                }
+                
+                // Send readiness to host
+                this.sendPluginReadiness(false, missingPlugins);
+                resolve({ completed: false });
+            };
+            pluginLoadingModal.open();
+        });
+    }
+    
+    /**
+     * Send plugin readiness status to host
+     */
+    sendPluginReadiness(ready, missingPlugins) {
+        if (!this.peer?.conn) return;
+        
+        // Wait for connection to be open before sending
+        if (!this.peer.conn.open) {
+            // Wait for connection to open
+            this.peer.conn.once('open', () => {
+                this.peer.conn.send({
+                    type: MessageTypes.PLUGIN_READINESS,
+                    ready,
+                    missingPlugins
+                });
+            });
+        } else {
+            // Connection is already open, send immediately
+            this.peer.conn.send({
+                type: MessageTypes.PLUGIN_READINESS,
+                ready,
+                missingPlugins
+            });
+        }
     }
 
     updateDisplayedSettings() {

@@ -34,6 +34,8 @@ export const MessageTypes = {
 
     // Plugin management
     PLUGIN_STATE_UPDATE: 'pluginStateUpdate',
+    PLUGIN_READINESS: 'pluginReadiness',
+    REQUEST_PLUGIN_READINESS: 'requestPluginReadiness',
 
     // Gameplay actions
     PLAYER_ACTION: 'playerAction',
@@ -107,6 +109,15 @@ export const MessageSchemas = {
 
     [MessageTypes.PLUGIN_STATE_UPDATE]: {
         pluginStates: { type: 'object', required: true }
+    },
+
+    [MessageTypes.PLUGIN_READINESS]: {
+        ready: { type: 'boolean', required: true },
+        missingPlugins: { type: 'array', required: true }
+    },
+
+    [MessageTypes.REQUEST_PLUGIN_READINESS]: {
+        // No required fields - just a request message
     },
 
     [MessageTypes.PLAYER_ACTION]: {

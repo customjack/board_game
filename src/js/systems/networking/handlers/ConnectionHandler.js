@@ -95,6 +95,51 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         } else {
             peer.eventHandler.showLobbyPage();
         }
+        
+        // After receiving game state, check plugins and send readiness
+        // This ensures the host knows the client's plugin status
+        if (peer.eventHandler && peer.eventHandler.checkAndLoadPlugins) {
+            // Set the previous map ID to trigger plugin check
+            peer.eventHandler.previousMapId = peer.gameState?.selectedMapId || null;
+            // Check plugins for current map
+            if (peer.gameState?.selectedMapId) {
+                // Ensure connection is open before checking
+                const checkPlugins = () => {
+                    if (peer.conn && peer.conn.open) {
+                        peer.eventHandler.checkAndLoadPlugins(peer.gameState);
+                    } else if (peer.conn) {
+                        // Wait for connection to open
+                        peer.conn.once('open', () => {
+                            peer.eventHandler.checkAndLoadPlugins(peer.gameState);
+                        });
+                    } else {
+                        // Connection not ready yet, try again shortly
+                        setTimeout(checkPlugins, 100);
+                    }
+                };
+                checkPlugins();
+            } else {
+                // No map selected yet, mark as ready (no plugins required)
+                if (peer.gameState && peer.peer?.id) {
+                    peer.gameState.setPluginReadiness(peer.peer.id, true, []);
+                    peer.eventHandler.updateGameState();
+                }
+                if (peer.eventHandler.sendPluginReadiness) {
+                    const sendReadiness = () => {
+                        if (peer.conn && peer.conn.open) {
+                            peer.eventHandler.sendPluginReadiness(true, []);
+                        } else if (peer.conn) {
+                            peer.conn.once('open', () => {
+                                peer.eventHandler.sendPluginReadiness(true, []);
+                            });
+                        } else {
+                            setTimeout(sendReadiness, 100);
+                        }
+                    };
+                    sendReadiness();
+                }
+            }
+        }
     }
 
     /**
@@ -153,6 +198,16 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
 
         if (!validationFailed) {
             peer.broadcastGameState();
+            
+            // Request plugin readiness from the newly joined client
+            // This ensures we get their readiness status even if they already have plugins
+            const peerId = message.peerId;
+            if (peerId && conn.open) {
+                console.log(`[Host] Requesting plugin readiness from ${peerId}`);
+                conn.send({
+                    type: MessageTypes.REQUEST_PLUGIN_READINESS
+                });
+            }
         }
     }
 

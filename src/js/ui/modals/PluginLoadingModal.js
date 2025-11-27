@@ -40,7 +40,12 @@ export default class PluginLoadingModal extends BaseModal {
 
     async onOpen() {
         this.renderContent();
-        await this.startLoading();
+        const autoLoad = this.personalSettings?.getAutoLoadPlugins() ?? true;
+        if (autoLoad) {
+            // Auto-load enabled, start loading immediately
+            await this.startLoading();
+        }
+        // If auto-load is disabled, wait for user to click "Load Plugins" button
     }
 
     renderContent() {
@@ -233,12 +238,8 @@ export default class PluginLoadingModal extends BaseModal {
     }
 
     async startLoading() {
-        const autoLoad = this.personalSettings?.getAutoLoadPlugins() ?? true;
-        
-        if (!autoLoad && this.loadedPlugins.length === 0 && this.failedPlugins.length === 0) {
-            // User needs to confirm
-            return;
-        }
+        // Always proceed with loading when this method is called
+        // (either auto-load is enabled, or user clicked "Load Plugins" button)
 
         // Disable cancel button
         const cancelButton = this.modal.querySelector('.button-secondary');
@@ -316,6 +317,12 @@ export default class PluginLoadingModal extends BaseModal {
                 retryButton.disabled = false;
                 retryButton.style.opacity = '1';
                 retryButton.style.cursor = 'pointer';
+            }
+            
+            // Still call onComplete so client can send readiness status (even with failures)
+            // User can retry if needed, but we should update readiness status
+            if (this.onComplete) {
+                this.onComplete({ loaded: this.loadedPlugins, failed: this.failedPlugins });
             }
         }
     }

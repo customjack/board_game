@@ -169,7 +169,7 @@ export default class PluginManagerModal extends BaseModal {
         const uploadButton = document.createElement('button');
         uploadButton.className = 'button button-primary';
         uploadButton.textContent = 'Add Plugin';
-        uploadButton.style.display = this.isHost ? '' : 'none';
+        // Always show Add Plugin button (not just for hosts)
         uploadButton.addEventListener('click', () => this.handleAddPlugin());
 
         searchContainer.appendChild(searchInput);

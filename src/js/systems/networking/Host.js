@@ -10,6 +10,7 @@ import GameStateHandler from './handlers/GameStateHandler.js';
 import PlayerHandler from './handlers/PlayerHandler.js';
 import ConnectionHandler from './handlers/ConnectionHandler.js';
 import PlayerActionHandler from './handlers/PlayerActionHandler.js';
+import PluginReadinessHandler from './handlers/PluginReadinessHandler.js';
 
 export default class Host extends BasePeer {
     constructor(originalName, eventHandler) {
@@ -44,7 +45,8 @@ export default class Host extends BasePeer {
             new GameStateHandler(this.protocol, context),
             new PlayerHandler(this.protocol, context),
             new ConnectionHandler(this.protocol, context),
-            new PlayerActionHandler(this.protocol, context)
+            new PlayerActionHandler(this.protocol, context),
+            new PluginReadinessHandler(this.protocol, context)
         ];
 
         // Register each handler

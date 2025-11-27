@@ -267,6 +267,54 @@ export default class PlayerListComponent extends BaseUIComponent {
         if (this.gameState.gamePhase !== newGameState.gamePhase) {
             return true;
         }
+        
+        // Check plugin readiness changes
+        // Only check if plugins are required
+        if (newGameState.pluginRequirements && newGameState.pluginRequirements.length > 0) {
+            const prevReadiness = this.gameState.pluginReadiness || {};
+            const newReadiness = newGameState.pluginReadiness || {};
+            
+            // Compare readiness for each player
+            const allPeerIds = new Set([
+                ...Object.keys(prevReadiness),
+                ...Object.keys(newReadiness),
+                ...newGameState.players.map(p => p.peerId)
+            ]);
+            
+            for (const peerId of allPeerIds) {
+                const prev = prevReadiness[peerId];
+                const next = newReadiness[peerId];
+                
+                // Check if readiness changed
+                if (!prev && !next) continue; // Both undefined, no change
+                if (!prev || !next) {
+                    // One is undefined, changed - this means readiness was added or removed
+                    return true;
+                }
+                if (prev.ready !== next.ready) {
+                    // Ready status changed
+                    return true;
+                }
+                if ((prev.missingPlugins || []).length !== (next.missingPlugins || []).length) {
+                    // Missing plugins count changed
+                    return true;
+                }
+                
+                // Check if missing plugins list changed (compare sorted arrays)
+                const prevMissing = (prev.missingPlugins || []).slice().sort().join(',');
+                const nextMissing = (next.missingPlugins || []).slice().sort().join(',');
+                if (prevMissing !== nextMissing) {
+                    return true;
+                }
+            }
+        } else {
+            // No plugins required - check if readiness was cleared
+            const prevReadiness = this.gameState.pluginReadiness || {};
+            const newReadiness = newGameState.pluginReadiness || {};
+            if (Object.keys(prevReadiness).length !== Object.keys(newReadiness).length) {
+                return true;
+            }
+        }
 
         const prevSettings = this.gameState.settings;
         const nextSettings = newGameState.settings;
@@ -435,6 +483,23 @@ export default class PlayerListComponent extends BaseUIComponent {
         // You badge
         if (player.peerId === this.currentPlayerPeerId) {
             nameHtml += `<span class="you-badge">You</span>`;
+        }
+        
+        // Plugin readiness badge (only in lobby, only if plugins are required)
+        if (this.gameState && !this.gameState.isGameStarted() && this.gameState.pluginRequirements && this.gameState.pluginRequirements.length > 0) {
+            // Access readiness directly from pluginReadiness object (more reliable than getPluginReadiness)
+            const readiness = this.gameState.pluginReadiness?.[player.peerId];
+            if (readiness) {
+                if (readiness.ready) {
+                    nameHtml += `<span class="plugin-ready-badge" style="background-color: var(--color-success); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;">Ready</span>`;
+                } else {
+                    const missingPlugins = readiness.missingPlugins || [];
+                    nameHtml += `<span class="plugin-not-ready-badge" style="background-color: var(--color-danger); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;" title="Missing plugins: ${missingPlugins.join(', ')}">Missing Game Data</span>`;
+                }
+            } else {
+                // No readiness info yet (still checking)
+                nameHtml += `<span class="plugin-checking-badge" style="background-color: var(--color-warning); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;">Loading Game Data</span>`;
+            }
         }
 
         playerNameBadges.innerHTML = nameHtml;

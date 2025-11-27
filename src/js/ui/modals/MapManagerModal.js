@@ -110,8 +110,8 @@ export default class MapManagerModal extends BaseModal {
 
         const uploadButton = document.createElement('button');
         uploadButton.className = 'button button-primary';
-        uploadButton.textContent = '+ Upload Custom Map';
-        uploadButton.style.display = this.isHost ? '' : 'none';
+        uploadButton.textContent = 'Add Map';
+        // Always show Add Map button (not just for hosts)
         uploadButton.addEventListener('click', () => this.handleUpload());
 
         searchContainer.appendChild(searchInput);

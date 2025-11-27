@@ -28,6 +28,11 @@ export default class BaseGameState {
         this.selectedMapId = selectedMapId;
         this.selectedMapData = selectedMapData;
         this.pluginState = pluginState;
+        
+        // Plugin readiness tracking: peerId -> { ready: boolean, missingPlugins: [] }
+        this.pluginReadiness = {};
+        // Required plugins for current map
+        this.pluginRequirements = [];
 
         this.triggeredEvents = [];
         this.gamePhase = GamePhases.IN_LOBBY;
@@ -109,6 +114,64 @@ export default class BaseGameState {
 
     removeClient(peerId) {
         this.players = this.players.filter(player => player.peerId !== peerId);
+        // Also remove plugin readiness for this peer
+        if (this.pluginReadiness) {
+            delete this.pluginReadiness[peerId];
+        }
+    }
+    
+    /**
+     * Set plugin readiness for a peer
+     * @param {string} peerId - Peer ID
+     * @param {boolean} ready - Whether plugins are ready
+     * @param {Array} missingPlugins - List of missing plugin IDs
+     */
+    setPluginReadiness(peerId, ready, missingPlugins = []) {
+        if (!this.pluginReadiness) {
+            this.pluginReadiness = {};
+        }
+        this.pluginReadiness[peerId] = {
+            ready,
+            missingPlugins: [...missingPlugins]
+        };
+    }
+    
+    /**
+     * Get plugin readiness for a peer
+     * @param {string} peerId - Peer ID
+     * @returns {Object|null} Readiness info or null
+     */
+    getPluginReadiness(peerId) {
+        return this.pluginReadiness?.[peerId] || null;
+    }
+    
+    /**
+     * Check if all players have required plugins
+     * @returns {boolean} True if all ready
+     */
+    allPlayersPluginsReady() {
+        if (!this.pluginRequirements || this.pluginRequirements.length === 0) {
+            return true; // No plugins required
+        }
+        
+        // Check all players
+        for (const player of this.players) {
+            const readiness = this.getPluginReadiness(player.peerId);
+            if (!readiness || !readiness.ready) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Set required plugins for current map
+     * @param {Array} requirements - Array of plugin requirement objects
+     */
+    setPluginRequirements(requirements) {
+        this.pluginRequirements = requirements || [];
+        // Reset all readiness when requirements change
+        this.pluginReadiness = {};
     }
 
     getPlayerByPlayerId(playerId) {
@@ -198,6 +261,8 @@ export default class BaseGameState {
             selectedMapId: this.selectedMapId,
             selectedMapData: this.selectedMapData,
             pluginState: this.pluginState,
+            pluginReadiness: this.pluginReadiness || {},
+            pluginRequirements: this.pluginRequirements || [],
             gamePhase: this.gamePhase,
             _version: this._version,
             _timestamp: this._timestamp
@@ -220,6 +285,10 @@ export default class BaseGameState {
             selectedMapData: json.selectedMapData || null,
             pluginState: json.pluginState || {}
         });
+        
+        // Restore plugin readiness and requirements
+        instance.pluginReadiness = json.pluginReadiness || {};
+        instance.pluginRequirements = json.pluginRequirements || [];
 
         instance.gamePhase = json.gamePhase || GamePhases.IN_LOBBY;
         instance._version = json._version || 0;
