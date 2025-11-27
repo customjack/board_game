@@ -1,7 +1,8 @@
 import BaseModal from './BaseModal.js';
 import MapStorageManager from '../../systems/storage/MapStorageManager.js';
 import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
-import { createInfoIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
+import MapSettingsModal from './MapSettingsModal.js';
+import { createInfoIcon, createGearIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
 
 export default class MapManagerModal extends BaseModal {
     constructor(id, config = {}) {
@@ -185,6 +186,24 @@ export default class MapManagerModal extends BaseModal {
 
         // Make card position relative for absolute positioning of info button
         card.style.position = 'relative';
+
+        // Settings button (to the left of info button)
+        const settingsButton = createIconButton(
+            createGearIcon(18, 'var(--text-color, #fff)'),
+            'Map settings',
+            (e) => {
+                e.stopPropagation();
+                this.showMapSettings(map);
+            }
+        );
+        settingsButton.style.position = 'absolute';
+        settingsButton.style.top = '8px';
+        settingsButton.style.right = '48px'; // Position to the left of info button
+        settingsButton.style.zIndex = '10';
+        settingsButton.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        settingsButton.style.border = '1px solid var(--border-color, #444)';
+        settingsButton.style.padding = '6px';
+        card.appendChild(settingsButton);
 
         // Info button in top right corner
         const infoButton = createIconButton(
@@ -443,88 +462,100 @@ export default class MapManagerModal extends BaseModal {
         infoContent.style.maxWidth = '600px';
         infoContent.style.width = '100%';
 
-        // Basic info section (outline format)
-        const basicInfo = document.createElement('div');
-        basicInfo.style.border = '1px solid var(--border-color, #444)';
-        basicInfo.style.borderRadius = '8px';
-        basicInfo.style.padding = '16px';
-        basicInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
-        basicInfo.style.textAlign = 'left';
+        // Map Information section (outline format)
+        const mapInfo = document.createElement('div');
+        mapInfo.style.border = '1px solid var(--border-color, #444)';
+        mapInfo.style.borderRadius = '8px';
+        mapInfo.style.padding = '16px';
+        mapInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        mapInfo.style.textAlign = 'left';
 
-        const name = document.createElement('h3');
-        name.textContent = map.name;
-        name.style.margin = '0 0 8px 0';
-        name.style.color = 'var(--text-color, #fff)';
-        name.style.fontSize = '1.3em';
-        name.style.textAlign = 'left';
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = 'Map Information';
+        sectionTitle.style.margin = '0 0 16px 0';
+        sectionTitle.style.color = 'var(--text-color, #fff)';
+        sectionTitle.style.fontSize = '1.2em';
+        sectionTitle.style.textAlign = 'left';
+        mapInfo.appendChild(sectionTitle);
 
-        const author = document.createElement('div');
-        author.style.display = 'flex';
-        author.style.gap = '8px';
-        author.style.marginBottom = '12px';
-        author.style.textAlign = 'left';
-        const authorLabel = document.createElement('span');
-        authorLabel.textContent = 'Author:';
-        authorLabel.style.color = 'var(--text-color-secondary, #aaa)';
-        authorLabel.style.fontWeight = '500';
-        const authorValue = document.createElement('span');
-        authorValue.textContent = map.author;
-        authorValue.style.color = 'var(--text-color, #fff)';
-        author.appendChild(authorLabel);
-        author.appendChild(authorValue);
+        // Create info list
+        const infoList = document.createElement('div');
+        infoList.style.display = 'flex';
+        infoList.style.flexDirection = 'column';
+        infoList.style.gap = '12px';
 
-        const description = document.createElement('div');
-        description.style.display = 'flex';
-        description.style.flexDirection = 'column';
-        description.style.gap = '4px';
-        description.style.textAlign = 'left';
-        const descLabel = document.createElement('span');
-        descLabel.textContent = 'Description:';
-        descLabel.style.color = 'var(--text-color-secondary, #aaa)';
-        descLabel.style.fontWeight = '500';
-        descLabel.style.marginBottom = '4px';
-        const descValue = document.createElement('p');
-        descValue.textContent = map.description || map.metadata?.description || 'No description available';
-        descValue.style.margin = '0';
-        descValue.style.color = 'var(--text-color, #fff)';
-        descValue.style.lineHeight = '1.5';
-        descValue.style.textAlign = 'left';
-        description.appendChild(descLabel);
-        description.appendChild(descValue);
-
-        basicInfo.appendChild(name);
-        basicInfo.appendChild(author);
-        basicInfo.appendChild(description);
-        infoContent.appendChild(basicInfo);
-
-        // Engine info (outline format)
         const engine = map.engineType ||
             mapData?.engine?.type ||
             mapData?.metadata?.gameEngine?.type ||
             'turn-based';
 
-        const engineInfo = document.createElement('div');
-        engineInfo.style.border = '1px solid var(--border-color, #444)';
-        engineInfo.style.borderRadius = '8px';
-        engineInfo.style.padding = '16px';
-        engineInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
-        engineInfo.style.textAlign = 'left';
+        const infoItems = [
+            { label: 'Name:', value: map.name || map.id },
+            { label: 'Author:', value: map.author || 'Unknown' },
+            { label: 'ID:', value: map.id },
+            { label: 'Game Engine:', value: engine },
+            { label: 'Source:', value: map.isBuiltIn ? 'built-in' : 'custom' }
+        ];
 
-        const engineLabel = document.createElement('div');
-        engineLabel.style.display = 'flex';
-        engineLabel.style.gap = '8px';
-        engineLabel.style.textAlign = 'left';
-        const engineLabelText = document.createElement('span');
-        engineLabelText.textContent = 'Game Engine:';
-        engineLabelText.style.color = 'var(--text-color-secondary, #aaa)';
-        engineLabelText.style.fontWeight = '500';
-        const engineValue = document.createElement('span');
-        engineValue.textContent = engine;
-        engineValue.style.color = 'var(--color-info, #8aa2ff)';
-        engineLabel.appendChild(engineLabelText);
-        engineLabel.appendChild(engineValue);
-        engineInfo.appendChild(engineLabel);
-        infoContent.appendChild(engineInfo);
+        infoItems.forEach(item => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.justifyContent = 'space-between';
+            row.style.padding = '8px 0';
+            row.style.borderBottom = '1px solid var(--border-color, #242424)';
+
+            const label = document.createElement('span');
+            label.textContent = item.label;
+            label.style.color = 'var(--text-color-secondary, #aaa)';
+            label.style.fontSize = '0.95em';
+            label.style.fontWeight = '500';
+
+            const value = document.createElement('span');
+            value.textContent = item.value;
+            value.style.color = 'var(--text-color, #fff)';
+            value.style.fontSize = '0.95em';
+            value.style.textAlign = 'right';
+            value.style.maxWidth = '60%';
+            value.style.overflow = 'hidden';
+            value.style.textOverflow = 'ellipsis';
+            value.style.whiteSpace = 'nowrap';
+
+            row.appendChild(label);
+            row.appendChild(value);
+            infoList.appendChild(row);
+        });
+
+        mapInfo.appendChild(infoList);
+        infoContent.appendChild(mapInfo);
+
+        // Description if available
+        const description = map.description || map.metadata?.description;
+        if (description) {
+            const descInfo = document.createElement('div');
+            descInfo.style.border = '1px solid var(--border-color, #444)';
+            descInfo.style.borderRadius = '8px';
+            descInfo.style.padding = '16px';
+            descInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+            descInfo.style.textAlign = 'left';
+
+            const descLabel = document.createElement('div');
+            descLabel.textContent = 'Description:';
+            descLabel.style.color = 'var(--text-color-secondary, #aaa)';
+            descLabel.style.fontSize = '0.95em';
+            descLabel.style.fontWeight = '500';
+            descLabel.style.marginBottom = '8px';
+
+            const descValue = document.createElement('p');
+            descValue.textContent = description;
+            descValue.style.margin = '0';
+            descValue.style.color = 'var(--text-color, #fff)';
+            descValue.style.lineHeight = '1.5';
+            descValue.style.fontSize = '0.9em';
+
+            descInfo.appendChild(descLabel);
+            descInfo.appendChild(descValue);
+            infoContent.appendChild(descInfo);
+        }
 
         // Plugin requirements (outline format with scrollable list)
         const plugins = mapData?.requirements?.plugins || [];
@@ -626,29 +657,6 @@ export default class MapManagerModal extends BaseModal {
             infoContent.appendChild(pluginsInfo);
         }
 
-        // Map source info (outline format)
-        const sourceInfo = document.createElement('div');
-        sourceInfo.style.border = '1px solid var(--border-color, #444)';
-        sourceInfo.style.borderRadius = '8px';
-        sourceInfo.style.padding = '16px';
-        sourceInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
-        sourceInfo.style.display = 'flex';
-        sourceInfo.style.justifyContent = 'space-between';
-        sourceInfo.style.alignItems = 'center';
-        sourceInfo.style.textAlign = 'left';
-
-        const sourceLabel = document.createElement('span');
-        sourceLabel.textContent = 'Source:';
-        sourceLabel.style.color = 'var(--text-color-secondary, #aaa)';
-        sourceLabel.style.fontWeight = '500';
-        const sourceValue = document.createElement('span');
-        sourceValue.textContent = map.isBuiltIn ? 'Built-in' : 'Custom Upload';
-        sourceValue.style.color = map.isBuiltIn ? 'var(--color-info, #8aa2ff)' : 'var(--color-warning, #ffa726)';
-        sourceValue.style.fontWeight = '500';
-
-        sourceInfo.appendChild(sourceLabel);
-        sourceInfo.appendChild(sourceValue);
-        infoContent.appendChild(sourceInfo);
 
         // Create a simple info modal (no cancel button needed)
         const modal = document.createElement('div');
@@ -694,5 +702,18 @@ export default class MapManagerModal extends BaseModal {
         modalContent.appendChild(buttonContainer);
         modal.appendChild(modalContent);
         document.body.appendChild(modal);
+    }
+
+    showMapSettings(map) {
+        const settingsModal = new MapSettingsModal(
+            `mapSettings-${map.id}`,
+            map,
+            () => {
+                // Refresh map list when settings modal closes
+                this.renderContent();
+            }
+        );
+        settingsModal.init();
+        settingsModal.open();
     }
 }

@@ -314,9 +314,42 @@ export default class PluginManager {
 
             console.log(`[PluginManager] Loading plugin from ${pluginInfo.url}...`);
 
-            // For ES modules, use direct import (skip PluginLoader which uses old API)
+            // Check for cached plugin code first
+            let pluginCode = this.getCachedPluginCode(pluginInfo.url);
+            let loadUrl = pluginInfo.url;
+            let fromCache = false;
+            let blobUrl = null;
+
+            if (pluginCode) {
+                console.log(`[PluginManager] Using cached plugin code for ${pluginInfo.url}`);
+                // Create a blob URL from cached code for ES module import
+                const blob = new Blob([pluginCode], { type: 'application/javascript' });
+                blobUrl = URL.createObjectURL(blob);
+                loadUrl = blobUrl;
+                fromCache = true;
+            } else {
+                // Fetch from CDN and cache it
+                console.log(`[PluginManager] Fetching plugin code from CDN...`);
+                const response = await fetch(pluginInfo.url);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch plugin: ${response.status} ${response.statusText}`);
+                }
+                pluginCode = await response.text();
+                // Cache the plugin code for next time
+                this.cachePluginCode(pluginInfo.url, pluginCode);
+                // Use original URL for import (no need for blob URL when fetching fresh)
+                loadUrl = pluginInfo.url;
+            }
+
+            // For ES modules, use direct import
             // Import the module - it may export a class or a factory function
-            const module = await import(/* webpackIgnore: true */ pluginInfo.url);
+            const module = await import(/* webpackIgnore: true */ loadUrl);
+            
+            // Clean up blob URL after import (if we used one)
+            if (blobUrl) {
+                // Small delay to ensure module is fully loaded before revoking
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+            }
             let PluginClass = module.default;
 
             // Check if it's a factory function (receives bundle, returns class)
@@ -370,10 +403,12 @@ export default class PluginManager {
                 tags: metadata.tags || pluginInfo.tags,
                 dependencies: metadata.dependencies || [],
                 url: pluginInfo.url,
+                cdn: pluginInfo.url, // Store CDN URL for reference
                 source: pluginInfo.source || pluginInfo.url,
                 loadMethod: pluginInfo.loadMethod || 'ES',
                 loaded: true,
-                loadedAt: new Date().toISOString()
+                loadedAt: new Date().toISOString(),
+                cached: fromCache || false
             };
 
             // Register the class
@@ -400,6 +435,94 @@ export default class PluginManager {
                 success: false,
                 error: error.message || String(error)
             };
+        }
+    }
+
+    /**
+     * Cache plugin code in local storage
+     * @param {string} url - Plugin CDN URL
+     * @param {string} code - Plugin source code
+     */
+    cachePluginCode(url, code) {
+        try {
+            const cacheKey = `plugin_code_${this.hashUrl(url)}`;
+            localStorage.setItem(cacheKey, code);
+            // Also store the mapping of URL to cache key
+            const urlMap = this.getPluginCodeUrlMap();
+            urlMap[url] = cacheKey;
+            localStorage.setItem('plugin_code_url_map', JSON.stringify(urlMap));
+            console.log(`[PluginManager] Cached plugin code for ${url}`);
+        } catch (e) {
+            console.warn('Failed to cache plugin code to localStorage', e);
+        }
+    }
+
+    /**
+     * Get cached plugin code from local storage
+     * @param {string} url - Plugin CDN URL
+     * @returns {string|null} Cached plugin code or null
+     */
+    getCachedPluginCode(url) {
+        try {
+            const urlMap = this.getPluginCodeUrlMap();
+            const cacheKey = urlMap[url];
+            if (!cacheKey) {
+                return null;
+            }
+            const code = localStorage.getItem(cacheKey);
+            return code;
+        } catch (e) {
+            console.warn('Failed to get cached plugin code from localStorage', e);
+            return null;
+        }
+    }
+
+    /**
+     * Get the URL to cache key mapping
+     * @returns {Object} Map of URL to cache key
+     */
+    getPluginCodeUrlMap() {
+        try {
+            const stored = localStorage.getItem('plugin_code_url_map');
+            return stored ? JSON.parse(stored) : {};
+        } catch (e) {
+            console.warn('Failed to load plugin code URL map from localStorage', e);
+            return {};
+        }
+    }
+
+    /**
+     * Create a hash of the URL for use as a cache key
+     * @param {string} url - URL to hash
+     * @returns {string} Hash string
+     */
+    hashUrl(url) {
+        // Simple hash function for URL
+        let hash = 0;
+        for (let i = 0; i < url.length; i++) {
+            const char = url.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return Math.abs(hash).toString(36);
+    }
+
+    /**
+     * Clear cached plugin code for a URL
+     * @param {string} url - Plugin CDN URL
+     */
+    clearCachedPluginCode(url) {
+        try {
+            const urlMap = this.getPluginCodeUrlMap();
+            const cacheKey = urlMap[url];
+            if (cacheKey) {
+                localStorage.removeItem(cacheKey);
+                delete urlMap[url];
+                localStorage.setItem('plugin_code_url_map', JSON.stringify(urlMap));
+                console.log(`[PluginManager] Cleared cached plugin code for ${url}`);
+            }
+        } catch (e) {
+            console.warn('Failed to clear cached plugin code from localStorage', e);
         }
     }
 
@@ -474,12 +597,38 @@ export default class PluginManager {
             const pluginInfo = this.remotePluginInfo.get(pluginId);
             if (pluginInfo && pluginInfo.url) {
                 this.loadedPluginUrls.delete(pluginInfo.url);
+                // Clear cached plugin code
+                this.clearCachedPluginCode(pluginInfo.url);
             }
             this.pluginUrls.delete(pluginId);
             this.remotePluginInfo.delete(pluginId);
         } catch (e) {
             console.warn('Failed to remove remote plugin from localStorage', e);
         }
+    }
+
+    /**
+     * Force refresh a plugin from CDN (clears cache and reloads)
+     * @param {string} pluginId - Plugin ID to refresh
+     * @returns {Promise<Object>} Load result
+     */
+    async refreshPluginFromCDN(pluginId) {
+        const pluginInfo = this.remotePluginInfo.get(pluginId);
+        if (!pluginInfo || !pluginInfo.url) {
+            return {
+                success: false,
+                error: 'Plugin not found or has no URL'
+            };
+        }
+
+        // Clear cached code
+        this.clearCachedPluginCode(pluginInfo.url);
+
+        // Unregister the plugin
+        this.unregisterPlugin(pluginId);
+
+        // Reload from CDN
+        return await this.loadPluginFromUrl(pluginInfo);
     }
 
     /**

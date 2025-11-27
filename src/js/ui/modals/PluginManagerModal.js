@@ -1,7 +1,8 @@
 import BaseModal from './BaseModal.js';
 import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
 import MapStorageManager from '../../systems/storage/MapStorageManager.js';
-import { createInfoIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
+import PluginSettingsModal from './PluginSettingsModal.js';
+import { createInfoIcon, createGearIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
 
 export default class PluginManagerModal extends BaseModal {
     constructor(id, pluginManager, config = {}) {
@@ -264,20 +265,19 @@ export default class PluginManagerModal extends BaseModal {
         controls.style.gap = '8px';
         controls.style.flexShrink = '0';
 
-        // Remove button (to the left of info button)
-        if (!plugin.isDefault && this.isHost) {
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'button button-danger button-small';
-            removeBtn.textContent = 'Remove';
-            removeBtn.title = 'Remove Plugin';
-            removeBtn.style.padding = '4px 10px';
-            removeBtn.style.fontSize = '0.75em';
-            removeBtn.addEventListener('click', (e) => {
+        // Settings button (to the left of info button)
+        const settingsButton = createIconButton(
+            createGearIcon(18, 'var(--text-color, #fff)'),
+            'Plugin settings',
+            (e) => {
                 e.stopPropagation();
-                this.handleRemovePlugin(plugin);
-            });
-            controls.appendChild(removeBtn);
-        }
+                this.showPluginSettings(plugin);
+            }
+        );
+        settingsButton.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        settingsButton.style.border = '1px solid var(--border-color, #444)';
+        settingsButton.style.padding = '6px';
+        controls.appendChild(settingsButton);
 
         // Info button (top right)
         const infoButton = createIconButton(
@@ -309,173 +309,97 @@ export default class PluginManagerModal extends BaseModal {
         infoContent.style.width = '100%';
         infoContent.style.textAlign = 'left';
 
-        // Basic info section (outline format)
-        const basicInfo = document.createElement('div');
-        basicInfo.style.border = '1px solid var(--border-color, #444)';
-        basicInfo.style.borderRadius = '8px';
-        basicInfo.style.padding = '16px';
-        basicInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
-        basicInfo.style.textAlign = 'left';
+        // Plugin Information section (outline format)
+        const pluginInfo = document.createElement('div');
+        pluginInfo.style.border = '1px solid var(--border-color, #444)';
+        pluginInfo.style.borderRadius = '8px';
+        pluginInfo.style.padding = '16px';
+        pluginInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        pluginInfo.style.textAlign = 'left';
 
-        const name = document.createElement('h3');
-        name.textContent = plugin.name;
-        name.style.margin = '0 0 8px 0';
-        name.style.color = 'var(--text-color, #fff)';
-        name.style.fontSize = '1.3em';
-        name.style.textAlign = 'left';
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = 'Plugin Information';
+        sectionTitle.style.margin = '0 0 16px 0';
+        sectionTitle.style.color = 'var(--text-color, #fff)';
+        sectionTitle.style.fontSize = '1.2em';
+        sectionTitle.style.textAlign = 'left';
+        pluginInfo.appendChild(sectionTitle);
 
-        const author = document.createElement('div');
-        author.style.display = 'flex';
-        author.style.gap = '8px';
-        author.style.marginBottom = '12px';
-        author.style.textAlign = 'left';
-        const authorLabel = document.createElement('span');
-        authorLabel.textContent = 'Author:';
-        authorLabel.style.color = 'var(--text-color-secondary, #aaa)';
-        authorLabel.style.fontWeight = '500';
-        const authorValue = document.createElement('span');
-        authorValue.textContent = plugin.author || 'Unknown';
-        authorValue.style.color = 'var(--text-color, #fff)';
-        author.appendChild(authorLabel);
-        author.appendChild(authorValue);
+        // Create info list
+        const infoList = document.createElement('div');
+        infoList.style.display = 'flex';
+        infoList.style.flexDirection = 'column';
+        infoList.style.gap = '12px';
 
-        const description = document.createElement('div');
-        description.style.display = 'flex';
-        description.style.flexDirection = 'column';
-        description.style.gap = '4px';
-        description.style.textAlign = 'left';
-        const descLabel = document.createElement('span');
-        descLabel.textContent = 'Description:';
-        descLabel.style.color = 'var(--text-color-secondary, #aaa)';
-        descLabel.style.fontWeight = '500';
-        descLabel.style.marginBottom = '4px';
-        const descValue = document.createElement('p');
-        descValue.textContent = plugin.description || 'No description available';
-        descValue.style.margin = '0';
-        descValue.style.color = 'var(--text-color, #fff)';
-        descValue.style.lineHeight = '1.5';
-        descValue.style.textAlign = 'left';
-        description.appendChild(descLabel);
-        description.appendChild(descValue);
+        const infoItems = [
+            { label: 'Name:', value: plugin.name },
+            { label: 'Author:', value: plugin.author || 'Unknown' },
+            { label: 'Version:', value: plugin.version || '1.0.0' },
+            { label: 'ID:', value: plugin.id },
+            { label: 'Source:', value: plugin.source === 'builtin' ? 'built-in' : 
+                      plugin.source === 'local' ? 'local' : 
+                      plugin.cdn ? 'remote' : 
+                      plugin.source || 'built-in' }
+        ];
 
-        basicInfo.appendChild(name);
-        basicInfo.appendChild(author);
-        basicInfo.appendChild(description);
-        infoContent.appendChild(basicInfo);
+        infoItems.forEach(item => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.justifyContent = 'space-between';
+            row.style.padding = '8px 0';
+            row.style.borderBottom = '1px solid var(--border-color, #242424)';
 
-        // Version info (outline format)
-        const versionInfo = document.createElement('div');
-        versionInfo.style.border = '1px solid var(--border-color, #444)';
-        versionInfo.style.borderRadius = '8px';
-        versionInfo.style.padding = '16px';
-        versionInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
-        versionInfo.style.textAlign = 'left';
+            const label = document.createElement('span');
+            label.textContent = item.label;
+            label.style.color = 'var(--text-color-secondary, #aaa)';
+            label.style.fontSize = '0.95em';
+            label.style.fontWeight = '500';
 
-        const versionLabel = document.createElement('div');
-        versionLabel.style.display = 'flex';
-        versionLabel.style.gap = '8px';
-        versionLabel.style.textAlign = 'left';
-        const versionLabelText = document.createElement('span');
-        versionLabelText.textContent = 'Version:';
-        versionLabelText.style.color = 'var(--text-color-secondary, #aaa)';
-        versionLabelText.style.fontWeight = '500';
-        const versionValue = document.createElement('span');
-        versionValue.textContent = plugin.version || 'Unknown';
-        versionValue.style.color = 'var(--color-info, #8aa2ff)';
-        versionLabel.appendChild(versionLabelText);
-        versionLabel.appendChild(versionValue);
-        versionInfo.appendChild(versionLabel);
-        infoContent.appendChild(versionInfo);
+            const value = document.createElement('span');
+            value.textContent = item.value;
+            value.style.color = 'var(--text-color, #fff)';
+            value.style.fontSize = '0.95em';
+            value.style.textAlign = 'right';
+            value.style.maxWidth = '60%';
+            value.style.overflow = 'hidden';
+            value.style.textOverflow = 'ellipsis';
+            value.style.whiteSpace = 'nowrap';
 
-        // Source info (outline format)
-        const sourceInfo = document.createElement('div');
-        sourceInfo.style.border = '1px solid var(--border-color, #444)';
-        sourceInfo.style.borderRadius = '8px';
-        sourceInfo.style.padding = '16px';
-        sourceInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
-        sourceInfo.style.display = 'flex';
-        sourceInfo.style.justifyContent = 'space-between';
-        sourceInfo.style.alignItems = 'center';
-        sourceInfo.style.textAlign = 'left';
+            row.appendChild(label);
+            row.appendChild(value);
+            infoList.appendChild(row);
+        });
 
-        const sourceLabel = document.createElement('span');
-        sourceLabel.textContent = 'Source:';
-        sourceLabel.style.color = 'var(--text-color-secondary, #aaa)';
-        sourceLabel.style.fontWeight = '500';
-        const sourceValue = document.createElement('span');
-        const sourceText = plugin.source === 'builtin' ? 'Built-in' : 
-                          plugin.source === 'local' ? 'Local' : 
-                          plugin.source || 'Unknown';
-        sourceValue.textContent = sourceText;
-        sourceValue.style.color = plugin.source === 'builtin' ? 'var(--color-info, #8aa2ff)' : 
-                                  plugin.source === 'local' ? 'var(--color-warning, #ffa726)' : 
-                                  'var(--text-color, #fff)';
-        sourceValue.style.fontWeight = '500';
+        pluginInfo.appendChild(infoList);
+        infoContent.appendChild(pluginInfo);
 
-        sourceInfo.appendChild(sourceLabel);
-        sourceInfo.appendChild(sourceValue);
-        infoContent.appendChild(sourceInfo);
+        // Description if available
+        if (plugin.description) {
+            const descInfo = document.createElement('div');
+            descInfo.style.border = '1px solid var(--border-color, #444)';
+            descInfo.style.borderRadius = '8px';
+            descInfo.style.padding = '16px';
+            descInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+            descInfo.style.textAlign = 'left';
 
-        // CDN info if available
-        if (plugin.cdn) {
-            const cdnInfo = document.createElement('div');
-            cdnInfo.style.border = '1px solid var(--border-color, #444)';
-            cdnInfo.style.borderRadius = '8px';
-            cdnInfo.style.padding = '16px';
-            cdnInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
-            cdnInfo.style.textAlign = 'left';
+            const descLabel = document.createElement('div');
+            descLabel.textContent = 'Description:';
+            descLabel.style.color = 'var(--text-color-secondary, #aaa)';
+            descLabel.style.fontSize = '0.95em';
+            descLabel.style.fontWeight = '500';
+            descLabel.style.marginBottom = '8px';
 
-            const cdnLabel = document.createElement('div');
-            cdnLabel.style.display = 'flex';
-            cdnLabel.style.flexDirection = 'column';
-            cdnLabel.style.gap = '4px';
-            cdnLabel.style.textAlign = 'left';
-            const cdnLabelText = document.createElement('span');
-            cdnLabelText.textContent = 'CDN URL:';
-            cdnLabelText.style.color = 'var(--text-color-secondary, #aaa)';
-            cdnLabelText.style.fontWeight = '500';
-            cdnLabelText.style.marginBottom = '4px';
-            const cdnValue = document.createElement('span');
-            cdnValue.textContent = plugin.cdn;
-            cdnValue.style.color = 'var(--text-color, #fff)';
-            cdnValue.style.fontFamily = 'monospace';
-            cdnValue.style.fontSize = '0.9em';
-            cdnValue.style.wordBreak = 'break-all';
-            cdnLabel.appendChild(cdnLabelText);
-            cdnLabel.appendChild(cdnValue);
-            cdnInfo.appendChild(cdnLabel);
-            infoContent.appendChild(cdnInfo);
+            const descValue = document.createElement('p');
+            descValue.textContent = plugin.description;
+            descValue.style.margin = '0';
+            descValue.style.color = 'var(--text-color, #fff)';
+            descValue.style.lineHeight = '1.5';
+            descValue.style.fontSize = '0.9em';
+
+            descInfo.appendChild(descLabel);
+            descInfo.appendChild(descValue);
+            infoContent.appendChild(descInfo);
         }
-
-        // Status info
-        const statusInfo = document.createElement('div');
-        statusInfo.style.border = '1px solid var(--border-color, #444)';
-        statusInfo.style.borderRadius = '8px';
-        statusInfo.style.padding = '16px';
-        statusInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
-        statusInfo.style.display = 'flex';
-        statusInfo.style.justifyContent = 'space-between';
-        statusInfo.style.alignItems = 'center';
-        statusInfo.style.textAlign = 'left';
-
-        const statusLabel = document.createElement('span');
-        statusLabel.textContent = 'Status:';
-        statusLabel.style.color = 'var(--text-color-secondary, #aaa)';
-        statusLabel.style.fontWeight = '500';
-        const statusValue = document.createElement('span');
-        if (plugin.isDefault) {
-            statusValue.textContent = 'Required';
-            statusValue.style.color = 'var(--text-color-secondary, #888)';
-        } else {
-            const usedByMap = this.currentMapPluginIds.has(plugin.id);
-            statusValue.textContent = usedByMap ? 'Active (Map Requirement)' : 'Not Used';
-            statusValue.style.color = usedByMap ? 'var(--color-success, #4caf50)' : 'var(--text-color-secondary, #888)';
-        }
-        statusValue.style.fontWeight = '500';
-
-        statusInfo.appendChild(statusLabel);
-        statusInfo.appendChild(statusValue);
-        infoContent.appendChild(statusInfo);
 
         // Create modal
         const modal = document.createElement('div');
@@ -521,6 +445,24 @@ export default class PluginManagerModal extends BaseModal {
         modalContent.appendChild(buttonContainer);
         modal.appendChild(modalContent);
         document.body.appendChild(modal);
+    }
+
+    showPluginSettings(plugin) {
+        const settingsModal = new PluginSettingsModal(
+            `pluginSettings-${plugin.id}`,
+            plugin,
+            this.pluginManager,
+            () => {
+                // Refresh plugin list when settings modal closes
+                this.loadPlugins();
+                const listElement = this.modal.querySelector('[data-plugin-list]');
+                if (listElement) {
+                    this.populatePluginList(listElement);
+                }
+            }
+        );
+        settingsModal.init();
+        settingsModal.open();
     }
 
     handleSearch(query) {
