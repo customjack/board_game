@@ -1,5 +1,6 @@
 import Plugin from './Plugin.js';
 import PluginLoader from './PluginLoader.js';
+import PluginBundle from './PluginBundle.js';
 
 /**
  * PluginManager - Centralized management for all game plugins
@@ -50,7 +51,23 @@ export default class PluginManager {
             baseClasses: { Plugin }
         });
 
+        // PluginBundle will be created after all dependencies are available
+        this.pluginBundle = null;
+
         this.loadSavedPlugins();
+    }
+
+    /**
+     * Initialize the plugin bundle with all dependencies
+     * This should be called after all core classes and factories are available
+     */
+    initializePluginBundle(dependencies) {
+        this.pluginBundle = new PluginBundle(dependencies);
+        this.pluginBundle.updateRuntimeDependencies(
+            this.eventBus,
+            this.registryManager,
+            this.factoryManager
+        );
     }
 
     /**
@@ -297,26 +314,46 @@ export default class PluginManager {
 
             console.log(`[PluginManager] Loading plugin from ${pluginInfo.url}...`);
 
-            // Use PluginLoader to load the plugin
-            const loaderInfo = {
-                id: pluginInfo.id,
-                name: pluginInfo.name,
-                url: pluginInfo.url,
-                loadMethod: pluginInfo.loadMethod
-            };
+            // For ES modules, use direct import (skip PluginLoader which uses old API)
+            // Import the module - it may export a class or a factory function
+            const module = await import(/* webpackIgnore: true */ pluginInfo.url);
+            let PluginClass = module.default;
 
-            const result = await this.pluginLoader.loadPluginWithFallback(loaderInfo);
-
-            if (!result.success) {
-                throw new Error(result.error);
+            // Check if it's a factory function (receives bundle, returns class)
+            // Try to detect: if it's a function with exactly 1 parameter, it's likely a factory
+            // We'll try calling it and see if it returns a class-like object
+            if (typeof PluginClass === 'function' && PluginClass.length === 1) {
+                // It might be a factory function - try calling it with the bundle
+                if (!this.pluginBundle) {
+                    throw new Error('PluginBundle not initialized. Call initializePluginBundle() first.');
+                }
+                
+                try {
+                    const result = PluginClass(this.pluginBundle);
+                    // If it returns a function with a prototype and getPluginMetadata, it's a class
+                    if (result && typeof result === 'function' && 
+                        result.prototype && 
+                        typeof result.getPluginMetadata === 'function') {
+                        PluginClass = result;
+                    }
+                    // Otherwise, assume it was a class constructor, not a factory
+                } catch (error) {
+                    // If calling it fails, it's probably not a factory - treat as class
+                    console.warn('[PluginManager] Failed to call as factory, treating as class:', error);
+                }
             }
 
-            // Import the module to get the Plugin class
-            const module = await import(/* webpackIgnore: true */ pluginInfo.url);
-            const PluginClass = module.default;
+            // Validate it's a Plugin class
+            if (!PluginClass || typeof PluginClass !== 'function') {
+                throw new Error('Plugin module must export a default class or factory function');
+            }
 
-            if (!PluginClass || !(PluginClass.prototype instanceof Plugin)) {
-                throw new Error('Module must export a default class extending Plugin');
+            // Check if it extends Plugin (may not work if Plugin came from bundle, so we'll be lenient)
+            if (PluginClass.prototype && !(PluginClass.prototype instanceof Plugin)) {
+                // If Plugin came from bundle, check if it has the right structure
+                if (typeof PluginClass.prototype.initialize !== 'function') {
+                    throw new Error('Plugin class must have an initialize() method');
+                }
             }
 
             // Get metadata from the plugin class (may override our temporary info)
@@ -334,7 +371,7 @@ export default class PluginManager {
                 dependencies: metadata.dependencies || [],
                 url: pluginInfo.url,
                 source: pluginInfo.source || pluginInfo.url,
-                loadMethod: result.method || pluginInfo.loadMethod,
+                loadMethod: pluginInfo.loadMethod || 'ES',
                 loaded: true,
                 loadedAt: new Date().toISOString()
             };

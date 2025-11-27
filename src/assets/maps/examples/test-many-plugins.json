@@ -1,0 +1,135 @@
+{
+    "$schema": "https://boardgame.example.com/schemas/game-v3.json",
+    "version": "1.0.0",
+    "type": "game",
+    "metadata": {
+        "name": "Test Board - Many Plugins",
+        "author": "Test Author",
+        "description": "Test board with 10 fake plugins to test scrollable plugin list",
+        "created": "2025-11-26T00:00:00.000Z",
+        "tags": ["test", "plugins"]
+    },
+    "requirements": {
+        "plugins": [
+            {
+                "id": "core",
+                "version": "^1.0.0",
+                "source": "builtin",
+                "description": "Core game functionality"
+            },
+            {
+                "id": "plugin-1",
+                "version": "^1.0.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-1.js",
+                "name": "Advanced Dice System",
+                "description": "Enhanced dice rolling with custom faces and modifiers"
+            },
+            {
+                "id": "plugin-2",
+                "version": "^2.1.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-2.js",
+                "name": "Card Deck Manager",
+                "description": "Comprehensive card deck management with shuffling and dealing"
+            },
+            {
+                "id": "plugin-3",
+                "version": "^1.5.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-3.js",
+                "name": "Timer Extension",
+                "description": "Adds turn timers and game clock functionality"
+            },
+            {
+                "id": "plugin-4",
+                "version": "^3.0.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-4.js",
+                "name": "Achievement System",
+                "description": "Track player achievements and milestones"
+            },
+            {
+                "id": "plugin-5",
+                "version": "^1.2.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-5.js",
+                "name": "Sound Effects Pack",
+                "description": "Audio feedback for game actions and events"
+            },
+            {
+                "id": "plugin-6",
+                "version": "^2.0.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-6.js",
+                "name": "Statistics Tracker",
+                "description": "Detailed game statistics and analytics"
+            },
+            {
+                "id": "plugin-7",
+                "version": "^1.8.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-7.js",
+                "name": "Custom Themes",
+                "description": "Additional visual themes and color schemes"
+            },
+            {
+                "id": "plugin-8",
+                "version": "^1.0.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-8.js",
+                "name": "Multiplayer Chat",
+                "description": "In-game chat system for players"
+            },
+            {
+                "id": "plugin-9",
+                "version": "^2.3.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-9.js",
+                "name": "Replay System",
+                "description": "Record and replay game sessions"
+            },
+            {
+                "id": "plugin-10",
+                "version": "^1.1.0",
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/plugin-10.js",
+                "name": "Leaderboard",
+                "description": "Global and session-based leaderboards"
+            }
+        ],
+        "minPlayers": 2,
+        "maxPlayers": 8
+    },
+    "engine": {
+        "type": "turn-based",
+        "config": {}
+    },
+    "ui": {
+        "layout": "standard-board",
+        "components": []
+    },
+    "rules": {
+        "startingPositions": {
+            "mode": "single",
+            "spaceIds": ["start"]
+        }
+    },
+    "board": {
+        "topology": {
+            "spaces": [
+                {
+                    "id": "start",
+                    "name": "Start",
+                    "type": "start",
+                    "position": { "x": 100, "y": 100 },
+                    "visual": { "size": 50, "color": "#ffffff" },
+                    "connections": [],
+                    "triggers": []
+                }
+            ]
+        },
+        "rendering": {}
+    }
+}
+

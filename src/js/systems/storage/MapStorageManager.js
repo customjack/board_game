@@ -126,6 +126,17 @@ export default class MapStorageManager {
                 thumbnail: null,
                 createdDate: '2025-02-10T00:00:00Z',
                 engineType: 'turn-based'
+            },
+            {
+                id: 'test-many-plugins',
+                name: 'Test Board - Many Plugins',
+                author: 'Test Author',
+                description: 'Test board with 10 fake plugins to test scrollable plugin list',
+                isBuiltIn: true,
+                path: 'assets/maps/examples/test-many-plugins.json',
+                thumbnail: null,
+                createdDate: '2025-11-26T00:00:00Z',
+                engineType: 'turn-based'
             }
         ];
     }

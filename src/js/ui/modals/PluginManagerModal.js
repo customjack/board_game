@@ -1,6 +1,7 @@
 import BaseModal from './BaseModal.js';
 import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
 import MapStorageManager from '../../systems/storage/MapStorageManager.js';
+import { createInfoIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
 
 export default class PluginManagerModal extends BaseModal {
     constructor(id, pluginManager, config = {}) {
@@ -218,6 +219,7 @@ export default class PluginManagerModal extends BaseModal {
     createPluginRow(plugin) {
         const row = document.createElement('div');
         row.className = 'plugin-row';
+        row.style.position = 'relative';
         row.style.display = 'flex';
         row.style.justifyContent = 'space-between';
         row.style.alignItems = 'center';
@@ -225,89 +227,51 @@ export default class PluginManagerModal extends BaseModal {
         row.style.borderBottom = '1px solid var(--border-color, #242424)';
         row.style.gap = '12px';
 
-        // Icon removed as per request
-        // const icon = document.createElement('div');
-        // ...
-
         const info = document.createElement('div');
         info.className = 'plugin-info';
         info.style.display = 'flex';
         info.style.flexDirection = 'column';
-        info.style.gap = '6px';
-
-        const header = document.createElement('div');
-        header.style.display = 'flex';
-        header.style.alignItems = 'center';
-        header.style.gap = '10px';
+        info.style.gap = '4px';
+        info.style.flex = '1';
+        info.style.minWidth = '0'; // Allow text truncation
 
         const name = document.createElement('h4');
         name.textContent = plugin.name;
         name.style.margin = '0';
         name.style.color = 'var(--text-color, #fff)';
+        name.style.fontSize = '1.05em';
+        name.style.overflow = 'hidden';
+        name.style.textOverflow = 'ellipsis';
+        name.style.whiteSpace = 'nowrap';
 
-        const version = document.createElement('span');
-        version.textContent = `v${plugin.version}`;
-        version.style.fontSize = '0.8em';
-        version.style.color = 'var(--text-color-secondary, #888)';
-        version.style.backgroundColor = 'var(--background-secondary, #202020)';
-        version.style.padding = '2px 6px';
-        version.style.borderRadius = '4px';
+        const author = document.createElement('p');
+        author.textContent = `by ${plugin.author || 'Unknown'}`;
+        author.style.margin = '0';
+        author.style.fontSize = '0.9em';
+        author.style.color = 'var(--text-color-secondary, #aaa)';
+        author.style.overflow = 'hidden';
+        author.style.textOverflow = 'ellipsis';
+        author.style.whiteSpace = 'nowrap';
 
-        header.appendChild(name);
-        header.appendChild(version);
+        info.appendChild(name);
+        info.appendChild(author);
 
-        const description = document.createElement('p');
-        description.textContent = plugin.description || 'No description available';
-        description.style.margin = '0';
-        description.style.fontSize = '0.9em';
-        description.style.color = 'var(--text-color-secondary, #aaa)';
-
-        // Show source information
-        if (plugin.source && plugin.source !== 'builtin' && plugin.source !== 'local') {
-            const sourceInfo = document.createElement('div');
-            sourceInfo.style.fontSize = '0.75em';
-            sourceInfo.style.color = 'var(--text-color-tertiary, #666)';
-            sourceInfo.style.marginTop = '4px';
-            sourceInfo.textContent = `Source: ${plugin.source}`;
-            description.appendChild(document.createElement('br'));
-            description.appendChild(sourceInfo);
-        }
-
-        const chips = document.createElement('div');
-        chips.style.display = 'flex';
-        chips.style.gap = '6px';
-        chips.style.flexWrap = 'wrap';
-
-        const usedByMap = this.currentMapPluginIds.has(plugin.id);
-        const mapChip = document.createElement('span');
-        mapChip.textContent = usedByMap ? 'Used by map' : 'Not in map';
-        mapChip.style.backgroundColor = usedByMap ? 'var(--color-info, #20304f)' : 'var(--background-secondary, #252525)';
-        mapChip.style.color = usedByMap ? '#fff' : 'var(--text-tertiary, #999)';
-        mapChip.style.fontSize = '0.75em';
-        mapChip.style.padding = '2px 6px';
-        mapChip.style.borderRadius = '4px';
-        chips.appendChild(mapChip);
-
-        info.appendChild(header);
-        info.appendChild(description);
-        info.appendChild(chips);
-
+        // Controls container in top right
         const controls = document.createElement('div');
         controls.className = 'plugin-controls';
         controls.style.display = 'flex';
-        controls.style.flexDirection = 'column';
-        controls.style.alignItems = 'flex-end';
+        controls.style.alignItems = 'center';
         controls.style.gap = '8px';
-        controls.style.minWidth = '120px';
+        controls.style.flexShrink = '0';
 
-        // Top row: Remove button (if applicable)
+        // Remove button (to the left of info button)
         if (!plugin.isDefault && this.isHost) {
             const removeBtn = document.createElement('button');
             removeBtn.className = 'button button-danger button-small';
             removeBtn.textContent = 'Remove';
             removeBtn.title = 'Remove Plugin';
-            removeBtn.style.padding = '2px 8px';
-            removeBtn.style.fontSize = '0.8em';
+            removeBtn.style.padding = '4px 10px';
+            removeBtn.style.fontSize = '0.75em';
             removeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.handleRemovePlugin(plugin);
@@ -315,43 +279,248 @@ export default class PluginManagerModal extends BaseModal {
             controls.appendChild(removeBtn);
         }
 
-        // Bottom row: Status indicators
-        const statusContainer = document.createElement('div');
-        statusContainer.style.display = 'flex';
-        statusContainer.style.flexDirection = 'column';
-        statusContainer.style.alignItems = 'flex-end';
-        statusContainer.style.gap = '4px';
-
-        if (plugin.isDefault) {
-            const badge = document.createElement('span');
-            badge.textContent = 'Required';
-            badge.style.color = 'var(--text-color-secondary, #888)';
-            badge.style.fontSize = '0.85em';
-            badge.style.fontStyle = 'italic';
-            statusContainer.appendChild(badge);
-        } else {
-            const usedByMap = this.currentMapPluginIds.has(plugin.id);
-            const statusBadge = document.createElement('span');
-            statusBadge.style.fontSize = '0.85em';
-            statusBadge.style.fontWeight = '500';
-
-            if (usedByMap) {
-                statusBadge.textContent = 'Active (Map Requirement)';
-                statusBadge.style.color = 'var(--color-success, #4caf50)';
-            } else {
-                statusBadge.textContent = 'Not Used';
-                statusBadge.style.color = 'var(--text-color-secondary, #888)';
-                statusBadge.style.fontStyle = 'italic';
+        // Info button (top right)
+        const infoButton = createIconButton(
+            createInfoIcon(18, 'var(--text-color, #fff)'),
+            'View plugin details',
+            (e) => {
+                e.stopPropagation();
+                this.showPluginInfo(plugin);
             }
-            statusContainer.appendChild(statusBadge);
-        }
-
-        controls.appendChild(statusContainer);
+        );
+        infoButton.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        infoButton.style.border = '1px solid var(--border-color, #444)';
+        infoButton.style.padding = '6px';
+        controls.appendChild(infoButton);
 
         row.appendChild(info);
         row.appendChild(controls);
 
         return row;
+    }
+
+    showPluginInfo(plugin) {
+        const infoContent = document.createElement('div');
+        infoContent.style.display = 'flex';
+        infoContent.style.flexDirection = 'column';
+        infoContent.style.gap = '20px';
+        infoContent.style.padding = '20px';
+        infoContent.style.maxWidth = '600px';
+        infoContent.style.width = '100%';
+        infoContent.style.textAlign = 'left';
+
+        // Basic info section (outline format)
+        const basicInfo = document.createElement('div');
+        basicInfo.style.border = '1px solid var(--border-color, #444)';
+        basicInfo.style.borderRadius = '8px';
+        basicInfo.style.padding = '16px';
+        basicInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        basicInfo.style.textAlign = 'left';
+
+        const name = document.createElement('h3');
+        name.textContent = plugin.name;
+        name.style.margin = '0 0 8px 0';
+        name.style.color = 'var(--text-color, #fff)';
+        name.style.fontSize = '1.3em';
+        name.style.textAlign = 'left';
+
+        const author = document.createElement('div');
+        author.style.display = 'flex';
+        author.style.gap = '8px';
+        author.style.marginBottom = '12px';
+        author.style.textAlign = 'left';
+        const authorLabel = document.createElement('span');
+        authorLabel.textContent = 'Author:';
+        authorLabel.style.color = 'var(--text-color-secondary, #aaa)';
+        authorLabel.style.fontWeight = '500';
+        const authorValue = document.createElement('span');
+        authorValue.textContent = plugin.author || 'Unknown';
+        authorValue.style.color = 'var(--text-color, #fff)';
+        author.appendChild(authorLabel);
+        author.appendChild(authorValue);
+
+        const description = document.createElement('div');
+        description.style.display = 'flex';
+        description.style.flexDirection = 'column';
+        description.style.gap = '4px';
+        description.style.textAlign = 'left';
+        const descLabel = document.createElement('span');
+        descLabel.textContent = 'Description:';
+        descLabel.style.color = 'var(--text-color-secondary, #aaa)';
+        descLabel.style.fontWeight = '500';
+        descLabel.style.marginBottom = '4px';
+        const descValue = document.createElement('p');
+        descValue.textContent = plugin.description || 'No description available';
+        descValue.style.margin = '0';
+        descValue.style.color = 'var(--text-color, #fff)';
+        descValue.style.lineHeight = '1.5';
+        descValue.style.textAlign = 'left';
+        description.appendChild(descLabel);
+        description.appendChild(descValue);
+
+        basicInfo.appendChild(name);
+        basicInfo.appendChild(author);
+        basicInfo.appendChild(description);
+        infoContent.appendChild(basicInfo);
+
+        // Version info (outline format)
+        const versionInfo = document.createElement('div');
+        versionInfo.style.border = '1px solid var(--border-color, #444)';
+        versionInfo.style.borderRadius = '8px';
+        versionInfo.style.padding = '16px';
+        versionInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        versionInfo.style.textAlign = 'left';
+
+        const versionLabel = document.createElement('div');
+        versionLabel.style.display = 'flex';
+        versionLabel.style.gap = '8px';
+        versionLabel.style.textAlign = 'left';
+        const versionLabelText = document.createElement('span');
+        versionLabelText.textContent = 'Version:';
+        versionLabelText.style.color = 'var(--text-color-secondary, #aaa)';
+        versionLabelText.style.fontWeight = '500';
+        const versionValue = document.createElement('span');
+        versionValue.textContent = plugin.version || 'Unknown';
+        versionValue.style.color = 'var(--color-info, #8aa2ff)';
+        versionLabel.appendChild(versionLabelText);
+        versionLabel.appendChild(versionValue);
+        versionInfo.appendChild(versionLabel);
+        infoContent.appendChild(versionInfo);
+
+        // Source info (outline format)
+        const sourceInfo = document.createElement('div');
+        sourceInfo.style.border = '1px solid var(--border-color, #444)';
+        sourceInfo.style.borderRadius = '8px';
+        sourceInfo.style.padding = '16px';
+        sourceInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        sourceInfo.style.display = 'flex';
+        sourceInfo.style.justifyContent = 'space-between';
+        sourceInfo.style.alignItems = 'center';
+        sourceInfo.style.textAlign = 'left';
+
+        const sourceLabel = document.createElement('span');
+        sourceLabel.textContent = 'Source:';
+        sourceLabel.style.color = 'var(--text-color-secondary, #aaa)';
+        sourceLabel.style.fontWeight = '500';
+        const sourceValue = document.createElement('span');
+        const sourceText = plugin.source === 'builtin' ? 'Built-in' : 
+                          plugin.source === 'local' ? 'Local' : 
+                          plugin.source || 'Unknown';
+        sourceValue.textContent = sourceText;
+        sourceValue.style.color = plugin.source === 'builtin' ? 'var(--color-info, #8aa2ff)' : 
+                                  plugin.source === 'local' ? 'var(--color-warning, #ffa726)' : 
+                                  'var(--text-color, #fff)';
+        sourceValue.style.fontWeight = '500';
+
+        sourceInfo.appendChild(sourceLabel);
+        sourceInfo.appendChild(sourceValue);
+        infoContent.appendChild(sourceInfo);
+
+        // CDN info if available
+        if (plugin.cdn) {
+            const cdnInfo = document.createElement('div');
+            cdnInfo.style.border = '1px solid var(--border-color, #444)';
+            cdnInfo.style.borderRadius = '8px';
+            cdnInfo.style.padding = '16px';
+            cdnInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+            cdnInfo.style.textAlign = 'left';
+
+            const cdnLabel = document.createElement('div');
+            cdnLabel.style.display = 'flex';
+            cdnLabel.style.flexDirection = 'column';
+            cdnLabel.style.gap = '4px';
+            cdnLabel.style.textAlign = 'left';
+            const cdnLabelText = document.createElement('span');
+            cdnLabelText.textContent = 'CDN URL:';
+            cdnLabelText.style.color = 'var(--text-color-secondary, #aaa)';
+            cdnLabelText.style.fontWeight = '500';
+            cdnLabelText.style.marginBottom = '4px';
+            const cdnValue = document.createElement('span');
+            cdnValue.textContent = plugin.cdn;
+            cdnValue.style.color = 'var(--text-color, #fff)';
+            cdnValue.style.fontFamily = 'monospace';
+            cdnValue.style.fontSize = '0.9em';
+            cdnValue.style.wordBreak = 'break-all';
+            cdnLabel.appendChild(cdnLabelText);
+            cdnLabel.appendChild(cdnValue);
+            cdnInfo.appendChild(cdnLabel);
+            infoContent.appendChild(cdnInfo);
+        }
+
+        // Status info
+        const statusInfo = document.createElement('div');
+        statusInfo.style.border = '1px solid var(--border-color, #444)';
+        statusInfo.style.borderRadius = '8px';
+        statusInfo.style.padding = '16px';
+        statusInfo.style.backgroundColor = 'var(--background-box, #1f1f1f)';
+        statusInfo.style.display = 'flex';
+        statusInfo.style.justifyContent = 'space-between';
+        statusInfo.style.alignItems = 'center';
+        statusInfo.style.textAlign = 'left';
+
+        const statusLabel = document.createElement('span');
+        statusLabel.textContent = 'Status:';
+        statusLabel.style.color = 'var(--text-color-secondary, #aaa)';
+        statusLabel.style.fontWeight = '500';
+        const statusValue = document.createElement('span');
+        if (plugin.isDefault) {
+            statusValue.textContent = 'Required';
+            statusValue.style.color = 'var(--text-color-secondary, #888)';
+        } else {
+            const usedByMap = this.currentMapPluginIds.has(plugin.id);
+            statusValue.textContent = usedByMap ? 'Active (Map Requirement)' : 'Not Used';
+            statusValue.style.color = usedByMap ? 'var(--color-success, #4caf50)' : 'var(--text-color-secondary, #888)';
+        }
+        statusValue.style.fontWeight = '500';
+
+        statusInfo.appendChild(statusLabel);
+        statusInfo.appendChild(statusValue);
+        infoContent.appendChild(statusInfo);
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.className = 'modal custom-modal';
+        modal.style.display = 'block';
+
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        modalContent.style.maxWidth = '650px';
+        modalContent.style.width = '90%';
+
+        const title = document.createElement('h2');
+        title.textContent = 'Plugin Information';
+        title.style.textAlign = 'left';
+        title.style.marginBottom = '20px';
+        title.style.color = 'var(--text-color, #fff)';
+        modalContent.appendChild(title);
+
+        // Left-align the content
+        const contentWrapper = document.createElement('div');
+        contentWrapper.style.display = 'flex';
+        contentWrapper.style.justifyContent = 'flex-start';
+        contentWrapper.style.width = '100%';
+        contentWrapper.appendChild(infoContent);
+        modalContent.appendChild(contentWrapper);
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'modal-buttons';
+        buttonContainer.style.justifyContent = 'flex-end';
+        buttonContainer.style.marginTop = '20px';
+
+        const closeButton = document.createElement('button');
+        closeButton.className = 'button button-primary';
+        closeButton.textContent = 'Close';
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        });
+
+        buttonContainer.appendChild(closeButton);
+        modalContent.appendChild(buttonContainer);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
     }
 
     handleSearch(query) {
@@ -403,12 +572,15 @@ export default class PluginManagerModal extends BaseModal {
         const urlLabel = document.createElement('label');
         urlLabel.textContent = 'Plugin CDN URL:';
         urlLabel.style.fontWeight = '600';
+        urlLabel.style.display = 'block';
+        urlLabel.style.textAlign = 'left';
         
         const urlInput = document.createElement('input');
         urlInput.type = 'url';
         urlInput.className = 'input';
         urlInput.placeholder = 'https://cdn.example.com/plugin.js';
         urlInput.style.width = '100%';
+        urlInput.style.boxSizing = 'border-box';
 
         const infoText = document.createElement('p');
         infoText.textContent = 'The plugin name and description will be loaded from the plugin\'s metadata.';
@@ -432,21 +604,39 @@ export default class PluginManagerModal extends BaseModal {
         }
 
         try {
-            const result = await this.pluginManager.loadPluginFromUrl(urlInput.value.trim());
+            const url = urlInput.value.trim();
+            const result = await this.pluginManager.loadPluginFromUrl(url);
             
             if (result.success) {
-                await ModalUtil.alert('Plugin loaded successfully!');
+                await ModalUtil.pluginResult(
+                    true,
+                    `Plugin "${result.pluginId || 'Unknown'}" loaded successfully!`,
+                    null,
+                    'Success'
+                );
                 this.loadPlugins();
                 const listElement = this.modal.querySelector('[data-plugin-list]');
                 if (listElement) {
                     this.populatePluginList(listElement);
                 }
             } else {
-                await ModalUtil.alert(`Failed to load plugin: ${result.error || 'Unknown error'}`);
+                const errorMessage = result.error || 'Unknown error occurred';
+                await ModalUtil.pluginResult(
+                    false,
+                    `Failed to load plugin from ${url}`,
+                    errorMessage,
+                    'Error'
+                );
             }
         } catch (error) {
             console.error('Error loading plugin:', error);
-            await ModalUtil.alert('Error loading plugin: ' + error.message);
+            const url = urlInput.value.trim();
+            await ModalUtil.pluginResult(
+                false,
+                `Failed to load plugin from ${url}`,
+                error.message || String(error),
+                'Error'
+            );
         }
     }
 

@@ -246,6 +246,79 @@ export default class ModalUtil {
     }
 
     /**
+     * Show a plugin loading result modal (success or error)
+     * @param {boolean} success - Whether loading was successful
+     * @param {string} message - Message to display
+     * @param {string} details - Additional details (optional)
+     * @param {string} title - Modal title (optional)
+     * @returns {Promise<void>} Resolves when modal is closed
+     */
+    static pluginResult(success, message, details = null, title = null) {
+        if (this.activeModal) {
+            return Promise.resolve();
+        }
+
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal custom-modal';
+            modal.style.display = 'block';
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+
+            // Title
+            const titleEl = document.createElement('h2');
+            titleEl.textContent = title || (success ? 'Plugin Loaded Successfully' : 'Plugin Load Failed');
+            titleEl.style.color = success ? '#4caf50' : '#f44336';
+            modalContent.appendChild(titleEl);
+
+            // Message
+            const messageEl = document.createElement('p');
+            messageEl.textContent = message;
+            messageEl.style.marginBottom = details ? '12px' : '20px';
+            messageEl.style.textAlign = 'center';
+            modalContent.appendChild(messageEl);
+
+            // Details (for errors)
+            if (details) {
+                const detailsEl = document.createElement('div');
+                detailsEl.style.backgroundColor = '#2a2a2a';
+                detailsEl.style.padding = '12px';
+                detailsEl.style.borderRadius = '4px';
+                detailsEl.style.marginTop = '12px';
+                detailsEl.style.marginBottom = '20px';
+                detailsEl.style.fontFamily = 'monospace';
+                detailsEl.style.fontSize = '0.85em';
+                detailsEl.style.color = '#ff6b6b';
+                detailsEl.style.maxHeight = '200px';
+                detailsEl.style.overflowY = 'auto';
+                detailsEl.style.wordBreak = 'break-word';
+                detailsEl.textContent = details;
+                modalContent.appendChild(detailsEl);
+            }
+
+            // Button
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'modal-buttons';
+            buttonContainer.style.justifyContent = 'center';
+
+            const okButton = document.createElement('button');
+            okButton.textContent = 'OK';
+            okButton.className = success ? 'button button-primary' : 'button button-secondary';
+            okButton.addEventListener('click', () => {
+                this.closeModal(modal);
+                resolve();
+            });
+
+            buttonContainer.appendChild(okButton);
+            modalContent.appendChild(buttonContainer);
+            modal.appendChild(modalContent);
+
+            this.showModal(modal);
+        });
+    }
+
+    /**
      * Close and remove a modal
      * @param {HTMLElement} modal - Modal element to close
      */

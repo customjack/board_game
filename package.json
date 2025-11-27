@@ -9,11 +9,14 @@
     "test:coverage": "jest --coverage",
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",
-    "build:plugins": "rollup -c rollup.plugins.config.js",
+    "build:plugins": "rollup -c rollup.plugins.config.js --bundleConfigAsCjs",
     "watch:plugins": "rollup -c rollup.plugins.config.js -w",
+    "cdn:start": "node scripts/start-cdn-server.js",
     "peerjs:start": "node scripts/start-peerjs-server.js",
     "dev:full": "npm run peerjs:start & npm run watch:plugins & npm start",
-    "dev:peer": "node scripts/dev-with-peerjs.js"
+    "dev:peer": "node scripts/dev-with-peerjs.js",
+    "dev:cdn": "node scripts/dev-with-cdn.js",
+    "test:plugin": "npm run build:plugins && npm run dev:cdn"
 
   },
   "keywords": [],

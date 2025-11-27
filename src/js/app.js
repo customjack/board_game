@@ -18,6 +18,14 @@ import DefaultCorePlugin from './systems/plugins/DefaultCorePlugin.js';
 import LocalStorageManager from './systems/storage/LocalStorageManager';
 import FactoryManager from './infrastructure/factories/FactoryManager';
 import GameEngineFactory from './infrastructure/factories/GameEngineFactory.js';
+import GameStateFactory from './infrastructure/factories/GameStateFactory.js';
+import BaseGameState from './game/state/BaseGameState.js';
+import BaseGameEngine from './core/base/BaseGameEngine.js';
+import TurnPhases from './game/phases/TurnPhases.js';
+import GamePhases from './game/phases/GamePhases.js';
+import PhaseStateMachine from './game/components/PhaseStateMachine.js';
+import BasePieceManager from './infrastructure/managers/BasePieceManager.js';
+import { getVisibleElementById } from './infrastructure/utils/helpers.js';
 import EffectFactory from './infrastructure/factories/EffectFactory';
 import ActionFactory from './infrastructure/factories/ActionFactory';
 import TriggerFactory from './infrastructure/factories/TriggerFactory';
@@ -369,6 +377,20 @@ function initializeApp() {
     // Listen for theme changes
     personalSettings.addThemeListener((theme) => {
         document.documentElement.setAttribute('data-theme', theme);
+    });
+
+    // Initialize PluginBundle with all dependencies for remote plugins
+    pluginManager.initializePluginBundle({
+        Plugin,
+        BaseGameEngine,
+        BaseGameState,
+        BasePieceManager,
+        GameEngineFactory,
+        GameStateFactory,
+        TurnPhases,
+        GamePhases,
+        PhaseStateMachine,
+        getVisibleElementById
     });
 
     // Register listeners
