@@ -12,7 +12,9 @@
     "build:plugins": "rollup -c rollup.plugins.config.js",
     "watch:plugins": "rollup -c rollup.plugins.config.js -w",
     "peerjs:start": "node scripts/start-peerjs-server.js",
-    "dev:full": "npm run peerjs:start & npm run watch:plugins & npm start"
+    "dev:full": "npm run peerjs:start & npm run watch:plugins & npm start",
+    "dev:peer": "npm run peerjs:start & npm start"
+
   },
   "keywords": [],
   "author": "",

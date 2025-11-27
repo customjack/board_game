@@ -262,6 +262,17 @@ export default class PluginManagerModal extends BaseModal {
         description.style.fontSize = '0.9em';
         description.style.color = 'var(--text-color-secondary, #aaa)';
 
+        // Show source information
+        if (plugin.source && plugin.source !== 'builtin' && plugin.source !== 'local') {
+            const sourceInfo = document.createElement('div');
+            sourceInfo.style.fontSize = '0.75em';
+            sourceInfo.style.color = 'var(--text-color-tertiary, #666)';
+            sourceInfo.style.marginTop = '4px';
+            sourceInfo.textContent = `Source: ${plugin.source}`;
+            description.appendChild(document.createElement('br'));
+            description.appendChild(sourceInfo);
+        }
+
         const chips = document.createElement('div');
         chips.style.display = 'flex';
         chips.style.gap = '6px';
@@ -382,12 +393,72 @@ export default class PluginManagerModal extends BaseModal {
     }
 
     async handleAddPlugin() {
-        const url = await ModalUtil.prompt('Enter the URL of the plugin module (CDN link):', '', 'Add Plugin');
-        if (!url) return;
+        // Create a more detailed form for adding plugins
+        const form = document.createElement('div');
+        form.style.display = 'flex';
+        form.style.flexDirection = 'column';
+        form.style.gap = '12px';
+        form.style.padding = '16px';
+
+        const urlLabel = document.createElement('label');
+        urlLabel.textContent = 'Plugin CDN URL (required):';
+        urlLabel.style.fontWeight = '600';
+        
+        const urlInput = document.createElement('input');
+        urlInput.type = 'url';
+        urlInput.className = 'input';
+        urlInput.placeholder = 'https://cdn.example.com/plugin.js';
+        urlInput.style.width = '100%';
+
+        const nameLabel = document.createElement('label');
+        nameLabel.textContent = 'Plugin Name (optional):';
+        nameLabel.style.fontWeight = '600';
+        
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'input';
+        nameInput.placeholder = 'My Plugin';
+        nameInput.style.width = '100%';
+
+        const descLabel = document.createElement('label');
+        descLabel.textContent = 'Description (optional):';
+        descLabel.style.fontWeight = '600';
+        
+        const descInput = document.createElement('textarea');
+        descInput.className = 'input';
+        descInput.placeholder = 'A brief description of the plugin';
+        descInput.style.width = '100%';
+        descInput.style.minHeight = '60px';
+        descInput.style.resize = 'vertical';
+
+        form.appendChild(urlLabel);
+        form.appendChild(urlInput);
+        form.appendChild(nameLabel);
+        form.appendChild(nameInput);
+        form.appendChild(descLabel);
+        form.appendChild(descInput);
+
+        const confirmed = await ModalUtil.customConfirm(
+            form,
+            'Add Remote Plugin',
+            'Add',
+            'Cancel'
+        );
+
+        if (!confirmed || !urlInput.value.trim()) {
+            return;
+        }
 
         try {
-            const success = await this.pluginManager.loadPluginFromUrl(url);
-            if (success) {
+            const pluginInfo = {
+                url: urlInput.value.trim(),
+                name: nameInput.value.trim() || undefined,
+                description: descInput.value.trim() || undefined
+            };
+
+            const result = await this.pluginManager.loadPluginFromUrl(pluginInfo);
+            
+            if (result.success) {
                 await ModalUtil.alert('Plugin loaded successfully!');
                 this.loadPlugins();
                 const listElement = this.modal.querySelector('[data-plugin-list]');
@@ -395,7 +466,7 @@ export default class PluginManagerModal extends BaseModal {
                     this.populatePluginList(listElement);
                 }
             } else {
-                await ModalUtil.alert('Failed to load plugin. Check console for details.');
+                await ModalUtil.alert(`Failed to load plugin: ${result.error || 'Unknown error'}`);
             }
         } catch (error) {
             console.error('Error loading plugin:', error);
@@ -404,9 +475,21 @@ export default class PluginManagerModal extends BaseModal {
     }
 
     async handleRemovePlugin(plugin) {
-        const confirmed = await ModalUtil.confirm(`Are you sure you want to remove plugin "${plugin.name}"?`, 'Remove Plugin');
+        // Cannot remove default/core plugins
+        if (plugin.isDefault || plugin.id === 'core') {
+            await ModalUtil.alert('Cannot remove core/default plugins.', 'Cannot Remove');
+            return;
+        }
+
+        const confirmed = await ModalUtil.confirm(
+            `Are you sure you want to remove plugin "${plugin.name}"? This will also remove it from your saved plugins.`,
+            'Remove Plugin'
+        );
+        
         if (confirmed) {
             if (this.pluginManager.unregisterPlugin(plugin.id)) {
+                // Also remove from remote plugin cache
+                this.pluginManager.removeSavedRemotePlugin(plugin.id);
                 this.loadPlugins();
                 const listElement = this.modal.querySelector('[data-plugin-list]');
                 if (listElement) {

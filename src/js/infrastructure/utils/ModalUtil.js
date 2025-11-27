@@ -96,6 +96,72 @@ export default class ModalUtil {
     }
 
     /**
+     * Show a custom confirm modal with custom HTML content
+     * @param {HTMLElement|string} content - Custom HTML element or message string
+     * @param {string} title - Modal title
+     * @param {string} confirmText - Confirm button text (default: 'OK')
+     * @param {string} cancelText - Cancel button text (default: 'Cancel')
+     * @returns {Promise<boolean>} Resolves to true if confirmed, false if canceled
+     */
+    static customConfirm(content, title = 'Confirm', confirmText = 'OK', cancelText = 'Cancel') {
+        // Prevent multiple modals
+        if (this.activeModal) {
+            return Promise.resolve(false);
+        }
+
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal custom-modal';
+            modal.style.display = 'block';
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+
+            // Title
+            const titleEl = document.createElement('h2');
+            titleEl.textContent = title;
+            modalContent.appendChild(titleEl);
+
+            // Content
+            const contentEl = document.createElement('div');
+            contentEl.className = 'modal-custom-content';
+            if (typeof content === 'string') {
+                contentEl.textContent = content;
+            } else {
+                contentEl.appendChild(content);
+            }
+            modalContent.appendChild(contentEl);
+
+            // Buttons
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'modal-buttons';
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = cancelText;
+            cancelButton.className = 'button button-secondary';
+            cancelButton.addEventListener('click', () => {
+                this.closeModal(modal);
+                resolve(false);
+            });
+
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = confirmText;
+            confirmButton.className = 'button button-primary';
+            confirmButton.addEventListener('click', () => {
+                this.closeModal(modal);
+                resolve(true);
+            });
+
+            buttonContainer.appendChild(cancelButton);
+            buttonContainer.appendChild(confirmButton);
+            modalContent.appendChild(buttonContainer);
+            modal.appendChild(modalContent);
+
+            this.showModal(modal);
+        });
+    }
+
+    /**
      * Create a modal element
      * @param {Object} config - Modal configuration
      * @returns {HTMLElement} Modal element

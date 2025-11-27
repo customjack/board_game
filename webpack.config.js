@@ -5,7 +5,7 @@ const webpack = require('webpack');
 const path = require('path');
 require('dotenv').config(); // Load .env file
 
-const DEV_SERVER_PORT = process.env.DEV_SERVER_PORT || 9000;
+const DEV_SERVER_PORT = process.env.DEV_SERVER_PORT || 9001;
 
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production';

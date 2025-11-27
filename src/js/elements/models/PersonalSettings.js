@@ -15,6 +15,7 @@ export default class PersonalSettings {
             this.autoRoll = savedSettings.autoRoll;
             this.rollAnimation = savedSettings.rollAnimation || 'dice-roll'; // Default if not set
             this.streamerMode = savedSettings.streamerMode || false;
+            this.autoLoadPlugins = savedSettings.autoLoadPlugins !== undefined ? savedSettings.autoLoadPlugins : true; // Default true
         } else {
             // Default settings if nothing is saved
             this.theme = 'light';
@@ -23,6 +24,7 @@ export default class PersonalSettings {
             this.autoRoll = false;
             this.rollAnimation = 'dice-roll'; // Default animation
             this.streamerMode = false;
+            this.autoLoadPlugins = true; // Default to true
         }
     }
 
@@ -104,6 +106,16 @@ export default class PersonalSettings {
         this.streamerModeListeners.forEach(callback => callback(enabled));
     }
 
+    // Getter and Setter for auto-load plugins
+    getAutoLoadPlugins() {
+        return this.autoLoadPlugins;
+    }
+
+    setAutoLoadPlugins(enabled) {
+        this.autoLoadPlugins = enabled;
+        this.saveToLocalStorage();
+    }
+
     // Convert the settings object to JSON format
     toJSON() {
         return {
@@ -113,6 +125,7 @@ export default class PersonalSettings {
             autoRoll: this.autoRoll,
             rollAnimation: this.rollAnimation,
             streamerMode: this.streamerMode,
+            autoLoadPlugins: this.autoLoadPlugins,
         };
     }
 
@@ -125,6 +138,7 @@ export default class PersonalSettings {
         settings.autoRoll = json.autoRoll;
         settings.rollAnimation = json.rollAnimation || 'dice-roll';
         settings.streamerMode = json.streamerMode || false;
+        settings.autoLoadPlugins = json.autoLoadPlugins !== undefined ? json.autoLoadPlugins : true;
         return settings;
     }
 

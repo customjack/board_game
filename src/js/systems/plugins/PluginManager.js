@@ -40,6 +40,9 @@ export default class PluginManager {
         // Map of plugin ID -> Source URL (for removal)
         this.pluginUrls = new Map();
 
+        // Map of plugin ID -> Full plugin info (for remote plugins)
+        this.remotePluginInfo = new Map();
+
         // Initialize PluginLoader
         this.pluginLoader = new PluginLoader({
             registryManager: this.registryManager,
@@ -192,9 +195,7 @@ export default class PluginManager {
 
         // Remove from persistence if it was loaded from a URL
         if (this.pluginUrls.has(pluginId)) {
-            const url = this.pluginUrls.get(pluginId);
-            this.removeSavedPluginUrl(url);
-            this.pluginUrls.delete(pluginId);
+            this.removeSavedRemotePlugin(pluginId);
         }
 
         console.log(`[PluginManager] Unregistered plugin: ${pluginId}`);
@@ -249,83 +250,155 @@ export default class PluginManager {
     }
 
     /**
-     * Load a plugin from a remote URL
-     * @param {string} url - URL to the plugin module
-     * @returns {Promise<boolean>} Success status
+     * Load a plugin from a remote URL or plugin info object
+     * @param {string|Object} urlOrInfo - URL string or plugin info object with {url, id, name, description, cdn, etc}
+     * @returns {Promise<Object>} Result object with {success: boolean, pluginId?: string, error?: string}
      */
-    /**
-     * Load a plugin from a remote URL
-     * @param {string} url - URL to the plugin module
-     * @returns {Promise<boolean>} Success status
-     */
-    async loadPluginFromUrl(url) {
+    async loadPluginFromUrl(urlOrInfo) {
         try {
-            if (this.loadedPluginUrls.has(url)) {
-                console.warn(`Plugin from ${url} already loaded`);
-                return true;
+            // Normalize input to plugin info object
+            let pluginInfo;
+            if (typeof urlOrInfo === 'string') {
+                pluginInfo = {
+                    id: `remote-${Date.now()}`,
+                    name: 'Remote Plugin',
+                    url: urlOrInfo,
+                    loadMethod: 'ES',
+                    description: '',
+                    source: urlOrInfo
+                };
+            } else {
+                pluginInfo = {
+                    id: urlOrInfo.id || `remote-${Date.now()}`,
+                    name: urlOrInfo.name || 'Remote Plugin',
+                    url: urlOrInfo.url || urlOrInfo.cdn,
+                    loadMethod: urlOrInfo.loadMethod || 'ES',
+                    description: urlOrInfo.description || '',
+                    source: urlOrInfo.cdn || urlOrInfo.url,
+                    version: urlOrInfo.version || '1.0.0',
+                    author: urlOrInfo.author || '',
+                    tags: urlOrInfo.tags || []
+                };
             }
 
-            console.log(`[PluginManager] Loading plugin from ${url}...`);
+            if (!pluginInfo.url) {
+                throw new Error('Plugin URL is required');
+            }
 
-            const pluginInfo = {
-                id: `remote-${Date.now()}`, // Temporary ID, will be updated from metadata
-                name: 'Remote Plugin',
-                url: url,
-                loadMethod: 'ES' // Default to ES module
-            };
+            // Check if already loaded
+            if (this.loadedPluginUrls.has(pluginInfo.url)) {
+                console.warn(`Plugin from ${pluginInfo.url} already loaded`);
+                const existingPlugin = Array.from(this.remotePluginInfo.values()).find(p => p.url === pluginInfo.url);
+                return {
+                    success: true,
+                    pluginId: existingPlugin?.id || pluginInfo.id
+                };
+            }
+
+            console.log(`[PluginManager] Loading plugin from ${pluginInfo.url}...`);
 
             // Use PluginLoader to load the plugin
-            // We use loadPluginWithFallback to try ES module first, then others if needed
-            const result = await this.pluginLoader.loadPluginWithFallback(pluginInfo);
+            const loaderInfo = {
+                id: pluginInfo.id,
+                name: pluginInfo.name,
+                url: pluginInfo.url,
+                loadMethod: pluginInfo.loadMethod
+            };
+
+            const result = await this.pluginLoader.loadPluginWithFallback(loaderInfo);
 
             if (!result.success) {
                 throw new Error(result.error);
             }
 
-            // The plugin loader registers the plugin with the registry manager (if it uses the new system)
-            // But for our current architecture, we expect the module to export a Plugin class
-            // Let's handle the module export manually for now to maintain compatibility with our Plugin class system
-
-            // Re-import to get the class (since PluginLoader might just execute side effects)
-            // Note: This is a bit redundant but ensures we get the class reference
-            const module = await import(/* webpackIgnore: true */ url);
+            // Import the module to get the Plugin class
+            const module = await import(/* webpackIgnore: true */ pluginInfo.url);
             const PluginClass = module.default;
 
             if (!PluginClass || !(PluginClass.prototype instanceof Plugin)) {
                 throw new Error('Module must export a default class extending Plugin');
             }
 
+            // Get metadata from the plugin class (may override our temporary info)
+            const metadata = PluginClass.getPluginMetadata();
+            
+            // Merge metadata with our plugin info
+            const fullPluginInfo = {
+                ...pluginInfo,
+                id: metadata.id,
+                name: metadata.name || pluginInfo.name,
+                description: metadata.description || pluginInfo.description,
+                version: metadata.version || pluginInfo.version,
+                author: metadata.author || pluginInfo.author,
+                tags: metadata.tags || pluginInfo.tags,
+                dependencies: metadata.dependencies || [],
+                url: pluginInfo.url,
+                source: pluginInfo.source || pluginInfo.url,
+                loadMethod: result.method || pluginInfo.loadMethod,
+                loaded: true,
+                loadedAt: new Date().toISOString()
+            };
+
             // Register the class
             if (this.registerPluginClass(PluginClass)) {
                 // Initialize it
-                const metadata = PluginClass.getPluginMetadata();
                 if (this.initializePlugin(metadata.id)) {
-                    this.loadedPluginUrls.add(url);
-                    this.pluginUrls.set(metadata.id, url);
-                    this.savePluginUrl(url);
-                    return true;
+                    this.loadedPluginUrls.add(pluginInfo.url);
+                    this.pluginUrls.set(metadata.id, pluginInfo.url);
+                    this.remotePluginInfo.set(metadata.id, fullPluginInfo);
+                    this.saveRemotePlugin(fullPluginInfo);
+                    return {
+                        success: true,
+                        pluginId: metadata.id
+                    };
                 }
             }
-            return false;
+            return {
+                success: false,
+                error: 'Failed to register or initialize plugin'
+            };
         } catch (error) {
-            console.error(`Failed to load plugin from ${url}:`, error);
-            return false;
+            console.error(`Failed to load plugin:`, error);
+            return {
+                success: false,
+                error: error.message || String(error)
+            };
         }
     }
 
     /**
-     * Save a plugin URL to local storage
-     * @param {string} url - URL to save
+     * Save a remote plugin to local storage
+     * @param {Object} pluginInfo - Full plugin info object
      */
-    savePluginUrl(url) {
+    saveRemotePlugin(pluginInfo) {
         try {
-            const urls = JSON.parse(localStorage.getItem('custom_plugin_urls') || '[]');
-            if (!urls.includes(url)) {
-                urls.push(url);
-                localStorage.setItem('custom_plugin_urls', JSON.stringify(urls));
+            const plugins = this.getSavedRemotePlugins();
+            const existingIndex = plugins.findIndex(p => p.id === pluginInfo.id || p.url === pluginInfo.url);
+            
+            if (existingIndex >= 0) {
+                plugins[existingIndex] = pluginInfo;
+            } else {
+                plugins.push(pluginInfo);
             }
+            
+            localStorage.setItem('remote_plugins', JSON.stringify(plugins));
         } catch (e) {
-            console.warn('Failed to save plugin URL to localStorage', e);
+            console.warn('Failed to save remote plugin to localStorage', e);
+        }
+    }
+
+    /**
+     * Get all saved remote plugins from local storage
+     * @returns {Array} Array of plugin info objects
+     */
+    getSavedRemotePlugins() {
+        try {
+            const stored = localStorage.getItem('remote_plugins');
+            if (!stored) return [];
+            return JSON.parse(stored);
+        } catch (e) {
+            console.warn('Failed to load remote plugins from localStorage', e);
+            return [];
         }
     }
 
@@ -334,9 +407,16 @@ export default class PluginManager {
      */
     async loadSavedPlugins() {
         try {
-            const urls = JSON.parse(localStorage.getItem('custom_plugin_urls') || '[]');
-            for (const url of urls) {
-                await this.loadPluginFromUrl(url);
+            const plugins = this.getSavedRemotePlugins();
+            for (const pluginInfo of plugins) {
+                // Only load if it has a valid URL
+                if (pluginInfo.url) {
+                    try {
+                        await this.loadPluginFromUrl(pluginInfo);
+                    } catch (error) {
+                        console.warn(`Failed to load saved plugin ${pluginInfo.id}:`, error);
+                    }
+                }
             }
         } catch (e) {
             console.warn('Failed to load saved plugins from localStorage', e);
@@ -344,18 +424,147 @@ export default class PluginManager {
     }
 
     /**
-     * Remove a saved plugin URL
-     * @param {string} url - URL to remove
+     * Remove a saved remote plugin
+     * @param {string} pluginId - Plugin ID to remove
      */
-    removeSavedPluginUrl(url) {
+    removeSavedRemotePlugin(pluginId) {
         try {
-            const urls = JSON.parse(localStorage.getItem('custom_plugin_urls') || '[]');
-            const newUrls = urls.filter(u => u !== url);
-            localStorage.setItem('custom_plugin_urls', JSON.stringify(newUrls));
-            this.loadedPluginUrls.delete(url);
+            const plugins = this.getSavedRemotePlugins();
+            const filtered = plugins.filter(p => p.id !== pluginId);
+            localStorage.setItem('remote_plugins', JSON.stringify(filtered));
+            
+            // Also remove from in-memory maps
+            const pluginInfo = this.remotePluginInfo.get(pluginId);
+            if (pluginInfo && pluginInfo.url) {
+                this.loadedPluginUrls.delete(pluginInfo.url);
+            }
+            this.pluginUrls.delete(pluginId);
+            this.remotePluginInfo.delete(pluginId);
         } catch (e) {
-            console.warn('Failed to remove plugin URL from localStorage', e);
+            console.warn('Failed to remove remote plugin from localStorage', e);
         }
+    }
+
+    /**
+     * Get remote plugin info by ID
+     * @param {string} pluginId - Plugin ID
+     * @returns {Object|null} Plugin info or null
+     */
+    getRemotePluginInfo(pluginId) {
+        return this.remotePluginInfo.get(pluginId) || null;
+    }
+
+    /**
+     * Get all remote plugins
+     * @returns {Array} Array of remote plugin info objects
+     */
+    getAllRemotePlugins() {
+        return Array.from(this.remotePluginInfo.values());
+    }
+
+    /**
+     * Extract plugin requirements from map data
+     * @param {Object} mapData - Map JSON data
+     * @returns {Array} Array of plugin requirement objects
+     */
+    extractPluginRequirements(mapData) {
+        const requirements = mapData?.requirements?.plugins || mapData?.metadata?.plugins || [];
+        return requirements.map(req => {
+            if (typeof req === 'string') {
+                return { id: req, version: '^1.0.0', source: 'builtin' };
+            }
+            return {
+                id: req.id,
+                version: req.version || '^1.0.0',
+                source: req.source || 'builtin',
+                cdn: req.cdn || req.url || null,
+                description: req.description || '',
+                name: req.name || req.id
+            };
+        });
+    }
+
+    /**
+     * Check if all required plugins are loaded
+     * @param {Array} requiredPlugins - Array of plugin requirement objects
+     * @returns {Object} { allLoaded: boolean, missing: Array }
+     */
+    checkPluginRequirements(requiredPlugins) {
+        const missing = [];
+        
+        for (const req of requiredPlugins) {
+            // Skip 'core' or 'builtin' plugins as they're always available
+            if (req.id === 'core' || req.source === 'builtin') {
+                continue;
+            }
+            
+            // Check if plugin is registered
+            if (!this.pluginClasses.has(req.id)) {
+                missing.push(req);
+            }
+        }
+        
+        return {
+            allLoaded: missing.length === 0,
+            missing
+        };
+    }
+
+    /**
+     * Load required plugins from map data
+     * @param {Object} mapData - Map JSON data
+     * @param {boolean} autoLoad - Whether to auto-load if user setting allows
+     * @returns {Promise<Object>} Result with loaded plugins and any missing ones
+     */
+    async loadRequiredPlugins(mapData, autoLoad = false) {
+        const requirements = this.extractPluginRequirements(mapData);
+        const check = this.checkPluginRequirements(requirements);
+        
+        if (check.allLoaded) {
+            return { success: true, loaded: [], missing: [] };
+        }
+        
+        const missing = check.missing;
+        const loaded = [];
+        const failed = [];
+        
+        // Only auto-load if enabled
+        if (!autoLoad) {
+            return { success: false, loaded: [], missing, failed: [] };
+        }
+        
+        // Try to load missing plugins
+        for (const req of missing) {
+            if (req.cdn || req.source === 'remote') {
+                try {
+                    const result = await this.loadPluginFromUrl({
+                        id: req.id,
+                        name: req.name,
+                        url: req.cdn,
+                        description: req.description,
+                        version: req.version
+                    });
+                    
+                    if (result.success) {
+                        loaded.push({ ...req, pluginId: result.pluginId });
+                    } else {
+                        failed.push({ ...req, error: result.error });
+                    }
+                } catch (error) {
+                    failed.push({ ...req, error: error.message });
+                }
+            } else {
+                // Plugin has no CDN source, can't auto-load
+                failed.push({ ...req, error: 'No CDN source specified' });
+            }
+        }
+        
+        return {
+            success: failed.length === 0,
+            loaded,
+            missing: failed,
+            failed
+        };
     }
 
     /**
@@ -369,11 +578,16 @@ export default class PluginManager {
             const metadata = pluginClass.getPluginMetadata();
             const enabled = this.pluginStates.get(pluginId);
             const initialized = this.pluginInstances.has(pluginId);
+            const remoteInfo = this.remotePluginInfo.get(pluginId);
 
             plugins.push({
                 ...metadata,
                 enabled,
-                initialized
+                initialized,
+                // Add remote plugin info if available
+                source: remoteInfo?.source || (metadata.isDefault ? 'builtin' : 'local'),
+                url: remoteInfo?.url || null,
+                loadedAt: remoteInfo?.loadedAt || null
             });
         }
 

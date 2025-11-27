@@ -201,6 +201,7 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         container.appendChild(title);
 
         container.appendChild(this.createCheckboxRow('Streamer Mode (Blur Invite Code)', 'streamerMode'));
+        container.appendChild(this.createCheckboxRow('Auto-load Plugins', 'autoLoadPlugins'));
     }
 
     createTitle(text) {
@@ -274,6 +275,9 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
 
         const streamerMode = this.inputs.get('streamerMode');
         if (streamerMode) streamerMode.checked = this.personalSettings.getStreamerMode();
+
+        const autoLoadPlugins = this.inputs.get('autoLoadPlugins');
+        if (autoLoadPlugins) autoLoadPlugins.checked = this.personalSettings.getAutoLoadPlugins();
     }
 
     applySettings() {
@@ -285,6 +289,7 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         const autoRoll = this.inputs.get('autoRoll')?.checked;
         const soundVolume = parseFloat(this.inputs.get('soundVolume')?.value);
         const streamerMode = this.inputs.get('streamerMode')?.checked ?? false;
+        const autoLoadPlugins = this.inputs.get('autoLoadPlugins')?.checked ?? true;
 
         if (theme) {
             this.personalSettings.setTheme(theme);
@@ -294,6 +299,7 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         if (autoRoll !== undefined) this.personalSettings.setAutoRoll(autoRoll);
         if (!Number.isNaN(soundVolume)) this.personalSettings.setSoundVolume(soundVolume);
         this.personalSettings.setStreamerMode(Boolean(streamerMode));
+        this.personalSettings.setAutoLoadPlugins(Boolean(autoLoadPlugins));
 
         // Close after applying, matching close button behavior
         this.close();
