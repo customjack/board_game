@@ -70,11 +70,13 @@ export default class ExamplePlugin extends Plugin {
         // Optional cleanup logic when the plugin is removed
         console.log('Cleaning up ExamplePlugin...');
         // Unsubscribe from events to avoid memory leaks
-        this.eventBus.off('settingsUpdated', this.handleSettingsUpdate.bind(this));
-        this.eventBus.off('boardUpdated', this.handleBoardUpdate.bind(this));
-        this.eventBus.off('piecesUpdated', this.handlePiecesUpdate.bind(this));
-        this.eventBus.off('playerListUpdated', this.handlePlayerListUpdate.bind(this));
-        this.eventBus.off('gameStateUpdated', this.handleGameStateUpdate.bind(this));
+        if (this.eventBus && typeof this.eventBus.off === 'function') {
+            this.eventBus.off('settingsUpdated', this.handleSettingsUpdate.bind(this));
+            this.eventBus.off('boardUpdated', this.handleBoardUpdate.bind(this));
+            this.eventBus.off('piecesUpdated', this.handlePiecesUpdate.bind(this));
+            this.eventBus.off('playerListUpdated', this.handlePlayerListUpdate.bind(this));
+            this.eventBus.off('gameStateUpdated', this.handleGameStateUpdate.bind(this));
+        }
     }
 
     /**

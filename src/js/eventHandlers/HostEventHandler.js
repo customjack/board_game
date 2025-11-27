@@ -330,9 +330,12 @@ export default class HostEventHandler extends BaseEventHandler {
                 const autoLoad = this.personalSettings?.getAutoLoadPlugins() ?? true;
                 
                 if (autoLoad) {
-                    // Auto-load enabled, show modal and load
-                    pluginLoadingModal.open();
-                    await pluginLoadingModal.startLoading();
+                    // Auto-load enabled, show modal (startLoading will be called by onOpen)
+                    await new Promise((resolve) => {
+                        pluginLoadingModal.onComplete = () => resolve(true);
+                        pluginLoadingModal.onCancel = () => resolve(false);
+                        pluginLoadingModal.open();
+                    });
                     
                     // Re-check after loading
                     const recheck = this.pluginManager.checkPluginRequirements(requiredPlugins);

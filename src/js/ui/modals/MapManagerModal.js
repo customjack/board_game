@@ -207,101 +207,89 @@ export default class MapManagerModal extends BaseModal {
         info.className = 'map-info';
         info.style.padding = '14px';
         info.style.flex = '1';
+        info.style.display = 'flex';
+        info.style.flexDirection = 'column';
+        info.style.gap = '8px';
+
+        // Header with name and info button
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'flex-start';
+        header.style.gap = '8px';
+
+        const nameAuthor = document.createElement('div');
+        nameAuthor.style.flex = '1';
+        nameAuthor.style.minWidth = '0'; // Allow text truncation
 
         const name = document.createElement('h3');
         name.className = 'map-name';
         name.textContent = map.name;
-        name.style.margin = '0 0 6px 0';
+        name.style.margin = '0 0 4px 0';
         name.style.fontSize = '1.05em';
         name.style.color = 'var(--text-color, #fff)';
+        name.style.overflow = 'hidden';
+        name.style.textOverflow = 'ellipsis';
+        name.style.whiteSpace = 'nowrap';
 
         const author = document.createElement('p');
         author.className = 'map-author';
         author.textContent = `by ${map.author}`;
-        author.style.margin = '0 0 8px 0';
+        author.style.margin = '0';
         author.style.fontSize = '0.9em';
         author.style.color = 'var(--text-color-secondary, #aaa)';
+        author.style.overflow = 'hidden';
+        author.style.textOverflow = 'ellipsis';
+        author.style.whiteSpace = 'nowrap';
 
-        const engineType = document.createElement('p');
-        engineType.style.fontSize = '0.85em';
-        engineType.style.color = 'var(--text-tertiary, #777)';
-        engineType.style.fontStyle = 'italic';
-        engineType.style.marginBottom = '6px';
-        const engine = map.engineType ||
-            map.metadata?.gameEngine?.type ||
-            map.gameEngine?.type ||
-            map.boardData?.metadata?.gameEngine?.type ||
-            map.boardData?.engine?.type ||
-            'turn-based';
-        engineType.textContent = `Engine: ${engine}`;
+        nameAuthor.appendChild(name);
+        nameAuthor.appendChild(author);
 
-        const tags = document.createElement('div');
-        tags.className = 'map-tags';
-        tags.style.display = 'flex';
-        tags.style.gap = '6px';
-        tags.style.flexWrap = 'wrap';
-        tags.style.marginTop = '8px';
+        // Info button
+        const infoButton = document.createElement('button');
+        infoButton.className = 'button button-secondary';
+        infoButton.textContent = 'ℹ️';
+        infoButton.title = 'View map details';
+        infoButton.style.padding = '4px 8px';
+        infoButton.style.fontSize = '1.2em';
+        infoButton.style.minWidth = '32px';
+        infoButton.style.flexShrink = '0';
+        infoButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.showMapInfo(map);
+        });
 
-        if (map.isBuiltIn) {
-            const builtInTag = document.createElement('span');
-            builtInTag.className = 'map-tag built-in';
-            builtInTag.textContent = 'Built-in';
-            builtInTag.style.backgroundColor = 'var(--background-secondary, #2f2f2f)';
-            builtInTag.style.color = 'var(--text-color, #fff)';
-            builtInTag.style.border = '1px solid var(--border-color, #444)';
-            builtInTag.style.fontSize = '0.75em';
-            builtInTag.style.padding = '2px 6px';
-            builtInTag.style.borderRadius = '4px';
-            tags.appendChild(builtInTag);
-        }
+        header.appendChild(nameAuthor);
+        header.appendChild(infoButton);
 
-        const engineTag = document.createElement('span');
-        engineTag.textContent = engine;
-        engineTag.style.backgroundColor = 'var(--background-secondary, #2f3644)';
-        engineTag.style.color = 'var(--color-info, #cdd9ff)';
-        engineTag.style.border = '1px solid var(--border-color, #444)';
-        engineTag.style.fontSize = '0.75em';
-        engineTag.style.padding = '2px 6px';
-        engineTag.style.borderRadius = '4px';
-        tags.appendChild(engineTag);
-
-        if (!map.isBuiltIn && this.isHost) {
-            const customTag = document.createElement('span');
-            customTag.textContent = 'Custom';
-            customTag.style.backgroundColor = 'var(--background-secondary, #3a2f2f)';
-            customTag.style.color = 'var(--color-warning, #ffd2d2)';
-            customTag.style.border = '1px solid var(--border-color, #444)';
-            customTag.style.fontSize = '0.75em';
-            customTag.style.padding = '2px 6px';
-            customTag.style.borderRadius = '4px';
-            tags.appendChild(customTag);
-        }
-
+        // Actions for custom maps (host only)
         if (!map.isBuiltIn && this.isHost) {
             const actions = document.createElement('div');
             actions.className = 'map-actions';
-            actions.style.marginTop = '10px';
             actions.style.display = 'flex';
             actions.style.gap = '8px';
-
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'button button-danger button-small';
-            deleteButton.textContent = 'Delete';
-            deleteButton.style.fontSize = '0.8em';
-            deleteButton.style.padding = '4px 8px';
-            deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.handleDelete(map.id);
-            });
+            actions.style.marginTop = '4px';
 
             const exportButton = document.createElement('button');
             exportButton.className = 'button button-secondary button-small';
             exportButton.textContent = 'Export';
-            exportButton.style.fontSize = '0.8em';
+            exportButton.style.fontSize = '0.75em';
             exportButton.style.padding = '4px 8px';
+            exportButton.style.flex = '1';
             exportButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.handleExport(map.id);
+            });
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'button button-danger button-small';
+            deleteButton.textContent = 'Delete';
+            deleteButton.style.fontSize = '0.75em';
+            deleteButton.style.padding = '4px 8px';
+            deleteButton.style.flex = '1';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.handleDelete(map.id);
             });
 
             actions.appendChild(exportButton);
@@ -309,10 +297,7 @@ export default class MapManagerModal extends BaseModal {
             info.appendChild(actions);
         }
 
-        info.appendChild(name);
-        info.appendChild(author);
-        info.appendChild(engineType);
-        info.appendChild(tags);
+        info.appendChild(header);
 
         card.appendChild(thumbnail);
         card.appendChild(info);
@@ -447,5 +432,190 @@ export default class MapManagerModal extends BaseModal {
             console.error('Error exporting map:', error);
             await ModalUtil.alert(`Failed to export map: ${error.message}`);
         }
+    }
+
+    async showMapInfo(map) {
+        // Load map data to get full information
+        let mapData = null;
+        try {
+            mapData = await MapStorageManager.loadMapData(map.id);
+        } catch (error) {
+            console.error('Error loading map data:', error);
+        }
+
+        const infoContent = document.createElement('div');
+        infoContent.style.display = 'flex';
+        infoContent.style.flexDirection = 'column';
+        infoContent.style.gap = '16px';
+        infoContent.style.padding = '16px';
+        infoContent.style.maxWidth = '500px';
+
+        // Basic info
+        const basicInfo = document.createElement('div');
+        basicInfo.style.display = 'flex';
+        basicInfo.style.flexDirection = 'column';
+        basicInfo.style.gap = '8px';
+
+        const name = document.createElement('h3');
+        name.textContent = map.name;
+        name.style.margin = '0';
+        name.style.color = 'var(--text-color, #fff)';
+
+        const author = document.createElement('p');
+        author.textContent = `Author: ${map.author}`;
+        author.style.margin = '0';
+        author.style.color = 'var(--text-color-secondary, #aaa)';
+
+        const description = document.createElement('p');
+        description.textContent = map.description || map.metadata?.description || 'No description available';
+        description.style.margin = '8px 0 0 0';
+        description.style.color = 'var(--text-color, #fff)';
+        description.style.lineHeight = '1.5';
+
+        basicInfo.appendChild(name);
+        basicInfo.appendChild(author);
+        basicInfo.appendChild(description);
+        infoContent.appendChild(basicInfo);
+
+        // Engine info
+        const engine = map.engineType ||
+            mapData?.engine?.type ||
+            mapData?.metadata?.gameEngine?.type ||
+            'turn-based';
+
+        const engineInfo = document.createElement('div');
+        engineInfo.style.display = 'flex';
+        engineInfo.style.flexDirection = 'column';
+        engineInfo.style.gap = '8px';
+        engineInfo.style.padding = '12px';
+        engineInfo.style.backgroundColor = 'var(--background-secondary, #202020)';
+        engineInfo.style.borderRadius = '8px';
+
+        const engineLabel = document.createElement('strong');
+        engineLabel.textContent = 'Game Engine:';
+        engineLabel.style.color = 'var(--text-color, #fff)';
+
+        const engineValue = document.createElement('span');
+        engineValue.textContent = engine;
+        engineValue.style.color = 'var(--color-info, #8aa2ff)';
+
+        engineInfo.appendChild(engineLabel);
+        engineInfo.appendChild(engineValue);
+        infoContent.appendChild(engineInfo);
+
+        // Plugin requirements
+        const plugins = mapData?.requirements?.plugins || [];
+        const nonCorePlugins = plugins.filter(p => {
+            const id = typeof p === 'string' ? p : p.id;
+            return id !== 'core' && (typeof p === 'object' ? p.source !== 'builtin' : false);
+        });
+
+        if (nonCorePlugins.length > 0) {
+            const pluginsInfo = document.createElement('div');
+            pluginsInfo.style.display = 'flex';
+            pluginsInfo.style.flexDirection = 'column';
+            pluginsInfo.style.gap = '8px';
+            pluginsInfo.style.padding = '12px';
+            pluginsInfo.style.backgroundColor = 'var(--background-secondary, #202020)';
+            pluginsInfo.style.borderRadius = '8px';
+
+            const pluginsLabel = document.createElement('strong');
+            pluginsLabel.textContent = 'Required Plugins:';
+            pluginsLabel.style.color = 'var(--text-color, #fff)';
+            pluginsLabel.style.marginBottom = '4px';
+
+            const pluginsList = document.createElement('div');
+            pluginsList.style.display = 'flex';
+            pluginsList.style.flexDirection = 'column';
+            pluginsList.style.gap = '6px';
+
+            nonCorePlugins.forEach(plugin => {
+                const pluginItem = document.createElement('div');
+                pluginItem.style.display = 'flex';
+                pluginItem.style.flexDirection = 'column';
+                pluginItem.style.gap = '2px';
+                pluginItem.style.padding = '6px';
+                pluginItem.style.backgroundColor = 'var(--background-box, #151515)';
+                pluginItem.style.borderRadius = '4px';
+
+                const pluginName = document.createElement('span');
+                pluginName.textContent = (typeof plugin === 'object' ? plugin.name || plugin.id : plugin);
+                pluginName.style.color = 'var(--text-color, #fff)';
+                pluginName.style.fontWeight = '500';
+
+                const pluginDesc = document.createElement('span');
+                pluginDesc.textContent = (typeof plugin === 'object' ? plugin.description || 'No description' : 'No description');
+                pluginDesc.style.fontSize = '0.85em';
+                pluginDesc.style.color = 'var(--text-color-secondary, #aaa)';
+
+                if (typeof plugin === 'object' && plugin.cdn) {
+                    const pluginSource = document.createElement('span');
+                    pluginSource.textContent = `Source: ${plugin.cdn}`;
+                    pluginSource.style.fontSize = '0.75em';
+                    pluginSource.style.color = 'var(--text-color-tertiary, #666)';
+                    pluginItem.appendChild(pluginSource);
+                }
+
+                pluginItem.appendChild(pluginName);
+                pluginItem.appendChild(pluginDesc);
+                pluginsList.appendChild(pluginItem);
+            });
+
+            pluginsInfo.appendChild(pluginsLabel);
+            pluginsInfo.appendChild(pluginsList);
+            infoContent.appendChild(pluginsInfo);
+        }
+
+        // Map source info
+        const sourceInfo = document.createElement('div');
+        sourceInfo.style.display = 'flex';
+        sourceInfo.style.justifyContent = 'space-between';
+        sourceInfo.style.padding = '8px';
+        sourceInfo.style.fontSize = '0.85em';
+        sourceInfo.style.color = 'var(--text-color-secondary, #aaa)';
+
+        const sourceLabel = document.createElement('span');
+        sourceLabel.textContent = 'Source:';
+        const sourceValue = document.createElement('span');
+        sourceValue.textContent = map.isBuiltIn ? 'Built-in' : 'Custom Upload';
+        sourceValue.style.color = map.isBuiltIn ? 'var(--color-info, #8aa2ff)' : 'var(--color-warning, #ffa726)';
+
+        sourceInfo.appendChild(sourceLabel);
+        sourceInfo.appendChild(sourceValue);
+        infoContent.appendChild(sourceInfo);
+
+        // Create a simple info modal (no cancel button needed)
+        const modal = document.createElement('div');
+        modal.className = 'modal custom-modal';
+        modal.style.display = 'block';
+
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        modalContent.style.maxWidth = '600px';
+
+        const title = document.createElement('h2');
+        title.textContent = 'Map Information';
+        modalContent.appendChild(title);
+
+        modalContent.appendChild(infoContent);
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'modal-buttons';
+        buttonContainer.style.justifyContent = 'flex-end';
+
+        const closeButton = document.createElement('button');
+        closeButton.className = 'button button-primary';
+        closeButton.textContent = 'Close';
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        });
+
+        buttonContainer.appendChild(closeButton);
+        modalContent.appendChild(buttonContainer);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
     }
 }

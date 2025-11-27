@@ -393,7 +393,7 @@ export default class PluginManagerModal extends BaseModal {
     }
 
     async handleAddPlugin() {
-        // Create a more detailed form for adding plugins
+        // Simple form - only CDN URL needed, metadata comes from plugin
         const form = document.createElement('div');
         form.style.display = 'flex';
         form.style.flexDirection = 'column';
@@ -401,7 +401,7 @@ export default class PluginManagerModal extends BaseModal {
         form.style.padding = '16px';
 
         const urlLabel = document.createElement('label');
-        urlLabel.textContent = 'Plugin CDN URL (required):';
+        urlLabel.textContent = 'Plugin CDN URL:';
         urlLabel.style.fontWeight = '600';
         
         const urlInput = document.createElement('input');
@@ -410,38 +410,20 @@ export default class PluginManagerModal extends BaseModal {
         urlInput.placeholder = 'https://cdn.example.com/plugin.js';
         urlInput.style.width = '100%';
 
-        const nameLabel = document.createElement('label');
-        nameLabel.textContent = 'Plugin Name (optional):';
-        nameLabel.style.fontWeight = '600';
-        
-        const nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.className = 'input';
-        nameInput.placeholder = 'My Plugin';
-        nameInput.style.width = '100%';
-
-        const descLabel = document.createElement('label');
-        descLabel.textContent = 'Description (optional):';
-        descLabel.style.fontWeight = '600';
-        
-        const descInput = document.createElement('textarea');
-        descInput.className = 'input';
-        descInput.placeholder = 'A brief description of the plugin';
-        descInput.style.width = '100%';
-        descInput.style.minHeight = '60px';
-        descInput.style.resize = 'vertical';
+        const infoText = document.createElement('p');
+        infoText.textContent = 'The plugin name and description will be loaded from the plugin\'s metadata.';
+        infoText.style.fontSize = '0.85em';
+        infoText.style.color = 'var(--text-color-secondary, #aaa)';
+        infoText.style.margin = '0';
 
         form.appendChild(urlLabel);
         form.appendChild(urlInput);
-        form.appendChild(nameLabel);
-        form.appendChild(nameInput);
-        form.appendChild(descLabel);
-        form.appendChild(descInput);
+        form.appendChild(infoText);
 
         const confirmed = await ModalUtil.customConfirm(
             form,
             'Add Remote Plugin',
-            'Add',
+            'Load',
             'Cancel'
         );
 
@@ -450,13 +432,7 @@ export default class PluginManagerModal extends BaseModal {
         }
 
         try {
-            const pluginInfo = {
-                url: urlInput.value.trim(),
-                name: nameInput.value.trim() || undefined,
-                description: descInput.value.trim() || undefined
-            };
-
-            const result = await this.pluginManager.loadPluginFromUrl(pluginInfo);
+            const result = await this.pluginManager.loadPluginFromUrl(urlInput.value.trim());
             
             if (result.success) {
                 await ModalUtil.alert('Plugin loaded successfully!');

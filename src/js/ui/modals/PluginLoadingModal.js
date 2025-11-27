@@ -53,6 +53,11 @@ export default class PluginLoadingModal extends BaseModal {
         contentContainer.style.flexDirection = 'column';
         contentContainer.style.gap = '16px';
 
+        // Reset loading state
+        this.loadedPlugins = [];
+        this.failedPlugins = [];
+        this.loadingPlugins.clear();
+
         // Message
         const message = document.createElement('p');
         message.textContent = this.isHost
@@ -75,10 +80,24 @@ export default class PluginLoadingModal extends BaseModal {
         pluginList.style.padding = '12px';
         pluginList.style.backgroundColor = 'var(--background-box, #151515)';
 
-        this.requiredPlugins.forEach(plugin => {
-            const item = this.createPluginItem(plugin);
-            pluginList.appendChild(item);
+        // Filter out core/builtin plugins from display
+        const pluginsToShow = this.requiredPlugins.filter(plugin => {
+            return plugin.id !== 'core' && plugin.source !== 'builtin';
         });
+
+        if (pluginsToShow.length === 0) {
+            const noPlugins = document.createElement('div');
+            noPlugins.textContent = 'No additional plugins required';
+            noPlugins.style.padding = '20px';
+            noPlugins.style.textAlign = 'center';
+            noPlugins.style.color = 'var(--text-color-secondary, #aaa)';
+            pluginList.appendChild(noPlugins);
+        } else {
+            pluginsToShow.forEach(plugin => {
+                const item = this.createPluginItem(plugin);
+                pluginList.appendChild(item);
+            });
+        }
 
         contentContainer.appendChild(pluginList);
 
@@ -93,6 +112,7 @@ export default class PluginLoadingModal extends BaseModal {
 
         // Buttons
         const buttonContainer = document.createElement('div');
+        buttonContainer.id = 'pluginLoadingButtons';
         buttonContainer.style.display = 'flex';
         buttonContainer.style.gap = '10px';
         buttonContainer.style.justifyContent = 'flex-end';
@@ -103,6 +123,25 @@ export default class PluginLoadingModal extends BaseModal {
         cancelButton.textContent = 'Cancel';
         cancelButton.addEventListener('click', () => this.handleCancel());
         buttonContainer.appendChild(cancelButton);
+
+        // Retry button (initially hidden/disabled)
+        const retryButton = document.createElement('button');
+        retryButton.id = 'pluginRetryButton';
+        retryButton.className = 'button button-primary';
+        retryButton.textContent = 'Retry';
+        retryButton.disabled = true;
+        retryButton.style.opacity = '0.5';
+        retryButton.style.cursor = 'not-allowed';
+        retryButton.addEventListener('click', () => {
+            // Retry failed plugins
+            const failed = [...this.failedPlugins];
+            this.failedPlugins = [];
+            this.loadedPlugins = [];
+            this.requiredPlugins = failed;
+            this.renderContent();
+            this.startLoading();
+        });
+        buttonContainer.appendChild(retryButton);
 
         const autoLoad = this.personalSettings?.getAutoLoadPlugins() ?? true;
         if (autoLoad) {
@@ -210,8 +249,13 @@ export default class PluginLoadingModal extends BaseModal {
 
         this.updateStatusMessage('Loading plugins...');
 
+        // Filter out core/builtin plugins from loading (they're always available)
+        const pluginsToLoad = this.requiredPlugins.filter(plugin => {
+            return plugin.id !== 'core' && plugin.source !== 'builtin';
+        });
+
         // Load each plugin
-        for (const plugin of this.requiredPlugins) {
+        for (const plugin of pluginsToLoad) {
             // Skip if already loaded
             if (this.pluginManager.pluginClasses.has(plugin.id)) {
                 this.updatePluginStatus(plugin.id, 'Already Loaded');
@@ -263,22 +307,15 @@ export default class PluginLoadingModal extends BaseModal {
                 this.close();
             }, 1000);
         } else {
-            this.updateStatusMessage(`Loaded ${this.loadedPlugins.length} plugin(s), ${this.failedPlugins.length} failed.`);
-            const retryButton = document.createElement('button');
-            retryButton.className = 'button button-primary';
-            retryButton.textContent = 'Retry Failed';
-            retryButton.addEventListener('click', () => {
-                // Retry failed plugins
-                const failed = [...this.failedPlugins];
-                this.failedPlugins = [];
-                this.requiredPlugins = failed;
-                this.renderContent();
-                this.startLoading();
-            });
+            const totalAttempted = pluginsToLoad.length;
+            this.updateStatusMessage(`Loaded ${this.loadedPlugins.length} of ${totalAttempted} plugin(s). ${this.failedPlugins.length} failed.`);
             
-            const buttonContainer = this.modal.querySelector('.button-secondary')?.parentElement;
-            if (buttonContainer) {
-                buttonContainer.appendChild(retryButton);
+            // Enable retry button
+            const retryButton = this.modal.querySelector('#pluginRetryButton');
+            if (retryButton) {
+                retryButton.disabled = false;
+                retryButton.style.opacity = '1';
+                retryButton.style.cursor = 'pointer';
             }
         }
     }
