@@ -26,6 +26,7 @@ import GamePhases from './game/phases/GamePhases.js';
 import PhaseStateMachine from './game/components/PhaseStateMachine.js';
 import BasePieceManager from './infrastructure/managers/BasePieceManager.js';
 import { getVisibleElementById } from './infrastructure/utils/helpers.js';
+import ModalUtil from './infrastructure/utils/ModalUtil.js';
 import EffectFactory from './infrastructure/factories/EffectFactory';
 import ActionFactory from './infrastructure/factories/ActionFactory';
 import TriggerFactory from './infrastructure/factories/TriggerFactory';
@@ -392,6 +393,7 @@ function initializeApp() {
         GamePhases,
         PhaseStateMachine,
         getVisibleElementById,
+        ModalUtil,
         MapStorageManager
     });
 
