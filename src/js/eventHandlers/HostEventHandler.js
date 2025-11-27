@@ -11,6 +11,7 @@ import MapManagerModal from '../ui/modals/MapManagerModal.js';
 import MapStorageManager from '../systems/storage/MapStorageManager.js';
 import Board from '../elements/models/Board.js';
 import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
+import PluginLoadingModal from '../ui/modals/PluginLoadingModal.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal, mapManagerModal) {
@@ -310,6 +311,56 @@ export default class HostEventHandler extends BaseEventHandler {
         try {
             // Load the map data
             const mapData = await MapStorageManager.loadMapData(mapId);
+
+            // Check for required plugins
+            const requiredPlugins = this.pluginManager.extractPluginRequirements(mapData);
+            const pluginCheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
+
+            if (!pluginCheck.allLoaded) {
+                // Show plugin loading modal
+                const pluginLoadingModal = new PluginLoadingModal(
+                    'hostPluginLoadingModal',
+                    this.pluginManager,
+                    this.personalSettings,
+                    { isHost: true }
+                );
+                pluginLoadingModal.init();
+                pluginLoadingModal.setRequiredPlugins(pluginCheck.missing);
+
+                const autoLoad = this.personalSettings?.getAutoLoadPlugins() ?? true;
+                
+                if (autoLoad) {
+                    // Auto-load enabled, show modal and load
+                    pluginLoadingModal.open();
+                    await pluginLoadingModal.startLoading();
+                    
+                    // Re-check after loading
+                    const recheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
+                    if (!recheck.allLoaded) {
+                        await ModalUtil.alert(
+                            `Some required plugins could not be loaded. The map may not work correctly.\n\nMissing: ${recheck.missing.map(p => p.id || p.name).join(', ')}`,
+                            'Plugin Loading Warning'
+                        );
+                    }
+                } else {
+                    // Auto-load disabled, show modal and wait for user confirmation
+                    const confirmed = await new Promise((resolve) => {
+                        pluginLoadingModal.onComplete = () => resolve(true);
+                        pluginLoadingModal.onCancel = () => resolve(false);
+                        pluginLoadingModal.open();
+                    });
+
+                    if (!confirmed) {
+                        throw new Error('Map loading cancelled by user');
+                    }
+
+                    // Re-check after loading
+                    const recheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
+                    if (!recheck.allLoaded) {
+                        throw new Error(`Required plugins not loaded: ${recheck.missing.map(p => p.id || p.name).join(', ')}`);
+                    }
+                }
+            }
 
             // Create board from map data
             const board = Board.fromJSON(mapData, this.factoryManager);

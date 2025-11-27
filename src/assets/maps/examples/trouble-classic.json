@@ -26,8 +26,10 @@
             {
                 "id": "trouble-plugin",
                 "version": "^1.0.0",
-                "source": "local",
-                "description": "Trouble engine"
+                "source": "remote",
+                "cdn": "http://localhost:8080/plugins/trouble-plugin.js",
+                "name": "Trouble Plugin",
+                "description": "Trouble game engine with Pop-O-Matic mechanics"
             }
         ],
         "minPlayers": 2,
