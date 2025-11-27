@@ -10,8 +10,10 @@ export default class PluginBundle {
         // Base classes that plugins extend
         this.Plugin = dependencies.Plugin;
         this.BaseGameEngine = dependencies.BaseGameEngine;
+        this.MultiPieceGameEngine = dependencies.MultiPieceGameEngine;
         this.BaseGameState = dependencies.BaseGameState;
         this.BasePieceManager = dependencies.BasePieceManager;
+        this.MultiPieceManager = dependencies.MultiPieceManager;
         
         // Factories for registration
         this.GameEngineFactory = dependencies.GameEngineFactory;
@@ -20,6 +22,7 @@ export default class PluginBundle {
         // Enums and constants
         this.TurnPhases = dependencies.TurnPhases;
         this.GamePhases = dependencies.GamePhases;
+        this.PlayerStates = dependencies.PlayerStates;
         
         // Components and utilities
         this.PhaseStateMachine = dependencies.PhaseStateMachine;

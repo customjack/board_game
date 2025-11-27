@@ -25,6 +25,9 @@ import TurnPhases from './game/phases/TurnPhases.js';
 import GamePhases from './game/phases/GamePhases.js';
 import PhaseStateMachine from './game/components/PhaseStateMachine.js';
 import BasePieceManager from './infrastructure/managers/BasePieceManager.js';
+import MultiPieceManager from './infrastructure/managers/MultiPieceManager.js';
+import MultiPieceGameEngine from './game/engines/MultiPieceGameEngine.js';
+import PlayerStates from './game/phases/PlayerStates.js';
 import { getVisibleElementById } from './infrastructure/utils/helpers.js';
 import ModalUtil from './infrastructure/utils/ModalUtil.js';
 import EffectFactory from './infrastructure/factories/EffectFactory';
@@ -385,12 +388,15 @@ function initializeApp() {
     pluginManager.initializePluginBundle({
         Plugin,
         BaseGameEngine,
+        MultiPieceGameEngine,
         BaseGameState,
         BasePieceManager,
+        MultiPieceManager,
         GameEngineFactory,
         GameStateFactory,
         TurnPhases,
         GamePhases,
+        PlayerStates,
         PhaseStateMachine,
         getVisibleElementById,
         ModalUtil,
