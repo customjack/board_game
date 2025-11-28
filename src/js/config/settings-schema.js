@@ -94,6 +94,16 @@ export const GAME_SETTINGS_SCHEMA = [
         readonly: false
     },
     {
+        id: 'allowMidGameJoin',
+        type: SETTING_TYPES.BOOLEAN,
+        label: 'Allow Mid-Game Joins',
+        description: 'Players can join the game after it has started',
+        defaultValue: true,
+        category: SETTING_CATEGORIES.PLAYERS,
+        constraints: {},
+        readonly: false
+    },
+    {
         id: 'turnTimerEnabled',
         type: SETTING_TYPES.BOOLEAN,
         label: 'Enable Turn Timer (Experimental)',

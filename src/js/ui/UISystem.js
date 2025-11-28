@@ -228,16 +228,18 @@ export default class UISystem {
             page: this.currentPage
         };
 
-        // Check engine type and hide timer for engines that don't use it
-        // This handles the case where timer HTML is hardcoded in the template
+        // Always update timer visibility when game state changes
+        // This ensures timer shows/hides when turnTimerEnabled setting changes
+        // or when the game starts (not just on initial join)
         this.updateTimerVisibility(gameState);
 
         this.componentManager.updateAll(gameState, context);
     }
 
     /**
-     * Update timer visibility based on engine type
+     * Update timer visibility based on engine type and timer setting
      * Some engines (like trouble) don't use turn timers
+     * Timer should also be hidden if turnTimerEnabled is false
      * @param {GameState} gameState - Current game state
      */
     updateTimerVisibility(gameState) {
@@ -250,10 +252,25 @@ export default class UISystem {
 
         // Engines that don't use timers
         const enginesWithoutTimer = ['trouble'];
+        
+        // Check if timer is enabled in settings
+        // Timer should show when enabled, regardless of when client joined
+        const timerEnabled = gameState.settings?.turnTimerEnabled === true;
+        const gameStarted = gameState.isGameStarted();
 
         const timerContainer = document.querySelector('.timer-container');
         if (timerContainer) {
-            if (engineType && enginesWithoutTimer.includes(engineType)) {
+            // Hide timer if:
+            // 1. Engine type doesn't use timers (e.g., trouble)
+            // 2. Timer is disabled in settings
+            // 3. Game hasn't started yet (timer only relevant during gameplay)
+            // Note: Timer visibility is checked on every game state update,
+            // so it will appear when enabled even if client joined before it was enabled
+            const shouldHide = (engineType && enginesWithoutTimer.includes(engineType)) || 
+                              !timerEnabled || 
+                              !gameStarted;
+            
+            if (shouldHide) {
                 timerContainer.style.display = 'none';
             } else {
                 // Show timer for other engines (if it was previously hidden)

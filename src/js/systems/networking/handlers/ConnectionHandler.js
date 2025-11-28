@@ -85,16 +85,24 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         if (previousOwnedPlayers.length > 0 && ownedPlayersFromState.length === 0) {
             console.log('[ConnectionPackage] Preserving local player references (JOIN not processed yet)');
             peer.ownedPlayers = previousOwnedPlayers;
+            // Don't show lobby/game page yet - wait for JOIN to be accepted
+            // Stay on loading page until we know we're accepted
+            return;
         } else {
             // Normal case: update owned players from game state
             peer.ownedPlayers = ownedPlayersFromState;
         }
 
-        if (peer.gameState.isGameStarted()) {
-            peer.eventHandler.showGamePage();
-        } else {
-            peer.eventHandler.showLobbyPage();
+        // Only show lobby/game page if we have owned players (JOIN was accepted)
+        // If we don't have owned players, we might be getting rejected, so stay on loading page
+        if (ownedPlayersFromState.length > 0) {
+            if (peer.gameState.isGameStarted()) {
+                peer.eventHandler.showGamePage();
+            } else {
+                peer.eventHandler.showLobbyPage();
+            }
         }
+        // Otherwise, stay on loading page and wait for JOIN_REJECTED or GAME_STATE update
         
         // After receiving game state, check plugins and send readiness
         // This ensures the host knows the client's plugin status
@@ -160,6 +168,19 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
                 reason: 'Invalid join request: No players provided.'
             });
             console.log('Join request rejected: No players provided');
+            return;
+        }
+
+        // Check if game has started and mid-game joins are not allowed
+        const gameStarted = peer.gameState.isGameStarted();
+        const allowMidGameJoin = peer.gameState.settings.allowMidGameJoin !== false; // Default to true if not set
+
+        if (gameStarted && !allowMidGameJoin) {
+            conn.send({
+                type: MessageTypes.JOIN_REJECTED,
+                reason: 'The game has already started and mid-game joins are not allowed.'
+            });
+            console.log('Join request rejected: Game has started and mid-game joins are disabled');
             return;
         }
 
@@ -236,8 +257,16 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
      * Handle join rejection (Client)
      */
     async handleJoinRejected(message, context) {
+        const peer = this.getPeer();
+        // Stay on loading page and show error
+        // Don't show lobby with default values
         await ModalUtil.alert(`Join request rejected: ${message.reason}`);
-        location.reload();
+        // Return to home page instead of reloading
+        if (peer && peer.eventHandler) {
+            peer.eventHandler.showPage('homePage');
+        } else {
+            location.reload();
+        }
     }
 
     /**

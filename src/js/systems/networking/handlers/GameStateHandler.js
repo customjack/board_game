@@ -47,10 +47,34 @@ export default class GameStateHandler extends MessageHandlerPlugin {
         const peer = this.getPeer();
         const factoryManager = this.getFactoryManager();
 
+        const previousOwnedPlayers = peer.ownedPlayers || [];
         peer.gameState = GameStateFactory.fromJSON(message.gameState, factoryManager);
         peer.ownedPlayers = peer.gameState.getPlayersByPeerId(peer.peer.id);
 
         console.log('Game state updated from full state');
+        
+        // If we now have owned players and we didn't before, or we're still on loading page,
+        // check if we should show lobby/game page
+        const nowHasOwnedPlayers = peer.ownedPlayers.length > 0;
+        const hadOwnedPlayers = previousOwnedPlayers.length > 0;
+        
+        // Show lobby/game page if:
+        // 1. We now have owned players (JOIN was accepted)
+        // 2. We're still on loading page (haven't transitioned yet)
+        if (nowHasOwnedPlayers) {
+            const currentPage = document.querySelector('#loadingPage')?.style.display;
+            const isOnLoadingPage = currentPage !== 'none' && currentPage !== '';
+            
+            if (isOnLoadingPage || !hadOwnedPlayers) {
+                // First time we have owned players, or we're still on loading page
+                if (peer.gameState.isGameStarted()) {
+                    peer.eventHandler.showGamePage();
+                } else {
+                    peer.eventHandler.showLobbyPage();
+                }
+            }
+        }
+        
         peer.eventHandler.updateGameState();
     }
 
@@ -76,10 +100,29 @@ export default class GameStateHandler extends MessageHandlerPlugin {
             const updatedStateJSON = StateDelta.applyDelta(currentStateJSON, message.delta);
 
             // Reconstruct GameState from the updated JSON
+            const previousOwnedPlayers = peer.ownedPlayers || [];
             peer.gameState = GameStateFactory.fromJSON(updatedStateJSON, factoryManager);
             peer.ownedPlayers = peer.gameState.getPlayersByPeerId(peer.peer.id);
 
             console.log(`Delta applied successfully. Version: ${peer.gameState.getVersion()}`);
+            
+            // Check if we should show lobby/game page (same logic as handleGameState)
+            const nowHasOwnedPlayers = peer.ownedPlayers.length > 0;
+            const hadOwnedPlayers = previousOwnedPlayers.length > 0;
+            
+            if (nowHasOwnedPlayers) {
+                const currentPage = document.querySelector('#loadingPage')?.style.display;
+                const isOnLoadingPage = currentPage !== 'none' && currentPage !== '';
+                
+                if (isOnLoadingPage || !hadOwnedPlayers) {
+                    if (peer.gameState.isGameStarted()) {
+                        peer.eventHandler.showGamePage();
+                    } else {
+                        peer.eventHandler.showLobbyPage();
+                    }
+                }
+            }
+            
             peer.eventHandler.updateGameState();
         } catch (error) {
             console.error('Error applying delta:', error);

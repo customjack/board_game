@@ -138,8 +138,10 @@ export default class ClientEventHandler extends BaseEventHandler {
         // Set initial map ID to trigger plugin check
         this.previousMapId = this.peer.gameState?.selectedMapId || null;
         this.previousPluginRequirementsHash = this.getRequirementsHash(this.peer.gameState?.pluginRequirements || []);
-
-        this.showLobbyPage();
+        
+        // Don't show lobby page yet - wait for connection package
+        // The connection package handler will show the appropriate page (lobby or game)
+        // after the connection is properly established
         
         // Check plugins for current map if one is already selected
         // Wait for connection to be open before checking plugins

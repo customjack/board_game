@@ -201,8 +201,13 @@ export default class Client extends BasePeer {
             console.error('Connection error:', err);
             this.connectionStatusManager.handleDisconnection();
         } else {
+            // Stay on loading page, show error, then return to home
             await ModalUtil.alert('Connection error: ' + err);
-            location.reload();
+            if (this.eventHandler) {
+                this.eventHandler.showPage('homePage');
+            } else {
+                location.reload();
+            }
         }
     }
 
