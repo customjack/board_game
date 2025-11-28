@@ -12,6 +12,7 @@ import MapStorageManager from '../systems/storage/MapStorageManager.js';
 import Board from '../elements/models/Board.js';
 import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
 import PluginLoadingModal from '../ui/modals/PluginLoadingModal.js';
+import { MessageTypes } from '../systems/networking/protocol/MessageTypes.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal, mapManagerModal) {
@@ -419,6 +420,15 @@ export default class HostEventHandler extends BaseEventHandler {
 
             // Broadcast the updated game state to all clients
             this.peer.broadcastGameState();
+
+            // Ask connected clients to re-check plugin readiness for the new map
+            if (requiredPlugins.length > 0 && Array.isArray(this.peer.connections)) {
+                this.peer.connections.forEach(conn => {
+                    if (conn?.open) {
+                        conn.send({ type: MessageTypes.REQUEST_PLUGIN_READINESS });
+                    }
+                });
+            }
 
             // Update host's UI components (including player list validation)
             this.updateGameState();

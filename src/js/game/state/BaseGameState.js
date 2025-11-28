@@ -247,7 +247,11 @@ export default class BaseGameState {
     getDeltaFields() {
         return [
             'stateType',
-            'gamePhase'
+            'gamePhase',
+            'selectedMapId',
+            'selectedMapData',
+            'pluginRequirements',
+            'pluginReadiness'
         ];
     }
 

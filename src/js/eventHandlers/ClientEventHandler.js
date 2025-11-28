@@ -22,6 +22,11 @@ export default class ClientEventHandler extends BaseEventHandler {
         
         // Track previous map ID to detect map changes
         this.previousMapId = null;
+        this.previousPluginRequirementsHash = null;
+
+        // Track in-flight plugin checks to avoid duplicate loading
+        this.currentPluginCheck = null;
+        this.currentPluginCheckKey = null;
     }
 
     /**
@@ -132,6 +137,7 @@ export default class ClientEventHandler extends BaseEventHandler {
 
         // Set initial map ID to trigger plugin check
         this.previousMapId = this.peer.gameState?.selectedMapId || null;
+        this.previousPluginRequirementsHash = this.getRequirementsHash(this.peer.gameState?.pluginRequirements || []);
 
         this.showLobbyPage();
         
@@ -210,94 +216,145 @@ export default class ClientEventHandler extends BaseEventHandler {
         // Check if map has changed
         const currentMapId = gameState.selectedMapId;
         const mapChanged = this.previousMapId !== currentMapId;
+        const requirementsHash = this.getRequirementsHash(gameState.pluginRequirements || []);
+        const requirementsChanged = this.previousPluginRequirementsHash !== requirementsHash;
         
-        if (mapChanged && currentMapId) {
+        if (mapChanged || requirementsChanged) {
             this.previousMapId = currentMapId;
-            // Check plugins for new map
+            this.previousPluginRequirementsHash = requirementsHash;
+            // Check plugins for new map or requirement change
             this.checkAndLoadPlugins(gameState);
+        } else {
+            // Keep previous values in sync even if no check was triggered
+            this.previousMapId = currentMapId;
+            this.previousPluginRequirementsHash = requirementsHash;
         }
         
         // Call parent update
         super.updateGameState(forceUpdate);
+    }
+
+    /**
+     * Normalize plugin requirements for hashing/comparison
+     */
+    getRequirementsHash(requirements = []) {
+        if (!requirements || requirements.length === 0) {
+            return 'none';
+        }
+
+        const normalized = requirements.map(req => ({
+            id: req.id || req.pluginId || req.name || '',
+            version: req.version || '',
+            source: req.source || '',
+            cdn: req.cdn || req.url || ''
+        })).sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+
+        return JSON.stringify(normalized);
     }
     
     /**
      * Check if client has required plugins and load if needed
      */
     async checkAndLoadPlugins(gameState) {
-        const requiredPlugins = gameState.pluginRequirements || [];
-        
-        if (requiredPlugins.length === 0) {
-            // No plugins required, mark as ready
-            if (this.peer?.gameState && this.peer?.peer?.id) {
-                this.peer.gameState.setPluginReadiness(this.peer.peer.id, true, []);
-                this.updateGameState();
-            }
-            this.sendPluginReadiness(true, []);
-            return;
+        const requiredPlugins = gameState?.pluginRequirements || [];
+        const requirementsHash = this.getRequirementsHash(requiredPlugins);
+
+        // Deduplicate concurrent checks for the same requirements
+        if (this.currentPluginCheck && this.currentPluginCheckKey === requirementsHash) {
+            return this.currentPluginCheck;
         }
-        
-        // Check which plugins are missing
-        const pluginCheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
-        
-        if (pluginCheck.allLoaded) {
-            // All plugins loaded, mark as ready
-            if (this.peer?.gameState && this.peer?.peer?.id) {
-                this.peer.gameState.setPluginReadiness(this.peer.peer.id, true, []);
-                this.updateGameState();
-            }
-            this.sendPluginReadiness(true, []);
-            return;
-        }
-        
-        // Show plugin loading modal
-        const pluginLoadingModal = new PluginLoadingModal(
-            'clientPluginLoadingModal',
-            this.pluginManager,
-            this.personalSettings,
-            { isHost: false }
-        );
-        pluginLoadingModal.init();
-        pluginLoadingModal.setRequiredPlugins(pluginCheck.missing);
-        
-        const autoLoad = this.personalSettings?.getAutoLoadPlugins() ?? true;
-        
-        // Show modal and wait for completion (or cancellation)
-        const result = await new Promise((resolve) => {
-            pluginLoadingModal.onComplete = (result) => {
-                // Re-check after loading completes (even if some failed)
-                const recheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
-                const isReady = recheck.allLoaded;
-                const missingPlugins = isReady ? [] : recheck.missing.map(p => p.id || p.name || p.pluginId);
-                
-                // Update local game state immediately so UI reflects readiness
+
+        const checkPromise = (async () => {
+            const isStale = () => {
+                return requirementsHash !== this.getRequirementsHash(this.peer?.gameState?.pluginRequirements || []);
+            };
+
+            if (requiredPlugins.length === 0) {
+                if (isStale()) return;
+                // No plugins required, mark as ready
                 if (this.peer?.gameState && this.peer?.peer?.id) {
-                    this.peer.gameState.setPluginReadiness(this.peer.peer.id, isReady, missingPlugins);
-                    // Trigger UI update
+                    this.peer.gameState.setPluginReadiness(this.peer.peer.id, true, []);
                     this.updateGameState();
                 }
-                
-                // Send readiness to host
-                this.sendPluginReadiness(isReady, missingPlugins);
-                resolve({ completed: true, result });
-            };
-            pluginLoadingModal.onCancel = () => {
-                // User cancelled, mark as not ready
-                const missingPlugins = pluginCheck.missing.map(p => p.id || p.name);
-                
-                // Update local game state immediately
+                this.sendPluginReadiness(true, []);
+                return;
+            }
+            
+            // Check which plugins are missing
+            const pluginCheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
+            
+            if (pluginCheck.allLoaded) {
+                if (isStale()) return;
+                // All plugins loaded, mark as ready
                 if (this.peer?.gameState && this.peer?.peer?.id) {
-                    this.peer.gameState.setPluginReadiness(this.peer.peer.id, false, missingPlugins);
-                    // Trigger UI update
+                    this.peer.gameState.setPluginReadiness(this.peer.peer.id, true, []);
                     this.updateGameState();
                 }
-                
-                // Send readiness to host
-                this.sendPluginReadiness(false, missingPlugins);
-                resolve({ completed: false });
-            };
-            pluginLoadingModal.open();
-        });
+                this.sendPluginReadiness(true, []);
+                return;
+            }
+            
+            // Show plugin loading modal
+            const pluginLoadingModal = new PluginLoadingModal(
+                'clientPluginLoadingModal',
+                this.pluginManager,
+                this.personalSettings,
+                { isHost: false }
+            );
+            pluginLoadingModal.init();
+            pluginLoadingModal.setRequiredPlugins(pluginCheck.missing);
+            
+            // Show modal and wait for completion (or cancellation)
+            await new Promise((resolve) => {
+                pluginLoadingModal.onComplete = (result) => {
+                    if (isStale()) return resolve({ completed: false, stale: true });
+                    // Re-check after loading completes (even if some failed)
+                    const recheck = this.pluginManager.checkPluginRequirements(requiredPlugins);
+                    const isReady = recheck.allLoaded;
+                    const missingPlugins = isReady ? [] : recheck.missing.map(p => p.id || p.name || p.pluginId);
+                    
+                    // Update local game state immediately so UI reflects readiness
+                    if (this.peer?.gameState && this.peer?.peer?.id) {
+                        this.peer.gameState.setPluginReadiness(this.peer.peer.id, isReady, missingPlugins);
+                        // Trigger UI update
+                        this.updateGameState();
+                    }
+                    
+                    // Send readiness to host
+                    this.sendPluginReadiness(isReady, missingPlugins);
+                    resolve({ completed: true, result });
+                };
+                pluginLoadingModal.onCancel = () => {
+                    if (isStale()) return resolve({ completed: false, stale: true });
+                    // User cancelled, mark as not ready
+                    const missingPlugins = pluginCheck.missing.map(p => p.id || p.name);
+                    
+                    // Update local game state immediately
+                    if (this.peer?.gameState && this.peer?.peer?.id) {
+                        this.peer.gameState.setPluginReadiness(this.peer.peer.id, false, missingPlugins);
+                        // Trigger UI update
+                        this.updateGameState();
+                    }
+                    
+                    // Send readiness to host
+                    this.sendPluginReadiness(false, missingPlugins);
+                    resolve({ completed: false });
+                };
+                pluginLoadingModal.open();
+            });
+        })();
+
+        this.currentPluginCheck = checkPromise;
+        this.currentPluginCheckKey = requirementsHash;
+
+        try {
+            return await checkPromise;
+        } finally {
+            if (this.currentPluginCheck === checkPromise) {
+                this.currentPluginCheck = null;
+                this.currentPluginCheckKey = null;
+            }
+        }
     }
     
     /**

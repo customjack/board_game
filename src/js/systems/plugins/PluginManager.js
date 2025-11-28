@@ -37,6 +37,7 @@ export default class PluginManager {
 
         // Loaded plugin URLs
         this.loadedPluginUrls = new Set();
+        this.inFlightPluginLoads = new Map();
 
         // Map of plugin ID -> Source URL (for removal)
         this.pluginUrls = new Map();
@@ -272,6 +273,40 @@ export default class PluginManager {
      * @returns {Promise<Object>} Result object with {success: boolean, pluginId?: string, error?: string}
      */
     async loadPluginFromUrl(urlOrInfo) {
+        const keys = [];
+        if (typeof urlOrInfo === 'string') {
+            keys.push(urlOrInfo);
+        } else if (urlOrInfo) {
+            if (urlOrInfo.id) keys.push(urlOrInfo.id);
+            if (urlOrInfo.url) keys.push(urlOrInfo.url);
+            if (urlOrInfo.cdn) keys.push(urlOrInfo.cdn);
+        }
+
+        // Reuse in-flight load to prevent double registration errors
+        const existingKey = keys.find(key => this.inFlightPluginLoads.get(key));
+        if (existingKey) {
+            return this.inFlightPluginLoads.get(existingKey);
+        }
+
+        const loadPromise = this._loadPluginFromUrlInternal(urlOrInfo);
+        keys.forEach(key => {
+            if (key) {
+                this.inFlightPluginLoads.set(key, loadPromise);
+            }
+        });
+
+        try {
+            return await loadPromise;
+        } finally {
+            keys.forEach(key => {
+                if (key) {
+                    this.inFlightPluginLoads.delete(key);
+                }
+            });
+        }
+    }
+
+    async _loadPluginFromUrlInternal(urlOrInfo) {
         try {
             // Normalize input to plugin info object
             let pluginInfo;
@@ -410,6 +445,20 @@ export default class PluginManager {
                 loadedAt: new Date().toISOString(),
                 cached: fromCache || false
             };
+
+            // If the plugin is already registered, skip re-registering and return success
+            if (this.pluginClasses.has(metadata.id)) {
+                console.warn(`[PluginManager] Plugin ${metadata.id} already registered, skipping reload`);
+                this.loadedPluginUrls.add(pluginInfo.url);
+                this.pluginUrls.set(metadata.id, pluginInfo.url);
+                this.remotePluginInfo.set(metadata.id, fullPluginInfo);
+                this.saveRemotePlugin(fullPluginInfo);
+                return {
+                    success: true,
+                    pluginId: metadata.id,
+                    alreadyLoaded: true
+                };
+            }
 
             // Register the class
             if (this.registerPluginClass(PluginClass)) {

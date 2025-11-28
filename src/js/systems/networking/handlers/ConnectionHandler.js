@@ -101,6 +101,9 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         if (peer.eventHandler && peer.eventHandler.checkAndLoadPlugins) {
             // Set the previous map ID to trigger plugin check
             peer.eventHandler.previousMapId = peer.gameState?.selectedMapId || null;
+            if (peer.eventHandler.getRequirementsHash) {
+                peer.eventHandler.previousPluginRequirementsHash = peer.eventHandler.getRequirementsHash(peer.gameState?.pluginRequirements || []);
+            }
             // Check plugins for current map
             if (peer.gameState?.selectedMapId) {
                 // Ensure connection is open before checking
