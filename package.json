@@ -7,17 +7,13 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",
     "build:plugins": "rollup -c rollup.plugins.config.js --bundleConfigAsCjs",
-    "watch:plugins": "rollup -c rollup.plugins.config.js -w",
+    "start": "webpack serve --mode development --open",
     "cdn:start": "node scripts/start-cdn-server.js",
     "peerjs:start": "node scripts/start-peerjs-server.js",
-    "dev:full": "npm run peerjs:start & npm run watch:plugins & npm start",
-    "dev:peer": "node scripts/dev-with-peerjs.js",
-    "dev:cdn": "node scripts/dev-with-cdn.js",
-    "test:plugin": "npm run build:plugins && npm run dev:cdn"
-
+    "dev:full": "npm run peerjs:start & npm run cdn:start & npm start",
+    "dev:peer": "npm run peerjs:start & npm start"
   },
   "keywords": [],
   "author": "",

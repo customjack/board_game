@@ -106,8 +106,9 @@ coverage/
 .yarn/
 .pnp.*
 
-# Plugins directory
-/plugins/
+# Plugins directory (but allow submodules)
+/plugins/*
+!/plugins/trouble/
 
 #artifcats
 artifacts/

@@ -39,10 +39,21 @@ const server = http.createServer((req, res) => {
     }
 
     // Map /plugins/* to dist/plugins/* and /maps/* to dist/maps/*
+    // Also check submodule locations for standalone plugins
     let filePath;
     if (urlPath.startsWith('/plugins/')) {
         const fileName = urlPath.replace('/plugins/', '');
-        filePath = path.join(PLUGINS_DIR, fileName);
+        // First check main dist/plugins, then check submodule dist/plugins
+        const mainPath = path.join(PLUGINS_DIR, fileName);
+        const submodulePath = path.join(__dirname, '..', 'plugins', 'trouble', 'dist', 'plugins', fileName);
+        
+        if (fs.existsSync(mainPath)) {
+            filePath = mainPath;
+        } else if (fs.existsSync(submodulePath)) {
+            filePath = submodulePath;
+        } else {
+            filePath = mainPath; // Will 404 if doesn't exist
+        }
     } else if (urlPath.startsWith('/maps/')) {
         const fileName = urlPath.replace('/maps/', '');
         filePath = path.join(MAPS_DIR, fileName);
