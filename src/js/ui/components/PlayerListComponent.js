@@ -42,6 +42,9 @@ export default class PlayerListComponent extends BaseUIComponent {
         // Store list element ID for switching contexts (lobby vs game)
         this.currentListElementId = config.listElementId || 'lobbyPlayerList';
 
+        // Track the last rendered signature so readiness changes always trigger refresh
+        this.lastRenderSignature = null;
+
         // Use shared modal instances
         this.playerInfoModal = null;
         this.playerControlModal = null;
@@ -167,6 +170,7 @@ export default class PlayerListComponent extends BaseUIComponent {
         this.containerId = elementId;
         this.container = this.getElement(elementId, false); // Don't cache, force fresh lookup
         this.elements = {}; // Clear element cache
+        this.lastRenderSignature = null; // Force next update to render in new container
     }
 
     /**
@@ -185,10 +189,11 @@ export default class PlayerListComponent extends BaseUIComponent {
     update(gameState, context = {}) {
         if (!this.initialized) return;
 
-        // Check if we need to update
-        if (!this.shouldUpdate(gameState)) {
+        const renderSignature = this.computeRenderSignature(gameState);
+        if (this.lastRenderSignature === renderSignature) {
             return;
         }
+        this.lastRenderSignature = renderSignature;
 
         // Store a deep copy of game state
         this.gameState = GameStateFactory.fromJSON(gameState.toJSON(), gameState.factoryManager);
@@ -327,6 +332,59 @@ export default class PlayerListComponent extends BaseUIComponent {
         }
 
         return false;
+    }
+
+    /**
+     * Build a compact signature of the relevant state so we can detect changes,
+     * especially plugin readiness, and re-render reliably.
+     */
+    computeRenderSignature(gameState) {
+        if (!gameState) return 'no-state';
+
+        const playersSig = (gameState.players || [])
+            .map(p => `${p.playerId}:${p.peerId}:${p.nickname}:${p.playerColor}:${p.peerColor}:${p.turnsTaken || 0}`)
+            .sort()
+            .join('|');
+
+        const readinessSig = Object.entries(gameState.pluginReadiness || {})
+            .map(([peerId, readiness]) => {
+                const missing = (readiness?.missingPlugins || []).slice().sort().join(',');
+                const readyFlag = readiness?.ready ? 1 : 0;
+                return `${peerId}:${readyFlag}:${missing}`;
+            })
+            .sort()
+            .join('|');
+
+        const requirementsSig = (gameState.pluginRequirements || [])
+            .map(req => req?.id || req?.name || '')
+            .sort()
+            .join('|');
+
+        const phaseSig = gameState.gamePhase || '';
+
+        return [playersSig, readinessSig, requirementsSig, phaseSig].join('||');
+    }
+
+    /**
+     * Get readiness info for a player (status + missing list)
+     */
+    getPlayerReadiness(player, gameState = this.gameState) {
+        const requirements = gameState?.pluginRequirements || [];
+        if (!requirements.length) {
+            return { status: 'not_required', missing: [] };
+        }
+
+        const readiness = gameState?.pluginReadiness?.[player.peerId];
+        if (!readiness) {
+            return { status: 'checking', missing: [] };
+        }
+        if (readiness.ready) {
+            return { status: 'ready', missing: [] };
+        }
+        return {
+            status: 'missing',
+            missing: (readiness.missingPlugins || []).slice()
+        };
     }
 
     /**
@@ -487,17 +545,13 @@ export default class PlayerListComponent extends BaseUIComponent {
         
         // Plugin readiness badge (only in lobby, only if plugins are required)
         if (this.gameState && !this.gameState.isGameStarted() && this.gameState.pluginRequirements && this.gameState.pluginRequirements.length > 0) {
-            // Access readiness directly from pluginReadiness object (more reliable than getPluginReadiness)
-            const readiness = this.gameState.pluginReadiness?.[player.peerId];
-            if (readiness) {
-                if (readiness.ready) {
-                    nameHtml += `<span class="plugin-ready-badge" style="background-color: var(--color-success); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;">Ready</span>`;
-                } else {
-                    const missingPlugins = readiness.missingPlugins || [];
-                    nameHtml += `<span class="plugin-not-ready-badge" style="background-color: var(--color-danger); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;" title="Missing plugins: ${missingPlugins.join(', ')}">Missing Game Data</span>`;
-                }
+            const readinessInfo = this.getPlayerReadiness(player, this.gameState);
+            if (readinessInfo.status === 'ready') {
+                nameHtml += `<span class="plugin-ready-badge" style="background-color: var(--color-success); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;">Ready</span>`;
+            } else if (readinessInfo.status === 'missing') {
+                nameHtml += `<span class="plugin-not-ready-badge" style="background-color: var(--color-danger); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;" title="Missing plugins: ${readinessInfo.missing.join(', ')}">Missing Game Data</span>`;
             } else {
-                // No readiness info yet (still checking)
+                // checking/not_required
                 nameHtml += `<span class="plugin-checking-badge" style="background-color: var(--color-warning); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;">Loading Game Data</span>`;
             }
         }
@@ -636,6 +690,7 @@ export default class PlayerListComponent extends BaseUIComponent {
     cleanup() {
         this.clear();
         this.gameState = null;
+        this.lastRenderSignature = null;
 
         // Cleanup modals
         if (this.playerInfoModal) {

@@ -200,7 +200,25 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         });
 
         if (!validationFailed) {
+            const joiningPeerId = message.peerId || (players[0]?.peerId);
+            const requirements = peer.gameState?.pluginRequirements || [];
+            const missingPluginIds = requirements
+                .filter(req => req && req.id && req.id !== 'core' && req.source !== 'builtin')
+                .map(req => req.id);
+
+            // Mark new peer as not ready until they report readiness
+            if (
+                requirements.length > 0 &&
+                joiningPeerId &&
+                peer.gameState &&
+                typeof peer.gameState.getPluginReadiness === 'function' &&
+                !peer.gameState.getPluginReadiness(joiningPeerId)
+            ) {
+                peer.gameState.setPluginReadiness(joiningPeerId, false, missingPluginIds);
+            }
+
             peer.broadcastGameState();
+            peer.eventHandler?.updateGameState?.(true);
             
             // Request plugin readiness from the newly joined client
             // This ensures we get their readiness status even if they already have plugins

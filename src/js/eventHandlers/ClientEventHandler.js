@@ -294,6 +294,22 @@ export default class ClientEventHandler extends BaseEventHandler {
                 return;
             }
             
+            const missingPlugins = pluginCheck.missing.map(p => p.id || p.name || p.pluginId);
+            
+            // Mark as not ready while awaiting user confirmation/loading
+            if (!isStale() && this.peer?.gameState && this.peer?.peer?.id) {
+                const current = this.peer.gameState.getPluginReadiness(this.peer.peer.id);
+                const alreadyPending =
+                    current &&
+                    current.ready === false &&
+                    (current.missingPlugins || []).join(',') === missingPlugins.join(',');
+                if (!alreadyPending) {
+                    this.peer.gameState.setPluginReadiness(this.peer.peer.id, false, missingPlugins);
+                    this.updateGameState();
+                }
+                this.sendPluginReadiness(false, missingPlugins);
+            }
+            
             // Show plugin loading modal
             const pluginLoadingModal = new PluginLoadingModal(
                 'clientPluginLoadingModal',
