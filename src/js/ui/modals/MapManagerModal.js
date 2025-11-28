@@ -18,6 +18,7 @@ export default class MapManagerModal extends BaseModal {
         this.onMapUploaded = config.onMapUploaded || null;
         this.isHost = config.isHost || false;
         this.factoryManager = config.factoryManager;
+        this.eventHandler = config.eventHandler || null; // Store event handler for map settings
 
         this.applyButton = null;
     }
@@ -33,6 +34,7 @@ export default class MapManagerModal extends BaseModal {
         if (config.onMapSelected !== undefined) this.onMapSelected = config.onMapSelected;
         if (config.onMapUploaded !== undefined) this.onMapUploaded = config.onMapUploaded;
         if (config.factoryManager !== undefined) this.factoryManager = config.factoryManager;
+        if (config.eventHandler !== undefined) this.eventHandler = config.eventHandler;
     }
 
     loadMaps() {
@@ -275,41 +277,7 @@ export default class MapManagerModal extends BaseModal {
         info.appendChild(name);
         info.appendChild(author);
 
-        // Actions for custom maps (host only)
-        if (!map.isBuiltIn && this.isHost) {
-            const actions = document.createElement('div');
-            actions.className = 'map-actions';
-            actions.style.display = 'flex';
-            actions.style.gap = '8px';
-            actions.style.marginTop = '4px';
-
-            const exportButton = document.createElement('button');
-            exportButton.className = 'button button-secondary button-small';
-            exportButton.textContent = 'Export';
-            exportButton.style.fontSize = '0.75em';
-            exportButton.style.padding = '4px 8px';
-            exportButton.style.flex = '1';
-            exportButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.handleExport(map.id);
-            });
-
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'button button-danger button-small';
-            deleteButton.textContent = 'Delete';
-            deleteButton.style.fontSize = '0.75em';
-            deleteButton.style.padding = '4px 8px';
-            deleteButton.style.flex = '1';
-            deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.handleDelete(map.id);
-            });
-
-            actions.appendChild(exportButton);
-            actions.appendChild(deleteButton);
-            info.appendChild(actions);
-        }
-
+        // No action buttons on cards - all actions are in settings modal
         card.appendChild(thumbnail);
         card.appendChild(info);
 
@@ -409,41 +377,7 @@ export default class MapManagerModal extends BaseModal {
         await ModalUtil.alert(`Map "${mapObject.name}" uploaded successfully!`);
     }
 
-    async handleDelete(mapId) {
-        const map = MapStorageManager.getMapById(mapId);
-        if (!map) return;
-
-        const confirmed = await ModalUtil.confirm(
-            `Are you sure you want to delete "${map.name}"?`,
-            'Delete Map'
-        );
-
-        if (confirmed) {
-            MapStorageManager.deleteCustomMap(mapId);
-            this.loadMaps();
-
-            const gridElement = this.modal.querySelector('[data-map-grid]');
-            if (gridElement) {
-                this.populateMapGrid(gridElement);
-            }
-
-            if (this.selectedMapId === mapId) {
-                this.selectedMapId = 'default';
-                MapStorageManager.setSelectedMapId('default');
-            }
-
-            this.updateApplyButtonState();
-        }
-    }
-
-    async handleExport(mapId) {
-        try {
-            await MapStorageManager.exportMap(mapId);
-        } catch (error) {
-            console.error('Error exporting map:', error);
-            await ModalUtil.alert(`Failed to export map: ${error.message}`);
-        }
-    }
+    // handleDelete and handleExport removed - these actions are now in MapSettingsModal
 
     async showMapInfo(map) {
         // Load map data to get full information
@@ -710,8 +644,10 @@ export default class MapManagerModal extends BaseModal {
             map,
             () => {
                 // Refresh map list when settings modal closes
+                this.loadMaps();
                 this.renderContent();
-            }
+            },
+            this.eventHandler || null
         );
         settingsModal.init();
         settingsModal.open();

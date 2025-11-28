@@ -260,7 +260,8 @@ export default class HostEventHandler extends BaseEventHandler {
                 isHost: true,
                 onMapSelected: async (mapId) => await this.handleMapSelected(mapId),
                 onMapUploaded: (mapObject) => this.handleMapUploaded(mapObject),
-                factoryManager: this.factoryManager
+                factoryManager: this.factoryManager,
+                eventHandler: this // Pass event handler for map removal
             });
             // It's already initialized in app.js
         }

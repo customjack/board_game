@@ -15,20 +15,22 @@ import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
 import MapStorageManager from '../../systems/storage/MapStorageManager.js';
 
 const SECTIONS = {
+    EXPORT: 'export',
     REMOVE: 'remove'
 };
 
 export default class MapSettingsModal extends SettingsBaseModal {
-    constructor(id, map, onCloseCallback) {
+    constructor(id, map, onCloseCallback, eventHandler = null) {
         super({
             id: id || `mapSettingsModal-${map.id}`,
             title: `Map Settings: ${map.name || map.id}`,
-            initialTab: SECTIONS.REMOVE
+            initialTab: SECTIONS.EXPORT
         });
 
         this.map = map;
         this.onCloseCallback = onCloseCallback || null;
-        this.selectedTab = SECTIONS.REMOVE;
+        this.eventHandler = eventHandler; // HostEventHandler or ClientEventHandler
+        this.selectedTab = SECTIONS.EXPORT;
     }
 
     init() {
@@ -44,6 +46,9 @@ export default class MapSettingsModal extends SettingsBaseModal {
 
     getTabs() {
         const tabs = [];
+        
+        // Export tab for all maps
+        tabs.push({ id: SECTIONS.EXPORT, label: 'Export' });
         
         // Check if this is a custom map (can be removed)
         const allBuiltInMaps = MapStorageManager.getBuiltInMaps();
@@ -68,14 +73,47 @@ export default class MapSettingsModal extends SettingsBaseModal {
         contentContainer.style.gap = '20px';
 
         switch (this.selectedTab) {
+            case SECTIONS.EXPORT:
+                this.renderExportSection(contentContainer);
+                break;
             case SECTIONS.REMOVE:
                 this.renderRemoveSection(contentContainer);
                 break;
             default:
-                // If no tabs available (built-in map), show message
-                this.renderNoActionsSection(contentContainer);
+                this.renderExportSection(contentContainer);
                 break;
         }
+    }
+
+    renderExportSection(container) {
+        const section = document.createElement('div');
+        section.style.display = 'flex';
+        section.style.flexDirection = 'column';
+        section.style.gap = '16px';
+
+        const title = document.createElement('h3');
+        title.textContent = 'Export Map';
+        title.style.margin = '0 0 12px 0';
+        title.style.color = 'var(--text-color, #fff)';
+        title.style.fontSize = '1.2em';
+
+        const description = document.createElement('p');
+        description.textContent = 'Download this map as a JSON file. You can share this file with others or use it as a backup.';
+        description.style.color = 'var(--text-color-secondary, #aaa)';
+        description.style.fontSize = '0.9em';
+        description.style.lineHeight = '1.5';
+        description.style.margin = '0 0 16px 0';
+
+        const exportButton = document.createElement('button');
+        exportButton.className = 'button button-primary';
+        exportButton.textContent = 'Export Map';
+        exportButton.style.width = '100%';
+        exportButton.addEventListener('click', () => this.handleExport());
+
+        section.appendChild(title);
+        section.appendChild(description);
+        section.appendChild(exportButton);
+        container.appendChild(section);
     }
 
     renderRemoveSection(container) {
@@ -154,6 +192,22 @@ export default class MapSettingsModal extends SettingsBaseModal {
         super.switchTab(tabId);
     }
 
+    async handleExport() {
+        try {
+            await MapStorageManager.exportMap(this.map.id);
+            await ModalUtil.alert(
+                `Map "${this.map.name || this.map.id}" has been exported successfully.`,
+                'Map Exported'
+            );
+        } catch (error) {
+            console.error('Error exporting map:', error);
+            await ModalUtil.alert(
+                `Failed to export map: ${error.message || String(error)}`,
+                'Export Failed'
+            );
+        }
+    }
+
     async handleRemove() {
         const allBuiltInMaps = MapStorageManager.getBuiltInMaps();
         const isBuiltIn = allBuiltInMaps.some(m => m.id === this.map.id);
@@ -170,10 +224,28 @@ export default class MapSettingsModal extends SettingsBaseModal {
 
         if (confirmed) {
             try {
+                // Check if this map is currently selected
+                const currentSelectedMapId = MapStorageManager.getSelectedMapId();
+                const isCurrentlySelected = currentSelectedMapId === this.map.id;
+                
                 const deleted = MapStorageManager.deleteCustomMap(this.map.id);
                 if (deleted) {
+                    // If the removed map was selected, switch to default
+                    if (isCurrentlySelected) {
+                        MapStorageManager.setSelectedMapId('default');
+                        
+                        // If we're in a game (host), load the default map and broadcast
+                        if (this.eventHandler && this.eventHandler.isHost && this.eventHandler.loadMapById) {
+                            try {
+                                await this.eventHandler.loadMapById('default');
+                            } catch (error) {
+                                console.error('Error loading default map after removal:', error);
+                            }
+                        }
+                    }
+                    
                     await ModalUtil.alert(
-                        `Map "${this.map.name || this.map.id}" has been removed successfully.`,
+                        `Map "${this.map.name || this.map.id}" has been removed successfully.${isCurrentlySelected ? ' The default map has been selected.' : ''}`,
                         'Map Removed'
                     );
                     this.close();
