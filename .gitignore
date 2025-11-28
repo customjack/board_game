@@ -108,3 +108,6 @@ coverage/
 
 # Plugins directory
 /plugins/
+
+#artifcats
+artifacts/

@@ -228,7 +228,42 @@ export default class UISystem {
             page: this.currentPage
         };
 
+        // Check engine type and hide timer for engines that don't use it
+        // This handles the case where timer HTML is hardcoded in the template
+        this.updateTimerVisibility(gameState);
+
         this.componentManager.updateAll(gameState, context);
+    }
+
+    /**
+     * Update timer visibility based on engine type
+     * Some engines (like trouble) don't use turn timers
+     * @param {GameState} gameState - Current game state
+     */
+    updateTimerVisibility(gameState) {
+        if (!gameState || !gameState.selectedMapData) return;
+
+        // Get engine type from map data
+        const engineType = gameState.selectedMapData?.engine?.type || 
+                          gameState.selectedMapData?.metadata?.gameEngine?.type ||
+                          null;
+
+        // Engines that don't use timers
+        const enginesWithoutTimer = ['trouble'];
+
+        const timerContainer = document.querySelector('.timer-container');
+        if (timerContainer) {
+            if (engineType && enginesWithoutTimer.includes(engineType)) {
+                timerContainer.style.display = 'none';
+            } else {
+                // Show timer for other engines (if it was previously hidden)
+                // Only show if component system hasn't hidden it
+                const timerComponent = this.components.timer;
+                if (!timerComponent || timerComponent.visible !== false) {
+                    timerContainer.style.display = '';
+                }
+            }
+        }
     }
 
     /**

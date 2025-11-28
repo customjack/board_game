@@ -5,6 +5,8 @@
  * This bundle is passed to plugins when they're loaded, allowing them
  * to access base classes, factories, and other dependencies.
  */
+import PluginMapProvider from './PluginMapProvider.js';
+
 export default class PluginBundle {
     constructor(dependencies) {
         // Base classes that plugins extend
@@ -34,6 +36,9 @@ export default class PluginBundle {
         this.registryManager = dependencies.registryManager || null;
         this.factoryManager = dependencies.factoryManager || null;
         this.MapStorageManager = dependencies.MapStorageManager || null;
+        
+        // Map provider class (plugins can instantiate this)
+        this.PluginMapProvider = PluginMapProvider;
     }
     
     /**
@@ -43,6 +48,19 @@ export default class PluginBundle {
         this.eventBus = eventBus;
         this.registryManager = registryManager;
         this.factoryManager = factoryManager;
+    }
+    
+    /**
+     * Create a map provider for a specific plugin
+     * This is a convenience method that plugins can use to get a map provider
+     * @param {string} pluginId - The ID of the plugin
+     * @returns {PluginMapProvider} A new PluginMapProvider instance
+     */
+    createMapProvider(pluginId) {
+        if (!this.MapStorageManager) {
+            throw new Error('MapStorageManager not available in bundle');
+        }
+        return new PluginMapProvider(pluginId, this.MapStorageManager);
     }
 }
 

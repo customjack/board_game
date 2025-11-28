@@ -96,7 +96,9 @@ export default class MapStorageManager {
             thumbnail: mergedMetadata.thumbnail || null,
             createdDate: mergedMetadata.created || mapData.created || new Date().toISOString(),
             metadata: mergedMetadata,
-            engineType: engineType || 'turn-based'
+            engineType: engineType || 'turn-based',
+            pluginId: mergedMetadata.pluginId || null, // Track which plugin provided this map
+            source: mergedMetadata.source || 'plugin-bundled' // Track source type
         };
 
         // Check if already registered
@@ -108,6 +110,48 @@ export default class MapStorageManager {
         }
 
         return mapObject;
+    }
+
+    /**
+     * Unregister a plugin map (called when plugin is removed or map is deleted)
+     * @param {string} mapId - The ID of the map to unregister
+     * @returns {boolean} True if map was found and removed, false otherwise
+     */
+    static unregisterPluginMap(mapId) {
+        const index = this.pluginMaps.findIndex(m => m.id === mapId);
+        if (index >= 0) {
+            this.pluginMaps.splice(index, 1);
+            console.log(`[MapStorageManager] Unregistered plugin map "${mapId}"`);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get all maps provided by a specific plugin
+     * @param {string} pluginId - The plugin ID
+     * @returns {Array} Array of map objects
+     */
+    static getMapsByPluginId(pluginId) {
+        return this.pluginMaps.filter(m => m.pluginId === pluginId);
+    }
+
+    /**
+     * Unregister all maps provided by a specific plugin
+     * Called when a plugin is removed or refreshed
+     * @param {string} pluginId - The plugin ID
+     * @returns {number} Number of maps unregistered
+     */
+    static unregisterMapsByPluginId(pluginId) {
+        const mapsToRemove = this.getMapsByPluginId(pluginId);
+        const count = mapsToRemove.length;
+        
+        for (const map of mapsToRemove) {
+            this.unregisterPluginMap(map.id);
+        }
+        
+        console.log(`[MapStorageManager] Unregistered ${count} map(s) for plugin "${pluginId}"`);
+        return count;
     }
 
     /**

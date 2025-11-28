@@ -1,6 +1,7 @@
 import Plugin from './Plugin.js';
 import PluginLoader from './PluginLoader.js';
 import PluginBundle from './PluginBundle.js';
+import MapStorageManager from '../storage/MapStorageManager.js';
 
 /**
  * PluginManager - Centralized management for all game plugins
@@ -189,6 +190,18 @@ export default class PluginManager {
         if (metadata && metadata.isDefault) {
             console.error(`Cannot unregister default plugin: ${pluginId}`);
             return false;
+        }
+
+        // Unregister all maps provided by this plugin (if they still exist)
+        // User may have already deleted them, so this is safe to call
+        try {
+            const mapsRemoved = MapStorageManager.unregisterMapsByPluginId(pluginId);
+            if (mapsRemoved > 0) {
+                console.log(`[PluginManager] Removed ${mapsRemoved} map(s) associated with plugin "${pluginId}"`);
+            }
+        } catch (error) {
+            console.error(`[PluginManager] Error removing maps for plugin "${pluginId}":`, error);
+            // Continue with plugin removal even if map removal fails
         }
 
         // Call cleanup if plugin is initialized
@@ -670,10 +683,22 @@ export default class PluginManager {
             };
         }
 
+        // Unregister all maps provided by this plugin BEFORE unregistering the plugin
+        // This ensures maps are removed even if plugin cleanup fails
+        try {
+            const mapsRemoved = MapStorageManager.unregisterMapsByPluginId(pluginId);
+            if (mapsRemoved > 0) {
+                console.log(`[PluginManager] Removed ${mapsRemoved} map(s) before refreshing plugin "${pluginId}"`);
+            }
+        } catch (error) {
+            console.error(`[PluginManager] Error removing maps before refresh for plugin "${pluginId}":`, error);
+            // Continue with refresh even if map removal fails
+        }
+
         // Clear cached code
         this.clearCachedPluginCode(pluginInfo.url);
 
-        // Unregister the plugin
+        // Unregister the plugin (this will also call cleanup, but maps are already removed)
         this.unregisterPlugin(pluginId);
 
         // Reload from CDN

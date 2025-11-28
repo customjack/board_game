@@ -44,8 +44,9 @@ export default class TimerComponent extends BaseUIComponent {
         // Initialize animation
         if (this.animation) {
             if (!this.gameState || !this.gameState.settings.turnTimerEnabled) {
-                // Show infinity symbol if timer disabled
-                this.animation.init(null, true);
+                // Timer disabled - don't initialize animation
+                // Timer will be hidden by engine-specific logic
+                return;
             } else {
                 // Normal timer with pause button
                 this.animation.init(this.pauseCallback);
@@ -61,6 +62,13 @@ export default class TimerComponent extends BaseUIComponent {
     startTimer() {
         if (!this.gameState || !this.gameState.settings.turnTimerEnabled) {
             return; // Timer disabled
+        }
+
+        // Check if timer element exists (might be hidden for engines that don't use timers)
+        const timerContainer = document.querySelector('.timer-container');
+        if (!timerContainer || timerContainer.style.display === 'none') {
+            // Timer is hidden, don't try to start it
+            return;
         }
 
         this.stopTimer(); // Clear any existing timer

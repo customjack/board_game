@@ -9,7 +9,7 @@
     "test:coverage": "jest --coverage",
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",
-    "build:plugins": "rollup -c rollup.plugins.config.js --bundleConfigAsCjs && mkdir -p dist/maps && cp src/assets/maps/examples/trouble-classic.json dist/maps/trouble-classic.json",
+    "build:plugins": "rollup -c rollup.plugins.config.js --bundleConfigAsCjs",
     "watch:plugins": "rollup -c rollup.plugins.config.js -w",
     "cdn:start": "node scripts/start-cdn-server.js",
     "peerjs:start": "node scripts/start-peerjs-server.js",

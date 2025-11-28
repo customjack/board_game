@@ -58,12 +58,6 @@ export default class TimerAnimation extends Animation {
             this.pauseCallback = pauseCallback;
             this.createPauseButton();
         }
-
-        // Handle infinite display
-        if (timerDisabled) {
-            this.duration = "infinity";
-            this.updateTimerDisplay();
-        }
     }
 
     createPauseButton() {
@@ -101,6 +95,13 @@ export default class TimerAnimation extends Animation {
 
     start(options = {}, callback = () => {}) {
         console.log("Starting timer animation with options:", options);
+        
+        // Safety check: if timer element is hidden/removed, don't start animation
+        if (!this.timerElement || !this.timerText || !this.progressRing) {
+            console.warn('TimerAnimation: Timer element not available, cannot start');
+            return;
+        }
+        
         this.cleanup();
 
         this.duration = options.duration || 30;
@@ -137,9 +138,10 @@ export default class TimerAnimation extends Animation {
     }
 
     updateTimerDisplay() {
-        if (this.duration === "infinity") {
-            this.timerText.textContent = '∞';
-            this.progressRing.style.opacity = '1';
+        // Infinite timer display removed - timer is now hidden for engines that don't use it
+        
+        // Safety check: if timer element is hidden/removed, don't try to update it
+        if (!this.timerText || !this.progressRing) {
             return;
         }
 

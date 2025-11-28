@@ -50,12 +50,15 @@ export default class MapSettingsModal extends SettingsBaseModal {
         // Export tab for all maps
         tabs.push({ id: SECTIONS.EXPORT, label: 'Export' });
         
-        // Check if this is a custom map (can be removed)
+        // Check if this map can be removed
+        // - Custom maps (uploaded by user)
+        // - Plugin-provided maps (bundled with plugins)
         const allBuiltInMaps = MapStorageManager.getBuiltInMaps();
         const isBuiltIn = allBuiltInMaps.some(m => m.id === this.map.id);
         const isCustomMap = !isBuiltIn && this.map.source !== 'builtin';
+        const isPluginMap = this.map.pluginId != null; // Plugin-provided maps can be removed
 
-        if (isCustomMap) {
+        if (isCustomMap || isPluginMap) {
             tabs.push({ id: SECTIONS.REMOVE, label: 'Remove' });
         }
 
@@ -211,14 +214,17 @@ export default class MapSettingsModal extends SettingsBaseModal {
     async handleRemove() {
         const allBuiltInMaps = MapStorageManager.getBuiltInMaps();
         const isBuiltIn = allBuiltInMaps.some(m => m.id === this.map.id);
+        const isPluginMap = this.map.pluginId != null;
         
-        if (isBuiltIn || this.map.source === 'builtin') {
-            await ModalUtil.alert('Only custom maps can be removed.', 'Cannot Remove');
+        // Only built-in maps (without pluginId) cannot be removed
+        if (isBuiltIn && !isPluginMap && this.map.source === 'builtin') {
+            await ModalUtil.alert('Only custom and plugin-provided maps can be removed.', 'Cannot Remove');
             return;
         }
 
+        const mapType = isPluginMap ? 'plugin-provided' : 'custom';
         const confirmed = await ModalUtil.confirm(
-            `Are you sure you want to remove map "${this.map.name || this.map.id}"? This action cannot be undone.`,
+            `Are you sure you want to remove ${mapType} map "${this.map.name || this.map.id}"? This action cannot be undone.${isPluginMap ? ' The plugin will remain installed.' : ''}`,
             'Remove Map'
         );
 
@@ -228,7 +234,17 @@ export default class MapSettingsModal extends SettingsBaseModal {
                 const currentSelectedMapId = MapStorageManager.getSelectedMapId();
                 const isCurrentlySelected = currentSelectedMapId === this.map.id;
                 
-                const deleted = MapStorageManager.deleteCustomMap(this.map.id);
+                let deleted = false;
+                
+                // Handle plugin-provided maps differently from custom maps
+                if (isPluginMap) {
+                    // Unregister plugin map
+                    deleted = MapStorageManager.unregisterPluginMap(this.map.id);
+                } else {
+                    // Delete custom map
+                    deleted = MapStorageManager.deleteCustomMap(this.map.id);
+                }
+                
                 if (deleted) {
                     // If the removed map was selected, switch to default
                     if (isCurrentlySelected) {

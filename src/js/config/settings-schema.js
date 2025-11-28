@@ -96,8 +96,8 @@ export const GAME_SETTINGS_SCHEMA = [
     {
         id: 'turnTimerEnabled',
         type: SETTING_TYPES.BOOLEAN,
-        label: 'Enable Turn Timer',
-        description: 'Limit time for each player turn',
+        label: 'Enable Turn Timer (Experimental)',
+        description: 'Limit time for each player turn. Note: Turn timer is currently experimental and may be buggy.',
         defaultValue: false,
         category: SETTING_CATEGORIES.TIMING,
         constraints: {},
@@ -107,7 +107,7 @@ export const GAME_SETTINGS_SCHEMA = [
         id: 'turnTimer',
         type: SETTING_TYPES.NUMBER,
         label: 'Turn Timer Duration',
-        description: 'Time limit per turn in seconds',
+        description: 'Time limit per turn in seconds. Note: Turn timer is currently experimental and may be buggy.',
         defaultValue: 150,
         category: SETTING_CATEGORIES.TIMING,
         constraints: {
