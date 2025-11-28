@@ -243,38 +243,18 @@ export default class UISystem {
      * @param {GameState} gameState - Current game state
      */
     updateTimerVisibility(gameState) {
-        if (!gameState || !gameState.selectedMapData) return;
+        if (!gameState) return;
 
-        // Get engine type from map data
-        const engineType = gameState.selectedMapData?.engine?.type || 
-                          gameState.selectedMapData?.metadata?.gameEngine?.type ||
-                          null;
-
-        // Engines that don't use timers
-        const enginesWithoutTimer = ['trouble'];
-        
-        // Check if timer is enabled in settings
-        // Timer should show when enabled, regardless of when client joined
+        // Timer should show when enabled in settings and the game has started
         const timerEnabled = gameState.settings?.turnTimerEnabled === true;
         const gameStarted = gameState.isGameStarted();
 
         const timerContainer = document.querySelector('.timer-container');
         if (timerContainer) {
-            // Hide timer if:
-            // 1. Engine type doesn't use timers (e.g., trouble)
-            // 2. Timer is disabled in settings
-            // 3. Game hasn't started yet (timer only relevant during gameplay)
-            // Note: Timer visibility is checked on every game state update,
-            // so it will appear when enabled even if client joined before it was enabled
-            const shouldHide = (engineType && enginesWithoutTimer.includes(engineType)) || 
-                              !timerEnabled || 
-                              !gameStarted;
-            
+            const shouldHide = !timerEnabled || !gameStarted;
             if (shouldHide) {
                 timerContainer.style.display = 'none';
             } else {
-                // Show timer for other engines (if it was previously hidden)
-                // Only show if component system hasn't hidden it
                 const timerComponent = this.components.timer;
                 if (!timerComponent || timerComponent.visible !== false) {
                     timerContainer.style.display = '';

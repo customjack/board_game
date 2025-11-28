@@ -27,6 +27,9 @@ export default class TimerComponent extends BaseUIComponent {
         this.pausedMessage = null;
         this.running = false;
         this.paused = false;
+
+        this.animationInitialized = false;
+        this.animationInitializedAsDisabled = false;
     }
 
     /**
@@ -41,34 +44,24 @@ export default class TimerComponent extends BaseUIComponent {
         this.onTimerEndCallback = callbacks.onTimerEnd || null;
         this.pauseCallback = callbacks.onPauseToggle || null;
 
-        // Initialize animation
-        if (this.animation) {
-            if (!this.gameState || !this.gameState.settings.turnTimerEnabled) {
-                // Timer disabled - don't initialize animation
-                // Timer will be hidden by engine-specific logic
-                return;
-            } else {
-                // Normal timer with pause button
-                this.animation.init(this.pauseCallback);
-                this.createPausedMessage();
-                this.hidePausedMessage();
-            }
-        }
+        this.ensureAnimationInitialized(this.gameState?.settings?.turnTimerEnabled === true);
     }
 
     /**
      * Start the timer
      */
     startTimer() {
-        if (!this.gameState || !this.gameState.settings.turnTimerEnabled) {
+        const timerEnabled = this.gameState?.settings?.turnTimerEnabled === true;
+        if (!timerEnabled) {
             return; // Timer disabled
         }
 
-        // Check if timer element exists (might be hidden for engines that don't use timers)
+        this.ensureAnimationInitialized(true);
+
+        // Ensure the timer element is visible when enabled
         const timerContainer = document.querySelector('.timer-container');
-        if (!timerContainer || timerContainer.style.display === 'none') {
-            // Timer is hidden, don't try to start it
-            return;
+        if (timerContainer) {
+            timerContainer.style.display = '';
         }
 
         this.stopTimer(); // Clear any existing timer
@@ -193,8 +186,14 @@ export default class TimerComponent extends BaseUIComponent {
         // Update timer enabled status
         if (this.animation) {
             const timerEnabled = gameState.settings.turnTimerEnabled;
+            this.ensureAnimationInitialized(timerEnabled === true);
             if (!timerEnabled && this.running) {
                 this.stopTimer();
+            } else if (timerEnabled) {
+                const timerContainer = document.querySelector('.timer-container');
+                if (timerContainer) {
+                    timerContainer.style.display = '';
+                }
             }
         }
     }
@@ -245,7 +244,29 @@ export default class TimerComponent extends BaseUIComponent {
         this.gameState = null;
         this.onTimerEndCallback = null;
         this.pauseCallback = null;
+        this.animationInitialized = false;
+        this.animationInitializedAsDisabled = false;
 
         super.cleanup();
+    }
+
+    /**
+     * Ensure the timer animation and DOM are initialized, optionally re-initializing
+     * when moving from disabled -> enabled so pause button appears.
+     */
+    ensureAnimationInitialized(turnTimerEnabled) {
+        if (!this.animation) return;
+
+        const shouldReinitFromDisabled = turnTimerEnabled && this.animationInitializedAsDisabled;
+        if (this.animationInitialized && !shouldReinitFromDisabled) {
+            return;
+        }
+
+        this.animation.init(this.pauseCallback, !turnTimerEnabled);
+        this.createPausedMessage();
+        this.hidePausedMessage();
+
+        this.animationInitialized = true;
+        this.animationInitializedAsDisabled = !turnTimerEnabled;
     }
 }
