@@ -12,6 +12,8 @@ import RollButtonComponent from './components/RollButtonComponent.js';
 import TimerComponent from './components/TimerComponent.js';
 import GameLogComponent from './components/GameLogComponent.js';
 import GameLogManager from '../infrastructure/managers/GameLogManager.js';
+import SidebarWidgetManager from './sidebar/SidebarWidgetManager.js';
+import TimerSidebarWidget from './sidebar/TimerSidebarWidget.js';
 
 export default class UISystem {
     /**
@@ -31,6 +33,11 @@ export default class UISystem {
         this.isHost = config.isHost || false;
         this.peerId = config.peerId || null;
         this.hostPeerId = config.hostPeerId || null;
+
+        // Sidebar widgets (modular sidebar UI)
+        this.sidebarWidgetManager = new SidebarWidgetManager({
+            containerId: 'gameSidebar'
+        });
 
         // Component manager
         this.componentManager = new UIComponentManager(this.eventBus);
@@ -177,6 +184,12 @@ export default class UISystem {
         // Initialize all components
         this.componentManager.initAll();
 
+        // Register sidebar widgets (timer as first modular piece)
+        if (this.components.timer) {
+            this.sidebarWidgetManager.register(new TimerSidebarWidget(this.components.timer));
+        }
+        this.sidebarWidgetManager.initAll();
+
         console.log('UI System initialized with', this.componentManager.getComponentIds().length, 'components');
     }
 
@@ -228,39 +241,8 @@ export default class UISystem {
             page: this.currentPage
         };
 
-        // Always update timer visibility when game state changes
-        // This ensures timer shows/hides when turnTimerEnabled setting changes
-        // or when the game starts (not just on initial join)
-        this.updateTimerVisibility(gameState);
-
         this.componentManager.updateAll(gameState, context);
-    }
-
-    /**
-     * Update timer visibility based on engine type and timer setting
-     * Some engines (like trouble) don't use turn timers
-     * Timer should also be hidden if turnTimerEnabled is false
-     * @param {GameState} gameState - Current game state
-     */
-    updateTimerVisibility(gameState) {
-        if (!gameState) return;
-
-        // Timer should show when enabled in settings and the game has started
-        const timerEnabled = gameState.settings?.turnTimerEnabled === true;
-        const gameStarted = gameState.isGameStarted();
-
-        const timerContainer = document.querySelector('.timer-container');
-        if (timerContainer) {
-            const shouldHide = !timerEnabled || !gameStarted;
-            if (shouldHide) {
-                timerContainer.style.display = 'none';
-            } else {
-                const timerComponent = this.components.timer;
-                if (!timerComponent || timerComponent.visible !== false) {
-                    timerContainer.style.display = '';
-                }
-            }
-        }
+        this.sidebarWidgetManager.updateAll(gameState, context);
     }
 
     /**
@@ -344,6 +326,7 @@ export default class UISystem {
      */
     cleanup() {
         this.componentManager.cleanupAll();
+        this.sidebarWidgetManager.cleanup();
         this.components = {};
         this.gameLogManager = null;
     }

@@ -202,7 +202,8 @@ export default class PluginLoadingModal extends BaseModal {
         const status = document.createElement('span');
         status.className = 'plugin-loading-status';
         status.dataset.pluginId = plugin.id;
-        status.textContent = 'Pending';
+        const versionLabel = plugin.version ? `v${plugin.version}` : 'Pending';
+        status.textContent = versionLabel;
         status.style.fontSize = '0.85em';
         status.style.color = 'var(--text-color-secondary, #888)';
         item.appendChild(status);
@@ -248,7 +249,7 @@ export default class PluginLoadingModal extends BaseModal {
         const loadingButton = this.modal.querySelector('#pluginLoadingButton');
         if (loadingButton) loadingButton.disabled = true;
 
-        this.updateStatusMessage('Loading plugins...');
+            this.updateStatusMessage('Loading plugins...');
 
         // Filter out core/builtin plugins from loading (they're always available)
         const pluginsToLoad = this.requiredPlugins.filter(plugin => {
@@ -257,9 +258,19 @@ export default class PluginLoadingModal extends BaseModal {
 
         // Load each plugin
         for (const plugin of pluginsToLoad) {
-            // Skip if already loaded
-            if (this.pluginManager.pluginClasses.has(plugin.id)) {
-                this.updatePluginStatus(plugin.id, 'Already Loaded');
+            // Check if the currently installed version satisfies the requirement
+            let satisfies = false;
+            try {
+                const check = this.pluginManager.checkPluginRequirements([plugin]);
+                satisfies = check.allLoaded;
+            } catch (e) {
+                satisfies = false;
+            }
+
+            // Skip load if requirement is already satisfied
+            if (satisfies) {
+                const versionNote = plugin.installedVersion ? ` (installed ${plugin.installedVersion})` : '';
+                this.updatePluginStatus(plugin.id, `Already Loaded${versionNote}`);
                 this.loadedPlugins.push(plugin);
                 continue;
             }
@@ -334,4 +345,3 @@ export default class PluginLoadingModal extends BaseModal {
         this.close();
     }
 }
-

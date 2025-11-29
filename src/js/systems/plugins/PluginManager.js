@@ -94,11 +94,39 @@ export default class PluginManager {
                 return false;
             }
 
-            // Check for duplicate plugin ID
+            // Handle duplicate plugin ID with version awareness
             if (this.pluginClasses.has(metadata.id)) {
-                const existingPlugin = this.pluginClasses.get(metadata.id).getPluginMetadata();
-                console.error(`Cannot register plugin: ID "${metadata.id}" is already in use by "${existingPlugin.name}"`);
-                return false;
+                const existingPluginClass = this.pluginClasses.get(metadata.id);
+                const existingMetadata = existingPluginClass.getPluginMetadata();
+                const versionComparison = this._compareVersions(metadata.version, existingMetadata.version);
+                const sameMajor = this._getMajorVersion(metadata.version) === this._getMajorVersion(existingMetadata.version);
+
+                if (versionComparison === 0) {
+                    console.error(`Cannot register plugin: ID "${metadata.id}" is already in use by "${existingMetadata.name}" (same version ${existingMetadata.version})`);
+                    return false;
+                }
+
+                if (!sameMajor) {
+                    console.error(`Cannot register plugin: ID "${metadata.id}" has incompatible major version (${metadata.version} vs ${existingMetadata.version})`);
+                    return false;
+                }
+
+                if (versionComparison < 0) {
+                    console.warn(`[PluginManager] Ignoring older version ${metadata.version} of plugin "${metadata.id}" (current ${existingMetadata.version})`);
+                    return false;
+                }
+
+                // Upgrade: replace class and drop existing instance so it can be re-initialized
+                console.warn(`[PluginManager] Upgrading plugin "${metadata.id}" from ${existingMetadata.version} to ${metadata.version}`);
+                this.pluginClasses.set(metadata.id, pluginClass);
+                if (this.pluginInstances.has(metadata.id)) {
+                    this.pluginInstances.delete(metadata.id);
+                    this.plugins = this.plugins.filter(p => {
+                        const meta = p.constructor?.getPluginMetadata?.();
+                        return meta?.id !== metadata.id;
+                    });
+                }
+                return true;
             }
 
             // Store plugin class
@@ -459,18 +487,31 @@ export default class PluginManager {
                 cached: fromCache || false
             };
 
-            // If the plugin is already registered, skip re-registering and return success
+            // If the plugin is already registered, check version compatibility
             if (this.pluginClasses.has(metadata.id)) {
-                console.warn(`[PluginManager] Plugin ${metadata.id} already registered, skipping reload`);
-                this.loadedPluginUrls.add(pluginInfo.url);
-                this.pluginUrls.set(metadata.id, pluginInfo.url);
-                this.remotePluginInfo.set(metadata.id, fullPluginInfo);
-                this.saveRemotePlugin(fullPluginInfo);
-                return {
-                    success: true,
-                    pluginId: metadata.id,
-                    alreadyLoaded: true
-                };
+                const existingMetadata = this.pluginClasses.get(metadata.id).getPluginMetadata();
+                const versionComparison = this._compareVersions(metadata.version, existingMetadata.version);
+                const sameMajor = this._getMajorVersion(metadata.version) === this._getMajorVersion(existingMetadata.version);
+
+                if (versionComparison <= 0) {
+                    console.warn(`[PluginManager] Plugin ${metadata.id} version ${existingMetadata.version} already registered, skipping reload`);
+                    this.loadedPluginUrls.add(pluginInfo.url);
+                    this.pluginUrls.set(metadata.id, pluginInfo.url);
+                    this.remotePluginInfo.set(metadata.id, fullPluginInfo);
+                    this.saveRemotePlugin(fullPluginInfo);
+                    return {
+                        success: true,
+                        pluginId: metadata.id,
+                        alreadyLoaded: true
+                    };
+                }
+
+                if (!sameMajor) {
+                    return {
+                        success: false,
+                        error: `Incompatible major version for plugin ${metadata.id} (existing ${existingMetadata.version}, new ${metadata.version})`
+                    };
+                }
             }
 
             // Register the class
@@ -759,8 +800,23 @@ export default class PluginManager {
             }
             
             // Check if plugin is registered
-            if (!this.pluginClasses.has(req.id)) {
+            const pluginClass = this.pluginClasses.get(req.id);
+            if (!pluginClass) {
                 missing.push(req);
+                continue;
+            }
+
+            // Version compatibility check
+            const installedMetadata = pluginClass.getPluginMetadata?.();
+            const installedVersion = installedMetadata?.version;
+            if (req.version && installedVersion) {
+                const satisfies = this._isVersionSatisfying(req.version, installedVersion);
+                if (!satisfies) {
+                    missing.push({
+                        ...req,
+                        installedVersion
+                    });
+                }
             }
         }
         
@@ -1202,5 +1258,51 @@ export default class PluginManager {
             valid: errors.length === 0,
             errors
         };
+    }
+
+    _getMajorVersion(version) {
+        const [major] = (version || '0').split('.');
+        return parseInt(major, 10) || 0;
+    }
+
+    _compareVersions(a, b) {
+        const parse = (v) => (v || '0').split('.').map(num => parseInt(num, 10) || 0);
+        const [aMaj, aMin = 0, aPatch = 0] = parse(a);
+        const [bMaj, bMin = 0, bPatch = 0] = parse(b);
+
+        if (aMaj !== bMaj) return aMaj > bMaj ? 1 : -1;
+        if (aMin !== bMin) return aMin > bMin ? 1 : -1;
+        if (aPatch !== bPatch) return aPatch > bPatch ? 1 : -1;
+        return 0;
+    }
+
+    _isVersionSatisfying(requiredRange, installedVersion) {
+        if (!requiredRange) return true;
+        const trimmed = requiredRange.trim();
+
+        // Handle caret ^x.y.z => same major, installed >= required
+        if (trimmed.startsWith('^')) {
+            const required = trimmed.slice(1);
+            const sameMajor = this._getMajorVersion(required) === this._getMajorVersion(installedVersion);
+            return sameMajor && this._compareVersions(installedVersion, required) >= 0;
+        }
+
+        // Handle tilde ~x.y.z => same major/minor, installed >= required
+        if (trimmed.startsWith('~')) {
+            const required = trimmed.slice(1);
+            const [reqMaj, reqMin] = (required || '0').split('.').map(v => parseInt(v, 10) || 0);
+            const [instMaj, instMin] = (installedVersion || '0').split('.').map(v => parseInt(v, 10) || 0);
+            const sameMinor = reqMaj === instMaj && reqMin === instMin;
+            return sameMinor && this._compareVersions(installedVersion, required) >= 0;
+        }
+
+        // Handle >=x.y.z
+        if (trimmed.startsWith('>=')) {
+            const required = trimmed.replace('>=', '').trim();
+            return this._compareVersions(installedVersion, required) >= 0;
+        }
+
+        // Exact match fallback
+        return this._compareVersions(installedVersion, trimmed) === 0;
     }
 }
