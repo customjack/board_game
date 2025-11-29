@@ -49,6 +49,7 @@ import UIControllerFactory from './infrastructure/factories/UIControllerFactory'
 import UIComponentFactory from './infrastructure/factories/UIComponentFactory';
 import AnimationFactory from './infrastructure/factories/AnimationFactory';
 import MapStorageManager from './systems/storage/MapStorageManager.js';
+import TurnBasedGameEngine from './game/engines/TurnBasedGameEngine.js';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
 
@@ -416,7 +417,8 @@ function initializeApp() {
         PhaseStateMachine,
         getVisibleElementById,
         ModalUtil,
-        MapStorageManager
+        MapStorageManager,
+        TurnBasedGameEngine
     });
 
     // Register listeners

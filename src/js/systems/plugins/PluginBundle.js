@@ -16,6 +16,7 @@ export default class PluginBundle {
         this.BaseGameState = dependencies.BaseGameState;
         this.BasePieceManager = dependencies.BasePieceManager;
         this.MultiPieceManager = dependencies.MultiPieceManager;
+        this.TurnBasedGameEngine = dependencies.TurnBasedGameEngine;
         this.BaseAction = dependencies.BaseAction;
         this.BaseTrigger = dependencies.BaseTrigger;
         this.PlayerEffect = dependencies.PlayerEffect;
