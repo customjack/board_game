@@ -451,30 +451,26 @@ export default class PlayerListComponent extends BaseUIComponent {
         const indicator = document.createElement('div');
         indicator.className = `player-count-validation validation-${validation.status}`;
 
-        let icon = '';
         let colorClass = '';
         let statusText = '';
 
         switch (validation.status) {
             case 'invalid':
-                icon = '❌';
                 colorClass = 'invalid';
                 statusText = 'Player Count: Invalid';
                 break;
             case 'warning':
-                icon = '⚠️';
                 colorClass = 'warning';
                 statusText = 'Player Count: Acceptable';
                 break;
             case 'valid':
-                icon = '✓';
                 colorClass = 'valid';
                 statusText = `Player Count: ${playerCount} player${playerCount !== 1 ? 's' : ''}`;
                 break;
         }
 
         indicator.innerHTML = `
-            <div class="validation-icon ${colorClass}">${icon}</div>
+            <div class="validation-icon ${colorClass}"></div>
             <div class="validation-content">
                 <div class="validation-status">${statusText}</div>
                 ${validation.messages.length > 0 ? `

@@ -1,9 +1,4 @@
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-
 // Note: The trouble plugin now has its own build system (see plugins/trouble/package.json)
 // This config is kept for any other plugins that don't have their own build system
 export default [
-    // Add other plugin builds here if needed
-    // The trouble plugin builds itself using its own rollup.config.js
 ];

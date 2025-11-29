@@ -13,6 +13,7 @@ import Board from '../elements/models/Board.js';
 import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
 import PluginLoadingModal from '../ui/modals/PluginLoadingModal.js';
 import { MessageTypes } from '../systems/networking/protocol/MessageTypes.js';
+import GameStartValidator from '../game/validation/GameStartValidator.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal, mapManagerModal) {
@@ -443,39 +444,22 @@ export default class HostEventHandler extends BaseEventHandler {
 
     async startGame() {
         console.log('Host is starting the game...');
-        
-        // Check if all players have required plugins
-        const allReady = this.peer.gameState.allPlayersPluginsReady();
-        console.log('[Host] Plugin readiness check:', { allReady, players: this.peer.gameState.players.length });
-        
-        if (!allReady) {
-            const notReadyPlayers = this.peer.gameState.players.filter(player => {
-                const readiness = this.peer.gameState.getPluginReadiness(player.peerId);
-                const isNotReady = !readiness || !readiness.ready;
-                console.log(`[Host] Player ${player.nickname} (${player.peerId}):`, { readiness, isNotReady });
-                return isNotReady;
-            });
-            
-            // Build detailed message
-            let message = 'Cannot start game. The following players are not ready:\n\n';
-            notReadyPlayers.forEach(player => {
-                const readiness = this.peer.gameState.getPluginReadiness(player.peerId);
-                if (!readiness) {
-                    message += `• ${player.nickname}: Loading game data...\n`;
-                } else if (!readiness.ready && readiness.missingPlugins && readiness.missingPlugins.length > 0) {
-                    message += `• ${player.nickname}: Missing game data (${readiness.missingPlugins.join(', ')})\n`;
-                } else {
-                    message += `• ${player.nickname}: Missing game data\n`;
-                }
-            });
-            message += '\nPlease wait for all players to load the required game data before starting.';
-            
+
+        const validator = new GameStartValidator(this.peer.gameState);
+        const validation = validator.validate();
+
+        if (!validation.canStart) {
+            const message = validation.blockers.join('\n\n');
             await ModalUtil.alert(message, 'Cannot Start Game');
-            console.log('[Host] Game start blocked - players not ready');
-            return; // Explicitly return to prevent game start
+            console.log('[Host] Game start blocked:', validation.blockers);
+            return;
         }
-        
-        console.log('[Host] All players ready, starting game...');
+
+        if (validation.warnings.length > 0) {
+            console.warn('[Host] Game start warnings:', validation.warnings);
+        }
+
+        console.log('[Host] All checks passed, starting game...');
         if (this.peer) {
             this.peer.broadcastStartGame();
         }

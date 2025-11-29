@@ -21,11 +21,19 @@ import GameEngineFactory from './infrastructure/factories/GameEngineFactory.js';
 import GameStateFactory from './infrastructure/factories/GameStateFactory.js';
 import BaseGameState from './game/state/BaseGameState.js';
 import BaseGameEngine from './core/base/BaseGameEngine.js';
+import BaseAction from './elements/actions/BaseAction.js';
+import BaseTrigger from './elements/triggers/BaseTrigger.js';
+import PlayerEffect from './elements/effects/PlayerEffect.js';
+import BaseStat from './elements/stats/BaseStat.js';
 import TurnPhases from './game/phases/TurnPhases.js';
 import GamePhases from './game/phases/GamePhases.js';
 import PhaseStateMachine from './game/components/PhaseStateMachine.js';
 import BasePieceManager from './infrastructure/managers/BasePieceManager.js';
 import MultiPieceManager from './infrastructure/managers/MultiPieceManager.js';
+import TurnManager from './game/components/TurnManager.js';
+import EventProcessor from './game/components/EventProcessor.js';
+import UIController from './game/components/UIController.js';
+import Animation from './animations/Animation.js';
 import MultiPieceGameEngine from './game/engines/MultiPieceGameEngine.js';
 import PlayerStates from './game/phases/PlayerStates.js';
 import { getVisibleElementById } from './infrastructure/utils/helpers.js';
@@ -390,8 +398,16 @@ function initializeApp() {
         BaseGameEngine,
         MultiPieceGameEngine,
         BaseGameState,
+        BaseAction,
+        BaseTrigger,
+        PlayerEffect,
+        BaseStat,
         BasePieceManager,
         MultiPieceManager,
+        TurnManager,
+        EventProcessor,
+        UIController,
+        Animation,
         GameEngineFactory,
         GameStateFactory,
         TurnPhases,

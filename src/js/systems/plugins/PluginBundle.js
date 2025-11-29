@@ -16,6 +16,14 @@ export default class PluginBundle {
         this.BaseGameState = dependencies.BaseGameState;
         this.BasePieceManager = dependencies.BasePieceManager;
         this.MultiPieceManager = dependencies.MultiPieceManager;
+        this.BaseAction = dependencies.BaseAction;
+        this.BaseTrigger = dependencies.BaseTrigger;
+        this.PlayerEffect = dependencies.PlayerEffect;
+        this.BaseStat = dependencies.BaseStat;
+        this.TurnManager = dependencies.TurnManager;
+        this.EventProcessor = dependencies.EventProcessor;
+        this.UIController = dependencies.UIController;
+        this.Animation = dependencies.Animation;
         
         // Factories for registration
         this.GameEngineFactory = dependencies.GameEngineFactory;
@@ -63,4 +71,3 @@ export default class PluginBundle {
         return new PluginMapProvider(pluginId, this.MapStorageManager);
     }
 }
-

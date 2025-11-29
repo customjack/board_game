@@ -22,9 +22,7 @@
         "source": "builtin",
         "description": "Core game functionality"
       }
-    ],
-    "minPlayers": 2,
-    "maxPlayers": 8
+    ]
   },
   "engine": {
     "type": "turn-based",

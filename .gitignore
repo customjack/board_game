@@ -29,6 +29,7 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Output of 'npm pack'
 *.tgz
+*.Zone.Identifier
 
 # dotenv environment variables file
 .env
@@ -112,6 +113,7 @@ coverage/
 # Plugins directory (but allow submodules)
 /plugins/*
 !/plugins/trouble/
+!/plugins/example/
 
 #artifcats
 artifacts/
