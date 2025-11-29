@@ -64,9 +64,40 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
     /**
      * Handle connection package (Client)
      */
-    handleConnectionPackage(message, context) {
+    async handleConnectionPackage(message, context) {
         const peer = this.getPeer();
         const factoryManager = this.getFactoryManager();
+        const pluginManager = peer?.eventHandler?.pluginManager;
+
+        // Ensure required plugins for the incoming game state are loaded before parsing
+        const requirements = message.gameState?.pluginRequirements || [];
+        if (pluginManager && requirements.length > 0) {
+            const check = pluginManager.checkPluginRequirements(requirements);
+            if (!check.allLoaded) {
+                const failures = [];
+                for (const req of check.missing) {
+                    const url = req.cdn || req.url;
+                    if (!url) {
+                        failures.push({ req, error: 'No CDN/URL provided' });
+                        continue;
+                    }
+                    const result = await pluginManager.loadPluginFromUrl({
+                        id: req.id,
+                        name: req.name,
+                        url,
+                        description: req.description,
+                        version: req.version
+                    });
+                    if (!result.success) {
+                        failures.push({ req, error: result.error });
+                    }
+                }
+                if (failures.length > 0) {
+                    await ModalUtil.alert(`Required plugins could not be loaded:\n${failures.map(f => `${f.req.id}: ${f.error}`).join('\n')}`);
+                    return;
+                }
+            }
+        }
 
         // Store current owned players before updating game state
         const previousOwnedPlayers = peer.ownedPlayers || [];

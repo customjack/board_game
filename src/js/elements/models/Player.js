@@ -3,6 +3,7 @@ import ColorAssigner from '../../infrastructure/utils/ColorAssigner';
 import RollEngine from '../../infrastructure/utils/RollEngine';
 import PlayerMovementHistory from './PlayerMovementHistory';
 import PlayerStates from '../../game/phases/PlayerStates';
+import playerStateRegistry from '../../infrastructure/registries/PlayerStateRegistry.js';
 
 export default class Player {
     /**
@@ -176,10 +177,15 @@ export default class Player {
 
     /**
      * Sets the player's state.
-     * @param {string} newState - The new state for the player. Must be a valid PlayerStates value.
+     * @param {string} newState - The new state for the player. Must be a valid PlayerStates value or a registered custom state.
      */
     setState(newState) {
-        if (!Object.values(PlayerStates).includes(newState)) {
+        // Check if it's a built-in state
+        const isBuiltInState = Object.values(PlayerStates).includes(newState);
+        // Check if it's a registered custom state
+        const isCustomState = playerStateRegistry.isRegistered(newState);
+        
+        if (!isBuiltInState && !isCustomState) {
             throw new Error(`Invalid player state: ${newState}`);
         }
         this.state = newState;

@@ -9,6 +9,7 @@ import ListenerRegistry from './infrastructure/registries/ListenerRegistry.js';
 import PlaceholderRegistry from './infrastructure/registries/PlaceholderRegistry.js';
 import WindowListenerRegistry from './infrastructure/registries/WindowListenerRegistry.js';
 import PieceManagerRegistry from './infrastructure/registries/PieceManagerRegistry.js';
+import playerStateRegistry, { PlayerStateRegistry } from './infrastructure/registries/PlayerStateRegistry.js';
 import RegistryManager from './infrastructure/registries/RegistryManager.js';
 import EventBus from './core/events/EventBus';
 import PluginManager from './systems/plugins/PluginManager';
@@ -77,14 +78,17 @@ function initializeRegistryManager() {
     const placeholderRegistry = new PlaceholderRegistry();
     const windowListenerRegistry = new WindowListenerRegistry();
     const pieceManagerRegistry = new PieceManagerRegistry();
+    // Use singleton instance for playerStateRegistry
+    // (imported from PlayerStateRegistry.js)
 
     registryManager.addRegistry('pageRegistry', pageRegistry);
     registryManager.addRegistry('listenerRegistry', listenerRegistry);
     registryManager.addRegistry('placeholderRegistry', placeholderRegistry);
     registryManager.addRegistry('windowListenerRegistry', windowListenerRegistry);
     registryManager.addRegistry('pieceManagerRegistry', pieceManagerRegistry);
+    registryManager.addRegistry('playerStateRegistry', playerStateRegistry);
 
-    return { registryManager, pageRegistry, listenerRegistry, placeholderRegistry, windowListenerRegistry, pieceManagerRegistry };
+    return { registryManager, pageRegistry, listenerRegistry, placeholderRegistry, windowListenerRegistry, pieceManagerRegistry, playerStateRegistry };
 }
 
 // Register pages in the PageRegistry
