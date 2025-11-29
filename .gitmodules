@@ -1,3 +1,6 @@
 [submodule "plugins/trouble"]
 	path = plugins/trouble
 	url = https://github.com/customjack/board_game_plugin_trouble.git
+[submodule "plugins/example"]
+	path = plugins/example
+	url = https://github.com/customjack/board_game_plugin_example.git
