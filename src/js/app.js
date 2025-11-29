@@ -9,7 +9,7 @@ import ListenerRegistry from './infrastructure/registries/ListenerRegistry.js';
 import PlaceholderRegistry from './infrastructure/registries/PlaceholderRegistry.js';
 import WindowListenerRegistry from './infrastructure/registries/WindowListenerRegistry.js';
 import PieceManagerRegistry from './infrastructure/registries/PieceManagerRegistry.js';
-import playerStateRegistry, { PlayerStateRegistry } from './infrastructure/registries/PlayerStateRegistry.js';
+import PlayerStateRegistry from './infrastructure/registries/PlayerStateRegistry.js';
 import RegistryManager from './infrastructure/registries/RegistryManager.js';
 import EventBus from './core/events/EventBus';
 import PluginManager from './systems/plugins/PluginManager';
@@ -37,6 +37,7 @@ import UIController from './game/components/UIController.js';
 import Animation from './animations/Animation.js';
 import MultiPieceGameEngine from './game/engines/MultiPieceGameEngine.js';
 import PlayerStates from './game/phases/PlayerStates.js';
+import Player from './elements/models/Player.js';
 import { getVisibleElementById } from './infrastructure/utils/helpers.js';
 import ModalUtil from './infrastructure/utils/ModalUtil.js';
 import EffectFactory from './infrastructure/factories/EffectFactory';
@@ -78,8 +79,7 @@ function initializeRegistryManager() {
     const placeholderRegistry = new PlaceholderRegistry();
     const windowListenerRegistry = new WindowListenerRegistry();
     const pieceManagerRegistry = new PieceManagerRegistry();
-    // Use singleton instance for playerStateRegistry
-    // (imported from PlayerStateRegistry.js)
+    const playerStateRegistry = new PlayerStateRegistry({ playerClass: Player });
 
     registryManager.addRegistry('pageRegistry', pageRegistry);
     registryManager.addRegistry('listenerRegistry', listenerRegistry);
@@ -418,6 +418,7 @@ function initializeApp() {
         TurnPhases,
         GamePhases,
         PlayerStates,
+        Player,
         PhaseStateMachine,
         getVisibleElementById,
         ModalUtil,

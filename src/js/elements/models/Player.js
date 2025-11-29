@@ -6,6 +6,18 @@ import PlayerStates from '../../game/phases/PlayerStates';
 import playerStateRegistry from '../../infrastructure/registries/PlayerStateRegistry.js';
 
 export default class Player {
+    static allowedStates = new Set(Object.values(PlayerStates));
+
+    static registerAllowedState(state) {
+        if (typeof state === 'string' && state.length > 0) {
+            Player.allowedStates.add(state);
+        }
+    }
+
+    static registerAllowedStates(states = []) {
+        states.forEach((s) => Player.registerAllowedState(s));
+    }
+
     /**
      * Constructs a new Player instance.
      * @param {string} peerId - The unique identifier for the client's connection.
@@ -180,12 +192,8 @@ export default class Player {
      * @param {string} newState - The new state for the player. Must be a valid PlayerStates value or a registered custom state.
      */
     setState(newState) {
-        // Check if it's a built-in state
-        const isBuiltInState = Object.values(PlayerStates).includes(newState);
-        // Check if it's a registered custom state
-        const isCustomState = playerStateRegistry.isRegistered(newState);
-        
-        if (!isBuiltInState && !isCustomState) {
+        const allowed = this.constructor.allowedStates || Player.allowedStates;
+        if (!allowed?.has?.(newState)) {
             throw new Error(`Invalid player state: ${newState}`);
         }
         this.state = newState;

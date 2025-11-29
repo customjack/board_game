@@ -28,5 +28,9 @@ export default class RegistryManager {
         return this.getRegistry('pieceManagerRegistry');
     }
 
+    getPlayerStateRegistry() {
+        return this.getRegistry('playerStateRegistry');
+    }
+
     // Add more shortcuts as needed for new registries
 }

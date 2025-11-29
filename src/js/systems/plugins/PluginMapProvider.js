@@ -63,7 +63,7 @@ export default class PluginMapProvider {
                 this.registeredMapIds.push(registeredMap.id);
             }
 
-            console.log(`[PluginMapProvider] Registered map "${registeredMap.name}" (${registeredMap.id}) for plugin "${this.pluginId}"`);
+            // console.log(`[PluginMapProvider] Registered map "${registeredMap.name}" (${registeredMap.id}) for plugin "${this.pluginId}"`);
             
             return registeredMap;
         } catch (error) {
@@ -116,7 +116,7 @@ export default class PluginMapProvider {
         }
 
         this.registeredMapIds = [];
-        console.log(`[PluginMapProvider] Unregistered ${count} map(s) for plugin "${this.pluginId}"`);
+        // console.log(`[PluginMapProvider] Unregistered ${count} map(s) for plugin "${this.pluginId}"`);
         
         return count;
     }
@@ -141,4 +141,3 @@ export default class PluginMapProvider {
         return `${this.pluginId}-${sanitized}`;
     }
 }
-

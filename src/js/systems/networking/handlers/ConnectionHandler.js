@@ -15,6 +15,7 @@ import { MessageTypes } from '../protocol/MessageTypes.js';
 import GameStateFactory from '../../../infrastructure/factories/GameStateFactory.js';
 import InputValidator from '../../../infrastructure/utils/InputValidator.js';
 import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
+import PluginLoadingModal from '../../../ui/modals/PluginLoadingModal.js';
 
 export default class ConnectionHandler extends MessageHandlerPlugin {
     register() {
@@ -62,6 +63,32 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
     }
 
     /**
+     * Ensure all required plugins are loaded, prompting the user via modal when needed.
+     */
+    async loadRequiredPluginsWithModal(peer, pluginManager, requirements) {
+        const check = pluginManager.checkPluginRequirements(requirements);
+        if (check.allLoaded) return true;
+
+        const modal = new PluginLoadingModal(
+            'connectionPluginLoadingModal',
+            pluginManager,
+            peer?.eventHandler?.personalSettings,
+            { isHost: peer?.isHost === true }
+        );
+        modal.init();
+        modal.setRequiredPlugins(check.missing);
+
+        return await new Promise((resolve) => {
+            modal.onComplete = () => {
+                const recheck = pluginManager.checkPluginRequirements(requirements);
+                resolve(recheck.allLoaded);
+            };
+            modal.onCancel = () => resolve(false);
+            modal.open();
+        });
+    }
+
+    /**
      * Handle connection package (Client)
      */
     async handleConnectionPackage(message, context) {
@@ -69,33 +96,13 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         const factoryManager = this.getFactoryManager();
         const pluginManager = peer?.eventHandler?.pluginManager;
 
-        // Ensure required plugins for the incoming game state are loaded before parsing
+        // Load required plugins (with modal) before deserializing game state
         const requirements = message.gameState?.pluginRequirements || [];
         if (pluginManager && requirements.length > 0) {
-            const check = pluginManager.checkPluginRequirements(requirements);
-            if (!check.allLoaded) {
-                const failures = [];
-                for (const req of check.missing) {
-                    const url = req.cdn || req.url;
-                    if (!url) {
-                        failures.push({ req, error: 'No CDN/URL provided' });
-                        continue;
-                    }
-                    const result = await pluginManager.loadPluginFromUrl({
-                        id: req.id,
-                        name: req.name,
-                        url,
-                        description: req.description,
-                        version: req.version
-                    });
-                    if (!result.success) {
-                        failures.push({ req, error: result.error });
-                    }
-                }
-                if (failures.length > 0) {
-                    await ModalUtil.alert(`Required plugins could not be loaded:\n${failures.map(f => `${f.req.id}: ${f.error}`).join('\n')}`);
-                    return;
-                }
+            const ready = await this.loadRequiredPluginsWithModal(peer, pluginManager, requirements);
+            if (!ready) {
+                console.warn('[ConnectionHandler] Required plugins were not loaded, aborting connection package handling');
+                return;
             }
         }
 
@@ -104,11 +111,56 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
 
         peer.gameState = GameStateFactory.fromJSON(message.gameState, factoryManager);
 
+        // Refresh UI immediately so map preview and sidebar reflect incoming state
+        peer.eventHandler?.updateGameState?.(true);
+
         // Try to get owned players from the new game state
         const ownedPlayersFromState = peer.gameState.getPlayersByPeerId(peer.peer.id);
 
         console.log('Game state updated from connection package');
         console.log(`[ConnectionPackage] Owned players: ${previousOwnedPlayers.length} -> ${ownedPlayersFromState.length}`);
+
+        const triggerPluginCheck = () => {
+            if (peer.eventHandler && peer.eventHandler.checkAndLoadPlugins) {
+                peer.eventHandler.previousMapId = peer.gameState?.selectedMapId || null;
+                if (peer.eventHandler.getRequirementsHash) {
+                    peer.eventHandler.previousPluginRequirementsHash = peer.eventHandler.getRequirementsHash(peer.gameState?.pluginRequirements || []);
+                }
+                if (peer.gameState?.selectedMapId) {
+                    const checkPlugins = () => {
+                        if (peer.conn && peer.conn.open) {
+                            peer.eventHandler.checkAndLoadPlugins(peer.gameState);
+                        } else if (peer.conn) {
+                            peer.conn.once('open', () => {
+                                peer.eventHandler.checkAndLoadPlugins(peer.gameState);
+                            });
+                        } else {
+                            setTimeout(checkPlugins, 100);
+                        }
+                    };
+                    checkPlugins();
+                } else {
+                    if (peer.gameState && peer.peer?.id) {
+                        peer.gameState.setPluginReadiness(peer.peer.id, true, []);
+                        peer.eventHandler.updateGameState();
+                    }
+                    if (peer.eventHandler.sendPluginReadiness) {
+                        const sendReadiness = () => {
+                            if (peer.conn && peer.conn.open) {
+                                peer.eventHandler.sendPluginReadiness(true, []);
+                            } else if (peer.conn) {
+                                peer.conn.once('open', () => {
+                                    peer.eventHandler.sendPluginReadiness(true, []);
+                                });
+                            } else {
+                                setTimeout(sendReadiness, 100);
+                            }
+                        };
+                        sendReadiness();
+                    }
+                }
+            }
+        };
 
         // If we had local players but the new game state doesn't include them,
         // it means our JOIN request hasn't been processed yet. Keep the previous references.
@@ -116,9 +168,6 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         if (previousOwnedPlayers.length > 0 && ownedPlayersFromState.length === 0) {
             console.log('[ConnectionPackage] Preserving local player references (JOIN not processed yet)');
             peer.ownedPlayers = previousOwnedPlayers;
-            // Don't show lobby/game page yet - wait for JOIN to be accepted
-            // Stay on loading page until we know we're accepted
-            return;
         } else {
             // Normal case: update owned players from game state
             peer.ownedPlayers = ownedPlayersFromState;
@@ -126,7 +175,7 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
 
         // Only show lobby/game page if we have owned players (JOIN was accepted)
         // If we don't have owned players, we might be getting rejected, so stay on loading page
-        if (ownedPlayersFromState.length > 0) {
+        if (ownedPlayersFromState.length > 0 || peer.gameState?.players?.length > 0) {
             if (peer.gameState.isGameStarted()) {
                 peer.eventHandler.showGamePage();
             } else {
@@ -137,50 +186,18 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         
         // After receiving game state, check plugins and send readiness
         // This ensures the host knows the client's plugin status
-        if (peer.eventHandler && peer.eventHandler.checkAndLoadPlugins) {
-            // Set the previous map ID to trigger plugin check
-            peer.eventHandler.previousMapId = peer.gameState?.selectedMapId || null;
-            if (peer.eventHandler.getRequirementsHash) {
-                peer.eventHandler.previousPluginRequirementsHash = peer.eventHandler.getRequirementsHash(peer.gameState?.pluginRequirements || []);
-            }
-            // Check plugins for current map
-            if (peer.gameState?.selectedMapId) {
-                // Ensure connection is open before checking
-                const checkPlugins = () => {
-                    if (peer.conn && peer.conn.open) {
-                        peer.eventHandler.checkAndLoadPlugins(peer.gameState);
-                    } else if (peer.conn) {
-                        // Wait for connection to open
-                        peer.conn.once('open', () => {
-                            peer.eventHandler.checkAndLoadPlugins(peer.gameState);
-                        });
-                    } else {
-                        // Connection not ready yet, try again shortly
-                        setTimeout(checkPlugins, 100);
-                    }
-                };
-                checkPlugins();
-            } else {
-                // No map selected yet, mark as ready (no plugins required)
-                if (peer.gameState && peer.peer?.id) {
-                    peer.gameState.setPluginReadiness(peer.peer.id, true, []);
-                    peer.eventHandler.updateGameState();
-                }
-                if (peer.eventHandler.sendPluginReadiness) {
-                    const sendReadiness = () => {
-                        if (peer.conn && peer.conn.open) {
-                            peer.eventHandler.sendPluginReadiness(true, []);
-                        } else if (peer.conn) {
-                            peer.conn.once('open', () => {
-                                peer.eventHandler.sendPluginReadiness(true, []);
-                            });
-                        } else {
-                            setTimeout(sendReadiness, 100);
-                        }
-                    };
-                    sendReadiness();
-                }
-            }
+        triggerPluginCheck();
+
+        // Always refresh UI once more now that we have processed readiness
+        peer.eventHandler?.updateGameState?.(true);
+
+        // Fallback: request a full state if player list looks incomplete after plugin sync
+        // This covers cases where initial state was sent before all plugins were ready
+        if (peer.conn?.open && Array.isArray(peer.gameState?.players) && peer.gameState.players.length <= 1) {
+            peer.conn.send({
+                type: MessageTypes.REQUEST_FULL_STATE,
+                reason: 'ensure_player_list_synced_after_plugin_load'
+            });
         }
     }
 
