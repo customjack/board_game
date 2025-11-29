@@ -198,7 +198,7 @@ export default class PluginManager {
             this.plugins.push(pluginInstance); // Also add to legacy array
 
             const metadata = pluginClass.getPluginMetadata();
-            console.log(`[PluginManager] Initialized: ${metadata.name}`);
+            console.log(`[PluginManager] Initialized plugin: ${metadata.name}`);
             return true;
         } catch (error) {
             console.error(`Failed to initialize plugin ${pluginId}:`, error);
@@ -388,7 +388,7 @@ export default class PluginManager {
                 };
             }
 
-            console.log(`[PluginManager] Loading plugin from ${pluginInfo.url}...`);
+            // console.log(`[PluginManager] Loading plugin from ${pluginInfo.url}...`);
 
             // Check for cached plugin code first
             let pluginCode = this.getCachedPluginCode(pluginInfo.url);
@@ -397,7 +397,7 @@ export default class PluginManager {
             let blobUrl = null;
 
             if (pluginCode) {
-                console.log(`[PluginManager] Using cached plugin code for ${pluginInfo.url}`);
+                // console.log(`[PluginManager] Using cached plugin code for ${pluginInfo.url}`);
                 // Create a blob URL from cached code for ES module import
                 const blob = new Blob([pluginCode], { type: 'application/javascript' });
                 blobUrl = URL.createObjectURL(blob);
@@ -405,7 +405,7 @@ export default class PluginManager {
                 fromCache = true;
             } else {
                 // Fetch from CDN and cache it
-                console.log(`[PluginManager] Fetching plugin code from CDN...`);
+                // console.log(`[PluginManager] Fetching plugin code from CDN...`);
                 const response = await fetch(pluginInfo.url);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch plugin: ${response.status} ${response.statusText}`);
@@ -554,7 +554,7 @@ export default class PluginManager {
             const urlMap = this.getPluginCodeUrlMap();
             urlMap[url] = cacheKey;
             localStorage.setItem('plugin_code_url_map', JSON.stringify(urlMap));
-            console.log(`[PluginManager] Cached plugin code for ${url}`);
+        // console.log(`[PluginManager] Cached plugin code for ${url}`);
         } catch (e) {
             console.warn('Failed to cache plugin code to localStorage', e);
         }
@@ -622,7 +622,7 @@ export default class PluginManager {
                 localStorage.removeItem(cacheKey);
                 delete urlMap[url];
                 localStorage.setItem('plugin_code_url_map', JSON.stringify(urlMap));
-                console.log(`[PluginManager] Cleared cached plugin code for ${url}`);
+        // console.log(`[PluginManager] Cleared cached plugin code for ${url}`);
             }
         } catch (e) {
             console.warn('Failed to clear cached plugin code from localStorage', e);

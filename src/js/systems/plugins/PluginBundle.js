@@ -39,6 +39,8 @@ export default class PluginBundle {
         this.PhaseStateMachine = dependencies.PhaseStateMachine;
         this.getVisibleElementById = dependencies.getVisibleElementById;
         this.ModalUtil = dependencies.ModalUtil;
+        this.Player = dependencies.Player;
+        this.PlayerStates = dependencies.PlayerStates;
         
         // Core managers (passed during initialize, but available here for convenience)
         this.eventBus = dependencies.eventBus || null;
