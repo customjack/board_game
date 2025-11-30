@@ -73,6 +73,7 @@ export default class GameStartValidator {
         const playerCount = this.gameState?.players?.length || 0;
 
         if (!gameRules || typeof gameRules.validatePlayerCount !== 'function') {
+            console.warn('[GameStartValidator] No gameRules or validatePlayerCount method available');
             return {
                 valid: true,
                 status: 'valid',

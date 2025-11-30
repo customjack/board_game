@@ -168,8 +168,9 @@ export default class Board {
         const rules = gameDefinition.rules || {};
 
         return {
-            minPlayers: requirements.minPlayers,
-            maxPlayers: requirements.maxPlayers,
+            // Use nullish coalescing to preserve 0 as a valid value, but allow undefined to fall through
+            minPlayers: rules.minPlayers != null ? rules.minPlayers : (requirements.minPlayers != null ? requirements.minPlayers : undefined),
+            maxPlayers: rules.maxPlayers != null ? rules.maxPlayers : (requirements.maxPlayers != null ? requirements.maxPlayers : undefined),
             recommendedPlayers: rules.recommendedPlayers,
             startingPositions: rules.startingPositions,
             turns: rules.turns ? rules.turns : (rules.turnOrder ? { turnOrder: rules.turnOrder } : undefined),

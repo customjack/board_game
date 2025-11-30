@@ -306,9 +306,7 @@ export default class BoardBundleLoader {
                 id: manifest.id
             },
             requirements: {
-                plugins: dependencies.plugins || [],
-                minPlayers: dependencies.minPlayers,
-                maxPlayers: dependencies.maxPlayers
+                plugins: dependencies.plugins || []
             },
             engine: {
                 type: engine.type || "turn-based",
@@ -322,6 +320,8 @@ export default class BoardBundleLoader {
             rules: {
                 turnOrder: rules.turnOrder || "sequential",
                 startingPositions: rules.startingPositions || {},
+                minPlayers: rules.minPlayers,
+                maxPlayers: rules.maxPlayers,
                 recommendedPlayers: rules.recommendedPlayers || {},
                 diceRolling: rules.diceRolling || {},
                 winCondition: rules.winCondition || {}

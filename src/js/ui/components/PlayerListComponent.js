@@ -213,6 +213,13 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         // Re-render player list
         this.render();
+        
+        // Force update player count validation if board rules changed
+        // This ensures the indicator updates when maps are switched
+        const players = this.gameState?.players || [];
+        if (this.currentListElementId === 'lobbyPlayerList') {
+            this.renderPlayerCountValidation(players.length);
+        }
     }
 
     /**
@@ -264,7 +271,17 @@ export default class PlayerListComponent extends BaseUIComponent {
         }
 
         // Check if board changed (important for validation rules)
-        if (this.gameState.board?.metadata?.name !== newGameState.board?.metadata?.name) {
+        const oldBoard = this.gameState.board;
+        const newBoard = newGameState.board;
+        if (oldBoard?.metadata?.name !== newBoard?.metadata?.name) {
+            return true;
+        }
+        
+        // Check if gameRules changed (min/max players) - important for player count validation
+        const oldRules = oldBoard?.gameRules;
+        const newRules = newBoard?.gameRules;
+        if (oldRules?.players?.min !== newRules?.players?.min ||
+            oldRules?.players?.max !== newRules?.players?.max) {
             return true;
         }
 
@@ -354,6 +371,11 @@ export default class PlayerListComponent extends BaseUIComponent {
             })
             .sort()
             .join('|');
+        
+        // Include board rules in signature so player count validation updates when map changes
+        const boardRulesSig = gameState.board?.gameRules 
+            ? `${gameState.board.gameRules.players?.min || 'none'}:${gameState.board.gameRules.players?.max || 'none'}`
+            : 'no-rules';
 
         const requirementsSig = (gameState.pluginRequirements || [])
             .map(req => req?.id || req?.name || '')
@@ -362,7 +384,7 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         const phaseSig = gameState.gamePhase || '';
 
-        return [playersSig, readinessSig, requirementsSig, phaseSig].join('||');
+        return [playersSig, readinessSig, requirementsSig, phaseSig, boardRulesSig].join('||');
     }
 
     /**

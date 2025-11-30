@@ -11,7 +11,7 @@ export default class GameRules {
     constructor(config = {}) {
         // Player rules
         this.players = {
-            min: config.players?.min ?? 1,
+            min: config.players?.min ?? null, // null = no minimum requirement (defaults to 1 for validation)
             max: config.players?.max ?? null, // null = unlimited
             recommended: {
                 min: config.players?.recommended?.min ?? null,
@@ -68,33 +68,61 @@ export default class GameRules {
             messages: []
         };
 
-        // Check minimum
-        if (this.players.min && playerCount < this.players.min) {
+        // First check hard constraints (min/max) - these block game start
+        const minRequired = this.players.min != null ? this.players.min : null;
+        const maxAllowed = this.players.max != null ? this.players.max : null;
+
+        // Check minimum constraint
+        if (minRequired != null && playerCount < minRequired) {
             result.valid = false;
             result.status = 'invalid';
-            result.messages.push(`Requires at least ${this.players.min} player${this.players.min > 1 ? 's' : ''}`);
+            result.messages.push(`Requires at least ${minRequired} player${minRequired > 1 ? 's' : ''}`);
         }
 
-        // Check maximum
-        if (this.players.max && playerCount > this.players.max) {
+        // Check maximum constraint
+        if (maxAllowed != null && playerCount > maxAllowed) {
             result.valid = false;
             result.status = 'invalid';
-            result.messages.push(`Maximum ${this.players.max} players allowed`);
+            result.messages.push(`Maximum ${maxAllowed} players allowed`);
         }
 
-        // Check recommended range (warning, not invalid)
+        // Only check recommended range if we passed the hard constraints
+        // Recommended warnings only show if we're within min/max but outside recommended
         if (result.valid) {
-            const recMin = this.players.recommended.min;
-            const recMax = this.players.recommended.max;
+            const recMin = this.players.recommended?.min;
+            const recMax = this.players.recommended?.max;
+            
+            // Check if we're within the hard constraints
+            const withinMin = minRequired == null || playerCount >= minRequired;
+            const withinMax = maxAllowed == null || playerCount <= maxAllowed;
+            const withinHardConstraints = withinMin && withinMax;
 
-            if (recMin && playerCount < recMin) {
-                result.status = 'warning';
-                result.messages.push(`Recommended: ${recMin}+ players for best experience`);
-            }
-
-            if (recMax && playerCount > recMax) {
-                result.status = 'warning';
-                result.messages.push(`Recommended: ${recMax} or fewer players for best experience`);
+            if (withinHardConstraints && (recMin != null || recMax != null)) {
+                let recommendedMessage = '';
+                
+                if (recMin != null && recMax != null) {
+                    // Both min and max recommended
+                    if (playerCount < recMin) {
+                        recommendedMessage = `Recommended: ${recMin}-${recMax} players for best experience`;
+                    } else if (playerCount > recMax) {
+                        recommendedMessage = `Recommended: ${recMin}-${recMax} players for best experience`;
+                    }
+                } else if (recMin != null) {
+                    // Only min recommended
+                    if (playerCount < recMin) {
+                        recommendedMessage = `Recommended: ${recMin}+ players for best experience`;
+                    }
+                } else if (recMax != null) {
+                    // Only max recommended
+                    if (playerCount > recMax) {
+                        recommendedMessage = `Recommended: ${recMax} or fewer players for best experience`;
+                    }
+                }
+                
+                if (recommendedMessage) {
+                    result.status = 'warning';
+                    result.messages.push(recommendedMessage);
+                }
             }
         }
 
@@ -270,8 +298,10 @@ export default class GameRules {
         if (json.minPlayers !== undefined || json.maxPlayers !== undefined || json.startingPositions !== undefined) {
             const nestedFormat = {
                 players: {
-                    min: json.minPlayers,
-                    max: json.maxPlayers,
+                    // Only include min/max if they are explicitly set (not undefined)
+                    // Allow 0 as a valid value, only exclude undefined and null
+                    ...(json.minPlayers !== undefined && { min: json.minPlayers }),
+                    ...(json.maxPlayers !== undefined && { max: json.maxPlayers }),
                     recommended: json.recommendedPlayers,
                     startingPositions: json.startingPositions
                 },
