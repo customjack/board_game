@@ -272,7 +272,7 @@ export default class HostEventHandler extends BaseEventHandler {
      * Load the initial map (from localStorage or default)
      */
     async loadInitialMap() {
-        const selectedMapId = MapStorageManager.getSelectedMapId();
+        const selectedMapId = await MapStorageManager.getSelectedMapId();
         try {
             await this.loadMapById(selectedMapId);
         } catch (error) {

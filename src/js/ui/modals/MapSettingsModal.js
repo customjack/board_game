@@ -101,7 +101,10 @@ export default class MapSettingsModal extends SettingsBaseModal {
         title.style.fontSize = '1.2em';
 
         const description = document.createElement('p');
-        description.textContent = 'Download this map as a JSON file. You can share this file with others or use it as a backup.';
+        const isBundle = this.map.bundleFormat === 'zip';
+        description.textContent = isBundle 
+            ? 'Download this map as a ZIP bundle containing all board files and assets. You can share this file with others or use it as a backup.'
+            : 'Download this map as a JSON file. You can share this file with others or use it as a backup.';
         description.style.color = 'var(--text-color-secondary, #aaa)';
         description.style.fontSize = '0.9em';
         description.style.lineHeight = '1.5';
@@ -231,7 +234,7 @@ export default class MapSettingsModal extends SettingsBaseModal {
         if (confirmed) {
             try {
                 // Check if this map is currently selected
-                const currentSelectedMapId = MapStorageManager.getSelectedMapId();
+                const currentSelectedMapId = await MapStorageManager.getSelectedMapId();
                 const isCurrentlySelected = currentSelectedMapId === this.map.id;
                 
                 let deleted = false;

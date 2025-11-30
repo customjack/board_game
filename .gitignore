@@ -75,6 +75,9 @@ public/
 tmp/
 temp/
 
+# Board working directories (unzipped boards for editing)
+boards/
+
 # Mac OS files
 .DS_Store
 

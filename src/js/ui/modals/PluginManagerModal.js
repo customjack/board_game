@@ -18,7 +18,7 @@ export default class PluginManagerModal extends BaseModal {
 
         this.currentMapInfo = null;
         this.currentMapPluginIds = new Set();
-        this.getCurrentMapId = config.getCurrentMapId || (() => MapStorageManager.getSelectedMapId());
+        this.getCurrentMapId = config.getCurrentMapId || (async () => await MapStorageManager.getSelectedMapId());
     }
 
     init() {
@@ -34,14 +34,14 @@ export default class PluginManagerModal extends BaseModal {
 
     async refreshCurrentMapPlugins() {
         try {
-            const mapId = this.getCurrentMapId();
+            const mapId = await this.getCurrentMapId();
             if (!mapId) {
                 this.currentMapInfo = null;
                 this.currentMapPluginIds = new Set();
                 return;
             }
 
-            const mapMeta = MapStorageManager.getMapById(mapId);
+            const mapMeta = await MapStorageManager.getMapById(mapId);
             const mapData = await MapStorageManager.loadMapData(mapId);
             const pluginIds = this.extractPluginIds(mapData);
 

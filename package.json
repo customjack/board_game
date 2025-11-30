@@ -41,6 +41,7 @@
     "webpack-dev-server": "^5.1.0"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "peerjs": "^1.5.4",
     "seedrandom": "^3.0.5"
   }

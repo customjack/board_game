@@ -37,10 +37,10 @@ export default class MapManagerModal extends BaseModal {
         if (config.eventHandler !== undefined) this.eventHandler = config.eventHandler;
     }
 
-    loadMaps() {
-        this.maps = MapStorageManager.getAllMaps();
+    async loadMaps() {
+        this.maps = await MapStorageManager.getAllMaps();
         this.filteredMaps = [...this.maps];
-        this.selectedMapId = MapStorageManager.getSelectedMapId();
+        this.selectedMapId = await MapStorageManager.getSelectedMapId();
     }
 
     onOpen() {
@@ -284,8 +284,8 @@ export default class MapManagerModal extends BaseModal {
         return card;
     }
 
-    handleSearch(query) {
-        this.filteredMaps = MapStorageManager.searchMaps(query);
+    async handleSearch(query) {
+        this.filteredMaps = await MapStorageManager.searchMaps(query);
         const gridElement = this.modal.querySelector('[data-map-grid]');
         if (gridElement) {
             this.populateMapGrid(gridElement);
@@ -338,7 +338,7 @@ export default class MapManagerModal extends BaseModal {
     handleUpload() {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.json';
+        input.accept = '.json,.zip';
         input.style.display = 'none';
 
         input.addEventListener('change', async (e) => {
@@ -359,16 +359,25 @@ export default class MapManagerModal extends BaseModal {
     }
 
     async uploadMapFile(file) {
-        const text = await file.text();
-        const mapData = JSON.parse(text);
+        // Check if it's a ZIP file
+        const isZip = file.name.toLowerCase().endsWith('.zip') || 
+                     file.type === 'application/zip' || 
+                     file.type === 'application/x-zip-compressed';
 
-        const mapObject = MapStorageManager.addCustomMap(mapData);
-
-        this.loadMaps();
-        const gridElement = this.modal.querySelector('[data-map-grid]');
-        if (gridElement) {
-            this.populateMapGrid(gridElement);
+        let mapObject;
+        
+        if (isZip) {
+            // Load from ZIP bundle
+            mapObject = await MapStorageManager.addCustomMapFromBundle(file);
+        } else {
+            // Load from JSON file (legacy format)
+            const text = await file.text();
+            const mapData = JSON.parse(text);
+            mapObject = MapStorageManager.addCustomMap(mapData);
         }
+
+        await this.loadMaps();
+        this.renderContent(); // Re-render the entire modal to refresh the map list
 
         if (this.onMapUploaded) {
             this.onMapUploaded(mapObject);
@@ -639,14 +648,16 @@ export default class MapManagerModal extends BaseModal {
     }
 
     showMapSettings(map) {
+        // Create callback to refresh map list when map is removed
+        const refreshCallback = async () => {
+            await this.loadMaps();
+            this.renderContent();
+        };
+        
         const settingsModal = new MapSettingsModal(
             `mapSettings-${map.id}`,
             map,
-            () => {
-                // Refresh map list when settings modal closes
-                this.loadMaps();
-                this.renderContent();
-            },
+            refreshCallback, // Refresh map list when settings modal closes (e.g., after map removal)
             this.eventHandler || null
         );
         settingsModal.init();

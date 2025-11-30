@@ -36,28 +36,91 @@ export default class SpaceRenderer {
         spaceElement.style.top = `${space.visualDetails.y - space.visualDetails.size / 2}px`;
         spaceElement.style.width = style.width;
         spaceElement.style.height = style.height;
-        spaceElement.style.backgroundColor = style.backgroundColor;
-        spaceElement.style.color = style.color;
-        spaceElement.style.borderRadius = style.borderRadius;
         spaceElement.style.zIndex = style.zIndex;
 
-        // Add border if configured
-        if (style.border) {
-            spaceElement.style.border = style.border;
+        // Check if space has an image
+        const hasImage = space.visualDetails.image || space.visualDetails.sprite?.image;
+        const imageUrl = space.visualDetails.image || space.visualDetails.sprite?.image;
+
+        if (hasImage && imageUrl) {
+            // Render space with image
+            spaceElement.style.backgroundColor = 'transparent';
+            spaceElement.style.borderRadius = style.borderRadius;
+            spaceElement.style.overflow = 'hidden';
+            spaceElement.style.display = 'flex';
+            spaceElement.style.alignItems = 'center';
+            spaceElement.style.justifyContent = 'center';
+            spaceElement.style.cursor = 'pointer';
+            spaceElement.style.userSelect = 'none';
+
+            // Create image element
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.alt = space.name;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            
+            // Handle sprite region if specified
+            if (space.visualDetails.sprite?.region) {
+                const region = space.visualDetails.sprite.region;
+                img.style.objectPosition = `-${region.x}px -${region.y}px`;
+                // Create a clipping container for sprite regions
+                const clipContainer = document.createElement('div');
+                clipContainer.style.width = '100%';
+                clipContainer.style.height = '100%';
+                clipContainer.style.overflow = 'hidden';
+                clipContainer.style.position = 'relative';
+                img.style.width = `${region.w || space.visualDetails.size}px`;
+                img.style.height = `${region.h || space.visualDetails.size}px`;
+                clipContainer.appendChild(img);
+                spaceElement.appendChild(clipContainer);
+            } else {
+                spaceElement.appendChild(img);
+            }
+
+            // Add border if configured
+            if (style.border) {
+                spaceElement.style.border = style.border;
+            }
+
+            // Add space name as overlay (optional, can be hidden if image is used)
+            if (space.visualDetails.showLabel !== false) {
+                const label = document.createElement('div');
+                label.textContent = space.name;
+                label.style.position = 'absolute';
+                label.style.color = style.color;
+                label.style.fontSize = '12px';
+                label.style.fontWeight = 'bold';
+                label.style.textAlign = 'center';
+                label.style.pointerEvents = 'none';
+                label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
+                spaceElement.appendChild(label);
+            }
+        } else {
+            // Render space with background color (original behavior)
+            spaceElement.style.backgroundColor = style.backgroundColor;
+            spaceElement.style.color = style.color;
+            spaceElement.style.borderRadius = style.borderRadius;
+
+            // Add border if configured
+            if (style.border) {
+                spaceElement.style.border = style.border;
+            }
+
+            // Center text
+            spaceElement.style.display = 'flex';
+            spaceElement.style.alignItems = 'center';
+            spaceElement.style.justifyContent = 'center';
+            spaceElement.style.textAlign = 'center';
+            spaceElement.style.fontSize = '12px';
+            spaceElement.style.fontWeight = 'bold';
+            spaceElement.style.cursor = 'pointer';
+            spaceElement.style.userSelect = 'none';
+
+            // Add space name
+            spaceElement.textContent = space.name;
         }
-
-        // Center text
-        spaceElement.style.display = 'flex';
-        spaceElement.style.alignItems = 'center';
-        spaceElement.style.justifyContent = 'center';
-        spaceElement.style.textAlign = 'center';
-        spaceElement.style.fontSize = '12px';
-        spaceElement.style.fontWeight = 'bold';
-        spaceElement.style.cursor = 'pointer';
-        spaceElement.style.userSelect = 'none';
-
-        // Add space name
-        spaceElement.textContent = space.name;
 
         // Add click handler if provided
         if (onClickCallback) {
