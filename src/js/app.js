@@ -1,6 +1,6 @@
 import '../css/styles.css';
-import HostEventHandler from './eventHandlers/HostEventHandler';
-import ClientEventHandler from './eventHandlers/ClientEventHandler';
+import HostEventHandler from './systems/eventHandlers/HostEventHandler.js';
+import ClientEventHandler from './systems/eventHandlers/ClientEventHandler.js';
 import PersonalSettings from './elements/models/PersonalSettings';
 import PersonalSettingsModal from './ui/modals/PersonalSettingsModal.js';
 import PluginManagerModal from './ui/modals/PluginManagerModal.js';

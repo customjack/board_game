@@ -1,19 +1,19 @@
 import BaseEventHandler from './BaseEventHandler.js';
-import Host from '../systems/networking/Host.js';
-import TimerAnimation from '../animations/TimerAnimation.js';
-import ModalUtil from '../infrastructure/utils/ModalUtil.js';
+import Host from '../networking/Host.js';
+import TimerAnimation from '../../animations/TimerAnimation.js';
+import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
 import UIBinder from './UIBinder.js';
 import ActionRegistry from './ActionRegistry.js';
-import { HOST_UI_BINDINGS } from '../config/ui-bindings.js';
-import LoadingProgressTracker, { LOADING_STAGES } from '../infrastructure/utils/LoadingProgressTracker.js';
-import LoadingBar from '../ui/LoadingBar.js';
-import MapManagerModal from '../ui/modals/MapManagerModal.js';
-import MapStorageManager from '../systems/storage/MapStorageManager.js';
-import Board from '../elements/models/Board.js';
-import GameStateFactory from '../infrastructure/factories/GameStateFactory.js';
-import PluginLoadingModal from '../ui/modals/PluginLoadingModal.js';
-import { MessageTypes } from '../systems/networking/protocol/MessageTypes.js';
-import GameStartValidator from '../game/validation/GameStartValidator.js';
+import { HOST_UI_BINDINGS } from '../../config/ui-bindings.js';
+import LoadingProgressTracker, { LOADING_STAGES } from '../../infrastructure/utils/LoadingProgressTracker.js';
+import LoadingBar from '../../ui/LoadingBar.js';
+import MapManagerModal from '../../ui/modals/MapManagerModal.js';
+import MapStorageManager from '../storage/MapStorageManager.js';
+import Board from '../../elements/models/Board.js';
+import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
+import PluginLoadingModal from '../../ui/modals/PluginLoadingModal.js';
+import { MessageTypes } from '../networking/protocol/MessageTypes.js';
+import GameStartValidator from '../../game/validation/GameStartValidator.js';
 
 export default class HostEventHandler extends BaseEventHandler {
     constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal, mapManagerModal) {
