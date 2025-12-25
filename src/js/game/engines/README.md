@@ -8,11 +8,6 @@ The game engine architecture is now organized into clear layers of abstraction, 
 IGameEngine (interface)
     ↓
 BaseGameEngine (core foundation)
-    ↓
-Mixins (reusable behaviors)
-    ↓
-Abstract Engines (common patterns)
-    ↓
 Concrete Implementations (specific games)
 ```
 
@@ -39,46 +34,7 @@ Provides common foundation for all game engines:
 - Event emission
 - Logging helpers
 
-### 3. Mixin Layer: Reusable Behaviors
-Located in: [abstractions/](./abstractions/)
-
-Mixins provide specific, composable behaviors that many engines need:
-
-#### `BoardInteractionMixin`
-For engines that need players to select spaces on a board:
-- `highlightSpaces(spaces)` - Highlight multiple spaces
-- `clearHighlights()` - Remove all highlights
-- `setupSpaceSelection(spaces, onSelect)` - Make spaces clickable
-- `cleanupSpaceSelection()` - Clean up event handlers
-
-**Use when:** Your engine needs to let players click on board spaces to move or perform actions.
-
-#### `PhaseManagementMixin`
-For engines using phase-based state machines:
-- `changePhase({ newGamePhase, newTurnPhase, delay })` - Change phases
-- `getCurrentPhase()` - Get current phase string
-- `isInGamePhase(phase)` - Check game phase
-- `isInTurnPhase(phase)` - Check turn phase
-
-**Use when:** Your engine has distinct game/turn phases.
-
-#### `DiceRollMixin`
-For engines that use dice rolling:
-- `rollDiceForCurrentPlayer(numDice, sides)` - Roll dice
-- `activateRollButton()` - Enable roll button
-- `deactivateRollButton()` - Disable roll button
-
-**Use when:** Your engine needs dice rolls for movement or actions.
-
-### 4. Abstract Engine Layer
-These are "almost concrete" base classes for common game patterns. They compose multiple mixins and add game-type-specific logic.
-
-**Examples to create:**
-- `AbstractPhaseBasedEngine` - Combines phase management + event processing
-- `AbstractMovementEngine` - Combines dice rolling + board interaction + movement
-- `AbstractResourceEngine` - For engines with resource management
-
-### 5. Concrete Implementations
+### 3. Concrete Implementations
 Located in: [./](.)
 
 Specific game engines that implement complete game logic:
@@ -89,15 +45,13 @@ Specific game engines that implement complete game logic:
 
 ### Option 1: From Scratch
 1. Extend `BaseGameEngine`
-2. Mix in needed behaviors (optional)
-3. Implement all required methods
-4. Define UI requirements
+2. Implement all required methods
+3. Define UI requirements
 
 ```javascript
 import BaseGameEngine from '../../core/base/BaseGameEngine.js';
-import { DiceRollMixin } from './abstractions/DiceRollMixin.js';
 
-class MyGameEngine extends DiceRollMixin(BaseGameEngine) {
+class MyGameEngine extends BaseGameEngine {
     init() {
         // Initialize your engine
     }
@@ -114,35 +68,22 @@ class MyGameEngine extends DiceRollMixin(BaseGameEngine) {
 }
 ```
 
-### Option 2: From Existing Abstract Engine
-When abstract engines are created, you can extend them:
-
-```javascript
-import AbstractMovementEngine from './AbstractMovementEngine.js';
-
-class MyMovementGameEngine extends AbstractMovementEngine {
-    // Only need to implement game-specific logic
-    // Movement, dice, board interaction already handled
-}
-```
-
 ## Migration from Old Architecture
 
 ### What Changed
 1. **Removed:** `getCapabilities()` - No more predicting all possible features
-2. **Added:** Mixin layers for composable behaviors
-3. **Reorganized:** Clear separation of concerns
-4. **Simplified:** Engines declare what they need, not what they support
+2. **Reorganized:** Clear separation of concerns
+3. **Simplified:** Engines declare what they need, not what they support
 
 ### Migration Steps
 1. Remove `getCapabilities()` from your engine
 2. Identify reusable patterns in your engine
-3. Extract them to mixins or abstract classes
-4. Compose your engine from base + mixins + specific logic
+3. Extract common helpers where needed
+4. Compose your engine from base + specific logic
 
 ## Design Principles
 
-1. **Composition over Inheritance:** Use mixins for horizontal reuse
+1. **Composition over Inheritance:** Keep engines focused and reuse helpers where it makes sense
 2. **Declare Needs, Not Capabilities:** Engines expose UI requirements
 3. **Organic Growth:** System adapts to engines, not vice versa
 4. **Single Responsibility:** Each layer has one clear purpose
