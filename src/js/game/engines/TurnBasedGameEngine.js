@@ -12,7 +12,6 @@ import TurnPhases from '../../game/phases/TurnPhases.js';
 import GamePhases from '../../game/phases/GamePhases.js';
 import PlayerStates from '../../game/phases/PlayerStates.js';
 import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
-import GameLogPopupController from '../../../deprecated/legacy/controllers/GameLogPopupController.js';
 import { getVisibleElementById } from '../../infrastructure/utils/helpers.js';
 
 export default class TurnBasedGameEngine extends AbstractTurnEngine {
@@ -76,9 +75,6 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
                 config.uiController || {}
             );
         }
-
-        // Game log popup controller (not yet migrated to component system)
-        this.gameLogPopupController = new GameLogPopupController(this.eventBus);
 
         // Register phase handlers
         this.registerPhaseHandlers();
@@ -347,11 +343,6 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
             gameLog.init();
         }
 
-        // Initialize game log popup controller (not yet in component system)
-        if (this.gameLogPopupController) {
-            this.gameLogPopupController.init();
-        }
-
         // Legacy UI controller path
         if (this.uiController) {
             this.uiController.init({
@@ -418,11 +409,6 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
         // Legacy UI controller cleanup
         if (this.uiController) {
             this.uiController.cleanup();
-        }
-
-        // Cleanup game log popup controller
-        if (this.gameLogPopupController && this.gameLogPopupController.destroy) {
-            this.gameLogPopupController.destroy();
         }
 
         this.running = false;
