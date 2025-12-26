@@ -13,6 +13,8 @@ export default class PromptModal extends PromptBaseModal {
         this.autoCloseMs = config.autoCloseMs || 0;
         this.onClose = config.onClose || null;
         this.countdownInterval = null;
+        this._resolved = false;
+        this._lastCallback = null;
     }
 
     init() {
@@ -105,9 +107,11 @@ export default class PromptModal extends PromptBaseModal {
         this.init();
         this.render(); // ensure fresh content each show
         this.setMessage(message, { trustedHtml });
+        this._resolved = false;
+        this._onResolved = callback;
+        this._lastCallback = callback;
         this._startCountdown(timeoutMs, callback);
         this.open();
-        this._onResolved = callback;
     }
 
     _startCountdown(timeoutMs, callback) {
@@ -141,9 +145,12 @@ export default class PromptModal extends PromptBaseModal {
             this.countdownInterval = null;
         }
         super.close();
-        const cb = callbackOverride || this._onResolved;
-        if (resolve && typeof cb === 'function') {
-            cb();
+        const cb = callbackOverride || this._onResolved || this._lastCallback;
+        if (!this._resolved && typeof cb === 'function') {
+            this._resolved = true;
+            if (resolve) {
+                cb();
+            }
         }
         this._onResolved = null;
     }
