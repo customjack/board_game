@@ -94,7 +94,10 @@ export default class ConnectionStatusManager {
 
         try {
             // Try to reconnect
-            await this.performReconnect();
+            const reachability = await this.performReconnect();
+            if (reachability === false) {
+                throw new Error('Host not reachable');
+            }
 
             // Wait a bit to see if heartbeat comes through
             await this.waitFor(2000);
@@ -157,12 +160,30 @@ export default class ConnectionStatusManager {
                 this.peer.conn.close();
             }
 
+            // Quick reachability probe to host peer server if available
+            try {
+                if (this.peer.peer?.socket?.ws?.readyState === 1) {
+                    // Already open socket to PeerJS server, proceed
+                } else if (typeof this.peer.peer?.socket?.start === 'function') {
+                    this.peer.peer.socket.start();
+                }
+            } catch (e) {
+                console.warn('[ConnectionStatus] Could not pre-open PeerJS socket', e);
+            }
+
             // Create new connection
             this.peer.connectToHost();
+
+            // If peerjs exposes open state, return false if server unreachable
+            if (this.peer.peer && this.peer.peer.disconnected && this.peer.peer.destroyed) {
+                return false;
+            }
+            return true;
         } else {
             // Host: wait for heartbeat to resume
             // The host doesn't need to reconnect, just wait for clients
             console.log('[ConnectionStatus] Host waiting for connection to resume...');
+            return true;
         }
     }
 
@@ -209,6 +230,17 @@ export default class ConnectionStatusManager {
         // Create custom modal content
         const modalContent = document.createElement('div');
         modalContent.className = 'connection-status-modal';
+        modalContent.style.display = 'flex';
+        modalContent.style.flexDirection = 'column';
+        modalContent.style.alignItems = 'center';
+        modalContent.style.gap = '10px';
+        modalContent.style.padding = '16px 18px';
+        modalContent.style.width = 'min(360px, 90vw)';
+        modalContent.style.borderRadius = '12px';
+        modalContent.style.backgroundColor = 'var(--background-box, #111)';
+        modalContent.style.border = '1px solid var(--border-color, #333)';
+        modalContent.style.boxShadow = '0 12px 28px rgba(0,0,0,0.45)';
+        modalContent.style.textAlign = 'center';
         modalContent.innerHTML = `
             <div class="connection-status-icon">⚠️</div>
             <h3 class="connection-status-title">Connection Lost</h3>
@@ -231,9 +263,17 @@ export default class ConnectionStatusManager {
         modal.className = 'modal';
         modal.id = 'connectionStatusModal';
         modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
 
         const modalDialog = document.createElement('div');
         modalDialog.className = 'modal-content';
+        modalDialog.style.margin = '0';
+        modalDialog.style.padding = '0';
+        modalDialog.style.background = 'transparent';
+        modalDialog.style.boxShadow = 'none';
+        modalDialog.style.maxWidth = 'unset';
         modalDialog.appendChild(modalContent);
 
         modal.appendChild(modalDialog);
