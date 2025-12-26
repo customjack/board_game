@@ -13,6 +13,7 @@ import GamePhases from '../../game/phases/GamePhases.js';
 import PlayerStates from '../../game/phases/PlayerStates.js';
 import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 import { getVisibleElementById } from '../../infrastructure/utils/helpers.js';
+import PromptModal from '../../ui/modals/prompts/PromptModal.js';
 
 export default class TurnBasedGameEngine extends AbstractTurnEngine {
     /**
@@ -57,6 +58,9 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
             this.eventBus,
             config.eventProcessor || {}
         );
+
+        // Prompt modal instance (lazy init)
+        this.promptModal = new PromptModal({ id: 'gamePromptModal', title: 'Message' });
 
         // Support UISystem (current approach) for backwards compatibility
         if (dependencies.uiSystem) {
@@ -257,18 +261,8 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
         if (this.uiController) {
             this.uiController.hideAllModals();
         } else {
-            // When using UISystem, manually hide modal DOM elements
-            const modals = [
-                document.getElementById('gamePromptModal'),
-                document.getElementById('choiceModal'),
-                document.getElementById('notificationModal')
-            ];
-
-            modals.forEach(modal => {
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-            });
+            // When using UISystem, close prompt modal if present
+            this.promptModal?.close();
         }
     }
 
@@ -1240,70 +1234,14 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
      * @param {Function} callback - Callback when dismissed
      */
     showPromptModal(message, callback) {
-        const modal = document.getElementById('gamePromptModal');
-        const modalMessage = document.getElementById('gamePromptModalMessage');
-        const dismissButton = document.getElementById('gamePromptModalDismissButton');
-        const countdownEl = document.getElementById('gamePromptModalCountdown');
+        const timeoutSeconds = this.gameState?.settings?.getModalTimeoutSeconds?.() ?? 0;
+        const timeoutMs = timeoutSeconds > 0 ? timeoutSeconds * 1000 : 0;
 
-        if (!modal || !modalMessage || !dismissButton) {
-            console.warn('Prompt modal elements missing; cannot display prompt.');
+        this.promptModal.openWithMessage(message, { timeoutMs, trustedHtml: true }, () => {
             if (typeof callback === 'function' && this.isClientTurn()) {
                 callback();
             }
-            return;
-        }
-
-        // Allow trusted placeholder markup
-        this.setModalMessage(modalMessage, message, { trustedHtml: true });
-        if (countdownEl) {
-            countdownEl.style.display = 'none';
-            countdownEl.textContent = '';
-        }
-        modal.style.display = 'block';
-
-        this.clearModalAutoDismissTimer();
-
-        let resolved = false;
-        const resolveOnce = () => {
-            if (resolved) return;
-            resolved = true;
-            if (typeof callback === 'function') {
-                callback();
-            }
-        };
-
-        const closeModal = (shouldResolve = false) => {
-            modal.style.display = 'none';
-            this.clearModalAutoDismissTimer();
-            if (countdownEl) {
-                countdownEl.style.display = 'none';
-            }
-            if (shouldResolve) {
-                resolveOnce();
-            }
-        };
-
-        const timeoutSeconds = this.gameState?.settings?.getModalTimeoutSeconds?.() ?? 0;
-        if (timeoutSeconds > 0) {
-            const timeoutMs = timeoutSeconds * 1000;
-            this.modalAutoDismissTimer = setTimeout(() => {
-                this.modalAutoDismissTimer = null;
-                const shouldResolve = this.isClientTurn();
-                closeModal(shouldResolve);
-            }, timeoutMs);
-            this.startModalCountdown(countdownEl, timeoutMs);
-        }
-
-        if (this.isClientTurn()) {
-            dismissButton.style.display = 'inline-block';
-
-            const newButton = dismissButton.cloneNode(true);
-            dismissButton.parentNode.replaceChild(newButton, dismissButton);
-
-            newButton.onclick = () => closeModal(true);
-        } else {
-            dismissButton.style.display = 'none';
-        }
+        });
     }
 
     /**

@@ -1,5 +1,5 @@
-import BaseModal from './BaseModal.js';
-import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
+import BaseManagerModal from './BaseManagerModal.js';
+import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
 
 /**
  * PluginLoadingModal - Modal for loading required plugins
@@ -7,7 +7,7 @@ import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
  * Shows when a map requires plugins that aren't loaded yet.
  * Can auto-load if user setting allows, or prompt for confirmation.
  */
-export default class PluginLoadingModal extends BaseModal {
+export default class PluginLoadingModal extends BaseManagerModal {
     constructor(id, pluginManager, personalSettings, config = {}) {
         super({
             id: id || 'pluginLoadingModal',

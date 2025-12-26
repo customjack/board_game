@@ -7,7 +7,7 @@
  * - Remove the plugin
  */
 import SettingsBaseModal from './SettingsBaseModal.js';
-import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
+import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
 
 const SECTIONS = {
     REFRESH: 'refresh',

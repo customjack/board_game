@@ -7,7 +7,7 @@
  * - Kick players
  */
 import SettingsBaseModal from './SettingsBaseModal.js';
-import { normalizeToHexColor, DEFAULT_HEX_COLOR } from '../../infrastructure/utils/colorUtils.js';
+import { normalizeToHexColor, DEFAULT_HEX_COLOR } from '../../../infrastructure/utils/colorUtils.js';
 
 export default class HostPlayerControlModal extends SettingsBaseModal {
     constructor(id, player, onNicknameChange, onKickPlayer, onColorChange, onPeerColorChange) {

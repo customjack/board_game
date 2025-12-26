@@ -22,6 +22,7 @@ export default class BaseModal extends BaseUIComponent {
         this.modal = null;
         this.content = null;
         this.selectedTab = 'general';
+        this.disableBackdropClose = config.disableBackdropClose || false;
     }
 
     /**
@@ -86,11 +87,13 @@ export default class BaseModal extends BaseUIComponent {
         }
 
         // Close on backdrop click
-        this.addEventListener(this.modal, 'click', (e) => {
-            if (e.target === this.modal) {
-                this.close();
-            }
-        });
+        if (!this.disableBackdropClose) {
+            this.addEventListener(this.modal, 'click', (e) => {
+                if (e.target === this.modal) {
+                    this.close();
+                }
+            });
+        }
 
         // Close on Escape key
         document.addEventListener('keydown', (e) => {
@@ -118,7 +121,9 @@ export default class BaseModal extends BaseUIComponent {
         if (this.modal) {
             this.modal.style.display = 'none';
         }
-        this.onClose();
+        if (typeof this.onClose === 'function') {
+            this.onClose();
+        }
     }
 
     /**

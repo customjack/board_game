@@ -7,11 +7,11 @@ import ActionRegistry from './ActionRegistry.js';
 import { HOST_UI_BINDINGS } from '../../config/ui-bindings.js';
 import LoadingProgressTracker, { LOADING_STAGES } from '../../infrastructure/utils/LoadingProgressTracker.js';
 import LoadingBar from '../../ui/LoadingBar.js';
-import MapManagerModal from '../../ui/modals/MapManagerModal.js';
+import MapManagerModal from '../../ui/modals/managers/MapManagerModal.js';
 import MapStorageManager from '../storage/MapStorageManager.js';
 import Board from '../../elements/models/Board.js';
 import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
-import PluginLoadingModal from '../../ui/modals/PluginLoadingModal.js';
+import PluginLoadingModal from '../../ui/modals/managers/PluginLoadingModal.js';
 import { MessageTypes } from '../networking/protocol/MessageTypes.js';
 import GameStartValidator from '../../game/validation/GameStartValidator.js';
 

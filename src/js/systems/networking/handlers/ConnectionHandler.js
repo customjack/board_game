@@ -15,7 +15,7 @@ import { MessageTypes } from '../protocol/MessageTypes.js';
 import GameStateFactory from '../../../infrastructure/factories/GameStateFactory.js';
 import InputValidator from '../../../infrastructure/utils/InputValidator.js';
 import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
-import PluginLoadingModal from '../../../ui/modals/PluginLoadingModal.js';
+import PluginLoadingModal from '../../../ui/modals/managers/PluginLoadingModal.js';
 
 export default class ConnectionHandler extends MessageHandlerPlugin {
     register() {

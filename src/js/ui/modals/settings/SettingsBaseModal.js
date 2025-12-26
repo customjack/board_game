@@ -5,7 +5,7 @@
  * - Left sidebar for navigation tabs
  * - Right content area for settings/info
  */
-import BaseModal from './BaseModal.js';
+import BaseModal from '../BaseModal.js';
 
 export default class SettingsBaseModal extends BaseModal {
     constructor(config = {}) {

@@ -1,10 +1,10 @@
-import BaseModal from './BaseModal.js';
-import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
-import MapStorageManager from '../../systems/storage/MapStorageManager.js';
-import PluginSettingsModal from './PluginSettingsModal.js';
-import { createInfoIcon, createGearIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
+import BaseManagerModal from './BaseManagerModal.js';
+import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
+import MapStorageManager from '../../../systems/storage/MapStorageManager.js';
+import PluginSettingsModal from '../settings/PluginSettingsModal.js';
+import { createInfoIcon, createGearIcon, createIconButton } from '../../../infrastructure/utils/IconUtils.js';
 
-export default class PluginManagerModal extends BaseModal {
+export default class PluginManagerModal extends BaseManagerModal {
     constructor(id, pluginManager, config = {}) {
         super({
             id: id || 'pluginManagerModal',

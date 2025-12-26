@@ -1,5 +1,5 @@
 import SettingsBaseModal from './SettingsBaseModal.js';
-import MapStorageManager from '../../systems/storage/MapStorageManager.js';
+import MapStorageManager from '../../../systems/storage/MapStorageManager.js';
 
 const CATEGORIES = {
     GRAPHICS: 'graphics',

@@ -9,7 +9,7 @@
  */
 
 import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
-import ConnectionStatusModal from '../../ui/modals/ConnectionStatusModal.js';
+import ConnectionStatusModal from '../../ui/modals/status/ConnectionStatusModal.js';
 
 export default class ConnectionStatusManager {
     constructor(peer) {

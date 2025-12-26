@@ -11,8 +11,8 @@
  * - Visual settings
  */
 import SettingsBaseModal from './SettingsBaseModal.js';
-import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
-import MapStorageManager from '../../systems/storage/MapStorageManager.js';
+import ModalUtil from '../../../infrastructure/utils/ModalUtil.js';
+import MapStorageManager from '../../../systems/storage/MapStorageManager.js';
 
 const SECTIONS = {
     EXPORT: 'export',

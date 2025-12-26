@@ -1,4 +1,4 @@
-import BaseModal from './BaseModal.js';
+import BaseModal from '../BaseModal.js';
 
 /**
  * ConnectionStatusModal - lightweight status modal for connection events.
