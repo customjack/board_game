@@ -9,6 +9,7 @@
  */
 
 import ModalUtil from '../../infrastructure/utils/ModalUtil.js';
+import ConnectionStatusModal from '../../ui/modals/ConnectionStatusModal.js';
 
 export default class ConnectionStatusManager {
     constructor(peer) {
@@ -20,7 +21,8 @@ export default class ConnectionStatusManager {
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 3;
         this.reconnectDelay = 1000; // Start with 1 second
-        this.maxReconnectDelay = 16000; // Max 16 seconds
+        this.backoffSchedule = [1000, 5000, 25000]; // Explicit backoff steps
+        this.maxReconnectDelay = 25000;
 
         // Heartbeat tracking
         this.lastHeartbeatTime = Date.now();
@@ -30,6 +32,10 @@ export default class ConnectionStatusManager {
         // Modal state
         this.statusModal = null;
         this.isReconnecting = false;
+        this.statusModalInstance = new ConnectionStatusModal({
+            onDisconnect: () => this.handleManualDisconnect(),
+            onReload: () => location.reload()
+        });
 
         // Timers
         this.heartbeatChecker = null;
@@ -99,13 +105,16 @@ export default class ConnectionStatusManager {
                 throw new Error('Host not reachable');
             }
 
+            const heartbeatBefore = this.lastHeartbeatTime;
+
             // Wait a bit to see if heartbeat comes through
             await this.waitFor(2000);
 
-            // Check if reconnected
+            // Check if reconnected: require a NEW heartbeat since attempt started
+            const heartbeatChanged = this.lastHeartbeatTime > heartbeatBefore;
             const timeSinceLastHeartbeat = Date.now() - this.lastHeartbeatTime;
 
-            if (timeSinceLastHeartbeat < this.heartbeatTimeout) {
+            if (heartbeatChanged && timeSinceLastHeartbeat < this.heartbeatTimeout) {
                 // Success!
                 this.handleReconnectSuccess();
                 return;
@@ -115,11 +124,8 @@ export default class ConnectionStatusManager {
             if (this.reconnectAttempts >= this.maxReconnectAttempts) {
                 this.handleReconnectFailure();
             } else {
-                // Exponential backoff
-                const delay = Math.min(
-                    this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
-                    this.maxReconnectDelay
-                );
+                // Exponential backoff (scheduled)
+                const delay = this.backoffSchedule[Math.min(this.reconnectAttempts - 1, this.backoffSchedule.length - 1)];
 
                 this.updateModalStatus(
                     'Connection Lost',
@@ -137,10 +143,7 @@ export default class ConnectionStatusManager {
             if (this.reconnectAttempts >= this.maxReconnectAttempts) {
                 this.handleReconnectFailure();
             } else {
-                const delay = Math.min(
-                    this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
-                    this.maxReconnectDelay
-                );
+                const delay = this.backoffSchedule[Math.min(this.reconnectAttempts - 1, this.backoffSchedule.length - 1)];
 
                 this.reconnectTimer = setTimeout(() => {
                     this.attemptReconnect();
@@ -227,112 +230,24 @@ export default class ConnectionStatusManager {
     }
 
     async showStatusModal() {
-        // Create custom modal content
-        const modalContent = document.createElement('div');
-        modalContent.className = 'connection-status-modal';
-        modalContent.style.display = 'flex';
-        modalContent.style.flexDirection = 'column';
-        modalContent.style.alignItems = 'center';
-        modalContent.style.gap = '10px';
-        modalContent.style.padding = '16px 18px';
-        modalContent.style.width = 'min(360px, 90vw)';
-        modalContent.style.borderRadius = '12px';
-        modalContent.style.backgroundColor = 'var(--background-box, #111)';
-        modalContent.style.border = '1px solid var(--border-color, #333)';
-        modalContent.style.boxShadow = '0 12px 28px rgba(0,0,0,0.45)';
-        modalContent.style.textAlign = 'center';
-        modalContent.innerHTML = `
-            <div class="connection-status-icon">⚠️</div>
-            <h3 class="connection-status-title">Connection Lost</h3>
-            <p class="connection-status-message">Attempting to reconnect...</p>
-            <div class="connection-status-progress">
-                <div class="connection-status-spinner"></div>
-            </div>
-            <div class="connection-status-actions">
-                <button id="connectionDisconnectBtn" class="button button-secondary">
-                    Disconnect
-                </button>
-            </div>
-        `;
-
-        // Store reference
-        this.statusModal = modalContent;
-
-        // Show using existing modal system
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.id = 'connectionStatusModal';
-        modal.style.display = 'flex';
-        modal.style.alignItems = 'center';
-        modal.style.justifyContent = 'center';
-        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
-
-        const modalDialog = document.createElement('div');
-        modalDialog.className = 'modal-content';
-        modalDialog.style.margin = '0';
-        modalDialog.style.padding = '0';
-        modalDialog.style.background = 'transparent';
-        modalDialog.style.boxShadow = 'none';
-        modalDialog.style.maxWidth = 'unset';
-        modalDialog.appendChild(modalContent);
-
-        modal.appendChild(modalDialog);
-        document.body.appendChild(modal);
-
-        // Add disconnect button handler
-        const disconnectBtn = modalContent.querySelector('#connectionDisconnectBtn');
-        if (disconnectBtn) {
-            disconnectBtn.addEventListener('click', () => {
-                this.handleManualDisconnect();
-            });
-        }
+        this.statusModalInstance.init();
+        this.statusModalInstance.setStatus('Connection Lost', 'Attempting to reconnect...', { showSpinner: true });
+        this.statusModalInstance.open();
+        this.statusModal = this.statusModalInstance.content;
     }
 
     updateModalStatus(title, message, isSuccess = false, showReload = false) {
-        if (!this.statusModal) return;
-
-        const titleEl = this.statusModal.querySelector('.connection-status-title');
-        const messageEl = this.statusModal.querySelector('.connection-status-message');
-        const icon = this.statusModal.querySelector('.connection-status-icon');
-        const progress = this.statusModal.querySelector('.connection-status-progress');
-        const actions = this.statusModal.querySelector('.connection-status-actions');
-
-        if (titleEl) titleEl.textContent = title;
-        if (messageEl) messageEl.textContent = message;
-
-        if (icon) {
-            icon.textContent = isSuccess ? '✓' : '⚠️';
-            icon.style.color = isSuccess ? 'var(--success-color, #28a745)' : 'var(--warning-color, #ffc107)';
-        }
-
-        if (progress) {
-            progress.style.display = isSuccess || showReload ? 'none' : 'flex';
-        }
-
-        if (actions && showReload) {
-            actions.innerHTML = `
-                <button id="connectionReloadBtn" class="button button-primary">
-                    Reload Page
-                </button>
-                <button id="connectionDisconnectBtn" class="button button-secondary">
-                    Disconnect
-                </button>
-            `;
-
-            actions.querySelector('#connectionReloadBtn')?.addEventListener('click', () => {
-                location.reload();
-            });
-
-            actions.querySelector('#connectionDisconnectBtn')?.addEventListener('click', () => {
-                this.handleManualDisconnect();
-            });
-        }
+        if (!this.statusModalInstance) return;
+        this.statusModalInstance.setStatus(title, message, {
+            success: isSuccess,
+            showReload,
+            showSpinner: !(isSuccess || showReload)
+        });
     }
 
     hideStatusModal() {
-        const modal = document.getElementById('connectionStatusModal');
-        if (modal) {
-            modal.remove();
+        if (this.statusModalInstance) {
+            this.statusModalInstance.close();
         }
         this.statusModal = null;
     }
