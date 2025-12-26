@@ -9,7 +9,6 @@ const ActionTypes = Object.freeze({
     SWAP_PLACES: 'SWAP_PLACES',
     SET_STAT: 'SET_STAT',
     CHANGE_STAT: 'CHANGE_STAT',
-    CUSTOM: 'CUSTOM',
 });
 
 export default ActionTypes;

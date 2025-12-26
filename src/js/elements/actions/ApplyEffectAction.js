@@ -96,7 +96,7 @@ export default class ApplyEffectAction extends BaseAction {
                         type: {
                             type: 'string',
                             description: 'Effect class name',
-                            example: 'SkipTurnEffect'
+                            example: 'SkipTurnsEffect'
                         },
                         args: {
                             type: 'array',

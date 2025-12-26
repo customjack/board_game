@@ -13,17 +13,13 @@ import ForceStopAction from '../../elements/actions/ForceStopAction.js';
 import SwapPlacesAction from '../../elements/actions/SwapPlacesAction.js';
 import SetStatAction from '../../elements/actions/SetStatAction.js';
 import ChangeStatAction from '../../elements/actions/ChangeStatAction.js';
-import CustomAction from '../../elements/actions/CustomAction.js';
 
 // Import all built-in trigger classes
 import OnEnterTrigger from '../../elements/triggers/OnEnterTrigger.js';
 import OnLandTrigger from '../../elements/triggers/OnLandTrigger.js';
 import OnExitTrigger from '../../elements/triggers/OnExitTrigger.js';
-import CodeTrigger from '../../elements/triggers/CodeTrigger.js';
 
 // Import all built-in effect classes
-import SkipTurnEffect from '../../elements/effects/SkipTurnEffect.js';
-import DoubleTurnEffect from '../../elements/effects/DoubleTurnEffect.js';
 import ChangeDirectionEffect from '../../elements/effects/ChangeDirectionEffect.js';
 import SkipTurnsEffect from '../../elements/effects/SkipTurnsEffect.js';
 import RepeatTurnsEffect from '../../elements/effects/RepeatTurnsEffect.js';
@@ -337,8 +333,7 @@ export default class DefaultCorePlugin extends Plugin {
             [ActionTypes.FORCE_STOP, ForceStopAction],
             [ActionTypes.SWAP_PLACES, SwapPlacesAction],
             [ActionTypes.SET_STAT, SetStatAction],
-            [ActionTypes.CHANGE_STAT, ChangeStatAction],
-            [ActionTypes.CUSTOM, CustomAction]
+            [ActionTypes.CHANGE_STAT, ChangeStatAction]
         ];
 
         try {
@@ -365,8 +360,7 @@ export default class DefaultCorePlugin extends Plugin {
         const triggers = [
             [TriggerTypes.ON_ENTER, OnEnterTrigger],
             [TriggerTypes.ON_LAND, OnLandTrigger],
-            [TriggerTypes.ON_EXIT, OnExitTrigger],
-            [TriggerTypes.CODE, CodeTrigger]
+            [TriggerTypes.ON_EXIT, OnExitTrigger]
         ];
 
         try {
@@ -391,8 +385,6 @@ export default class DefaultCorePlugin extends Plugin {
         if (!effectFactory) return 0;
 
         const effects = [
-            ['SkipTurnEffect', SkipTurnEffect],
-            ['DoubleTurnEffect', DoubleTurnEffect],
             ['ChangeDirectionEffect', ChangeDirectionEffect],
             ['SkipTurnsEffect', SkipTurnsEffect],
             ['RepeatTurnsEffect', RepeatTurnsEffect]
@@ -505,18 +497,14 @@ export default class DefaultCorePlugin extends Plugin {
                     'APPLY_EFFECT',
                     'SET_PLAYER_SPACE',
                     'FORCE_STOP',
-                    'SWAP_PLACES',
-                    'CUSTOM'
+                    'SWAP_PLACES'
                 ],
                 triggers: [
                     'ON_ENTER',
                     'ON_LAND',
-                    'ON_EXIT',
-                    'CODE'
+                    'ON_EXIT'
                 ],
                 effects: [
-                    'SkipTurnEffect',
-                    'DoubleTurnEffect',
                     'ChangeDirectionEffect',
                     'SkipTurnsEffect',
                     'RepeatTurnsEffect'

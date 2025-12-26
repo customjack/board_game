@@ -647,7 +647,7 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
     handleChangeTurn() {
         this.emitEvent('changeTurn', { gameState: this.gameState });
 
-        // Enact all effects that trigger during CHANGE_TURN phase (e.g., SkipTurnEffect)
+        // Enact all effects that trigger during CHANGE_TURN phase (e.g., SkipTurnsEffect)
         this.enactAllEffects();
 
         const currentPlayer = this.turnManager.getCurrentPlayer();
@@ -1162,8 +1162,6 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
                     ? `triggered a teleport to ${target}`
                     : `triggered a teleport event`;
             }
-            case ActionTypes.CUSTOM:
-                return `triggered a custom event on ${spaceLabel}`;
             default:
                 return `triggered an event (${actionType}) on ${spaceLabel}`;
         }
