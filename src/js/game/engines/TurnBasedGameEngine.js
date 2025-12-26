@@ -907,7 +907,10 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
         let rollResult = null;
 
         // Dev helper: allow manual rolls when enabled via env flag
-        const manualRollEnabled = process?.env?.DEV_CHOOSE_ROLL === 'true';
+        const manualRollEnabled =
+            (typeof process !== 'undefined' && process?.env?.DEV_CHOOSE_ROLL === 'true') ||
+            (typeof window !== 'undefined' && window.DEV_CHOOSE_ROLL === true) ||
+            (typeof localStorage !== 'undefined' && localStorage.getItem('DEV_CHOOSE_ROLL') === 'true');
         if (manualRollEnabled) {
             const input = window.prompt('Enter roll (1-6) or leave blank for random:', '');
             const parsed = parseInt(input, 10);
