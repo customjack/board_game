@@ -198,7 +198,7 @@ export default class Host extends BasePeer {
             useDelta = stats.worthIt;
 
             if (useDelta) {
-                console.log(`Using delta update (${stats.savingsPercent}% smaller): ${stats.deltaSize} bytes vs ${stats.fullSize} bytes`);
+                console.debug(`Using delta update (${stats.savingsPercent}% smaller): ${stats.deltaSize} bytes vs ${stats.fullSize} bytes`);
             }
         }
 

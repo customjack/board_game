@@ -51,7 +51,7 @@ export default class GameStateHandler extends MessageHandlerPlugin {
         peer.gameState = GameStateFactory.fromJSON(message.gameState, factoryManager);
         peer.ownedPlayers = peer.gameState.getPlayersByPeerId(peer.peer.id);
 
-        console.log('Game state updated from full state');
+        console.debug('Game state updated from full state');
         
         // If we now have owned players and we didn't before, or we're still on loading page,
         // check if we should show lobby/game page
@@ -104,7 +104,7 @@ export default class GameStateHandler extends MessageHandlerPlugin {
             peer.gameState = GameStateFactory.fromJSON(updatedStateJSON, factoryManager);
             peer.ownedPlayers = peer.gameState.getPlayersByPeerId(peer.peer.id);
 
-            console.log(`Delta applied successfully. Version: ${peer.gameState.getVersion()}`);
+            console.debug(`Delta applied successfully. Version: ${peer.gameState.getVersion()}`);
             
             // Check if we should show lobby/game page (same logic as handleGameState)
             const nowHasOwnedPlayers = peer.ownedPlayers.length > 0;
@@ -161,7 +161,7 @@ export default class GameStateHandler extends MessageHandlerPlugin {
         const peer = this.getPeer();
         const conn = context.connection;
 
-        console.log(`Client ${conn.peer} requested full state. Reason: ${message.reason || 'unspecified'}`);
+        console.debug(`Client ${conn.peer} requested full state. Reason: ${message.reason || 'unspecified'}`);
         peer.sendGameState(conn);
     }
 

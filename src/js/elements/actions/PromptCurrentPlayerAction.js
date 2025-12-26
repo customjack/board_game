@@ -50,6 +50,8 @@ export default class PromptCurrentPlayerAction extends BaseAction {
 
                 if (currentPlayer.peerId === gameEngine.peerId) {
                     gameEngine.showPromptModal(processed_message, postExecutionCallback);
+                    console.log(`Prompting current player: ${processed_message}`);
+
                 }
             }
         } else {

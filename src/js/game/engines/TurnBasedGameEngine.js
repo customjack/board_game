@@ -750,6 +750,8 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
         // This is called each time we process an event, and gets the current list
         const triggeredEvents = this.gameState.determineTriggeredEvents(this.eventBus, this.peerId);
 
+        console.log("Remaining triggered events to process:", triggeredEvents.length);
+
         if (triggeredEvents.length === 0) {
             // No more events to process
             console.log('No more events to process');
