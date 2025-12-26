@@ -15,6 +15,7 @@ export default class PromptModal extends PromptBaseModal {
         this.countdownInterval = null;
         this._resolved = false;
         this._lastCallback = null;
+        this._openToken = 0; // increments each time we show; guards against stale callbacks
     }
 
     init() {
@@ -104,17 +105,39 @@ export default class PromptModal extends PromptBaseModal {
     }
 
     openWithMessage(message, { timeoutMs = 0, trustedHtml = true } = {}, callback) {
+        // Bump token so older callbacks cannot resolve newer prompts
+        this._openToken += 1;
+        const token = this._openToken;
+
+        console.debug('[PromptModal] openWithMessage', {
+            token,
+            hasCallback: typeof callback === 'function',
+            timeoutMs
+        });
+
         this.init();
         this.render(); // ensure fresh content each show
         this.setMessage(message, { trustedHtml });
         this._resolved = false;
+        // Store callbacks in two slots so a UI re-render (host path rebuilds DOM) cannot
+        // drop the resolver between open() and close(). _onResolved is the live one,
+        // _lastCallback is the fallback used if _onResolved was cleared during reinit.
         this._onResolved = callback;
         this._lastCallback = callback;
-        this._startCountdown(timeoutMs, callback);
+        this._startCountdown(timeoutMs, callback, token);
         this.open();
+
+        // Re-bind dismiss to this prompt token to avoid stale callback execution
+        const dismissBtn = this.content?.querySelector('#gamePromptModalDismissButton');
+        if (dismissBtn) {
+            dismissBtn.onclick = () => {
+                console.debug('[PromptModal] dismiss clicked', { token });
+                this.close(true, callback, token);
+            };
+        }
     }
 
-    _startCountdown(timeoutMs, callback) {
+    _startCountdown(timeoutMs, callback, token) {
         const countdownEl = this.content?.querySelector('#gamePromptModalCountdown');
         if (this.countdownInterval) {
             clearInterval(this.countdownInterval);
@@ -132,23 +155,30 @@ export default class PromptModal extends PromptBaseModal {
             if (remaining <= 0) {
                 clearInterval(this.countdownInterval);
                 this.countdownInterval = null;
-                this.close(true, callback);
+                this.close(true, callback, token);
             } else {
                 countdownEl.textContent = `Closing in ${remaining}s`;
             }
         }, 1000);
     }
 
-    close(resolve = false, callbackOverride = null) {
+    close(resolve = false, callbackOverride = null, token = null) {
+        // Ignore closes for stale prompts (older token)
+        if (token !== null && token !== this._openToken) {
+            console.debug('[PromptModal] close ignored stale token', { token, current: this._openToken });
+            return;
+        }
         if (this.countdownInterval) {
             clearInterval(this.countdownInterval);
             this.countdownInterval = null;
         }
         super.close();
+        // Prefer override, then the live callback, then the last known one (protects host re-renders)
         const cb = callbackOverride || this._onResolved || this._lastCallback;
         if (!this._resolved && typeof cb === 'function') {
             this._resolved = true;
             if (resolve) {
+                console.debug('[PromptModal] close -> resolve callback', { token: this._openToken });
                 cb();
             }
         }
