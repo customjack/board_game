@@ -17,6 +17,7 @@ module.exports = (env, argv) => {
         'process.env.PEERJS_KEY': JSON.stringify(process.env.PEERJS_KEY || ''),
         'process.env.PEERJS_SECURE': JSON.stringify(process.env.PEERJS_SECURE || ''),
         'process.env.DEV_CHOOSE_ROLL': JSON.stringify(process.env.DEV_CHOOSE_ROLL || ''),
+        DEV_CHOOSE_ROLL: JSON.stringify(process.env.DEV_CHOOSE_ROLL === 'true'),
     };
 
     return {
