@@ -904,7 +904,23 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
      */
     rollDiceForCurrentPlayer() {
         const currentPlayer = this.turnManager.getCurrentPlayer();
-        const rollResult = currentPlayer.rollDice();
+        let rollResult = null;
+
+        // Dev helper: allow manual rolls when enabled via env flag
+        const manualRollEnabled = process?.env?.DEV_CHOOSE_ROLL === 'true';
+        if (manualRollEnabled) {
+            const input = window.prompt('Enter roll (1-6) or leave blank for random:', '');
+            const parsed = parseInt(input, 10);
+            if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= 6) {
+                rollResult = parsed;
+                console.log(`[DEV] Manual roll selected: ${rollResult}`);
+            }
+        }
+
+        if (rollResult === null) {
+            rollResult = currentPlayer.rollDice();
+        }
+
         console.log(`${currentPlayer.nickname} rolled a ${rollResult}`);
         this.logPlayerAction(currentPlayer, `rolled a ${rollResult}.`, {
             type: 'dice-roll',
