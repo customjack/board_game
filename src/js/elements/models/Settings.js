@@ -147,6 +147,22 @@ export default class Settings {
     }
 
     /**
+     * Gets the spectator limit
+     * @returns {number} Spectator limit
+     */
+    getSpectatorLimit() {
+        return this.spectatorLimit;
+    }
+
+    /**
+     * Sets the spectator limit
+     * @param {number} limit - Spectator limit
+     */
+    setSpectatorLimit(limit) {
+        this.spectatorLimit = limit;
+    }
+
+    /**
      * Gets whether turn timer is enabled
      * @returns {boolean} Turn timer enabled state
      */

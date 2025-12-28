@@ -91,6 +91,7 @@ export default class PlayerListComponent extends BaseUIComponent {
                 null, // Will be set when opened
                 (playerId, newNickname) => this.handleHostNicknameChange(playerId, newNickname),
                 (playerId) => this.handleKickPlayer(playerId),
+                (playerId) => this.handleMakeSpectator(playerId),
                 (playerId, newColor) => this.handleHostColorChange(playerId, newColor),
                 (playerId, newPeerColor) => this.handleHostPeerColorChange(playerId, newPeerColor)
             );
@@ -159,6 +160,10 @@ export default class PlayerListComponent extends BaseUIComponent {
      */
     handleKickPlayer(playerId) {
         this.emit('kickPlayer', { playerId });
+    }
+
+    handleMakeSpectator(playerId) {
+        this.emit('makeSpectator', { playerId });
     }
 
     /**
@@ -348,6 +353,12 @@ export default class PlayerListComponent extends BaseUIComponent {
             return true;
         }
 
+        const prevUnclaimed = (this.gameState.unclaimedPeerIds || []).slice().sort().join('|');
+        const nextUnclaimed = (newGameState.unclaimedPeerIds || []).slice().sort().join('|');
+        if (prevUnclaimed !== nextUnclaimed) {
+            return true;
+        }
+
         return false;
     }
 
@@ -384,7 +395,12 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         const phaseSig = gameState.gamePhase || '';
 
-        return [playersSig, readinessSig, requirementsSig, phaseSig, boardRulesSig].join('||');
+        const unclaimedSig = (gameState.unclaimedPeerIds || [])
+            .slice()
+            .sort()
+            .join('|');
+
+        return [playersSig, readinessSig, requirementsSig, phaseSig, boardRulesSig, unclaimedSig].join('||');
     }
 
     /**
@@ -407,6 +423,11 @@ export default class PlayerListComponent extends BaseUIComponent {
             status: 'missing',
             missing: (readiness.missingPlugins || []).slice()
         };
+    }
+
+    isUnclaimedPeerId(peerId) {
+        const unclaimed = this.gameState?.unclaimedPeerIds || [];
+        return peerId && Array.isArray(unclaimed) && unclaimed.includes(peerId);
     }
 
     /**
@@ -513,6 +534,13 @@ export default class PlayerListComponent extends BaseUIComponent {
     }
 
     getPlayerPermissions(peerId) {
+        if (this.isUnclaimedPeerId(peerId)) {
+            return {
+                nameChange: false,
+                playerColor: false,
+                peerColor: false
+            };
+        }
         const hostPeerId = this.hostPeerId || this.currentPlayerPeerId;
         const isHostEditingOwnPlayer = this.isHost && hostPeerId && peerId === hostPeerId;
         const isCurrentPeer = peerId === this.currentPlayerPeerId;
@@ -547,18 +575,23 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         const playerColor = player.playerColor || '#FFFFFF';
         const peerBorderColor = player.peerColor || '#FFFFFF';
+        const isUnclaimed = this.isUnclaimedPeerId(player.peerId);
 
         // Player name with color
         let nameHtml = `<span class="player-name" style="color:${playerColor}; font-weight: bold;">${player.nickname}</span>`;
 
         // Host badge
-        if (player.peerId === this.hostPeerId) {
+        if (!isUnclaimed && player.peerId === this.hostPeerId) {
             nameHtml += `<span class="host-badge">Host</span>`;
         }
 
         // You badge
-        if (player.peerId === this.currentPlayerPeerId) {
+        if (!isUnclaimed && player.peerId === this.currentPlayerPeerId) {
             nameHtml += `<span class="you-badge">You</span>`;
+        }
+
+        if (isUnclaimed) {
+            nameHtml += `<span class="unclaimed-badge">Unclaimed</span>`;
         }
         
         // Plugin readiness badge (only in lobby, only if plugins are required)
@@ -591,7 +624,7 @@ export default class PlayerListComponent extends BaseUIComponent {
         playerButtons.appendChild(infoButton);
 
         // Gear button for players you control (self-management)
-        if (player.peerId === this.currentPlayerPeerId) {
+        if (player.peerId === this.currentPlayerPeerId && !isUnclaimed) {
             const gearButton = createIconButton(
                 createGearIcon(20),
                 'Player settings',

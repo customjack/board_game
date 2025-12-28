@@ -43,6 +43,7 @@ export default class UIComponentFactory {
         const defaultTypes = [
             'RemainingMovesComponent',
             'PlayerListComponent',
+            'SpectatorListComponent',
             'RollButtonComponent',
             'TimerComponent',
             'GameLogComponent',

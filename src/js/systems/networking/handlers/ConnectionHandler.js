@@ -173,9 +173,10 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
             peer.ownedPlayers = ownedPlayersFromState;
         }
 
-        // Only show lobby/game page if we have owned players (JOIN was accepted)
-        // If we don't have owned players, we might be getting rejected, so stay on loading page
-        if (ownedPlayersFromState.length > 0 || peer.gameState?.players?.length > 0) {
+        const isSpectator = peer.gameState?.isSpectator?.(peer.peer?.id);
+
+        // Only show lobby/game page if we have owned players or are an accepted spectator
+        if (ownedPlayersFromState.length > 0 || isSpectator || peer.gameState?.players?.length > 0) {
             if (peer.gameState.isGameStarted()) {
                 peer.eventHandler.showGamePage();
             } else {
@@ -207,28 +208,83 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
     handleJoin(message, context) {
         const peer = this.getPeer();
         const conn = context.connection;
-        const players = message.players;
+        const players = Array.isArray(message.players) ? message.players : null;
+        const joiningPeerId = message.peerId;
 
         // Validate players array
-        if (!Array.isArray(players) || players.length === 0) {
+        if (!Array.isArray(players)) {
             conn.send({
                 type: MessageTypes.JOIN_REJECTED,
-                reason: 'Invalid join request: No players provided.'
+                reason: 'Invalid join request: players must be an array.'
             });
-            console.log('Join request rejected: No players provided');
+            console.log('Join request rejected: players must be an array');
             return;
         }
+
+        if (!joiningPeerId) {
+            conn.send({
+                type: MessageTypes.JOIN_REJECTED,
+                reason: 'Invalid join request: Missing peerId.'
+            });
+            console.log('Join request rejected: Missing peerId');
+            return;
+        }
+
+        const joiningAsSpectator = players.length === 0;
 
         // Check if game has started and mid-game joins are not allowed
         const gameStarted = peer.gameState.isGameStarted();
         const allowMidGameJoin = peer.gameState.settings.allowMidGameJoin !== false; // Default to true if not set
 
-        if (gameStarted && !allowMidGameJoin) {
+        if (gameStarted && !allowMidGameJoin && !joiningAsSpectator) {
             conn.send({
                 type: MessageTypes.JOIN_REJECTED,
                 reason: 'The game has already started and mid-game joins are not allowed.'
             });
             console.log('Join request rejected: Game has started and mid-game joins are disabled');
+            return;
+        }
+
+        if (joiningAsSpectator) {
+            const spectatorLimit = peer.gameState.settings.spectatorLimit ?? 0;
+            const existingSpectator = peer.gameState.isSpectator?.(joiningPeerId);
+            const spectatorCount = peer.gameState.getSpectators?.().length || 0;
+
+            if (!existingSpectator && spectatorLimit > 0 && spectatorCount >= spectatorLimit) {
+                conn.send({
+                    type: MessageTypes.JOIN_REJECTED,
+                    reason: `Spectator limit reached. The lobby allows up to ${spectatorLimit} spectators.`
+                });
+                console.log(`Join request rejected. Spectator limit of ${spectatorLimit} reached.`);
+                return;
+            }
+
+            peer.gameState.addSpectator(joiningPeerId);
+
+            const requirements = peer.gameState?.pluginRequirements || [];
+            const missingPluginIds = requirements
+                .filter(req => req && req.id && req.id !== 'core' && req.source !== 'builtin')
+                .map(req => req.id);
+
+            if (
+                requirements.length > 0 &&
+                joiningPeerId &&
+                peer.gameState &&
+                typeof peer.gameState.getPluginReadiness === 'function' &&
+                !peer.gameState.getPluginReadiness(joiningPeerId)
+            ) {
+                peer.gameState.setPluginReadiness(joiningPeerId, false, missingPluginIds);
+            }
+
+            peer.broadcastGameState();
+            peer.eventHandler?.updateGameState?.(true);
+
+            if (joiningPeerId && conn.open) {
+                conn.send({
+                    type: MessageTypes.REQUEST_PLUGIN_READINESS
+                });
+            }
+
             return;
         }
 
@@ -269,7 +325,6 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         });
 
         if (!validationFailed) {
-            const joiningPeerId = message.peerId || (players[0]?.peerId);
             const requirements = peer.gameState?.pluginRequirements || [];
             const missingPluginIds = requirements
                 .filter(req => req && req.id && req.id !== 'core' && req.source !== 'builtin')

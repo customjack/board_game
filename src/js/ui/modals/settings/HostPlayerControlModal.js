@@ -10,7 +10,7 @@ import SettingsBaseModal from './SettingsBaseModal.js';
 import { normalizeToHexColor, DEFAULT_HEX_COLOR } from '../../../infrastructure/utils/colorUtils.js';
 
 export default class HostPlayerControlModal extends SettingsBaseModal {
-    constructor(id, player, onNicknameChange, onKickPlayer, onColorChange, onPeerColorChange) {
+    constructor(id, player, onNicknameChange, onKickPlayer, onMakeSpectator, onColorChange, onPeerColorChange) {
         super({
             id: id || 'hostPlayerControlModal',
             title: 'Manage Player'
@@ -19,6 +19,7 @@ export default class HostPlayerControlModal extends SettingsBaseModal {
         this.targetPlayer = player;
         this.onNicknameChange = onNicknameChange;
         this.onKickPlayer = onKickPlayer;
+        this.onMakeSpectator = onMakeSpectator;
         this.onColorChange = onColorChange;
         this.onPeerColorChange = onPeerColorChange;
 
@@ -100,6 +101,7 @@ export default class HostPlayerControlModal extends SettingsBaseModal {
                     <div class="settings-input-wrapper">
                         <p class="help-text" style="margin-bottom: 10px;">Are you sure you want to kick this player from the game?</p>
                         <button id="hostKickPlayerBtn" class="button button-danger">Kick Player</button>
+                        <button id="hostMakeSpectatorBtn" class="button button-secondary" style="margin-top: 10px;">Make Spectator</button>
                     </div>
                 </div>
             `;
@@ -167,6 +169,14 @@ export default class HostPlayerControlModal extends SettingsBaseModal {
         if (kickBtn) {
             this.addEventListener(kickBtn, 'click', () => {
                 if (this.onKickPlayer) this.onKickPlayer(this.targetPlayer.playerId);
+                this.close();
+            });
+        }
+
+        const makeSpectatorBtn = this.modal.querySelector('#hostMakeSpectatorBtn');
+        if (makeSpectatorBtn) {
+            this.addEventListener(makeSpectatorBtn, 'click', () => {
+                if (this.onMakeSpectator) this.onMakeSpectator(this.targetPlayer.playerId);
                 this.close();
             });
         }

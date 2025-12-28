@@ -11,8 +11,17 @@ import PluginLoadingModal from '../../ui/modals/managers/PluginLoadingModal.js';
 import { MessageTypes } from '../networking/protocol/MessageTypes.js';
 
 export default class ClientEventHandler extends BaseEventHandler {
-    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal) {
-        super(false, registryManager, pluginManager, factoryManager, eventBus, personalSettings);
+    constructor(
+        registryManager,
+        pluginManager,
+        factoryManager,
+        eventBus,
+        personalSettings,
+        pluginManagerModal,
+        personalSettingsModal,
+        gameStateStorageManager
+    ) {
+        super(false, registryManager, pluginManager, factoryManager, eventBus, personalSettings, gameStateStorageManager);
 
         // Initialize UI systems
         this.uiBinder = new UIBinder(CLIENT_UI_BINDINGS);
@@ -82,14 +91,12 @@ export default class ClientEventHandler extends BaseEventHandler {
     }
 
     async startJoinGame() {
-        const playerNameInput = document.getElementById('joinNameInput');
         const gameCodeInput = document.getElementById('joinCodeInput');
 
-        const playerName = playerNameInput.value.trim();
         const gameCode = gameCodeInput.value.trim();
 
-        if (!playerName || !gameCode) {
-            await ModalUtil.alert('Please enter your name and a valid game code.');
+        if (!gameCode) {
+            await ModalUtil.alert('Please enter a valid game code.');
             return;
         }
 
@@ -110,7 +117,7 @@ export default class ClientEventHandler extends BaseEventHandler {
 
         progressTracker.start();
 
-        this.peer = new Client(playerName, gameCode, this);
+        this.peer = new Client(null, gameCode, this);
         await this.peer.init(progressTracker);
         this.pluginManager.setPeer(this.peer.peer);
         this.pluginManager.setEventHandler(this);

@@ -6,6 +6,7 @@
  */
 import UIComponentManager from './UIComponentManager.js';
 import PlayerListComponent from './components/PlayerListComponent.js';
+import SpectatorListComponent from './components/SpectatorListComponent.js';
 import BoardCanvasComponent from './components/BoardCanvasComponent.js';
 import RemainingMovesComponent from './components/RemainingMovesComponent.js';
 import RollButtonComponent from './components/RollButtonComponent.js';
@@ -45,6 +46,7 @@ export default class UISystem {
         // Individual component references
         this.components = {
             lobbyPlayerList: null,
+            lobbySpectatorList: null,
             gamePlayerList: null,
             lobbyBoard: null,
             gameBoard: null,
@@ -85,6 +87,25 @@ export default class UISystem {
                 listElementId: 'lobbyPlayerList',
                 isHost: this.isHost,
                 currentPlayerPeerId: this.peerId,
+                hostPeerId: this.hostPeerId,
+                eventBus: this.eventBus
+            });
+
+        // Create lobby spectator list
+        this.components.lobbySpectatorList = uiComponentFactory
+            ? uiComponentFactory.create('SpectatorListComponent', {
+                spectatorListElementId: 'lobbySpectatorList',
+                unclaimedListElementId: 'lobbyUnclaimedList',
+                isHost: this.isHost,
+                currentPeerId: this.peerId,
+                hostPeerId: this.hostPeerId,
+                eventBus: this.eventBus
+            })
+            : new SpectatorListComponent({
+                spectatorListElementId: 'lobbySpectatorList',
+                unclaimedListElementId: 'lobbyUnclaimedList',
+                isHost: this.isHost,
+                currentPeerId: this.peerId,
                 hostPeerId: this.hostPeerId,
                 eventBus: this.eventBus
             });
@@ -209,6 +230,12 @@ export default class UISystem {
             this.components.lobbyPlayerList.setIsHost(isHost);
             this.components.lobbyPlayerList.currentPlayerPeerId = peerId;
             this.components.lobbyPlayerList.hostPeerId = hostPeerId;
+        }
+
+        if (this.components.lobbySpectatorList) {
+            this.components.lobbySpectatorList.isHost = isHost;
+            this.components.lobbySpectatorList.currentPeerId = peerId;
+            this.components.lobbySpectatorList.hostPeerId = hostPeerId;
         }
 
         if (this.components.gamePlayerList) {

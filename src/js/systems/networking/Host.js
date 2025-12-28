@@ -78,7 +78,7 @@ export default class Host extends BasePeer {
         if (progressTracker) progressTracker.nextStage();
 
         this.setupUI();
-        this.addPlayer(id, this.originalName, true);
+        this.gameState.addSpectator(id, { label: 'Host' });
 
         // Update UI with initial game state (including board)
         this.eventHandler.updateGameState(true);
@@ -179,6 +179,7 @@ export default class Host extends BasePeer {
     }
 
     removePeer(peerId) {
+        this.gameState.removeSpectator(peerId);
         const playersToRemove = this.gameState.players.filter(player => player.peerId === peerId);
         playersToRemove.forEach(player => this.removePlayer(player.playerId));
     }
@@ -262,5 +263,49 @@ export default class Host extends BasePeer {
         this.addPlayer(this.peer.id, playerName);
         this.eventHandler.updateGameState();
         this.broadcastGameState();
+    }
+
+    claimPeerSlot(peerSlotId, requestingPeerId) {
+        if (!peerSlotId || !requestingPeerId) return false;
+
+        const unclaimed = Array.isArray(this.gameState.unclaimedPeerIds)
+            ? this.gameState.unclaimedPeerIds
+            : [];
+        if (!unclaimed.includes(peerSlotId)) {
+            return false;
+        }
+
+        const playersToClaim = this.gameState.players.filter(p => p.peerId === peerSlotId);
+        if (playersToClaim.length === 0) {
+            this.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
+            this.updateAndBroadcastGameState(this.gameState);
+            return false;
+        }
+
+        const limit = this.gameState.settings.playerLimitPerPeer;
+        const currentOwned = this.gameState.players.filter(p => p.peerId === requestingPeerId).length;
+        if (limit && currentOwned + playersToClaim.length > limit) {
+            return false;
+        }
+
+        playersToClaim.forEach(player => {
+            player.peerId = requestingPeerId;
+        });
+
+        this.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
+        this.gameState.removeSpectator(requestingPeerId);
+        this.updateAndBroadcastGameState(this.gameState);
+        return true;
+    }
+
+    makePeerSpectator(peerId) {
+        if (!peerId) return false;
+
+        const unclaimed = new Set(this.gameState.unclaimedPeerIds || []);
+        unclaimed.add(peerId);
+        this.gameState.unclaimedPeerIds = Array.from(unclaimed);
+        this.gameState.addSpectator(peerId);
+        this.updateAndBroadcastGameState(this.gameState);
+        return true;
     }
 }

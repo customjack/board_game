@@ -16,8 +16,19 @@ import { MessageTypes } from '../networking/protocol/MessageTypes.js';
 import GameStartValidator from '../../game/validation/GameStartValidator.js';
 
 export default class HostEventHandler extends BaseEventHandler {
-    constructor(registryManager, pluginManager, factoryManager, eventBus, personalSettings, pluginManagerModal, personalSettingsModal, mapManagerModal) {
-        super(true, registryManager, pluginManager, factoryManager, eventBus, personalSettings);
+    constructor(
+        registryManager,
+        pluginManager,
+        factoryManager,
+        eventBus,
+        personalSettings,
+        pluginManagerModal,
+        personalSettingsModal,
+        mapManagerModal,
+        gameStateManagerModal,
+        gameStateStorageManager
+    ) {
+        super(true, registryManager, pluginManager, factoryManager, eventBus, personalSettings, gameStateStorageManager);
 
         // Initialize UI systems
         this.uiBinder = new UIBinder(HOST_UI_BINDINGS);
@@ -25,6 +36,8 @@ export default class HostEventHandler extends BaseEventHandler {
         this.mapManagerModal = mapManagerModal;
         this.pluginManagerModal = pluginManagerModal; // Plugin manager modal
         this.personalSettingsModal = personalSettingsModal;
+        this.gameStateManagerModal = gameStateManagerModal;
+        this.gameStateStorageManager = gameStateStorageManager;
     }
 
     init() {
@@ -140,6 +153,11 @@ export default class HostEventHandler extends BaseEventHandler {
             elementId: 'openPluginListButton',
             description: 'Open plugin list'
         });
+
+        this.actionRegistry.register('openGameStateManager', () => this.openGameStateManager(), {
+            elementId: 'openGameStateManagerButton',
+            description: 'Open game state manager'
+        });
     }
 
     /**
@@ -151,15 +169,18 @@ export default class HostEventHandler extends BaseEventHandler {
         }
     }
 
-
-    async startHostGame() {
-        const hostNameInput = document.getElementById('hostNameInput');
-        const hostName = hostNameInput.value.trim();
-        if (!hostName) {
-            await ModalUtil.alert('Please enter your name.');
-            return;
+    openGameStateManager() {
+        if (this.gameStateManagerModal) {
+            this.gameStateManagerModal.updateConfig({
+                isHost: true,
+                eventHandler: this
+            });
+            this.gameStateManagerModal.open();
         }
+    }
 
+
+    async startHostGame(loadSave = null) {
         document.getElementById('startHostButton').disabled = true;
         this.showPage("loadingPage");
 
@@ -174,7 +195,7 @@ export default class HostEventHandler extends BaseEventHandler {
 
         progressTracker.start();
 
-        this.peer = new Host(hostName, this);
+        this.peer = new Host(null, this);
         await this.peer.init(progressTracker);
         this.pluginManager.setPeer(this.peer.peer);
         this.pluginManager.setEventHandler(this);
@@ -201,6 +222,31 @@ export default class HostEventHandler extends BaseEventHandler {
 
         this.showPage("lobbyPage");
         this.displayLobbyControls();
+
+        if (loadSave && loadSave.state) {
+            await this.applyLoadedGameState(loadSave);
+        }
+    }
+
+    async applyLoadedGameState(loadSave) {
+        if (!this.peer || !loadSave?.state) return;
+
+        const hostPeerId = this.peer?.peer?.id || this.peer?.hostId || null;
+        const loadedState = GameStateFactory.fromJSON(loadSave.state, this.factoryManager);
+
+        const peerSlots = Array.from(new Set(loadedState.players.map(player => player.peerId)));
+        loadedState.setUnclaimedPeerIds(peerSlots);
+        loadedState.spectators = [];
+        if (hostPeerId) {
+            loadedState.addSpectator(hostPeerId, { label: 'Host' });
+        }
+
+        loadedState.pluginReadiness = {};
+        if (hostPeerId && (loadedState.pluginRequirements || []).length === 0) {
+            loadedState.setPluginReadiness(hostPeerId, true, []);
+        }
+
+        this.peer.updateAndBroadcastGameState(loadedState);
     }
 
     /**
@@ -228,6 +274,7 @@ export default class HostEventHandler extends BaseEventHandler {
         const startGameButton = setInlineDisplay('startGameButton');
         const selectMapButton = setInlineDisplay('selectMapButton');
         const openSettingsButton = setInlineDisplay('openSettingsButton');
+        setInlineDisplay('openGameStateManagerButton');
 
         // Support either legacy uploadBoardButton or new uploadPluginButton IDs
         setInlineDisplay('uploadPluginButton');
@@ -523,6 +570,13 @@ export default class HostEventHandler extends BaseEventHandler {
             const player = this.peer.gameState.players.find(p => p.playerId === playerId);
             if (player) {
                 this.peer.kickPlayer(player.peerId);
+            }
+        });
+
+        playerListComponent.on('makeSpectator', ({ playerId }) => {
+            const player = this.peer.gameState.players.find(p => p.playerId === playerId);
+            if (player) {
+                this.peer.makePeerSpectator(player.peerId);
             }
         });
     }

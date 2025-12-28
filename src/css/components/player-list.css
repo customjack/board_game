@@ -93,6 +93,46 @@
   min-height: 0; /* Allow flex shrinking */
 }
 
+#lobbySpectatorList,
+#lobbyUnclaimedList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 calc(var(--spacing-unit) * 1) 0;
+}
+
+.spectator-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(var(--spacing-unit) * 1);
+  background-color: var(--background-modal);
+  border-radius: 5px;
+  border: 1px dashed var(--border-color);
+  margin-bottom: calc(var(--spacing-unit) * 0.75);
+  min-height: 44px;
+}
+
+.spectator-name {
+  font-weight: 600;
+}
+
+.spectator-badges,
+.spectator-actions {
+  display: flex;
+  gap: calc(var(--spacing-unit) * 0.5);
+  align-items: center;
+}
+
+.spectator-empty {
+  color: var(--text-color-muted, #888);
+  padding: calc(var(--spacing-unit) * 0.75);
+}
+
+.spectator-claim {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
 /* Badges */
 .host-badge,
 .you-badge {
@@ -110,6 +150,18 @@
 /* Specific colors for success badge */
 .you-badge {
   background-color: var(--color-success);
+}
+
+.unclaimed-badge {
+  background-color: var(--color-warning);
+  color: var(--text-color-light);
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Box sizing */

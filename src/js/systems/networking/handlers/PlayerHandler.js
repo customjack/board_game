@@ -28,6 +28,18 @@ export default class PlayerHandler extends MessageHandlerPlugin {
         );
 
         this.registerHandler(
+            MessageTypes.CLAIM_PEER_SLOT,
+            this.handleClaimPeerSlot,
+            { description: 'Handle player slot claim (host only)' }
+        );
+
+        this.registerHandler(
+            MessageTypes.CLAIM_PEER_REJECTED,
+            this.handleClaimPeerRejected,
+            { description: 'Handle player slot claim rejection (client only)' }
+        );
+
+        this.registerHandler(
             MessageTypes.NAME_CHANGE,
             this.handleNameChange,
             { description: 'Handle player name change (host only)' }
@@ -119,6 +131,59 @@ export default class PlayerHandler extends MessageHandlerPlugin {
      */
     async handleAddPlayerRejected(message, context) {
         await ModalUtil.alert(message.reason);
+    }
+
+    async handleClaimPeerRejected(message, context) {
+        await ModalUtil.alert(message.reason);
+    }
+
+    handleClaimPeerSlot(message, context) {
+        const peer = this.getPeer();
+        const conn = context.connection;
+        const requesterPeerId = conn?.peer;
+        const peerSlotId = message.peerSlotId;
+
+        if (!peerSlotId || !requesterPeerId) {
+            return;
+        }
+
+        const unclaimed = Array.isArray(peer.gameState.unclaimedPeerIds)
+            ? peer.gameState.unclaimedPeerIds
+            : [];
+
+        if (!unclaimed.includes(peerSlotId)) {
+            conn.send({
+                type: MessageTypes.CLAIM_PEER_REJECTED,
+                reason: 'That player slot is no longer available.'
+            });
+            return;
+        }
+
+        const playersToClaim = peer.gameState.players.filter(p => p.peerId === peerSlotId);
+        if (playersToClaim.length === 0) {
+            peer.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
+            peer.broadcastGameState();
+            return;
+        }
+
+        const limit = peer.gameState.settings.playerLimitPerPeer;
+        const currentOwned = peer.gameState.players.filter(p => p.peerId === requesterPeerId).length;
+        if (limit && currentOwned + playersToClaim.length > limit) {
+            conn.send({
+                type: MessageTypes.CLAIM_PEER_REJECTED,
+                reason: `Claim would exceed the per-peer limit of ${limit} players.`
+            });
+            return;
+        }
+
+        playersToClaim.forEach(player => {
+            player.peerId = requesterPeerId;
+        });
+
+        peer.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
+        peer.gameState.removeSpectator(requesterPeerId);
+        peer.broadcastGameState();
+        peer.eventHandler?.updateGameState?.();
     }
 
     /**

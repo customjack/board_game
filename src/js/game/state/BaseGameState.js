@@ -14,7 +14,10 @@ export default class BaseGameState {
         randomGenerator = new SharedRandomNumberGenerator(Math.random().toString(36).slice(2, 11)),
         selectedMapId = 'default',
         selectedMapData = null,
-        pluginState = {}
+        pluginState = {},
+        gameId = null,
+        spectators = [],
+        unclaimedPeerIds = []
     } = {}) {
         if (!board) {
             throw new Error('Board instance is required to initialize a game state');
@@ -28,6 +31,9 @@ export default class BaseGameState {
         this.selectedMapId = selectedMapId;
         this.selectedMapData = selectedMapData;
         this.pluginState = pluginState;
+        this.gameId = gameId || this.generateGameId();
+        this.spectators = Array.isArray(spectators) ? spectators : [];
+        this.unclaimedPeerIds = Array.isArray(unclaimedPeerIds) ? unclaimedPeerIds : [];
         
         // Plugin readiness tracking: peerId -> { ready: boolean, missingPlugins: [] }
         this.pluginReadiness = {};
@@ -39,6 +45,11 @@ export default class BaseGameState {
 
         this._version = 0;
         this._timestamp = Date.now();
+    }
+
+    generateGameId() {
+        const seed = Math.random().toString(36).slice(2, 10);
+        return `game-${Date.now().toString(36)}-${seed}`;
     }
 
     getStateType() {
@@ -118,8 +129,46 @@ export default class BaseGameState {
         if (this.pluginReadiness) {
             delete this.pluginReadiness[peerId];
         }
+        this.removeSpectator(peerId);
     }
-    
+
+    addSpectator(peerId, details = {}) {
+        if (!peerId) return null;
+        if (!Array.isArray(this.spectators)) {
+            this.spectators = [];
+        }
+        const existing = this.spectators.find(s => s.peerId === peerId);
+        if (existing) {
+            return existing;
+        }
+        const spectator = {
+            peerId,
+            joinedAt: details.joinedAt || Date.now(),
+            label: details.label || null
+        };
+        this.spectators.push(spectator);
+        return spectator;
+    }
+
+    removeSpectator(peerId) {
+        if (!peerId || !Array.isArray(this.spectators)) return false;
+        const originalCount = this.spectators.length;
+        this.spectators = this.spectators.filter(s => s.peerId !== peerId);
+        return this.spectators.length !== originalCount;
+    }
+
+    getSpectators() {
+        return Array.isArray(this.spectators) ? this.spectators : [];
+    }
+
+    isSpectator(peerId) {
+        return this.getSpectators().some(s => s.peerId === peerId);
+    }
+
+    setUnclaimedPeerIds(peerIds = []) {
+        this.unclaimedPeerIds = Array.isArray(peerIds) ? [...peerIds] : [];
+    }
+
     /**
      * Set plugin readiness for a peer
      * @param {string} peerId - Peer ID
@@ -179,7 +228,10 @@ export default class BaseGameState {
     }
 
     getPlayersByPeerId(peerId) {
-        return this.players.filter(player => player.peerId === peerId);
+        const unclaimed = this.unclaimedPeerIds || [];
+        return this.players.filter(player =>
+            player.peerId === peerId && !unclaimed.includes(player.peerId)
+        );
     }
 
     determineTriggeredEvents(eventBus = null, peerId = null) {
@@ -247,11 +299,14 @@ export default class BaseGameState {
     getDeltaFields() {
         return [
             'stateType',
+            'gameId',
             'gamePhase',
             'selectedMapId',
             'selectedMapData',
             'pluginRequirements',
-            'pluginReadiness'
+            'pluginReadiness',
+            'spectators',
+            'unclaimedPeerIds'
         ];
     }
 
@@ -267,6 +322,9 @@ export default class BaseGameState {
             pluginState: this.pluginState,
             pluginReadiness: this.pluginReadiness || {},
             pluginRequirements: this.pluginRequirements || [],
+            gameId: this.gameId,
+            spectators: this.spectators || [],
+            unclaimedPeerIds: this.unclaimedPeerIds || [],
             gamePhase: this.gamePhase,
             _version: this._version,
             _timestamp: this._timestamp
@@ -287,7 +345,10 @@ export default class BaseGameState {
             randomGenerator,
             selectedMapId: json.selectedMapId || 'default',
             selectedMapData: json.selectedMapData || null,
-            pluginState: json.pluginState || {}
+            pluginState: json.pluginState || {},
+            gameId: json.gameId || null,
+            spectators: json.spectators || [],
+            unclaimedPeerIds: json.unclaimedPeerIds || []
         });
         
         // Restore plugin readiness and requirements

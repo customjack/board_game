@@ -38,6 +38,7 @@ export default class BaseGameEngine extends IGameEngine {
         this.factoryManager = dependencies.factoryManager;
         this.isHost = dependencies.isHost;
         this.gameLogManager = dependencies.gameLogManager || null;
+        this.autoSaveHandler = dependencies.autoSaveHandler || null;
 
         // UI dependencies (optional)
         this.uiRegistry = dependencies.uiRegistry || null;
@@ -327,6 +328,21 @@ export default class BaseGameEngine extends IGameEngine {
      */
     getEngineType() {
         return 'base';
+    }
+
+    /**
+     * Request an auto-save of the current game state.
+     * Subclasses should call this at their desired cadence.
+     * @param {string} reason - Reason or trigger name for the save.
+     * @param {Object} metadata - Additional metadata for the save.
+     */
+    requestAutoSave(reason, metadata = {}) {
+        if (typeof this.autoSaveHandler !== 'function') return;
+        this.autoSaveHandler(this.gameState, {
+            reason,
+            engineType: this.getEngineType(),
+            ...metadata
+        });
     }
 
     /**

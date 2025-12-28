@@ -178,6 +178,12 @@ export default class InputValidator {
             errors.push(`Player limit per peer: ${playerLimitPerPeer.error}`);
         }
 
+        // Validate spectator limit
+        const spectatorLimit = this.validateNumber(settings.spectatorLimit, 0, 100);
+        if (!spectatorLimit.isValid) {
+            errors.push(`Spectator limit: ${spectatorLimit.error}`);
+        }
+
         // Validate turn timer
         const turnTimer = this.validateNumber(settings.turnTimer, 0, 3600); // Max 1 hour
         if (!turnTimer.isValid) {

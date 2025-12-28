@@ -873,6 +873,11 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
                 this.changePhase({ newTurnPhase: TurnPhases.CHANGE_TURN, delay: 0 });
             }
         }
+
+        this.requestAutoSave('turnEnded', {
+            turnNumber: this.gameState.getTurnNumber?.(),
+            currentPlayerId: currentPlayer?.playerId
+        });
     }
 
     handleTimerEnd() {

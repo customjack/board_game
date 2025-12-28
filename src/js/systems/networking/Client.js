@@ -83,8 +83,6 @@ export default class Client extends BasePeer {
 
         if (progressTracker) progressTracker.nextStage();
 
-        this.addPlayer(id, this.originalName);
-
         // Update UI with initial game state (including board)
         this.eventHandler.updateGameState(true);
 
@@ -161,11 +159,10 @@ export default class Client extends BasePeer {
         }
 
         this.startHeartbeat();
-        const playersJSON = this.ownedPlayers.map(player => player.toJSON());
         this.conn.send({
             type: MessageTypes.JOIN,
             peerId: this.peer.id,
-            players: playersJSON,
+            players: []
         });
         this.eventHandler.displayInviteCode(this.hostId);
     }

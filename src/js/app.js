@@ -52,6 +52,8 @@ import UIComponentFactory from './infrastructure/factories/UIComponentFactory';
 import AnimationFactory from './infrastructure/factories/AnimationFactory';
 import MapStorageManager from './systems/storage/MapStorageManager.js';
 import TurnBasedGameEngine from './game/engines/TurnBasedGameEngine.js';
+import GameStateStorageManager from './systems/storage/GameStateStorageManager.js';
+import GameStateManagerModal from './ui/modals/managers/GameStateManagerModal.js';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
 
@@ -198,7 +200,9 @@ function registerListeners(
     pluginManager,
     factoryManager,
     eventBus,
-    localStorageManager
+    localStorageManager,
+    gameStateStorageManager,
+    gameStateManagerModal
 ) {
     const pageRegistry = registryManager.getPageRegistry();
     const hostButton = document.getElementById('hostButton');
@@ -207,6 +211,7 @@ function registerListeners(
     const startJoinButton = document.getElementById('startJoinButton');
     const hostBackButton = document.getElementById('hostBackButton');
     const joinBackButton = document.getElementById('joinBackButton');
+    const loadGameStateButton = document.getElementById('loadGameStateButton');
 
     // Initialize Plugin Manager Modal
     const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager);
@@ -237,62 +242,70 @@ function registerListeners(
     listenerRegistry.registerListener('hostButton', 'click', () => {
         pageRegistry.showPage('hostPage');
         if (startHostButton) startHostButton.disabled = false;
-        const hostNameInput = document.getElementById('hostNameInput');
-        if (hostNameInput) hostNameInput.focus();
     });
 
     listenerRegistry.registerListener('joinButton', 'click', () => {
         pageRegistry.showPage('joinPage');
         if (startJoinButton) startJoinButton.disabled = false;
-        const joinNameInput = document.getElementById('joinNameInput');
-        if (joinNameInput) joinNameInput.focus();
+        const joinCodeInput = document.getElementById('joinCodeInput');
+        if (joinCodeInput) joinCodeInput.focus();
     });
 
     if (hostBackButton) {
         listenerRegistry.registerListener('hostBackButton', 'click', () => {
-            const hostNameInput = document.getElementById('hostNameInput');
-            if (hostNameInput) hostNameInput.value = '';
             resetHomePage();
         });
     }
 
     if (joinBackButton) {
         listenerRegistry.registerListener('joinBackButton', 'click', () => {
-            const joinNameInput = document.getElementById('joinNameInput');
             const joinCodeInput = document.getElementById('joinCodeInput');
-            if (joinNameInput) joinNameInput.value = '';
             if (joinCodeInput) joinCodeInput.value = '';
             resetHomePage();
         });
     }
 
     let hostEventHandlerInstance = null;
+    const startHostFlow = async (loadSave = null) => {
+        if (hostEventHandlerInstance) {
+            return;
+        }
+        try {
+            pluginManager.setHost(true);
+            hostEventHandlerInstance = new HostEventHandler(
+                registryManager,
+                pluginManager,
+                factoryManager,
+                eventBus,
+                personalSettings,
+                pluginManagerModal,
+                personalSettingsMenu,
+                mapManagerModal,
+                gameStateManagerModal,
+                gameStateStorageManager
+            );
+            hostEventHandlerInstance.init();
+            await hostEventHandlerInstance.startHostGame(loadSave);
+        } catch (error) {
+            console.error('Failed to start host game:', error);
+            hostEventHandlerInstance = null;
+        }
+    };
+
+    const handleStartHostClick = async () => startHostFlow();
     if (startHostButton) {
-        const handleStartHostClick = async () => {
-            if (hostEventHandlerInstance) {
-                return;
-            }
-            try {
-                pluginManager.setHost(true);
-                hostEventHandlerInstance = new HostEventHandler(
-                    registryManager,
-                    pluginManager,
-                    factoryManager,
-                    eventBus,
-                    personalSettings,
-                    pluginManagerModal,
-                    personalSettingsMenu,
-                    mapManagerModal
-                );
-                hostEventHandlerInstance.init();
-                await hostEventHandlerInstance.startHostGame();
-                startHostButton.removeEventListener('click', handleStartHostClick);
-            } catch (error) {
-                console.error('Failed to start host game:', error);
-                hostEventHandlerInstance = null;
-            }
-        };
         startHostButton.addEventListener('click', handleStartHostClick);
+    }
+
+    if (loadGameStateButton) {
+        loadGameStateButton.addEventListener('click', () => {
+            gameStateManagerModal.updateConfig({
+                isHost: true,
+                eventHandler: null,
+                onLoadSave: (save) => startHostFlow(save)
+            });
+            gameStateManagerModal.open();
+        });
     }
 
     let clientEventHandlerInstance = null;
@@ -310,7 +323,8 @@ function registerListeners(
                     eventBus,
                     personalSettings,
                     pluginManagerModal,
-                    personalSettingsMenu
+                    personalSettingsMenu,
+                    gameStateStorageManager
                 );
                 clientEventHandlerInstance.init();
                 await clientEventHandlerInstance.startJoinGame();
@@ -389,6 +403,13 @@ function initializeApp() {
         localStorageManager
     );
 
+    const gameStateStorageManager = new GameStateStorageManager(personalSettings);
+    const gameStateManagerModal = new GameStateManagerModal('gameStateManagerModal', {
+        gameStateStorageManager,
+        isHost: false
+    });
+    gameStateManagerModal.init();
+
     // Apply initial theme
     document.documentElement.setAttribute('data-theme', personalSettings.getTheme());
 
@@ -436,7 +457,9 @@ function initializeApp() {
         pluginManager,
         factoryManager,
         eventBus,
-        localStorageManager
+        localStorageManager,
+        gameStateStorageManager,
+        gameStateManagerModal
     );
 }
 

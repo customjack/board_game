@@ -24,6 +24,8 @@ export const MessageTypes = {
     // Player management
     PROPOSE_ADD_PLAYER: 'proposeAddPlayer',
     ADD_PLAYER_REJECTED: 'addPlayerRejected',
+    CLAIM_PEER_SLOT: 'claimPeerSlot',
+    CLAIM_PEER_REJECTED: 'claimPeerRejected',
     NAME_CHANGE: 'nameChange',
     COLOR_CHANGE: 'colorChange',
     PEER_COLOR_CHANGE: 'peerColorChange',
@@ -86,6 +88,14 @@ export const MessageSchemas = {
     [MessageTypes.ADD_PLAYER_REJECTED]: {
         reason: { type: 'string', required: true },
         player: { type: 'object', required: false }
+    },
+
+    [MessageTypes.CLAIM_PEER_SLOT]: {
+        peerSlotId: { type: 'string', required: true }
+    },
+
+    [MessageTypes.CLAIM_PEER_REJECTED]: {
+        reason: { type: 'string', required: true }
     },
 
     [MessageTypes.NAME_CHANGE]: {

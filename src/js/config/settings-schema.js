@@ -64,6 +64,20 @@ export const GAME_SETTINGS_SCHEMA = [
         readonly: false
     },
     {
+        id: 'spectatorLimit',
+        type: SETTING_TYPES.NUMBER,
+        label: 'Spectator Limit',
+        description: 'Maximum number of spectators allowed in the lobby',
+        defaultValue: 10,
+        category: SETTING_CATEGORIES.PLAYERS,
+        constraints: {
+            min: 0,
+            max: 100,
+            step: 1
+        },
+        readonly: false
+    },
+    {
         id: 'allowPlayerNameChange',
         type: SETTING_TYPES.BOOLEAN,
         label: 'Allow Player Name Changes',

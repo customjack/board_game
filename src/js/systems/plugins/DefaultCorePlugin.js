@@ -38,6 +38,7 @@ import EventProcessor from '../../game/components/EventProcessor.js';
 import UIController from '../../game/components/UIController.js';
 import RemainingMovesComponent from '../../ui/components/RemainingMovesComponent.js';
 import PlayerListComponent from '../../ui/components/PlayerListComponent.js';
+import SpectatorListComponent from '../../ui/components/SpectatorListComponent.js';
 import RollButtonComponent from '../../ui/components/RollButtonComponent.js';
 import TimerComponent from '../../ui/components/TimerComponent.js';
 import GameLogComponent from '../../ui/components/GameLogComponent.js';
@@ -244,6 +245,7 @@ export default class DefaultCorePlugin extends Plugin {
         const components = [
             ['RemainingMovesComponent', RemainingMovesComponent],
             ['PlayerListComponent', PlayerListComponent],
+            ['SpectatorListComponent', SpectatorListComponent],
             ['RollButtonComponent', RollButtonComponent],
             ['TimerComponent', TimerComponent],
             ['GameLogComponent', GameLogComponent],

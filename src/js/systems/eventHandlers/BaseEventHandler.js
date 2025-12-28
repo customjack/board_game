@@ -8,7 +8,7 @@ import PageRegistry from '../../infrastructure/registries/PageRegistry.js';
 import ListenerRegistry from '../../infrastructure/registries/ListenerRegistry.js';
 
 export default class BaseEventHandler {
-    constructor(isHost, registryManager, pluginManager, factoryManager, eventBus, personalSettings) {
+    constructor(isHost, registryManager, pluginManager, factoryManager, eventBus, personalSettings, gameStateStorageManager = null) {
         this.registryManager = registryManager;
         this.pageRegistry = registryManager.getPageRegistry();
         if (!this.pageRegistry) {
@@ -25,6 +25,7 @@ export default class BaseEventHandler {
         this.factoryManager = factoryManager;
         this.eventBus = eventBus;
         this.personalSettings = personalSettings;
+        this.gameStateStorageManager = gameStateStorageManager;
         this.isHost = isHost;
 
         this.inviteCode = document.getElementById('inviteCode');
@@ -91,6 +92,7 @@ export default class BaseEventHandler {
     setupPlayerListComponentListeners() {
         const lobbyPlayerList = this.uiSystem?.components?.lobbyPlayerList;
         const gamePlayerList = this.uiSystem?.components?.gamePlayerList;
+        const lobbySpectatorList = this.uiSystem?.components?.lobbySpectatorList;
 
         if (lobbyPlayerList) {
             lobbyPlayerList.on('nicknameChange', ({ playerId, newNickname }) => {
@@ -154,6 +156,33 @@ export default class BaseEventHandler {
             });
 
             this.setupRoleSpecificPlayerListComponentListeners(gamePlayerList);
+        }
+
+        if (lobbySpectatorList) {
+            lobbySpectatorList.on('claimPeerSlot', ({ peerSlotId }) => {
+                this.requestClaimPeerSlot(peerSlotId);
+            });
+        }
+    }
+
+    requestClaimPeerSlot(peerSlotId) {
+        if (!peerSlotId) return;
+
+        if (this.isHost) {
+            if (this.peer?.claimPeerSlot) {
+                this.peer.claimPeerSlot(peerSlotId, this.peer?.peer?.id);
+            }
+            return;
+        }
+
+        const connection = this.peer?.conn;
+        if (connection && connection.open) {
+            connection.send({
+                type: MessageTypes.CLAIM_PEER_SLOT,
+                peerSlotId
+            });
+        } else {
+            console.warn('[BaseEventHandler] Cannot claim player slot: no connection to host');
         }
     }
 
@@ -494,7 +523,8 @@ export default class BaseEventHandler {
             factoryManager: this.factoryManager,
             isHost: this.isHost,
             uiSystem: this.uiSystem,
-            gameLogManager: this.uiSystem?.gameLogManager
+            gameLogManager: this.uiSystem?.gameLogManager,
+            autoSaveHandler: this.isHost ? this.buildAutoSaveHandler() : null
         }, { engineConfig });
         console.log(`[Performance] Game engine created in ${(performance.now() - engineStart).toFixed(0)}ms`);
 
@@ -512,6 +542,20 @@ export default class BaseEventHandler {
             return (newState) => this.peer?.updateAndBroadcastGameState?.(newState);
         }
         return (newState) => this.peer?.proposeGameState?.(newState);
+    }
+
+    buildAutoSaveHandler() {
+        if (!this.gameStateStorageManager) {
+            return null;
+        }
+
+        return (gameState, metadata = {}) => {
+            this.gameStateStorageManager.saveGameState(gameState, {
+                source: 'auto',
+                reason: metadata.reason || metadata.trigger || 'auto',
+                force: false
+            });
+        };
     }
 
     /**

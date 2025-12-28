@@ -56,12 +56,13 @@ export default class GameStateHandler extends MessageHandlerPlugin {
         // If we now have owned players and we didn't before, or we're still on loading page,
         // check if we should show lobby/game page
         const nowHasOwnedPlayers = peer.ownedPlayers.length > 0;
+        const isSpectator = peer.gameState?.isSpectator?.(peer.peer?.id);
         const hadOwnedPlayers = previousOwnedPlayers.length > 0;
         
         // Show lobby/game page if:
         // 1. We now have owned players (JOIN was accepted)
         // 2. We're still on loading page (haven't transitioned yet)
-        if (nowHasOwnedPlayers) {
+        if (nowHasOwnedPlayers || isSpectator) {
             const currentPage = document.querySelector('#loadingPage')?.style.display;
             const isOnLoadingPage = currentPage !== 'none' && currentPage !== '';
             
@@ -108,9 +109,10 @@ export default class GameStateHandler extends MessageHandlerPlugin {
             
             // Check if we should show lobby/game page (same logic as handleGameState)
             const nowHasOwnedPlayers = peer.ownedPlayers.length > 0;
+            const isSpectator = peer.gameState?.isSpectator?.(peer.peer?.id);
             const hadOwnedPlayers = previousOwnedPlayers.length > 0;
             
-            if (nowHasOwnedPlayers) {
+            if (nowHasOwnedPlayers || isSpectator) {
                 const currentPage = document.querySelector('#loadingPage')?.style.display;
                 const isOnLoadingPage = currentPage !== 'none' && currentPage !== '';
                 
