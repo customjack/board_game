@@ -52,7 +52,7 @@ export default class SpectatorListComponent extends BaseUIComponent {
             .sort()
             .join('|');
         const playersSig = (gameState.players || [])
-            .map(p => `${p.playerId}:${p.peerId}`)
+            .map(p => `${p.playerId}:${p.peerId}:${p.isUnclaimed ? 'u' : 'c'}`)
             .sort()
             .join('|');
 
@@ -73,9 +73,10 @@ export default class SpectatorListComponent extends BaseUIComponent {
         const spectatorSummary = document.createElement('li');
         spectatorSummary.className = 'spectator-container spectator-summary';
         const limit = this.gameState.settings?.spectatorLimit;
+        const derivedCount = this.getActiveSpectatorCount(spectators);
         const totalText = Number.isFinite(limit) && limit > 0
-            ? `${spectators.length} / ${limit}`
-            : `${spectators.length}`;
+            ? `${derivedCount} / ${limit}`
+            : `${derivedCount}`;
         spectatorSummary.textContent = `Spectators: ${totalText}`;
         this.spectatorContainer.appendChild(spectatorSummary);
 
@@ -121,6 +122,21 @@ export default class SpectatorListComponent extends BaseUIComponent {
         li.appendChild(name);
         li.appendChild(actions);
         return li;
+    }
+
+    getActiveSpectatorCount(spectators = []) {
+        const players = Array.isArray(this.gameState?.players) ? this.gameState.players : [];
+        const ownedByPeer = new Map();
+        players.forEach(player => {
+            const pid = player?.peerId;
+            if (!pid || player.isUnclaimed) return;
+            ownedByPeer.set(pid, (ownedByPeer.get(pid) || 0) + 1);
+        });
+
+        return spectators.filter(s => {
+            if (!s?.peerId) return false;
+            return (ownedByPeer.get(s.peerId) || 0) === 0;
+        }).length;
     }
 
     canClaimSlot(peerSlotId) {

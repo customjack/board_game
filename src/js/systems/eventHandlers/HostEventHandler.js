@@ -237,9 +237,9 @@ export default class HostEventHandler extends BaseEventHandler {
         const peerSlots = [];
         loadedState.players.forEach((player, index) => {
             const originalSlot = player?.peerId || `player-${index}`;
-            const unclaimedSlot = `unclaimed-${originalSlot}`;
-            player.peerId = unclaimedSlot;
-            peerSlots.push(unclaimedSlot);
+            player.isUnclaimed = true;
+            player.peerId = originalSlot;
+            peerSlots.push(originalSlot);
         });
         loadedState.setUnclaimedPeerIds(peerSlots);
         loadedState.spectators = [];

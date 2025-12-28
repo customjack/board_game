@@ -31,6 +31,7 @@ export default class Player {
         this.nickname = nickname;
         this.factoryManager = factoryManager;
         this.isHost = isHost;
+        this.isUnclaimed = false;
         this.stats = []; // Initialize as array of stat instances
         this.playerId = playerId || this.generatePlayerId();
         this.id = this.playerId;
@@ -255,6 +256,7 @@ export default class Player {
             peerId: this.peerId,
             nickname: this.nickname,
             isHost: this.isHost,
+            isUnclaimed: this.isUnclaimed,
             state: this.state,
             playerColor: this.playerColor,
             peerColor: this.peerColor,
@@ -284,6 +286,7 @@ export default class Player {
             json.playerId,
             json.state
         );
+        player.isUnclaimed = Boolean(json.isUnclaimed);
 
         // Rebuild stats from JSON
         player.stats = (json.stats || []).map(statJson => {

@@ -147,7 +147,8 @@ export default class GameStateManagerModal extends BaseManagerModal {
         if (!Array.isArray(gameSaves) || gameSaves.length === 0) return document.createElement('div');
 
         const sorted = gameSaves.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        const latest = sorted[0];
+        const latest = sorted[sorted.length - 1];
+        let selectedSave = latest;
 
         const card = document.createElement('div');
         card.className = 'game-state-card';
@@ -156,7 +157,13 @@ export default class GameStateManagerModal extends BaseManagerModal {
         card.style.padding = '12px';
         card.style.display = 'flex';
         card.style.flexDirection = 'column';
-        card.style.gap = '6px';
+        card.style.gap = '8px';
+
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.flexWrap = 'wrap';
+        header.style.gap = '8px';
+        header.style.alignItems = 'center';
 
         const title = document.createElement('div');
         title.style.fontWeight = '600';
@@ -165,75 +172,70 @@ export default class GameStateManagerModal extends BaseManagerModal {
         const meta = document.createElement('div');
         meta.style.fontSize = '0.85em';
         meta.style.color = 'var(--text-color-muted, #888)';
-        meta.textContent = `Latest: ${new Date(latest.createdAt).toLocaleString()} • ${sorted.length} saves`;
+        meta.textContent = `${sorted.length} saves`;
 
-        const details = document.createElement('div');
-        details.style.fontSize = '0.85em';
-        details.style.color = 'var(--text-color-muted, #888)';
-        details.textContent = `Game ID: ${latest.gameId} • Phase: ${latest.gamePhase || 'IN_LOBBY'}`;
-
-        const savesList = document.createElement('ul');
-        savesList.style.listStyle = 'none';
-        savesList.style.margin = '8px 0 0 0';
-        savesList.style.padding = '0';
-        savesList.style.display = 'flex';
-        savesList.style.flexDirection = 'column';
-        savesList.style.gap = '6px';
-
-        sorted.forEach(save => {
-            const row = document.createElement('li');
-            row.style.display = 'flex';
-            row.style.alignItems = 'center';
-            row.style.gap = '8px';
-            row.style.border = '1px solid var(--border-color)';
-            row.style.borderRadius = '4px';
-            row.style.padding = '8px';
-
-            const saveInfo = document.createElement('div');
-            saveInfo.style.flex = '1';
-            saveInfo.style.display = 'flex';
-            saveInfo.style.flexDirection = 'column';
-            saveInfo.style.gap = '2px';
-            saveInfo.style.fontSize = '0.85em';
-            saveInfo.innerHTML = `
-                <div>${new Date(save.createdAt).toLocaleString()} • ${save.source}</div>
-                <div style="color: var(--text-color-muted, #888)">Phase: ${save.gamePhase || 'IN_LOBBY'} • Turn: ${save.turnNumber ?? 'N/A'}</div>
-            `;
-            row.appendChild(saveInfo);
-
-            const actions = document.createElement('div');
-            actions.style.display = 'flex';
-            actions.style.gap = '6px';
-
-            if (this.isHost) {
-                const loadButton = document.createElement('button');
-                loadButton.className = 'button button-primary';
-                loadButton.textContent = 'Load';
-                loadButton.addEventListener('click', () => this.handleLoadSave(save));
-                actions.appendChild(loadButton);
+        const select = document.createElement('select');
+        select.className = 'input';
+        select.style.minWidth = '220px';
+        select.style.flex = '1';
+        select.addEventListener('change', (e) => {
+            const found = sorted.find(s => s.saveId === e.target.value);
+            if (found) {
+                selectedSave = found;
+                detail.textContent = this.formatSaveDetails(found);
             }
-
-            const downloadButton = document.createElement('button');
-            downloadButton.className = 'button button-secondary';
-            downloadButton.textContent = 'Download';
-            downloadButton.addEventListener('click', () => this.handleDownload(save));
-            actions.appendChild(downloadButton);
-
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'button button-danger';
-            deleteButton.textContent = 'Delete';
-            deleteButton.addEventListener('click', () => this.handleDelete(save));
-            actions.appendChild(deleteButton);
-
-            row.appendChild(actions);
-            savesList.appendChild(row);
         });
 
-        card.appendChild(title);
-        card.appendChild(meta);
-        card.appendChild(details);
-        card.appendChild(savesList);
+        sorted.slice().reverse().forEach(save => {
+            const option = document.createElement('option');
+            option.value = save.saveId;
+            option.textContent = `${new Date(save.createdAt).toLocaleString()} • ${save.source}`;
+            select.appendChild(option);
+        });
+        select.value = latest.saveId;
+
+        header.appendChild(title);
+        header.appendChild(meta);
+        header.appendChild(select);
+
+        const detail = document.createElement('div');
+        detail.style.fontSize = '0.85em';
+        detail.style.color = 'var(--text-color-muted, #888)';
+        detail.textContent = this.formatSaveDetails(selectedSave);
+
+        const actions = document.createElement('div');
+        actions.style.display = 'flex';
+        actions.style.gap = '8px';
+        actions.style.flexWrap = 'wrap';
+
+        if (this.isHost) {
+            const loadButton = document.createElement('button');
+            loadButton.className = 'button button-primary';
+            loadButton.textContent = 'Load';
+            loadButton.addEventListener('click', () => this.handleLoadSave(selectedSave));
+            actions.appendChild(loadButton);
+        }
+
+        const downloadButton = document.createElement('button');
+        downloadButton.className = 'button button-secondary';
+        downloadButton.textContent = 'Download';
+        downloadButton.addEventListener('click', () => this.handleDownload(selectedSave));
+        actions.appendChild(downloadButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'button button-danger';
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', () => this.handleDelete(selectedSave));
+        actions.appendChild(deleteButton);
+
+        card.appendChild(header);
+        card.appendChild(detail);
+        card.appendChild(actions);
         return card;
+    }
+
+    formatSaveDetails(save) {
+        return `Game ID: ${save.gameId} • Phase: ${save.gamePhase || 'IN_LOBBY'} • Turn: ${save.turnNumber ?? 'N/A'}`;
     }
 
     handleManualSave() {
