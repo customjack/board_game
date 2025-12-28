@@ -191,7 +191,7 @@ export default class GameStateStorageManager {
 
             grouped.forEach(group => {
                 group.sort(sortByCreatedAt);
-                while (this.calculateGroupSize(group) > perGameLimitBytes) {
+                while (group.length > 1 && this.calculateGroupSize(group) > perGameLimitBytes) {
                     group.shift();
                 }
             });
