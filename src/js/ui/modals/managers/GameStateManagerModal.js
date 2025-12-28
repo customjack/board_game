@@ -146,8 +146,12 @@ export default class GameStateManagerModal extends BaseManagerModal {
     createGameGroupCard(gameSaves = []) {
         if (!Array.isArray(gameSaves) || gameSaves.length === 0) return document.createElement('div');
 
-        const sorted = gameSaves.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).reverse(); // latest first
-        let selectedSave = sorted[0];
+        const sorted = gameSaves
+            .slice()
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .reverse(); // latest first in array order
+        const firstSave = sorted[0];
+        let selectedSave = firstSave;
 
         const card = document.createElement('div');
         card.className = 'game-state-card';
@@ -166,7 +170,7 @@ export default class GameStateManagerModal extends BaseManagerModal {
 
         const title = document.createElement('div');
         title.style.fontWeight = '600';
-        title.textContent = latest.mapName || 'Saved Game';
+        title.textContent = (selectedSave && selectedSave.mapName) || 'Saved Game';
 
         const meta = document.createElement('div');
         meta.style.fontSize = '0.85em';
