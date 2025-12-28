@@ -68,17 +68,14 @@ export default class SpectatorListComponent extends BaseUIComponent {
         if (!this.gameState) return;
 
         const spectators = Array.isArray(this.gameState.spectators) ? this.gameState.spectators : [];
-        if (spectators.length === 0) {
-            const empty = document.createElement('li');
-            empty.className = 'spectator-empty';
-            empty.textContent = 'No spectators connected.';
-            this.spectatorContainer.appendChild(empty);
-        } else {
-            spectators.forEach((spectator, index) => {
-                const item = this.createSpectatorItem(spectator, index);
-                this.spectatorContainer.appendChild(item);
-            });
-        }
+        const spectatorSummary = document.createElement('li');
+        spectatorSummary.className = 'spectator-container spectator-summary';
+        const limit = this.gameState.settings?.spectatorLimit;
+        const totalText = Number.isFinite(limit) && limit > 0
+            ? `${spectators.length} / ${limit}`
+            : `${spectators.length}`;
+        spectatorSummary.textContent = `Spectators: ${totalText}`;
+        this.spectatorContainer.appendChild(spectatorSummary);
 
         const unclaimed = Array.isArray(this.gameState.unclaimedPeerIds)
             ? this.gameState.unclaimedPeerIds
@@ -95,33 +92,6 @@ export default class SpectatorListComponent extends BaseUIComponent {
                 this.unclaimedContainer.appendChild(item);
             });
         }
-    }
-
-    createSpectatorItem(spectator, index) {
-        const li = document.createElement('li');
-        li.className = 'spectator-container';
-
-        const name = document.createElement('div');
-        name.className = 'spectator-name';
-
-        const label = spectator?.label || `Spectator ${index + 1}`;
-        name.textContent = label;
-
-        const badges = document.createElement('div');
-        badges.className = 'spectator-badges';
-
-        if (spectator.peerId === this.hostPeerId) {
-            badges.appendChild(this.createBadge('Host'));
-        }
-
-        if (spectator.peerId === this.currentPeerId) {
-            badges.appendChild(this.createBadge('You', 'you-badge'));
-        }
-
-        li.appendChild(name);
-        li.appendChild(badges);
-
-        return li;
     }
 
     createUnclaimedItem(peerId, index) {

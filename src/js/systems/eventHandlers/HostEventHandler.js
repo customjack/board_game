@@ -234,8 +234,13 @@ export default class HostEventHandler extends BaseEventHandler {
         const hostPeerId = this.peer?.peer?.id || this.peer?.hostId || null;
         const loadedState = GameStateFactory.fromJSON(loadSave.state, this.factoryManager);
 
-        const peerSlots = Array.from(new Set(loadedState.players.map(player => player.peerId)));
-        loadedState.setUnclaimedPeerIds(peerSlots);
+        const peerSlots = new Set();
+        loadedState.players.forEach(player => {
+            if (player?.peerId) {
+                peerSlots.add(player.peerId);
+            }
+        });
+        loadedState.setUnclaimedPeerIds(Array.from(peerSlots));
         loadedState.spectators = [];
         if (hostPeerId) {
             loadedState.addSpectator(hostPeerId, { label: 'Host' });

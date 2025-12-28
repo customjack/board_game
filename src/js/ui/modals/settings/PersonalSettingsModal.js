@@ -4,6 +4,7 @@ import MapStorageManager from '../../../systems/storage/MapStorageManager.js';
 const CATEGORIES = {
     GRAPHICS: 'graphics',
     GAMEPLAY: 'gameplay',
+    GAMESTATE: 'gamestate',
     MISC: 'misc'
 };
 
@@ -27,6 +28,7 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         // Callbacks for external managers
         this.openPluginManager = null;
         this.openMapManager = null;
+        this.openGameStateManager = null;
     }
 
     init() {
@@ -45,6 +47,7 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         return [
             { id: CATEGORIES.GRAPHICS, label: 'Graphics' },
             { id: CATEGORIES.GAMEPLAY, label: 'Gameplay' },
+            { id: CATEGORIES.GAMESTATE, label: 'Game State Storage' },
             { id: CATEGORIES.MISC, label: 'Misc' }
         ];
     }
@@ -102,8 +105,22 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
             );
         }
 
+        // 4. Game States Button
+        let gameStatesBtn = null;
+        if (this.openGameStateManager) {
+            gameStatesBtn = createOrGetButton(
+                'personalSettingsGameStatesButton',
+                'Game States',
+                'button button-secondary settings-modal-action',
+                () => {
+                    this.close();
+                    this.openGameStateManager();
+                }
+            );
+        }
+
         // Clear existing buttons to re-order them correctly
-        // We want: [Maps] [Plugins] [Apply] [Close]
+        // We want: [Maps] [Plugins] [Game States] [Apply] [Close]
         // Note: Close button is usually already there or added by BaseModal. 
         // BaseModal adds close button to header-buttons.
 
@@ -112,11 +129,13 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         // Remove our managed buttons if they are already attached to re-append in order
         if (mapsBtn) mapsBtn.remove();
         if (pluginsBtn) pluginsBtn.remove();
+        if (gameStatesBtn) gameStatesBtn.remove();
         applyButton.remove();
 
         // Append in order
         if (mapsBtn) headerButtons.insertBefore(mapsBtn, closeButton);
         if (pluginsBtn) headerButtons.insertBefore(pluginsBtn, closeButton);
+        if (gameStatesBtn) headerButtons.insertBefore(gameStatesBtn, closeButton);
         headerButtons.insertBefore(applyButton, closeButton);
 
         this.applyButton = applyButton;
@@ -138,6 +157,13 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         }
     }
 
+    setOpenGameStateManager(callback) {
+        this.openGameStateManager = callback;
+        if (this.modal) {
+            this.createApplyButton();
+        }
+    }
+
     renderContent() {
         const content = this.modal.querySelector(`#${this.id}Content`) || this.content;
         if (!content) return;
@@ -151,6 +177,9 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
                 break;
             case CATEGORIES.GAMEPLAY:
                 this.renderGameplaySettings(content);
+                break;
+            case CATEGORIES.GAMESTATE:
+                this.renderGameStateSettings(content);
                 break;
 
             case CATEGORIES.MISC:
@@ -202,9 +231,11 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
 
         container.appendChild(this.createCheckboxRow('Streamer Mode (Blur Invite Code)', 'streamerMode'));
         container.appendChild(this.createCheckboxRow('Auto-load Plugins', 'autoLoadPlugins'));
+    }
 
-        const storageTitle = this.createTitle('Game State Storage');
-        container.appendChild(storageTitle);
+    renderGameStateSettings(container) {
+        const title = this.createTitle('Game State Storage');
+        container.appendChild(title);
 
         container.appendChild(this.createCheckboxRow('Auto-save Game States', 'autoSaveGameStates'));
         container.appendChild(this.createNumberRow('Total Storage Limit (MB)', 'gameStateTotalLimitMb', 0, 500, 1));

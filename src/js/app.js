@@ -233,6 +233,15 @@ function registerListeners(
         mapManagerModal.open();
     });
 
+    // Wire up Personal Settings to open Game State Manager
+    personalSettingsMenu.setOpenGameStateManager(() => {
+        gameStateManagerModal.updateConfig({
+            isHost: pluginManager?.isHost === true,
+            eventHandler: null
+        });
+        gameStateManagerModal.open();
+    });
+
     const resetHomePage = () => {
         pageRegistry.showPage('homePage');
         if (hostButton) hostButton.disabled = false;
