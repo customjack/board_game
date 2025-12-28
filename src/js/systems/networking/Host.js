@@ -275,7 +275,9 @@ export default class Host extends BasePeer {
             return false;
         }
 
-        const playersToClaim = this.gameState.players.filter(p => p.peerId === peerSlotId);
+        const playersToClaim = this.gameState.players.filter(p =>
+            p.playerId === peerSlotId || p.peerId === peerSlotId
+        );
         if (playersToClaim.length === 0) {
             this.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
             this.updateAndBroadcastGameState(this.gameState);
@@ -290,6 +292,7 @@ export default class Host extends BasePeer {
 
         playersToClaim.forEach(player => {
             player.peerId = requestingPeerId;
+            player.isUnclaimed = false;
         });
 
         this.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);

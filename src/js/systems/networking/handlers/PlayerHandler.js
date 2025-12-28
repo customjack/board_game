@@ -159,7 +159,9 @@ export default class PlayerHandler extends MessageHandlerPlugin {
             return;
         }
 
-        const playersToClaim = peer.gameState.players.filter(p => p.peerId === peerSlotId);
+        const playersToClaim = peer.gameState.players.filter(p =>
+            p.playerId === peerSlotId || p.peerId === peerSlotId
+        );
         if (playersToClaim.length === 0) {
             peer.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
             peer.broadcastGameState();

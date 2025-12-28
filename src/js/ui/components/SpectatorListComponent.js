@@ -136,7 +136,11 @@ export default class SpectatorListComponent extends BaseUIComponent {
         return spectators.filter(s => {
             if (!s?.peerId) return false;
             const owned = ownedByPeer.get(s.peerId) || 0;
-            // Count as spectator only if they have no owned players
+            // Host counts as spectator even if they own players
+            if (this.hostPeerId && s.peerId === this.hostPeerId) {
+                return true;
+            }
+            // Others count as spectator only if they have no owned players
             return owned === 0;
         }).length;
     }

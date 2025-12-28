@@ -146,9 +146,8 @@ export default class GameStateManagerModal extends BaseManagerModal {
     createGameGroupCard(gameSaves = []) {
         if (!Array.isArray(gameSaves) || gameSaves.length === 0) return document.createElement('div');
 
-        const sorted = gameSaves.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        const latest = sorted[sorted.length - 1];
-        let selectedSave = latest;
+        const sorted = gameSaves.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).reverse(); // latest first
+        let selectedSave = sorted[0];
 
         const card = document.createElement('div');
         card.className = 'game-state-card';
@@ -186,13 +185,13 @@ export default class GameStateManagerModal extends BaseManagerModal {
             }
         });
 
-        sorted.slice().reverse().forEach(save => {
+        sorted.forEach(save => {
             const option = document.createElement('option');
             option.value = save.saveId;
             option.textContent = `${new Date(save.createdAt).toLocaleString()} • ${save.source}`;
             select.appendChild(option);
         });
-        select.value = latest.saveId;
+        select.value = selectedSave.saveId;
 
         header.appendChild(title);
         header.appendChild(meta);
@@ -208,17 +207,6 @@ export default class GameStateManagerModal extends BaseManagerModal {
         actions.style.gap = '8px';
         actions.style.flexWrap = 'wrap';
 
-        const deleteGameButton = document.createElement('button');
-        deleteGameButton.className = 'button button-danger';
-        deleteGameButton.textContent = 'Delete Game';
-        deleteGameButton.addEventListener('click', async () => {
-            const confirmed = await ModalUtil.confirm('Delete all saves for this game?', 'Delete Game Saves');
-            if (!confirmed) return;
-            this.gameStateStorageManager.clearGame(latest.gameId);
-            this.renderContent();
-        });
-        actions.appendChild(deleteGameButton);
-
         if (this.isHost) {
             const loadButton = document.createElement('button');
             loadButton.className = 'button button-primary';
@@ -229,13 +217,24 @@ export default class GameStateManagerModal extends BaseManagerModal {
 
         const downloadButton = document.createElement('button');
         downloadButton.className = 'button button-secondary';
-        downloadButton.textContent = 'Download';
+        downloadButton.textContent = 'Download Selected';
         downloadButton.addEventListener('click', () => this.handleDownload(selectedSave));
         actions.appendChild(downloadButton);
 
+        const deleteGameButton = document.createElement('button');
+        deleteGameButton.className = 'button button-danger';
+        deleteGameButton.textContent = 'Delete Game';
+        deleteGameButton.addEventListener('click', async () => {
+            const confirmed = await ModalUtil.confirm('Delete all saves for this game?', 'Delete Game Saves');
+            if (!confirmed) return;
+            this.gameStateStorageManager.clearGame(selectedSave.gameId);
+            this.renderContent();
+        });
+        actions.appendChild(deleteGameButton);
+
         const deleteButton = document.createElement('button');
         deleteButton.className = 'button button-danger';
-        deleteButton.textContent = 'Delete Save';
+        deleteButton.textContent = 'Delete Selected';
         deleteButton.addEventListener('click', () => this.handleDelete(selectedSave));
         actions.appendChild(deleteButton);
 

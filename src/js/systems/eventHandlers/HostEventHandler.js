@@ -236,12 +236,13 @@ export default class HostEventHandler extends BaseEventHandler {
 
         const peerSlots = [];
         loadedState.players.forEach((player, index) => {
-            const originalSlot = player?.peerId || `player-${index}`;
+            const slotId = player?.playerId || player?.peerId || `slot-${index}`;
             player.isUnclaimed = true;
-            player.peerId = originalSlot;
-            peerSlots.push(originalSlot);
+            player.peerId = null;
+            peerSlots.push(slotId);
         });
         loadedState.setUnclaimedPeerIds(peerSlots);
+        loadedState.pluginReadiness = {};
         loadedState.spectators = [];
         if (hostPeerId) {
             loadedState.addSpectator(hostPeerId, { label: 'Host' });
