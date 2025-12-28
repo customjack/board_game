@@ -202,6 +202,13 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
 
         container.appendChild(this.createCheckboxRow('Streamer Mode (Blur Invite Code)', 'streamerMode'));
         container.appendChild(this.createCheckboxRow('Auto-load Plugins', 'autoLoadPlugins'));
+
+        const storageTitle = this.createTitle('Game State Storage');
+        container.appendChild(storageTitle);
+
+        container.appendChild(this.createCheckboxRow('Auto-save Game States', 'autoSaveGameStates'));
+        container.appendChild(this.createNumberRow('Total Storage Limit (MB)', 'gameStateTotalLimitMb', 0, 500, 1));
+        container.appendChild(this.createNumberRow('Per-Game Storage Limit (MB)', 'gameStatePerGameLimitMb', 0, 200, 1));
     }
 
     createTitle(text) {
@@ -256,6 +263,17 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         return this.createSettingRow(label, range);
     }
 
+    createNumberRow(label, key, min, max, step) {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = min;
+        input.max = max;
+        input.step = step;
+        input.className = 'input settings-input';
+        this.inputs.set(key, input);
+        return this.createSettingRow(label, input);
+    }
+
     loadSettingsIntoUI() {
         if (!this.personalSettings) return;
         const theme = this.inputs.get('theme');
@@ -278,6 +296,15 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
 
         const autoLoadPlugins = this.inputs.get('autoLoadPlugins');
         if (autoLoadPlugins) autoLoadPlugins.checked = this.personalSettings.getAutoLoadPlugins();
+
+        const autoSaveGameStates = this.inputs.get('autoSaveGameStates');
+        if (autoSaveGameStates) autoSaveGameStates.checked = this.personalSettings.getAutoSaveGameStates();
+
+        const gameStateTotalLimitMb = this.inputs.get('gameStateTotalLimitMb');
+        if (gameStateTotalLimitMb) gameStateTotalLimitMb.value = this.personalSettings.getGameStateTotalLimitMb();
+
+        const gameStatePerGameLimitMb = this.inputs.get('gameStatePerGameLimitMb');
+        if (gameStatePerGameLimitMb) gameStatePerGameLimitMb.value = this.personalSettings.getGameStatePerGameLimitMb();
     }
 
     applySettings() {
@@ -290,6 +317,9 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         const soundVolume = parseFloat(this.inputs.get('soundVolume')?.value);
         const streamerMode = this.inputs.get('streamerMode')?.checked ?? false;
         const autoLoadPlugins = this.inputs.get('autoLoadPlugins')?.checked ?? true;
+        const autoSaveGameStates = this.inputs.get('autoSaveGameStates')?.checked ?? true;
+        const gameStateTotalLimitMb = parseFloat(this.inputs.get('gameStateTotalLimitMb')?.value);
+        const gameStatePerGameLimitMb = parseFloat(this.inputs.get('gameStatePerGameLimitMb')?.value);
 
         if (theme) {
             this.personalSettings.setTheme(theme);
@@ -300,6 +330,13 @@ export default class PersonalSettingsModal extends SettingsBaseModal {
         if (!Number.isNaN(soundVolume)) this.personalSettings.setSoundVolume(soundVolume);
         this.personalSettings.setStreamerMode(Boolean(streamerMode));
         this.personalSettings.setAutoLoadPlugins(Boolean(autoLoadPlugins));
+        this.personalSettings.setAutoSaveGameStates(Boolean(autoSaveGameStates));
+        if (!Number.isNaN(gameStateTotalLimitMb)) {
+            this.personalSettings.setGameStateTotalLimitMb(gameStateTotalLimitMb);
+        }
+        if (!Number.isNaN(gameStatePerGameLimitMb)) {
+            this.personalSettings.setGameStatePerGameLimitMb(gameStatePerGameLimitMb);
+        }
 
         // Close after applying, matching close button behavior
         this.close();

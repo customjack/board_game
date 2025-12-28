@@ -19,7 +19,8 @@ export default class ClientEventHandler extends BaseEventHandler {
         personalSettings,
         pluginManagerModal,
         personalSettingsModal,
-        gameStateStorageManager
+        gameStateStorageManager,
+        gameStateManagerModal
     ) {
         super(false, registryManager, pluginManager, factoryManager, eventBus, personalSettings, gameStateStorageManager);
 
@@ -28,6 +29,7 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.actionRegistry = new ActionRegistry();
         this.pluginManagerModal = pluginManagerModal;
         this.personalSettingsModal = personalSettingsModal;
+        this.gameStateManagerModal = gameStateManagerModal;
         
         // Track previous map ID to detect map changes
         this.previousMapId = null;
@@ -87,6 +89,11 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.actionRegistry.register('openPluginList', () => this.openPluginManager(), {
             elementId: 'openPluginListButton',
             description: 'Open plugin list'
+        });
+
+        this.actionRegistry.register('openGameStateManager', () => this.openGameStateManager(), {
+            elementId: 'openGameStateManagerButton',
+            description: 'Open game state manager'
         });
     }
 
@@ -169,11 +176,13 @@ export default class ClientEventHandler extends BaseEventHandler {
         const leaveGameButton = document.getElementById('leaveGameButton');
         const openSettingsButton = document.getElementById('openSettingsButton');
         const viewPluginListButton = document.getElementById('viewPluginListButton');
+        const openGameStateManagerButton = document.getElementById('openGameStateManagerButton');
 
         // Show client-specific buttons
         if (leaveGameButton) leaveGameButton.style.display = 'block';
         if (openSettingsButton) openSettingsButton.style.display = 'block';
         if (viewPluginListButton) viewPluginListButton.style.display = 'block';
+        if (openGameStateManagerButton) openGameStateManagerButton.style.display = 'block';
 
         // Conditionally show or hide the "Add Player" button
         this.updateAddPlayerButton();
@@ -504,6 +513,16 @@ export default class ClientEventHandler extends BaseEventHandler {
     openPluginManager() {
         if (this.pluginManagerModal) {
             this.pluginManagerModal.open();
+        }
+    }
+
+    openGameStateManager() {
+        if (this.gameStateManagerModal) {
+            this.gameStateManagerModal.updateConfig({
+                isHost: false,
+                eventHandler: this
+            });
+            this.gameStateManagerModal.open();
         }
     }
 }

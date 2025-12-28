@@ -324,7 +324,8 @@ function registerListeners(
                     personalSettings,
                     pluginManagerModal,
                     personalSettingsMenu,
-                    gameStateStorageManager
+                    gameStateStorageManager,
+                    gameStateManagerModal
                 );
                 clientEventHandlerInstance.init();
                 await clientEventHandlerInstance.startJoinGame();

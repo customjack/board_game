@@ -16,6 +16,9 @@ export default class PersonalSettings {
             this.rollAnimation = savedSettings.rollAnimation || 'dice-roll'; // Default if not set
             this.streamerMode = savedSettings.streamerMode || false;
             this.autoLoadPlugins = savedSettings.autoLoadPlugins !== undefined ? savedSettings.autoLoadPlugins : true; // Default true
+            this.autoSaveGameStates = savedSettings.autoSaveGameStates !== undefined ? savedSettings.autoSaveGameStates : true;
+            this.gameStateTotalLimitMb = Number(savedSettings.gameStateTotalLimitMb) || 50;
+            this.gameStatePerGameLimitMb = Number(savedSettings.gameStatePerGameLimitMb) || 10;
         } else {
             // Default settings if nothing is saved
             this.theme = 'light';
@@ -25,6 +28,9 @@ export default class PersonalSettings {
             this.rollAnimation = 'dice-roll'; // Default animation
             this.streamerMode = false;
             this.autoLoadPlugins = true; // Default to true
+            this.autoSaveGameStates = true;
+            this.gameStateTotalLimitMb = 50;
+            this.gameStatePerGameLimitMb = 10;
         }
     }
 
@@ -116,6 +122,37 @@ export default class PersonalSettings {
         this.saveToLocalStorage();
     }
 
+    getAutoSaveGameStates() {
+        return this.autoSaveGameStates;
+    }
+
+    setAutoSaveGameStates(enabled) {
+        this.autoSaveGameStates = enabled;
+        this.saveToLocalStorage();
+    }
+
+    getGameStateTotalLimitMb() {
+        return this.gameStateTotalLimitMb;
+    }
+
+    setGameStateTotalLimitMb(limitMb) {
+        const parsed = Number(limitMb);
+        if (!Number.isFinite(parsed) || parsed < 0) return;
+        this.gameStateTotalLimitMb = parsed;
+        this.saveToLocalStorage();
+    }
+
+    getGameStatePerGameLimitMb() {
+        return this.gameStatePerGameLimitMb;
+    }
+
+    setGameStatePerGameLimitMb(limitMb) {
+        const parsed = Number(limitMb);
+        if (!Number.isFinite(parsed) || parsed < 0) return;
+        this.gameStatePerGameLimitMb = parsed;
+        this.saveToLocalStorage();
+    }
+
     // Convert the settings object to JSON format
     toJSON() {
         return {
@@ -126,6 +163,9 @@ export default class PersonalSettings {
             rollAnimation: this.rollAnimation,
             streamerMode: this.streamerMode,
             autoLoadPlugins: this.autoLoadPlugins,
+            autoSaveGameStates: this.autoSaveGameStates,
+            gameStateTotalLimitMb: this.gameStateTotalLimitMb,
+            gameStatePerGameLimitMb: this.gameStatePerGameLimitMb
         };
     }
 
@@ -139,6 +179,9 @@ export default class PersonalSettings {
         settings.rollAnimation = json.rollAnimation || 'dice-roll';
         settings.streamerMode = json.streamerMode || false;
         settings.autoLoadPlugins = json.autoLoadPlugins !== undefined ? json.autoLoadPlugins : true;
+        settings.autoSaveGameStates = json.autoSaveGameStates !== undefined ? json.autoSaveGameStates : true;
+        settings.gameStateTotalLimitMb = Number(json.gameStateTotalLimitMb) || 50;
+        settings.gameStatePerGameLimitMb = Number(json.gameStatePerGameLimitMb) || 10;
         return settings;
     }
 

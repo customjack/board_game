@@ -16,7 +16,8 @@ export const HOST_UI_BINDINGS = {
         closeGame: 'closeGameButton',
         startGame: 'startGameButton',
         addPlayer: 'addPlayerButton',
-        uploadPlugin: 'uploadPluginButton'
+        uploadPlugin: 'uploadPluginButton',
+        openGameStateManager: 'openGameStateManagerButton'
     },
 
     // Input elements with validation
@@ -107,7 +108,8 @@ export const CLIENT_UI_BINDINGS = {
     buttons: {
         joinGame: 'joinGameButton',
         leaveGame: 'leaveGameButton',
-        addPlayer: 'addPlayerButton'
+        addPlayer: 'addPlayerButton',
+        openGameStateManager: 'openGameStateManagerButton'
     },
 
     // Input elements
