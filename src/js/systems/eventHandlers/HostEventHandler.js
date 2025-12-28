@@ -666,6 +666,7 @@ export default class HostEventHandler extends BaseEventHandler {
         this.settingsManager.updateGameStateFromInputs(this.peer.gameState);
         this.peer.broadcastGameState();
         this.updateAddPlayerButton();
+        this.updateGameState();
     }
 
     /**

@@ -166,7 +166,9 @@ export default class GameStateStorageManager {
             reason,
             engineType: state.stateType || 'unknown',
             mapId: state.selectedMapId || 'unknown',
-            mapName: state.board?.metadata?.name || 'Unknown Map',
+            mapName: state.board?.metadata?.name
+                || state.board?.metadata?.displayName
+                || (state.selectedMapId === 'default' ? 'Default Board' : state.selectedMapId || 'Unknown Map'),
             turnNumber: gameState.getTurnNumber?.() ?? null,
             gamePhase: state.gamePhase || 'IN_LOBBY',
             state

@@ -208,6 +208,17 @@ export default class GameStateManagerModal extends BaseManagerModal {
         actions.style.gap = '8px';
         actions.style.flexWrap = 'wrap';
 
+        const deleteGameButton = document.createElement('button');
+        deleteGameButton.className = 'button button-danger';
+        deleteGameButton.textContent = 'Delete Game';
+        deleteGameButton.addEventListener('click', async () => {
+            const confirmed = await ModalUtil.confirm('Delete all saves for this game?', 'Delete Game Saves');
+            if (!confirmed) return;
+            this.gameStateStorageManager.clearGame(latest.gameId);
+            this.renderContent();
+        });
+        actions.appendChild(deleteGameButton);
+
         if (this.isHost) {
             const loadButton = document.createElement('button');
             loadButton.className = 'button button-primary';
@@ -224,7 +235,7 @@ export default class GameStateManagerModal extends BaseManagerModal {
 
         const deleteButton = document.createElement('button');
         deleteButton.className = 'button button-danger';
-        deleteButton.textContent = 'Delete';
+        deleteButton.textContent = 'Delete Save';
         deleteButton.addEventListener('click', () => this.handleDelete(selectedSave));
         actions.appendChild(deleteButton);
 

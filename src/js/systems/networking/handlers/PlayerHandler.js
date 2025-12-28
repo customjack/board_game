@@ -178,6 +178,7 @@ export default class PlayerHandler extends MessageHandlerPlugin {
 
         playersToClaim.forEach(player => {
             player.peerId = requesterPeerId;
+            player.isUnclaimed = false;
         });
 
         peer.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
