@@ -130,12 +130,25 @@ export default class GameStateManagerModal extends BaseManagerModal {
             return;
         }
 
-        saves.forEach(save => {
-            container.appendChild(this.createSaveCard(save));
+        const grouped = saves.reduce((acc, save) => {
+            const gameId = save.gameId || 'unknown-game';
+            if (!acc.has(gameId)) acc.set(gameId, []);
+            acc.get(gameId).push(save);
+            return acc;
+        }, new Map());
+
+        grouped.forEach((gameSaves) => {
+            const card = this.createGameGroupCard(gameSaves);
+            container.appendChild(card);
         });
     }
 
-    createSaveCard(save) {
+    createGameGroupCard(gameSaves = []) {
+        if (!Array.isArray(gameSaves) || gameSaves.length === 0) return document.createElement('div');
+
+        const sorted = gameSaves.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const latest = sorted[0];
+
         const card = document.createElement('div');
         card.className = 'game-state-card';
         card.style.border = '1px solid var(--border-color)';
@@ -147,47 +160,79 @@ export default class GameStateManagerModal extends BaseManagerModal {
 
         const title = document.createElement('div');
         title.style.fontWeight = '600';
-        title.textContent = save.mapName || 'Saved Game';
+        title.textContent = latest.mapName || 'Saved Game';
 
         const meta = document.createElement('div');
         meta.style.fontSize = '0.85em';
         meta.style.color = 'var(--text-color-muted, #888)';
-        meta.textContent = `Saved ${new Date(save.createdAt).toLocaleString()} • ${save.source}`;
+        meta.textContent = `Latest: ${new Date(latest.createdAt).toLocaleString()} • ${sorted.length} saves`;
 
         const details = document.createElement('div');
         details.style.fontSize = '0.85em';
         details.style.color = 'var(--text-color-muted, #888)';
-        details.textContent = `Game ID: ${save.gameId} • Phase: ${save.gamePhase || 'IN_LOBBY'}`;
+        details.textContent = `Game ID: ${latest.gameId} • Phase: ${latest.gamePhase || 'IN_LOBBY'}`;
 
-        const actions = document.createElement('div');
-        actions.style.display = 'flex';
-        actions.style.gap = '8px';
-        actions.style.marginTop = '6px';
+        const savesList = document.createElement('ul');
+        savesList.style.listStyle = 'none';
+        savesList.style.margin = '8px 0 0 0';
+        savesList.style.padding = '0';
+        savesList.style.display = 'flex';
+        savesList.style.flexDirection = 'column';
+        savesList.style.gap = '6px';
 
-        if (this.isHost) {
-            const loadButton = document.createElement('button');
-            loadButton.className = 'button button-primary';
-            loadButton.textContent = 'Load';
-            loadButton.addEventListener('click', () => this.handleLoadSave(save));
-            actions.appendChild(loadButton);
-        }
+        sorted.forEach(save => {
+            const row = document.createElement('li');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '8px';
+            row.style.border = '1px solid var(--border-color)';
+            row.style.borderRadius = '4px';
+            row.style.padding = '8px';
 
-        const downloadButton = document.createElement('button');
-        downloadButton.className = 'button button-secondary';
-        downloadButton.textContent = 'Download';
-        downloadButton.addEventListener('click', () => this.handleDownload(save));
-        actions.appendChild(downloadButton);
+            const saveInfo = document.createElement('div');
+            saveInfo.style.flex = '1';
+            saveInfo.style.display = 'flex';
+            saveInfo.style.flexDirection = 'column';
+            saveInfo.style.gap = '2px';
+            saveInfo.style.fontSize = '0.85em';
+            saveInfo.innerHTML = `
+                <div>${new Date(save.createdAt).toLocaleString()} • ${save.source}</div>
+                <div style="color: var(--text-color-muted, #888)">Phase: ${save.gamePhase || 'IN_LOBBY'} • Turn: ${save.turnNumber ?? 'N/A'}</div>
+            `;
+            row.appendChild(saveInfo);
 
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'button button-danger';
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', () => this.handleDelete(save));
-        actions.appendChild(deleteButton);
+            const actions = document.createElement('div');
+            actions.style.display = 'flex';
+            actions.style.gap = '6px';
+
+            if (this.isHost) {
+                const loadButton = document.createElement('button');
+                loadButton.className = 'button button-primary';
+                loadButton.textContent = 'Load';
+                loadButton.addEventListener('click', () => this.handleLoadSave(save));
+                actions.appendChild(loadButton);
+            }
+
+            const downloadButton = document.createElement('button');
+            downloadButton.className = 'button button-secondary';
+            downloadButton.textContent = 'Download';
+            downloadButton.addEventListener('click', () => this.handleDownload(save));
+            actions.appendChild(downloadButton);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'button button-danger';
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', () => this.handleDelete(save));
+            actions.appendChild(deleteButton);
+
+            row.appendChild(actions);
+            savesList.appendChild(row);
+        });
 
         card.appendChild(title);
         card.appendChild(meta);
         card.appendChild(details);
-        card.appendChild(actions);
+        card.appendChild(savesList);
         return card;
     }
 

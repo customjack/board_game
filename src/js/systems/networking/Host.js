@@ -145,6 +145,11 @@ export default class Host extends BasePeer {
         // Increment version before serializing
         newGameState.incrementVersion();
 
+        // Ensure host is represented as a spectator
+        if (this.peer?.id && typeof newGameState.addSpectator === 'function') {
+            newGameState.addSpectator(this.peer.id, { label: 'Host' });
+        }
+
         const newGameStateJSON = newGameState.toJSON();
         this.gameState = GameStateFactory.fromJSON(newGameStateJSON, this.eventHandler.factoryManager);
 

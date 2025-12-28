@@ -56,7 +56,9 @@ export default class SpectatorListComponent extends BaseUIComponent {
             .sort()
             .join('|');
 
-        return [spectatorsSig, unclaimedSig, playersSig].join('||');
+        const spectatorLimit = gameState.settings?.spectatorLimit ?? 'none';
+
+        return [spectatorsSig, unclaimedSig, playersSig, `limit:${spectatorLimit}`].join('||');
     }
 
     render() {
