@@ -162,6 +162,9 @@ export default class BaseEventHandler {
             lobbySpectatorList.on('claimPeerSlot', ({ peerSlotId }) => {
                 this.requestClaimPeerSlot(peerSlotId);
             });
+            lobbySpectatorList.on('removeUnclaimedSlot', ({ peerSlotId }) => {
+                this.requestRemoveUnclaimedSlot(peerSlotId);
+            });
         }
     }
 
@@ -183,6 +186,18 @@ export default class BaseEventHandler {
             });
         } else {
             console.warn('[BaseEventHandler] Cannot claim player slot: no connection to host');
+        }
+    }
+
+    requestRemoveUnclaimedSlot(peerSlotId) {
+        if (!peerSlotId || !this.isHost) return;
+        if (this.peer?.removePlayer) {
+            this.peer.removePlayer(peerSlotId);
+            if (Array.isArray(this.peer.gameState?.unclaimedPeerIds)) {
+                this.peer.gameState.unclaimedPeerIds = this.peer.gameState.unclaimedPeerIds.filter(id => id !== peerSlotId);
+            }
+            this.peer.broadcastGameState?.();
+            this.updateGameState(true);
         }
     }
 

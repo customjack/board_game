@@ -3,6 +3,7 @@
  */
 import BaseUIComponent from '../BaseUIComponent.js';
 import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
+import { createIconButton, createInfoIcon, createTrashIcon } from '../../infrastructure/utils/IconUtils.js';
 
 export default class SpectatorListComponent extends BaseUIComponent {
     constructor(config = {}) {
@@ -123,6 +124,17 @@ export default class SpectatorListComponent extends BaseUIComponent {
                 this.emit('claimPeerSlot', { peerSlotId: peerId });
             });
             actions.appendChild(claimButton);
+        }
+
+        if (this.isHost) {
+            const infoBtn = createIconButton(createInfoIcon(18), 'View info', () => {
+                this.emit('viewUnclaimedInfo', { peerSlotId: peerId });
+            });
+            const deleteBtn = createIconButton(createTrashIcon(18), 'Delete slot', () => {
+                this.emit('removeUnclaimedSlot', { peerSlotId: peerId });
+            });
+            actions.appendChild(infoBtn);
+            actions.appendChild(deleteBtn);
         }
 
         li.appendChild(name);
