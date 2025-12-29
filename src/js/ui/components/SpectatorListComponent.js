@@ -3,7 +3,7 @@
  */
 import BaseUIComponent from '../BaseUIComponent.js';
 import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
-import { createIconButton, createInfoIcon, createTrashIcon } from '../../infrastructure/utils/IconUtils.js';
+import { createIconButton, createInfoIcon, createCloseIcon } from '../../infrastructure/utils/IconUtils.js';
 
 export default class SpectatorListComponent extends BaseUIComponent {
     constructor(config = {}) {
@@ -126,14 +126,17 @@ export default class SpectatorListComponent extends BaseUIComponent {
             actions.appendChild(claimButton);
         }
 
+        // Info button for host and clients
+        const infoBtn = createIconButton(createInfoIcon(18), 'View info', () => {
+            this.emit('viewUnclaimedInfo', { peerSlotId: peerId });
+        });
+        actions.appendChild(infoBtn);
+
+        // Delete button host-only
         if (this.isHost) {
-            const infoBtn = createIconButton(createInfoIcon(18), 'View info', () => {
-                this.emit('viewUnclaimedInfo', { peerSlotId: peerId });
-            });
-            const deleteBtn = createIconButton(createTrashIcon(18), 'Delete slot', () => {
+            const deleteBtn = createIconButton(createCloseIcon(18), 'Delete slot', () => {
                 this.emit('removeUnclaimedSlot', { peerSlotId: peerId });
             });
-            actions.appendChild(infoBtn);
             actions.appendChild(deleteBtn);
         }
 
@@ -175,11 +178,16 @@ export default class SpectatorListComponent extends BaseUIComponent {
         const settings = this.gameState.settings;
         const playerLimitPerPeer = settings?.playerLimitPerPeer ?? 0;
         const currentOwnedCount = (this.gameState.players || []).filter(
-            player => player.peerId === this.currentPeerId
+            player => player.peerId === this.currentPeerId && !player.isUnclaimed
         ).length;
 
+        // Host can always claim within limits
+        if (this.isHost) {
+            return playerLimitPerPeer <= 0 || currentOwnedCount < playerLimitPerPeer;
+        }
+
         const isSpectator = this.gameState.isSpectator?.(this.currentPeerId);
-        if (!isSpectator && currentOwnedCount === 0 && !this.isHost) {
+        if (!isSpectator) {
             return false;
         }
 

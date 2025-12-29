@@ -165,6 +165,9 @@ export default class BaseEventHandler {
             lobbySpectatorList.on('removeUnclaimedSlot', ({ peerSlotId }) => {
                 this.requestRemoveUnclaimedSlot(peerSlotId);
             });
+            lobbySpectatorList.on('viewUnclaimedInfo', ({ peerSlotId }) => {
+                this.openPlayerInfoModal(peerSlotId);
+            });
         }
     }
 
@@ -199,6 +202,22 @@ export default class BaseEventHandler {
             this.peer.broadcastGameState?.();
             this.updateGameState(true);
         }
+    }
+
+    openPlayerInfoModal(playerId) {
+        if (!playerId || !Array.isArray(this.peer?.gameState?.players)) return;
+        const player = this.peer.gameState.players.find(p => p.playerId === playerId || p.peerId === playerId);
+        if (!player) return;
+
+        // Reuse the same modal used by player list
+        if (!this.playerInfoModal) {
+            const PlayerInfoModal = require('../../ui/modals/settings/PlayerInfoModal.js').default;
+            this.playerInfoModal = new PlayerInfoModal('playerInfoModal', this.peer.gameState);
+        }
+
+        const viewer = this.getOwnedPlayer?.() || null;
+        this.playerInfoModal.gameState = this.peer.gameState;
+        this.playerInfoModal.open(player, viewer);
     }
 
     getOwnedPlayer(playerId) {
