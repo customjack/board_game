@@ -187,7 +187,7 @@ export default class PlayerHandler extends MessageHandlerPlugin {
             player.isUnclaimed = false;
         });
 
-        peer.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
+        peer.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId && id !== playersToClaim[0]?.playerId);
         peer.gameState.removeSpectator(requesterPeerId);
         peer.broadcastGameState();
         peer.eventHandler?.updateGameState?.();

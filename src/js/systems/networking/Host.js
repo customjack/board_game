@@ -307,7 +307,7 @@ export default class Host extends BasePeer {
             player.isUnclaimed = false;
         });
 
-        this.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
+        this.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId && id !== playersToClaim[0]?.playerId);
         this.gameState.removeSpectator(requestingPeerId);
         this.updateAndBroadcastGameState(this.gameState);
         return true;

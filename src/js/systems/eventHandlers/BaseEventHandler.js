@@ -176,7 +176,10 @@ export default class BaseEventHandler {
 
         if (this.isHost) {
             if (this.peer?.claimPeerSlot) {
-                this.peer.claimPeerSlot(peerSlotId, this.peer?.peer?.id);
+                const success = this.peer.claimPeerSlot(peerSlotId, this.peer?.peer?.id);
+                if (!success) {
+                    ModalUtil?.alert?.('Unable to claim that slot. Check player limits or availability.');
+                }
             }
             return;
         }
