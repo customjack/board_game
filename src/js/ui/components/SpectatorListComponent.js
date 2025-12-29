@@ -80,9 +80,13 @@ export default class SpectatorListComponent extends BaseUIComponent {
         spectatorSummary.textContent = `Spectators: ${totalText}`;
         this.spectatorContainer.appendChild(spectatorSummary);
 
-        const unclaimed = Array.isArray(this.gameState.unclaimedPeerIds)
+        const rawUnclaimed = Array.isArray(this.gameState.unclaimedPeerIds)
             ? this.gameState.unclaimedPeerIds
             : [];
+        const fallbackUnclaimed = (this.gameState.players || [])
+            .filter(p => p.isUnclaimed)
+            .map(p => p.playerId);
+        const unclaimed = rawUnclaimed.length > 0 ? rawUnclaimed : fallbackUnclaimed;
 
         if (unclaimed.length === 0) {
             const empty = document.createElement('li');
@@ -104,7 +108,9 @@ export default class SpectatorListComponent extends BaseUIComponent {
         const name = document.createElement('div');
         name.className = 'spectator-name';
         const shortId = peerId ? peerId.slice(-6) : 'slot';
-        name.textContent = `Unclaimed Slot ${index + 1} (${shortId})`;
+        const nickname = this.lookupUnclaimedNickname(peerId);
+        const label = nickname ? `${nickname} (${shortId})` : `Unclaimed Slot ${index + 1} (${shortId})`;
+        name.textContent = label;
 
         const actions = document.createElement('div');
         actions.className = 'spectator-actions';
@@ -122,6 +128,12 @@ export default class SpectatorListComponent extends BaseUIComponent {
         li.appendChild(name);
         li.appendChild(actions);
         return li;
+    }
+
+    lookupUnclaimedNickname(peerSlotId) {
+        if (!peerSlotId || !Array.isArray(this.gameState?.players)) return null;
+        const player = this.gameState.players.find(p => p.playerId === peerSlotId || p.peerId === peerSlotId);
+        return player?.nickname || null;
     }
 
     getActiveSpectatorCount(spectators = []) {
