@@ -155,17 +155,6 @@ export default class PlayerHandler extends MessageHandlerPlugin {
             p.playerId === peerSlotId || p.peerId === peerSlotId
         );
 
-        // Allow claim if slot exists OR if we have an unclaimed player matching the slot id
-        const slotIsListed = unclaimed.includes(peerSlotId);
-        const slotHasUnclaimedPlayer = playersToClaim.some(p => p.isUnclaimed);
-        if (!slotIsListed && !slotHasUnclaimedPlayer) {
-            conn.send({
-                type: MessageTypes.CLAIM_PEER_REJECTED,
-                reason: 'That player slot is no longer available.'
-            });
-            return;
-        }
-
         if (playersToClaim.length === 0) {
             peer.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
             peer.broadcastGameState();

@@ -284,12 +284,6 @@ export default class Host extends BasePeer {
             p.playerId === peerSlotId || p.peerId === peerSlotId
         );
 
-        const slotIsListed = unclaimed.includes(peerSlotId);
-        const slotHasUnclaimedPlayer = playersToClaim.some(p => p.isUnclaimed);
-        if (!slotIsListed && !slotHasUnclaimedPlayer) {
-            return false;
-        }
-
         if (playersToClaim.length === 0) {
             this.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
             this.updateAndBroadcastGameState(this.gameState);
