@@ -129,8 +129,6 @@ export default class ClientEventHandler extends BaseEventHandler {
         this.pluginManager.setPeer(this.peer.peer);
         this.pluginManager.setEventHandler(this);
 
-        progressTracker.nextStage();
-
         // Create animations for UI components
         const animStart = performance.now();
         const timerAnimation = new TimerAnimation(false);
@@ -144,10 +142,10 @@ export default class ClientEventHandler extends BaseEventHandler {
         }
 
         // Create game engine using factory
-        this.createGameEngine((proposedGameState) => this.peer.proposeGameState(proposedGameState));
+        // Engine already created during Client init for deterministic stage ordering
+        // this.createGameEngine((proposedGameState) => this.peer.proposeGameState(proposedGameState));
 
-        progressTracker.nextStage();
-        progressTracker.complete();
+        // progressTracker completion happens when the connection to host opens
 
         // Set initial map ID to trigger plugin check
         this.previousMapId = this.peer.gameState?.selectedMapId || null;

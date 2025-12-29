@@ -446,7 +446,8 @@ export default class HostEventHandler extends BaseEventHandler {
                 randomGenerator: previousState?.randomGenerator,
                 selectedMapId: mapId,
                 selectedMapData: mapData,
-                pluginState: previousState?.pluginState || {}
+                pluginState: previousState?.pluginState || {},
+                gameId: previousState?.gameId
             });
             
             // Set plugin requirements for the new map

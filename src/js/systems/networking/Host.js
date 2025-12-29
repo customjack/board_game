@@ -190,6 +190,8 @@ export default class Host extends BasePeer {
     }
 
     broadcastGameState() {
+        this.refreshSpectators();
+
         const gameStateData = this.gameState.toJSON();
 
         // Calculate delta if we have a previous state
@@ -230,6 +232,57 @@ export default class Host extends BasePeer {
         this.previousGameStateJSON = gameStateData;
 
         //console.log("Broadcasted gamestate:", useDelta ? delta : gameStateData);
+    }
+
+    refreshSpectators() {
+        if (!this.gameState) return;
+
+        const ownedByPeer = new Map();
+        (this.gameState.players || []).forEach(player => {
+            if (!player?.peerId || player.isUnclaimed) return;
+            ownedByPeer.set(player.peerId, (ownedByPeer.get(player.peerId) || 0) + 1);
+        });
+
+        const knownPeers = new Set();
+        if (this.peer?.id) {
+            knownPeers.add(this.peer.id);
+        }
+        (this.connections || []).forEach(conn => {
+            if (conn?.peer) knownPeers.add(conn.peer);
+        });
+        (this.gameState.spectators || []).forEach(s => {
+            if (s?.peerId) knownPeers.add(s.peerId);
+        });
+
+        const previousSignature = (Array.isArray(this.gameState.spectators) ? this.gameState.spectators : [])
+            .map(s => s.peerId)
+            .filter(Boolean)
+            .sort()
+            .join('|');
+
+        const updatedSpectators = [];
+        knownPeers.forEach(peerId => {
+            if (!peerId) return;
+            const owned = ownedByPeer.get(peerId) || 0;
+            if (owned === 0) {
+                const existing = (this.gameState.spectators || []).find(s => s.peerId === peerId);
+                updatedSpectators.push(existing || {
+                    peerId,
+                    label: peerId === this.peer?.id ? 'Host' : null
+                });
+            }
+        });
+
+        const nextSignature = updatedSpectators
+            .map(s => s.peerId)
+            .filter(Boolean)
+            .sort()
+            .join('|');
+
+        this.gameState.spectators = updatedSpectators;
+        if (previousSignature !== nextSignature && typeof this.gameState.incrementVersion === 'function') {
+            this.gameState.incrementVersion();
+        }
     }
 
     broadcastStartGame() {
@@ -276,15 +329,13 @@ export default class Host extends BasePeer {
         const unclaimed = Array.isArray(this.gameState.unclaimedPeerIds)
             ? this.gameState.unclaimedPeerIds
             : [];
-        if (!unclaimed.includes(peerSlotId)) {
-            return false;
-        }
 
         const playersToClaim = this.gameState.players.filter(p =>
             p.playerId === peerSlotId || p.peerId === peerSlotId
         );
 
         if (playersToClaim.length === 0) {
+            console.warn('[Host.claimPeerSlot] No matching players for slot', { peerSlotId, requestingPeerId, unclaimed });
             this.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
             this.updateAndBroadcastGameState(this.gameState);
             return false;
@@ -293,6 +344,7 @@ export default class Host extends BasePeer {
         const limit = this.gameState.settings.playerLimitPerPeer;
         const currentOwned = this.gameState.players.filter(p => p.peerId === requestingPeerId).length;
         if (limit && currentOwned + playersToClaim.length > limit) {
+            console.warn('[Host.claimPeerSlot] Per-peer limit exceeded', { peerSlotId, requestingPeerId, limit, currentOwned, playersToClaim: playersToClaim.length });
             return false;
         }
 
@@ -310,10 +362,10 @@ export default class Host extends BasePeer {
     makePeerSpectator(peerId) {
         if (!peerId) return false;
 
-        const unclaimed = new Set(this.gameState.unclaimedPeerIds || []);
-        unclaimed.add(peerId);
-        this.gameState.unclaimedPeerIds = Array.from(unclaimed);
         this.gameState.addSpectator(peerId);
+        // Remove any players owned by this peer (no unclaimed slot created)
+        this.gameState.players = this.gameState.players.filter(p => p.peerId !== peerId);
+        this.previousGameStateJSON = null; // force full state broadcast so spectators sync
         this.updateAndBroadcastGameState(this.gameState);
         return true;
     }

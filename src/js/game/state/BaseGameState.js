@@ -147,6 +147,7 @@ export default class BaseGameState {
             label: details.label || null
         };
         this.spectators.push(spectator);
+        this.incrementVersion?.();
         return spectator;
     }
 
@@ -154,7 +155,11 @@ export default class BaseGameState {
         if (!peerId || !Array.isArray(this.spectators)) return false;
         const originalCount = this.spectators.length;
         this.spectators = this.spectators.filter(s => s.peerId !== peerId);
-        return this.spectators.length !== originalCount;
+        const changed = this.spectators.length !== originalCount;
+        if (changed) {
+            this.incrementVersion?.();
+        }
+        return changed;
     }
 
     getSpectators() {

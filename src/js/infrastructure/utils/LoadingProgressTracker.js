@@ -35,6 +35,7 @@ export default class LoadingProgressTracker {
         this.stageTimes.clear();
 
         if (this.stages.length > 0) {
+            this.stageTimes.set(this.stages[0], this.startTime);
             this.notifyProgress(this.stages[0], 0);
         }
 
@@ -71,7 +72,8 @@ export default class LoadingProgressTracker {
         const totalTime = performance.now() - this.startTime;
         console.log(`[LoadingProgress] Total initialization time: ${totalTime.toFixed(0)}ms`);
 
-        this.notifyProgress('Complete', this.stages.length, `Ready! (${totalTime.toFixed(0)}ms)`);
+        const finalIndex = Math.max(this.stages.length - 1, 0);
+        this.notifyProgress('Complete', finalIndex, `Ready! (${totalTime.toFixed(0)}ms)`);
 
         return this;
     }
@@ -80,16 +82,21 @@ export default class LoadingProgressTracker {
      * Notify all callbacks
      */
     notifyProgress(stage, stageIndex, customMessage = null) {
-        const percent = this.stages.length > 0
-            ? Math.round((stageIndex / this.stages.length) * 100)
+        const totalStages = this.stages.length;
+        const boundedIndex = Math.max(0, Math.min(stageIndex, Math.max(totalStages - 1, 0)));
+        const displayIndex = Math.min(boundedIndex + 1, Math.max(totalStages, 1));
+        const denominator = Math.max(totalStages - 1, 1);
+        const percent = totalStages > 0
+            ? Math.round((boundedIndex / denominator) * 100)
             : 100;
 
         const elapsedMs = performance.now() - this.startTime;
 
         const progressData = {
             stage,
-            stageIndex,
-            totalStages: this.stages.length,
+            stageIndex: boundedIndex,
+            totalStages,
+            displayIndex,
             percent,
             message: customMessage || stage,
             elapsedMs: elapsedMs.toFixed(0)
@@ -148,9 +155,9 @@ export const LOADING_STAGES = {
     CLIENT: [
         'Initializing network...',
         'Loading game board...',
-        'Connecting to host...',
         'Setting up UI components...',
         'Configuring game engine...',
+        'Connecting to host...',
         'Joining lobby...'
     ]
 };

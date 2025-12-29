@@ -69,7 +69,7 @@ export default class LoadingBar {
 
         // Update details
         if (this.detailsElement) {
-            this.detailsElement.textContent = `Stage ${data.stageIndex + 1}/${data.totalStages} • ${data.elapsedMs}ms elapsed`;
+            this.detailsElement.textContent = `Stage ${data.displayIndex || (data.stageIndex + 1)}/${data.totalStages} • ${data.elapsedMs}ms elapsed`;
         }
     }
 

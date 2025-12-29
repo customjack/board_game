@@ -99,9 +99,15 @@ export default class HostPlayerControlModal extends SettingsBaseModal {
                 <div class="settings-row">
                     <div class="settings-label">Kick ${this.targetPlayer.nickname}</div>
                     <div class="settings-input-wrapper">
-                        <p class="help-text" style="margin-bottom: 10px;">Are you sure you want to kick this player from the game?</p>
-                        <button id="hostKickPlayerBtn" class="button button-danger">Kick Player</button>
-                        <button id="hostMakeSpectatorBtn" class="button button-secondary" style="margin-top: 10px;">Make Spectator</button>
+                        <p class="help-text" style="margin-bottom: 10px;">Disconnect this peer entirely (removes all of their players and closes the connection).</p>
+                        <button id="hostKickPlayerBtn" class="button button-danger">Kick Player (disconnect)</button>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-label">Remove Player</div>
+                    <div class="settings-input-wrapper">
+                        <p class="help-text" style="margin-bottom: 10px;">Remove just this player entry. If the peer has no other players, they remain connected as a spectator (if allowed).</p>
+                            <button id="hostMakeSpectatorBtn" class="button button-danger">Remove Player (keep peer)</button>
                     </div>
                 </div>
             `;

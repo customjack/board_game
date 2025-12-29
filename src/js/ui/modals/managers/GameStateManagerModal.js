@@ -148,10 +148,8 @@ export default class GameStateManagerModal extends BaseManagerModal {
 
         const sorted = gameSaves
             .slice()
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .reverse(); // latest first in array order
-        const firstSave = sorted[0];
-        let selectedSave = firstSave;
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // newest first
+        let selectedSave = sorted[0];
 
         const card = document.createElement('div');
         card.className = 'game-state-card';

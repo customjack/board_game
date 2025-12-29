@@ -15,6 +15,7 @@ export default class SpectatorListComponent extends BaseUIComponent {
 
         this.spectatorListElementId = config.spectatorListElementId || 'lobbySpectatorList';
         this.unclaimedListElementId = config.unclaimedListElementId || 'lobbyUnclaimedList';
+        this.unclaimedWrapperId = config.unclaimedWrapperId || 'lobbyUnclaimedContainer';
         this.currentPeerId = config.currentPeerId || null;
         this.hostPeerId = config.hostPeerId || null;
         this.isHost = config.isHost || false;
@@ -26,6 +27,7 @@ export default class SpectatorListComponent extends BaseUIComponent {
         super.init();
         this.spectatorContainer = this.getElement(this.spectatorListElementId, false);
         this.unclaimedContainer = this.getElement(this.unclaimedListElementId, false);
+        this.unclaimedWrapper = this.getElement(this.unclaimedWrapperId, false);
     }
 
     update(gameState) {
@@ -57,9 +59,19 @@ export default class SpectatorListComponent extends BaseUIComponent {
             .sort()
             .join('|');
 
-        const spectatorLimit = gameState.settings?.spectatorLimit ?? 'none';
+        const settings = gameState.settings || {};
+        const spectatorLimit = settings.spectatorLimit ?? 'none';
+        const perPeerLimit = settings.playerLimitPerPeer ?? 'none';
+        const totalLimit = settings.playerLimit ?? 'none';
 
-        return [spectatorsSig, unclaimedSig, playersSig, `limit:${spectatorLimit}`].join('||');
+        return [
+            spectatorsSig,
+            unclaimedSig,
+            playersSig,
+            `limit:${spectatorLimit}`,
+            `perPeer:${perPeerLimit}`,
+            `total:${totalLimit}`
+        ].join('||');
     }
 
     render() {
@@ -70,15 +82,34 @@ export default class SpectatorListComponent extends BaseUIComponent {
 
         if (!this.gameState) return;
 
-        const spectators = Array.isArray(this.gameState.spectators) ? this.gameState.spectators : [];
+        const players = Array.isArray(this.gameState.players) ? this.gameState.players : [];
+        const { activeSpectators, isSelfSpectator } = this.buildSpectatorData(players);
         const spectatorSummary = document.createElement('li');
-        spectatorSummary.className = 'spectator-container spectator-summary';
+        spectatorSummary.className = 'spectator-container spectator-summary spectator-footnote';
         const limit = this.gameState.settings?.spectatorLimit;
-        const derivedCount = this.getActiveSpectatorCount(spectators);
+        const derivedCount = activeSpectators.length;
         const totalText = Number.isFinite(limit) && limit > 0
             ? `${derivedCount} / ${limit}`
             : `${derivedCount}`;
-        spectatorSummary.textContent = `Spectators: ${totalText}`;
+
+        const label = document.createElement('span');
+        label.className = 'spectator-footnote-label';
+        label.textContent = 'Spectators';
+
+        const count = document.createElement('span');
+        count.className = 'spectator-footnote-count';
+        count.textContent = totalText;
+
+        spectatorSummary.appendChild(label);
+        spectatorSummary.appendChild(count);
+
+        if (isSelfSpectator) {
+            const you = document.createElement('span');
+            you.className = 'spectator-footnote-you you-badge';
+            you.textContent = 'You';
+            spectatorSummary.appendChild(you);
+        }
+
         this.spectatorContainer.appendChild(spectatorSummary);
 
         const rawUnclaimed = Array.isArray(this.gameState.unclaimedPeerIds)
@@ -89,22 +120,23 @@ export default class SpectatorListComponent extends BaseUIComponent {
             .map(p => p.playerId);
         const unclaimed = rawUnclaimed.length > 0 ? rawUnclaimed : fallbackUnclaimed;
 
-        if (unclaimed.length === 0) {
-            const empty = document.createElement('li');
-            empty.className = 'spectator-empty';
-            empty.textContent = 'No unclaimed player slots.';
-            this.unclaimedContainer.appendChild(empty);
-        } else {
-            unclaimed.forEach((peerId, index) => {
-                const item = this.createUnclaimedItem(peerId, index);
-                this.unclaimedContainer.appendChild(item);
-            });
+        if (this.unclaimedWrapper) {
+            this.unclaimedWrapper.style.display = unclaimed.length > 0 ? '' : 'none';
         }
+
+        if (unclaimed.length === 0) {
+            return;
+        }
+
+        unclaimed.forEach((peerId, index) => {
+            const item = this.createUnclaimedItem(peerId, index);
+            this.unclaimedContainer.appendChild(item);
+        });
     }
 
     createUnclaimedItem(peerId, index) {
         const li = document.createElement('li');
-        li.className = 'spectator-container';
+        li.className = 'spectator-container spectator-unclaimed';
 
         const name = document.createElement('div');
         name.className = 'spectator-name';
@@ -151,8 +183,7 @@ export default class SpectatorListComponent extends BaseUIComponent {
         return player?.nickname || null;
     }
 
-    getActiveSpectatorCount(spectators = []) {
-        const players = Array.isArray(this.gameState?.players) ? this.gameState.players : [];
+    buildSpectatorData(players = []) {
         const ownedByPeer = new Map();
         players.forEach(player => {
             const pid = player?.peerId;
@@ -160,16 +191,26 @@ export default class SpectatorListComponent extends BaseUIComponent {
             ownedByPeer.set(pid, (ownedByPeer.get(pid) || 0) + 1);
         });
 
-        return spectators.filter(s => {
+        const spectators = Array.isArray(this.gameState.spectators) ? this.gameState.spectators.slice() : [];
+
+        if (this.hostPeerId && !spectators.some(s => s.peerId === this.hostPeerId)) {
+            spectators.push({ peerId: this.hostPeerId, label: 'Host' });
+        }
+
+        const currentOwned = this.currentPeerId ? ownedByPeer.get(this.currentPeerId) || 0 : 0;
+        const isSelfSpectator = this.currentPeerId ? currentOwned === 0 : false;
+
+        if (isSelfSpectator && this.currentPeerId && !spectators.some(s => s.peerId === this.currentPeerId)) {
+            spectators.push({ peerId: this.currentPeerId });
+        }
+
+        const activeSpectators = spectators.filter(s => {
             if (!s?.peerId) return false;
             const owned = ownedByPeer.get(s.peerId) || 0;
-            // Host counts as spectator even if they own players
-            if (this.hostPeerId && s.peerId === this.hostPeerId) {
-                return true;
-            }
-            // Others count as spectator only if they have no owned players
             return owned === 0;
-        }).length;
+        });
+
+        return { activeSpectators, isSelfSpectator };
     }
 
     canClaimSlot(peerSlotId) {
@@ -177,19 +218,22 @@ export default class SpectatorListComponent extends BaseUIComponent {
 
         const settings = this.gameState.settings;
         const playerLimitPerPeer = settings?.playerLimitPerPeer ?? 0;
+        const totalPlayerLimit = settings?.playerLimit ?? 0;
         const currentOwnedCount = (this.gameState.players || []).filter(
             player => player.peerId === this.currentPeerId && !player.isUnclaimed
         ).length;
+        const totalPlayers = Array.isArray(this.gameState.players) ? this.gameState.players.length : 0;
 
         if (playerLimitPerPeer > 0 && currentOwnedCount >= playerLimitPerPeer) {
             return false;
         }
 
-        // Allow host and clients (spectators) to claim within limits
-        if (this.isHost) return true;
+        if (totalPlayerLimit > 0 && totalPlayers > totalPlayerLimit) {
+            return false;
+        }
 
-        const isSpectator = this.gameState.isSpectator?.(this.currentPeerId);
-        return Boolean(isSpectator || currentOwnedCount === 0);
+        // Allow host and any peer within limits
+        return true;
     }
 
     createBadge(text, className = 'host-badge') {

@@ -116,12 +116,8 @@ export default class BaseEventHandler {
                 }
             });
 
-            lobbyPlayerList.on('leaveGame', () => {
-                const ownedPlayer = this.getOwnedPlayer();
-                if (ownedPlayer) {
-                    this.removePlayer(ownedPlayer.playerId);
-                }
-            });
+            lobbyPlayerList.on('leaveGame', () => this.leaveGame());
+            lobbyPlayerList.on('removePlayer', ({ playerId }) => this.removePlayer(playerId));
 
             this.setupRoleSpecificPlayerListComponentListeners(lobbyPlayerList);
         }
@@ -148,12 +144,8 @@ export default class BaseEventHandler {
                 }
             });
 
-            gamePlayerList.on('leaveGame', () => {
-                const ownedPlayer = this.getOwnedPlayer();
-                if (ownedPlayer) {
-                    this.removePlayer(ownedPlayer.playerId);
-                }
-            });
+            gamePlayerList.on('leaveGame', () => this.leaveGame());
+            gamePlayerList.on('removePlayer', ({ playerId }) => this.removePlayer(playerId));
 
             this.setupRoleSpecificPlayerListComponentListeners(gamePlayerList);
         }
@@ -360,6 +352,10 @@ export default class BaseEventHandler {
     }
 
     async leaveGame() {
+        const owned = Array.isArray(this.peer?.ownedPlayers) ? [...this.peer.ownedPlayers] : [];
+        for (const p of owned) {
+            await this.applyPlayerRemoval(p.playerId);
+        }
         await ModalUtil.alert('You have left the game.');
         location.reload();
     }
@@ -627,30 +623,36 @@ export default class BaseEventHandler {
      * Calls applyPlayerRemoval() which subclasses implement differently
      */
     async removePlayer(playerId) {
-        const playerIndex = this.peer.ownedPlayers.findIndex((p) => p.playerId === playerId);
-
-        if (playerIndex !== -1) {
-            const player = this.peer.ownedPlayers[playerIndex];
-
-            if (this.peer.ownedPlayers.length === 1) {
-                const confirmed = await ModalUtil.confirm(
-                    `Are you sure you want to remove ${player.nickname}? This is your last player, so you will leave the game.`,
-                    'Remove Player'
-                );
-                if (confirmed) {
-                    this.leaveGame();
-                }
-            } else {
-                const confirmed = await ModalUtil.confirm(
-                    `Are you sure you want to remove ${player.nickname}?`,
-                    'Remove Player'
-                );
-                if (confirmed) {
-                    await this.applyPlayerRemoval(playerId);
-                }
-            }
-        } else {
+        if (!playerId || !this.peer?.gameState?.players) {
             await ModalUtil.alert('Player not found.');
+            return;
+        }
+
+        const target = this.peer.gameState.players.find(p => p.playerId === playerId);
+        if (!target) {
+            await ModalUtil.alert('Player not found.');
+            return;
+        }
+
+        // Permission: host can remove anyone; clients can remove only their own
+        if (!this.isHost && target.peerId !== this.peer?.peer?.id) {
+            await ModalUtil.alert('You can only remove your own players.');
+            return;
+        }
+
+        const message = `Are you sure you want to remove ${target.nickname}?`;
+        const confirmed = await ModalUtil.confirm(message, 'Remove Player');
+        if (!confirmed) return;
+
+        if (this.isHost) {
+            this.peer?.removePlayer?.(playerId);
+            if (this.peer) {
+                this.peer.previousGameStateJSON = null; // force full broadcast to sync spectators
+            }
+            this.peer?.broadcastGameState?.();
+            this.updateGameState(true);
+        } else {
+            await this.applyPlayerRemoval(playerId);
         }
     }
 

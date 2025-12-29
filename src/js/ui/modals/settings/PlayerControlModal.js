@@ -11,7 +11,7 @@ import SettingsBaseModal from './SettingsBaseModal.js';
 import { normalizeToHexColor, DEFAULT_HEX_COLOR } from '../../../infrastructure/utils/colorUtils.js';
 
 export default class PlayerControlModal extends SettingsBaseModal {
-    constructor(id, player, onNicknameChange, onColorChange, onPeerColorChange, onLeaveGame) {
+    constructor(id, player, onNicknameChange, onColorChange, onPeerColorChange, onLeaveGame, onRemovePlayer) {
         super({
             id: id || 'playerControlModal',
             title: 'Player Settings'
@@ -22,6 +22,8 @@ export default class PlayerControlModal extends SettingsBaseModal {
         this.onColorChange = onColorChange;
         this.onPeerColorChange = onPeerColorChange;
         this.onLeaveGame = onLeaveGame;
+        this.onRemovePlayer = onRemovePlayer;
+        this.onRemovePlayer = onRemovePlayer;
 
         this.permissions = {
             nameChange: true,
@@ -115,6 +117,13 @@ export default class PlayerControlModal extends SettingsBaseModal {
                         <button id="leaveGameBtn" class="button button-danger">Leave Game</button>
                     </div>
                 </div>
+                <div class="settings-row">
+                    <div class="settings-label">Remove Player</div>
+                    <div class="settings-input-wrapper">
+                        <p class="help-text" style="margin-bottom: 10px;">Delete this player from the lobby. If the peer has no other players, they become a spectator (or disconnected if over limit).</p>
+                        <button id="removePlayerBtn" class="button button-danger">Remove Player</button>
+                    </div>
+                </div>
             `;
         }
 
@@ -191,6 +200,15 @@ export default class PlayerControlModal extends SettingsBaseModal {
         if (leaveBtn) {
             this.addEventListener(leaveBtn, 'click', () => {
                 if (this.onLeaveGame) this.onLeaveGame();
+                this.close();
+            });
+        }
+
+        // Remove player button (host only)
+        const removePlayerBtn = this.modal.querySelector('#removePlayerBtn');
+        if (removePlayerBtn) {
+            this.addEventListener(removePlayerBtn, 'click', () => {
+                if (this.onRemovePlayer) this.onRemovePlayer(this.player?.playerId);
                 this.close();
             });
         }

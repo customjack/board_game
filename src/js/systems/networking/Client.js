@@ -59,13 +59,12 @@ export default class Client extends BasePeer {
 
     async init(progressTracker = null) {
         console.log("Initializing Client...");
+        this.progressTracker = progressTracker || null;
 
         // Initialize PeerJS connection
         const peerStart = performance.now();
         const id = await this.initPeer();
         console.log(`[Performance] Peer initialized in ${(performance.now() - peerStart).toFixed(0)}ms`);
-
-        if (progressTracker) progressTracker.nextStage();
 
         console.log("Peer connection open with ID:", id);
 
@@ -74,17 +73,23 @@ export default class Client extends BasePeer {
         await this.initializeGameState();
         console.log(`[Performance] Game state initialized in ${(performance.now() - gameStateStart).toFixed(0)}ms`);
 
-        if (progressTracker) progressTracker.nextStage();
+        if (this.progressTracker) this.progressTracker.nextStage();
 
         // Initialize managers
         const managersStart = performance.now();
         this.eventHandler.initManagers(id, this.hostId);
         console.log(`[Performance] Managers initialized in ${(performance.now() - managersStart).toFixed(0)}ms`);
 
-        if (progressTracker) progressTracker.nextStage();
+        if (this.progressTracker) this.progressTracker.nextStage();
 
         // Update UI with initial game state (including board)
         this.eventHandler.updateGameState(true);
+
+        // Build the game engine early so the stage ordering stays deterministic
+        if (this.eventHandler?.createGameEngine) {
+            this.eventHandler.createGameEngine((proposedGameState) => this.proposeGameState(proposedGameState));
+            if (this.progressTracker) this.progressTracker.nextStage();
+        }
 
         // Apply connection timeout from settings (seconds -> ms)
         const idleTimeoutSec = this.gameState?.settings?.connectionIdleTimeoutSeconds;
@@ -92,7 +97,7 @@ export default class Client extends BasePeer {
             this.heartbeatTimeoutMs = idleTimeoutSec * 1000;
         }
 
-        if (progressTracker) progressTracker.nextStage('Connecting to host...');
+        if (this.progressTracker) this.progressTracker.nextStage();
         this.connectToHost();
 
         // Keep heartbeat alive when tab visibility changes (helps with throttled timers)
@@ -152,6 +157,10 @@ export default class Client extends BasePeer {
 
     handleOpenConnection() {
         console.log('Connected to host');
+        if (this.progressTracker) {
+            this.progressTracker.nextStage();
+            this.progressTracker.complete();
+        }
 
         // Initialize connection status manager
         if (!this.connectionStatusManager) {

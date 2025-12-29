@@ -156,6 +156,7 @@ export default class PlayerHandler extends MessageHandlerPlugin {
         );
 
         if (playersToClaim.length === 0) {
+            console.warn('[PlayerHandler.claim] No matching players for slot', { peerSlotId, requesterPeerId, unclaimed });
             peer.gameState.unclaimedPeerIds = unclaimed.filter(id => id !== peerSlotId);
             peer.broadcastGameState();
             return;

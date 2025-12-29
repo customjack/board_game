@@ -81,7 +81,8 @@ export default class PlayerListComponent extends BaseUIComponent {
                 (playerId, newNickname) => this.handleNicknameChange(playerId, newNickname),
                 (playerId, newColor) => this.handleColorChange(playerId, newColor),
                 (playerId, newPeerColor) => this.handlePeerColorChange(playerId, newPeerColor),
-                () => this.handleLeaveGame()
+                () => this.handleLeaveGame(),
+                (playerId) => this.handleRemovePlayer(playerId)
             );
         }
 
@@ -152,6 +153,10 @@ export default class PlayerListComponent extends BaseUIComponent {
      */
     handleLeaveGame() {
         this.emit('leaveGame', {});
+    }
+
+    handleRemovePlayer(playerId) {
+        this.emit('removePlayer', { playerId });
     }
 
     /**

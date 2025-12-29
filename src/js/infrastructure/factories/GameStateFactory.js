@@ -58,7 +58,8 @@ export default class GameStateFactory {
         randomGenerator,
         selectedMapId = 'default',
         selectedMapData = null,
-        pluginState = {}
+        pluginState = {},
+        gameId = null
     } = {}) {
         if (!board) {
             throw new Error('Board is required to create a game state');
@@ -79,7 +80,8 @@ export default class GameStateFactory {
             randomGenerator,
             selectedMapId,
             selectedMapData,
-            pluginState
+            pluginState,
+            gameId
         });
     }
 
