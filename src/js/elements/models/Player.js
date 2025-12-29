@@ -42,7 +42,8 @@ export default class Player {
         this.currentSpaceId = null;
 
         this.playerColor = (new ColorAssigner()).assignColor(this.playerId);
-        this.peerColor = (new ColorAssigner()).assignColor(this.peerId);
+        const peerColorKey = this.peerId || 'unclaimed';
+        this.peerColor = (new ColorAssigner()).assignColor(peerColorKey);
 
         this.rollEngine = new RollEngine(this.generateSeedFromId(this.playerId));
         this.turnsTaken = 0;

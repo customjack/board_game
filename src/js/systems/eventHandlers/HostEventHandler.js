@@ -238,7 +238,9 @@ export default class HostEventHandler extends BaseEventHandler {
         loadedState.players.forEach((player, index) => {
             const slotId = player?.playerId || player?.peerId || `slot-${index}`;
             player.isUnclaimed = true;
-            player.peerId = slotId;
+            player.peerId = slotId; // placeholder ID for claim mapping
+            player.peerColor = '#888888'; // neutral color for unclaimed slots
+            player.isHost = false;
             peerSlots.push(slotId);
         });
         loadedState.setUnclaimedPeerIds(peerSlots);

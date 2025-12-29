@@ -230,7 +230,9 @@ export default class BaseGameState {
     getPlayersByPeerId(peerId) {
         const unclaimed = this.unclaimedPeerIds || [];
         return this.players.filter(player =>
-            player.peerId === peerId && !unclaimed.includes(player.peerId)
+            player.peerId === peerId &&
+            !unclaimed.includes(player.peerId) &&
+            !player.isUnclaimed
         );
     }
 

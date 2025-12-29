@@ -95,6 +95,15 @@ export default class BasePeer {
         const removedPlayer = this.gameState.getPlayerByPlayerId?.(playerId);
         this.ownedPlayers = this.ownedPlayers.filter(player => player.playerId !== playerId);
         this.gameState.removePlayer(playerId);
+
+        // If the owning peer now has zero players, treat them as a spectator
+        if (removedPlayer?.peerId) {
+            const remaining = this.gameState.players.filter(p => p.peerId === removedPlayer.peerId).length;
+            if (remaining === 0 && typeof this.gameState.addSpectator === 'function') {
+                this.gameState.addSpectator(removedPlayer.peerId);
+            }
+        }
+
         this.eventHandler.updateGameState();
         if (removedPlayer) {
             this.eventHandler.gameEngine?.handlePlayersRemoved?.([removedPlayer], { wasCurrent });
