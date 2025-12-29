@@ -238,7 +238,7 @@ export default class HostEventHandler extends BaseEventHandler {
         loadedState.players.forEach((player, index) => {
             const slotId = player?.playerId || player?.peerId || `slot-${index}`;
             player.isUnclaimed = true;
-            player.peerId = slotId; // placeholder slot so board rendering keeps position
+            player.peerId = null; // will be assigned when claimed; keep existing peerColor
             player.isHost = false;
             peerSlots.push(slotId);
         });
@@ -458,7 +458,11 @@ export default class HostEventHandler extends BaseEventHandler {
                 newGameState.setPluginReadiness(hostPeerId, true, []);
             }
 
-            newGameState.resetPlayerPositions?.();
+            // Only reset to starting spaces if players have no positions yet
+            const allUnset = (newGameState.players || []).every(p => !p.currentSpaceId);
+            if (allUnset) {
+                newGameState.resetPlayerPositions?.();
+            }
 
             this.peer.gameState = newGameState;
             if (hostPeerId) {
