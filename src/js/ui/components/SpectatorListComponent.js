@@ -181,21 +181,15 @@ export default class SpectatorListComponent extends BaseUIComponent {
             player => player.peerId === this.currentPeerId && !player.isUnclaimed
         ).length;
 
-        // Host can always claim within limits
-        if (this.isHost) {
-            return playerLimitPerPeer <= 0 || currentOwnedCount < playerLimitPerPeer;
-        }
-
-        const isSpectator = this.gameState.isSpectator?.(this.currentPeerId);
-        if (!isSpectator) {
-            return false;
-        }
-
         if (playerLimitPerPeer > 0 && currentOwnedCount >= playerLimitPerPeer) {
             return false;
         }
 
-        return true;
+        // Allow host and clients (spectators) to claim within limits
+        if (this.isHost) return true;
+
+        const isSpectator = this.gameState.isSpectator?.(this.currentPeerId);
+        return Boolean(isSpectator || currentOwnedCount === 0);
     }
 
     createBadge(text, className = 'host-badge') {
