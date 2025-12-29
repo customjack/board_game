@@ -451,11 +451,13 @@ export default class PlayerListComponent extends BaseUIComponent {
             return;
         }
 
-        // Render each player
-        const players = this.gameState.players;
+        // Render each player that is claimed/connected
+        const players = this.gameState.players.filter(p => !p.isUnclaimed && p.peerId);
         players.forEach(player => {
             const playerElement = this.createPlayerElement(player);
-            this.container.appendChild(playerElement);
+            if (playerElement) {
+                this.container.appendChild(playerElement);
+            }
         });
 
         // Add player count validation indicator
@@ -567,6 +569,9 @@ export default class PlayerListComponent extends BaseUIComponent {
      * @returns {HTMLElement} Player list item element
      */
     createPlayerElement(player) {
+        if (player.isUnclaimed || !player.peerId) {
+            return null;
+        }
         const li = document.createElement('li');
         li.className = 'player-container';
 
