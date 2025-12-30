@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 
 /**
  * ApplyEffectAction - Applies an effect to the current player
@@ -7,8 +6,10 @@ import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
  * Creates and applies an effect instance using the EffectFactory.
  */
 export default class ApplyEffectAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'APPLY_EFFECT';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -83,7 +84,7 @@ export default class ApplyEffectAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.APPLY_EFFECT,
+            type: this.type,
             displayName: 'Apply Effect',
             description: 'Apply an effect to the current player or game state',
             category: 'effects',

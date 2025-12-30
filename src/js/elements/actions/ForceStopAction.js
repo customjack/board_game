@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 
 /**
  * ForceStopAction - Forces the player to stop on their current space
@@ -7,8 +6,10 @@ import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
  * Sets remaining moves to 0, preventing further movement this turn.
  */
 export default class ForceStopAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'FORCE_STOP';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -55,7 +56,7 @@ export default class ForceStopAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.FORCE_STOP,
+            type: this.type,
             displayName: 'Force Stop',
             description: 'Immediately stops the player on their current space by setting remaining moves to 0',
             category: 'movement',

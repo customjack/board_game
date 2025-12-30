@@ -12,15 +12,28 @@
 export default class BaseTrigger {
     /**
      * Create a new trigger
-     * @param {string} type - The trigger type identifier
      * @param {*} payload - Optional payload data for the trigger
+     * @param {string} [explicitType] - Optional override for trigger type
      */
-    constructor(type, payload = null) {
+    constructor(payload = null, explicitType = null) {
         if (this.constructor === BaseTrigger) {
             throw new Error("BaseTrigger is an abstract class and cannot be instantiated directly");
         }
-        this.type = type;
-        this.payload = payload;
+        let resolvedPayload = payload;
+        let resolvedType = explicitType;
+
+        // Backward compatibility: allow constructor(type, payload)
+        if (typeof payload === 'string' && (explicitType === null || typeof explicitType === 'object')) {
+            resolvedType = payload;
+            resolvedPayload = explicitType;
+        }
+
+        const ctorType = this.constructor.type || this.constructor.triggerType || null;
+        this.type = resolvedType || ctorType;
+        if (!this.type) {
+            throw new Error(`${this.constructor.name} must define a static "type" identifier`);
+        }
+        this.payload = resolvedPayload;
     }
 
     /**

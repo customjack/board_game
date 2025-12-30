@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 import { sanitizePromptMessage } from '../../infrastructure/utils/PromptMessage.js';
 
 /**
@@ -8,8 +7,10 @@ import { sanitizePromptMessage } from '../../infrastructure/utils/PromptMessage.
  * Displays a message modal only to the current player. Other players don't see it.
  */
 export default class PromptCurrentPlayerAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'PROMPT_CURRENT_PLAYER';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -89,7 +90,7 @@ export default class PromptCurrentPlayerAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.PROMPT_CURRENT_PLAYER,
+            type: this.type,
             displayName: 'Prompt Current Player',
             description: 'Display a message modal to the current player only',
             category: 'prompts',

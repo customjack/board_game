@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 
 /**
  * DisplacePlayerAction - Moves the player forward or backward
@@ -7,8 +6,10 @@ import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
  * Positive steps add to remaining moves, negative steps move back in history.
  */
 export default class DisplacePlayerAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'DISPLACE_PLAYER';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -117,7 +118,7 @@ export default class DisplacePlayerAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.DISPLACE_PLAYER,
+            type: this.type,
             displayName: 'Displace Player',
             description: 'Move the player forward (positive) or backward (negative) by a number of steps',
             category: 'movement',

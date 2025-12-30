@@ -1,6 +1,4 @@
 import Plugin from './Plugin.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
-import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
 
 // Import all built-in action classes
 import PromptAllPlayersAction from '../../elements/actions/PromptAllPlayersAction.js';
@@ -326,21 +324,21 @@ export default class DefaultCorePlugin extends Plugin {
         if (!actionFactory) return 0;
 
         const actions = [
-            [ActionTypes.PROMPT_ALL_PLAYERS, PromptAllPlayersAction],
-            [ActionTypes.PROMPT_CURRENT_PLAYER, PromptCurrentPlayerAction],
-            [ActionTypes.SET_PLAYER_STATE, SetPlayerStateAction],
-            [ActionTypes.DISPLACE_PLAYER, DisplacePlayerAction],
-            [ActionTypes.APPLY_EFFECT, ApplyEffectAction],
-            [ActionTypes.SET_PLAYER_SPACE, SetPlayerSpaceAction],
-            [ActionTypes.FORCE_STOP, ForceStopAction],
-            [ActionTypes.SWAP_PLACES, SwapPlacesAction],
-            [ActionTypes.SET_STAT, SetStatAction],
-            [ActionTypes.CHANGE_STAT, ChangeStatAction]
+            PromptAllPlayersAction,
+            PromptCurrentPlayerAction,
+            SetPlayerStateAction,
+            DisplacePlayerAction,
+            ApplyEffectAction,
+            SetPlayerSpaceAction,
+            ForceStopAction,
+            SwapPlacesAction,
+            SetStatAction,
+            ChangeStatAction
         ];
 
         try {
-            actions.forEach(([type, classRef]) => {
-                actionFactory.register(type, classRef);
+            actions.forEach((classRef) => {
+                actionFactory.register(classRef);
             });
             return actions.length;
         } catch (error) {
@@ -360,14 +358,14 @@ export default class DefaultCorePlugin extends Plugin {
         if (!triggerFactory) return 0;
 
         const triggers = [
-            [TriggerTypes.ON_ENTER, OnEnterTrigger],
-            [TriggerTypes.ON_LAND, OnLandTrigger],
-            [TriggerTypes.ON_EXIT, OnExitTrigger]
+            OnEnterTrigger,
+            OnLandTrigger,
+            OnExitTrigger
         ];
 
         try {
-            triggers.forEach(([type, classRef]) => {
-                triggerFactory.register(type, classRef);
+            triggers.forEach((classRef) => {
+                triggerFactory.register(classRef);
             });
             return triggers.length;
         } catch (error) {

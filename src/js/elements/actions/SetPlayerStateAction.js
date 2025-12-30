@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 
 /**
  * SetPlayerStateAction - Changes the current player's state
@@ -7,8 +6,10 @@ import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
  * Updates the player's state (e.g., NORMAL, DRUNK, FROZEN, etc.)
  */
 export default class SetPlayerStateAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'SET_PLAYER_STATE';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -75,7 +76,7 @@ export default class SetPlayerStateAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.SET_PLAYER_STATE,
+            type: this.type,
             displayName: 'Set Player State',
             description: 'Change the current player\'s state',
             category: 'player',

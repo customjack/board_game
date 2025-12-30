@@ -1,5 +1,4 @@
 import BaseTrigger from './BaseTrigger.js';
-import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
 
 /**
  * OnExitTrigger - Triggered when a player exits (leaves) a space
@@ -13,8 +12,10 @@ import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
  * - Events that should fire when departing from a space
  */
 export default class OnExitTrigger extends BaseTrigger {
-    constructor(type, payload = null) {
-        super(type, payload);
+    static type = 'ON_EXIT';
+
+    constructor(payload = null) {
+        super(payload);
     }
 
     /**
@@ -75,7 +76,7 @@ export default class OnExitTrigger extends BaseTrigger {
      */
     static getMetadata() {
         return {
-            type: TriggerTypes.ON_EXIT,
+            type: this.type,
             displayName: 'On Exit',
             description: 'Triggered when a player exits (leaves) a space. Checks movement history to detect when the player has departed.',
             category: 'movement',

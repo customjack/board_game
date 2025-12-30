@@ -22,12 +22,23 @@ export default class TriggerFactory extends BaseFactory {
      * @param {Class} classRef - The trigger class (must extend BaseTrigger)
      */
     register(typeName, classRef) {
-        if (!(classRef.prototype instanceof BaseTrigger)) {
+        let resolvedType = typeName;
+        let resolvedClass = classRef;
+
+        if (typeof typeName === 'function' && !classRef) {
+            resolvedClass = typeName;
+            resolvedType = resolvedClass?.type || resolvedClass?.triggerType;
+        }
+
+        if (!(resolvedClass?.prototype instanceof BaseTrigger)) {
             throw new Error(
-                `Cannot register "${typeName}". It must be a subclass of BaseTrigger.`
+                `Cannot register "${resolvedType}". It must be a subclass of BaseTrigger.`
             );
         }
-        super.register(typeName, classRef);
+        if (!resolvedType || typeof resolvedType !== 'string') {
+            throw new Error(`Cannot register trigger without a valid type identifier`);
+        }
+        super.register(resolvedType, resolvedClass);
     }
 
     /**
@@ -37,7 +48,7 @@ export default class TriggerFactory extends BaseFactory {
      */
     createFromJSON(json) {
         const { type, payload } = json;
-        return this.create(type, type, payload);
+        return this.create(type, payload);
     }
 
     /**

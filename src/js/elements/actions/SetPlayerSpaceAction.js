@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 
 /**
  * SetPlayerSpaceAction - Teleports the player to a specific space
@@ -7,8 +6,10 @@ import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
  * Moves the player directly to the specified space ID.
  */
 export default class SetPlayerSpaceAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'SET_PLAYER_SPACE';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -75,7 +76,7 @@ export default class SetPlayerSpaceAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.SET_PLAYER_SPACE,
+            type: this.type,
             displayName: 'Set Player Space',
             description: 'Teleport the player to a specific space on the board',
             category: 'movement',

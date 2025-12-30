@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 
 /**
  * ChangeStatAction - Changes a player stat by a delta amount
@@ -8,8 +7,10 @@ import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
  * The stat is identified by its ID (e.g., "score", "health", etc.)
  */
 export default class ChangeStatAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'CHANGE_STAT';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -81,7 +82,7 @@ export default class ChangeStatAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.CHANGE_STAT,
+            type: this.type,
             displayName: 'Change Stat',
             description: 'Change a player stat by a delta amount (positive or negative)',
             category: 'stats',

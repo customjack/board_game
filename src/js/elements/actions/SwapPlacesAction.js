@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 
 /**
  * SwapPlacesAction - Swaps the current player's position with another player
@@ -7,8 +6,10 @@ import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
  * Can target a specific player by ID or select a random player.
  */
 export default class SwapPlacesAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'SWAP_PLACES';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -92,7 +93,7 @@ export default class SwapPlacesAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.SWAP_PLACES,
+            type: this.type,
             displayName: 'Swap Places',
             description: 'Swap the current player\'s position with another player. If no target is specified, selects a random player.',
             category: 'movement',

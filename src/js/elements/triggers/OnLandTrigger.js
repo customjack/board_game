@@ -1,5 +1,4 @@
 import BaseTrigger from './BaseTrigger.js';
-import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
 
 /**
  * OnLandTrigger - Triggered when a player lands on a space (finishes movement)
@@ -13,8 +12,10 @@ import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
  * - Events that should only fire at final destination
  */
 export default class OnLandTrigger extends BaseTrigger {
-    constructor(type, payload = null) {
-        super(type, payload);
+    static type = 'ON_LAND';
+
+    constructor(payload = null) {
+        super(payload);
     }
 
     /**
@@ -77,7 +78,7 @@ export default class OnLandTrigger extends BaseTrigger {
      */
     static getMetadata() {
         return {
-            type: TriggerTypes.ON_LAND,
+            type: this.type,
             displayName: 'On Land',
             description: 'Triggered when a player lands on a space after completing all movement. Only fires when the player has no moves remaining.',
             category: 'movement',

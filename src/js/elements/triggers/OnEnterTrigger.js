@@ -1,5 +1,4 @@
 import BaseTrigger from './BaseTrigger.js';
-import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
 
 /**
  * OnEnterTrigger - Triggered when a player enters (moves into) a space
@@ -13,8 +12,10 @@ import TriggerTypes from '../../infrastructure/utils/TriggerTypes.js';
  * - Events that should fire during movement, not just on landing
  */
 export default class OnEnterTrigger extends BaseTrigger {
-    constructor(type, payload = null) {
-        super(type, payload);
+    static type = 'ON_ENTER';
+
+    constructor(payload = null) {
+        super(payload);
     }
 
     /**
@@ -72,7 +73,7 @@ export default class OnEnterTrigger extends BaseTrigger {
      */
     static getMetadata() {
         return {
-            type: TriggerTypes.ON_ENTER,
+            type: this.type,
             displayName: 'On Enter',
             description: 'Triggered when a player enters (moves into) a space. Fires mid-movement, before all moves are complete.',
             category: 'movement',

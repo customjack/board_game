@@ -1,15 +1,15 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
-
-/**
- * SetStatAction - Sets a player stat to a specific value
- *
- * This action sets a stat's value directly, replacing any previous value.
- * The stat is identified by its ID (e.g., "score", "health", etc.)
- */
 export default class SetStatAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'SET_STAT';
+
+    /**
+     * SetStatAction - Sets a player stat to a specific value
+     *
+     * This action sets a stat's value directly, replacing any previous value.
+     * The stat is identified by its ID (e.g., "score", "health", etc.)
+     */
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -81,7 +81,7 @@ export default class SetStatAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.SET_STAT,
+            type: this.type,
             displayName: 'Set Stat',
             description: 'Set a player stat to a specific value',
             category: 'stats',

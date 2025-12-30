@@ -19,12 +19,24 @@ export default class ActionFactory extends BaseFactory {
      * @throws {Error} If classRef is not a subclass of BaseAction
      */
     register(typeName, classRef) {
-        if (!(classRef.prototype instanceof BaseAction)) {
+        // Support register(ClassRef) shorthand
+        let resolvedType = typeName;
+        let resolvedClass = classRef;
+
+        if (typeof typeName === 'function' && !classRef) {
+            resolvedClass = typeName;
+            resolvedType = resolvedClass?.type || resolvedClass?.actionType;
+        }
+
+        if (!(resolvedClass?.prototype instanceof BaseAction)) {
             throw new Error(
-                `Cannot register "${typeName}". It must be a subclass of BaseAction.`
+                `Cannot register "${resolvedType}". It must be a subclass of BaseAction.`
             );
         }
-        super.register(typeName, classRef);
+        if (!resolvedType || typeof resolvedType !== 'string') {
+            throw new Error(`Cannot register action without a valid type identifier`);
+        }
+        super.register(resolvedType, resolvedClass);
     }
 
     /**
@@ -34,7 +46,7 @@ export default class ActionFactory extends BaseFactory {
      */
     createFromJSON(json) {
         const { type, payload } = json;
-        return this.create(type, type, payload);
+        return this.create(type, payload);
     }
 
     /**

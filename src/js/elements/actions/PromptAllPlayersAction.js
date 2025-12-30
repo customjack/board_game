@@ -1,5 +1,4 @@
 import BaseAction from './BaseAction.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
 import { sanitizePromptMessage } from '../../infrastructure/utils/PromptMessage.js';
 
 /**
@@ -9,8 +8,10 @@ import { sanitizePromptMessage } from '../../infrastructure/utils/PromptMessage.
  * replacement for dynamic content like player names.
  */
 export default class PromptAllPlayersAction extends BaseAction {
-    constructor(type, payload) {
-        super(type, payload);
+    static type = 'PROMPT_ALL_PLAYERS';
+
+    constructor(payload) {
+        super(payload);
     }
 
     /**
@@ -85,7 +86,7 @@ export default class PromptAllPlayersAction extends BaseAction {
      */
     static getMetadata() {
         return {
-            type: ActionTypes.PROMPT_ALL_PLAYERS,
+            type: this.type,
             displayName: 'Prompt All Players',
             description: 'Display a message modal to all players in the game',
             category: 'prompts',

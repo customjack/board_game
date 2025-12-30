@@ -11,7 +11,12 @@ import AbstractTurnEngine from './AbstractTurnEngine.js';
 import TurnPhases from '../../game/phases/TurnPhases.js';
 import GamePhases from '../../game/phases/GamePhases.js';
 import PlayerStates from '../../game/phases/PlayerStates.js';
-import ActionTypes from '../../infrastructure/utils/ActionTypes.js';
+import ApplyEffectAction from '../../elements/actions/ApplyEffectAction.js';
+import DisplacePlayerAction from '../../elements/actions/DisplacePlayerAction.js';
+import PromptAllPlayersAction from '../../elements/actions/PromptAllPlayersAction.js';
+import PromptCurrentPlayerAction from '../../elements/actions/PromptCurrentPlayerAction.js';
+import SetPlayerSpaceAction from '../../elements/actions/SetPlayerSpaceAction.js';
+import SetPlayerStateAction from '../../elements/actions/SetPlayerStateAction.js';
 import { getVisibleElementById } from '../../infrastructure/utils/helpers.js';
 import PromptModal from '../../ui/modals/prompts/PromptModal.js';
 
@@ -1153,15 +1158,15 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
 
         const actionType = action.type;
         switch (actionType) {
-            case ActionTypes.PROMPT_ALL_PLAYERS:
-            case ActionTypes.PROMPT_CURRENT_PLAYER: {
+            case PromptAllPlayersAction.type:
+            case PromptCurrentPlayerAction.type: {
                 const message = action.payload?.message;
                 if (message) {
                     return `triggered a prompt on ${spaceLabel}: "${this.truncateMessage(message)}"`;
                 }
                 return `triggered a prompt on ${spaceLabel}`;
             }
-            case ActionTypes.DISPLACE_PLAYER: {
+            case DisplacePlayerAction.type: {
                 const steps = action.payload?.steps;
                 if (typeof steps === 'number' && steps !== 0) {
                     const absSteps = Math.abs(steps);
@@ -1172,15 +1177,15 @@ export default class TurnBasedGameEngine extends AbstractTurnEngine {
                 }
                 return `triggered a movement effect on ${spaceLabel}`;
             }
-            case ActionTypes.APPLY_EFFECT:
+            case ApplyEffectAction.type:
                 return `triggered a player effect on ${spaceLabel}`;
-            case ActionTypes.SET_PLAYER_STATE: {
+            case SetPlayerStateAction.type: {
                 const state = action.payload?.state;
                 return state
                     ? `triggered a state change to ${state}`
                     : `triggered a state change`;
             }
-            case ActionTypes.SET_PLAYER_SPACE: {
+            case SetPlayerSpaceAction.type: {
                 const target = action.payload?.spaceId;
                 return target
                     ? `triggered a teleport to ${target}`

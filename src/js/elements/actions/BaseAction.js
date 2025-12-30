@@ -8,16 +8,30 @@
  */
 export default class BaseAction {
     /**
-     * @param {string} type - The action type identifier (e.g., 'PROMPT_ALL_PLAYERS')
      * @param {Object} payload - Action-specific data
+     * @param {string} [explicitType] - Optional override for action type
      */
-    constructor(type, payload = null) {
+    constructor(payload = null, explicitType = null) {
         if (this.constructor === BaseAction) {
             throw new Error("BaseAction is an abstract class and cannot be instantiated directly");
         }
 
-        this.type = type;
-        this.payload = payload;
+        let resolvedPayload = payload;
+        let resolvedType = explicitType;
+
+        // Backward compatibility: allow constructor(type, payload)
+        if (typeof payload === 'string' && (explicitType === null || typeof explicitType === 'object')) {
+            resolvedType = payload;
+            resolvedPayload = explicitType;
+        }
+
+        const ctorType = this.constructor.type || this.constructor.actionType || null;
+        this.type = resolvedType || ctorType;
+        if (!this.type) {
+            throw new Error(`${this.constructor.name} must define a static "type" identifier`);
+        }
+
+        this.payload = resolvedPayload;
     }
 
     /**
