@@ -19,6 +19,7 @@ import SetPlayerSpaceAction from '../../../elements/actions/SetPlayerSpaceAction
 import SetPlayerStateAction from '../../../elements/actions/SetPlayerStateAction.js';
 import { getVisibleElementById } from '../../../infrastructure/utils/helpers.js';
 import PromptModal from '../../../ui/modals/prompts/PromptModal.js';
+import TurnBasedUIAdapter from './ui/TurnBasedUIAdapter.js';
 
 export default class TurnBasedGameEngine extends BaseTurnEngine {
     /**
@@ -66,6 +67,19 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
 
         // Prompt modal instance (lazy init)
         this.promptModal = new PromptModal({ id: 'gamePromptModal', title: 'Message' });
+        this.uiAdapter = new TurnBasedUIAdapter({
+            uiSystem: dependencies.uiSystem,
+            uiController: dependencies.rollButtonManager || dependencies.timerManager ? uiControllerFactory.create(
+                config.uiController?.type || 'default',
+                {
+                    rollButtonManager: dependencies.rollButtonManager,
+                    timerManager: dependencies.timerManager
+                },
+                config.uiController || {}
+            ) : null,
+            promptModal: this.promptModal,
+            getUIComponent: this.getUIComponent.bind(this)
+        });
 
         // Support UISystem (current approach) for backwards compatibility
         if (dependencies.uiSystem) {
@@ -74,16 +88,7 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
 
         // Legacy UIController approach (backwards compatibility)
         // Will be replaced by UIComponentRegistry in the future
-        if (dependencies.rollButtonManager || dependencies.timerManager) {
-            this.uiController = uiControllerFactory.create(
-                config.uiController?.type || 'default',
-                {
-                    rollButtonManager: dependencies.rollButtonManager,
-                    timerManager: dependencies.timerManager
-                },
-                config.uiController || {}
-            );
-        }
+        this.uiController = this.uiAdapter.uiController || null;
 
         // Register phase handlers
         this.registerPhaseHandlers();
@@ -95,189 +100,24 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
     // ===== UI Abstraction Methods =====
     // These methods work with UIComponentRegistry, UISystem, and UIController
 
-    activateRollButton() {
-        // Try UIComponentRegistry first (future)
-        const rollButton = this.getUIComponent('rollButton');
-        if (rollButton && rollButton.activate) {
-            rollButton.activate();
-            return;
-        }
-        // Try UISystem (current)
-        if (this.uiSystem) {
-            const btn = this.uiSystem.getComponent('rollButton');
-            if (btn && btn.activate) {
-                btn.activate();
-                return;
-            }
-        }
-        // Fall back to UIController (legacy)
-        if (this.uiController) {
-            this.uiController.activateRollButton();
-        }
+        // UI Adapter is the single UI bridge
     }
 
-    deactivateRollButton() {
-        const rollButton = this.getUIComponent('rollButton');
-        if (rollButton && rollButton.deactivate) {
-            rollButton.deactivate();
-            return;
-        }
-        if (this.uiSystem) {
-            const btn = this.uiSystem.getComponent('rollButton');
-            if (btn && btn.deactivate) {
-                btn.deactivate();
-                return;
-            }
-        }
-        if (this.uiController) {
-            this.uiController.deactivateRollButton();
-        }
-    }
-
-    startTimer() {
-        const timer = this.getUIComponent('timer');
-        if (timer && timer.startTimer) {
-            timer.startTimer();
-            return;
-        }
-        if (this.uiSystem) {
-            const tmr = this.uiSystem.getComponent('timer');
-            if (tmr && tmr.startTimer) {
-                tmr.startTimer();
-                return;
-            }
-        }
-        if (this.uiController) {
-            this.uiController.startTimer();
-        }
-    }
-
-    stopTimer() {
-        const timer = this.getUIComponent('timer');
-        if (timer && timer.stopTimer) {
-            timer.stopTimer();
-            return;
-        }
-        if (this.uiSystem) {
-            const tmr = this.uiSystem.getComponent('timer');
-            if (tmr && tmr.stopTimer) {
-                tmr.stopTimer();
-                return;
-            }
-        }
-        if (this.uiController) {
-            this.uiController.stopTimer();
-        }
-    }
-
-    pauseTimer() {
-        const timer = this.getUIComponent('timer');
-        if (timer && timer.pauseTimer) {
-            timer.pauseTimer();
-            return;
-        }
-        if (this.uiSystem) {
-            const tmr = this.uiSystem.getComponent('timer');
-            if (tmr && tmr.pauseTimer) {
-                tmr.pauseTimer();
-                return;
-            }
-        }
-        if (this.uiController) {
-            this.uiController.pauseTimer();
-        }
-    }
-
-    resumeTimer() {
-        const timer = this.getUIComponent('timer');
-        if (timer && timer.resumeTimer) {
-            timer.resumeTimer();
-            return;
-        }
-        if (this.uiSystem) {
-            const tmr = this.uiSystem.getComponent('timer');
-            if (tmr && tmr.resumeTimer) {
-                tmr.resumeTimer();
-                return;
-            }
-        }
-        if (this.uiController) {
-            this.uiController.resumeTimer();
-        }
-    }
-
-    showRemainingMoves() {
-        const remainingMoves = this.getUIComponent('remainingMoves');
-        if (remainingMoves && remainingMoves.show) {
-            remainingMoves.show();
-            return;
-        }
-        if (this.uiSystem) {
-            const rm = this.uiSystem.getComponent('remainingMoves');
-            if (rm && rm.show) {
-                rm.show();
-                return;
-            }
-        }
-        if (this.uiController) {
-            this.uiController.showRemainingMoves();
-        }
-    }
-
-    hideRemainingMoves() {
-        const remainingMoves = this.getUIComponent('remainingMoves');
-        if (remainingMoves && remainingMoves.hide) {
-            remainingMoves.hide();
-            return;
-        }
-        if (this.uiSystem) {
-            const rm = this.uiSystem.getComponent('remainingMoves');
-            if (rm && rm.hide) {
-                rm.hide();
-                return;
-            }
-        }
-        if (this.uiController) {
-            this.uiController.hideRemainingMoves();
-        }
-    }
-
-    updateRemainingMoves(moves) {
-        const remainingMoves = this.getUIComponent('remainingMoves');
-        if (remainingMoves && remainingMoves.updateMoves) {
-            remainingMoves.updateMoves(moves);
-            return;
-        }
-        if (this.uiSystem) {
-            const rm = this.uiSystem.getComponent('remainingMoves');
-            if (rm && rm.updateMoves) {
-                rm.updateMoves(moves);
-                return;
-            }
-        }
-        if (this.uiController) {
-            this.uiController.updateRemainingMoves(moves);
-        }
-    }
-
+    activateRollButton() { return this.uiAdapter.activateRollButton(); }
+    deactivateRollButton() { return this.uiAdapter.deactivateRollButton(); }
+    startTimer() { return this.uiAdapter.startTimer(); }
+    stopTimer() { return this.uiAdapter.stopTimer(); }
+    pauseTimer() { return this.uiAdapter.pauseTimer(); }
+    resumeTimer() { return this.uiAdapter.resumeTimer(); }
+    showRemainingMoves() { return this.uiAdapter.showRemainingMoves(); }
+    hideRemainingMoves() { return this.uiAdapter.hideRemainingMoves(); }
+    updateRemainingMoves(moves) { return this.uiAdapter.updateRemainingMoves(moves); }
     hideAllModals() {
         this.clearModalAutoDismissTimer();
-
-        if (this.uiController) {
-            this.uiController.hideAllModals();
-        } else {
-            // When using UISystem, close prompt modal if present
-            this.promptModal?.close();
-        }
+        return this.uiAdapter.hideAllModals();
     }
-
     updateUIFromGameState(gameState, peerId) {
-        // When using UIComponentRegistry, components handle updates via event listeners
-        // No manual update needed as components subscribe to gameStateUpdated events
-        if (this.uiController) {
-            // Legacy path
-            this.uiController.updateFromGameState(gameState, peerId);
-        }
+        return this.uiAdapter.updateUIFromGameState(gameState, peerId);
     }
 
     /**
@@ -343,14 +183,12 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
         }
 
         // Legacy UI controller path
-        if (this.uiController) {
-            this.uiController.init({
-                onRollDice: () => this.rollDiceForCurrentPlayer(),
-                onRollComplete: (result) => this.handleAfterDiceRoll(result),
-                onTimerEnd: () => this.handleTimerEnd(),
-                onPauseToggle: () => this.togglePauseGame()
-            });
-        }
+        this.uiAdapter.initLegacyUI({
+            onRollDice: () => this.rollDiceForCurrentPlayer(),
+            onRollComplete: (result) => this.handleAfterDiceRoll(result),
+            onTimerEnd: () => this.handleTimerEnd(),
+            onPauseToggle: () => this.togglePauseGame()
+        });
 
         this.initialized = true;
         this.running = false;
