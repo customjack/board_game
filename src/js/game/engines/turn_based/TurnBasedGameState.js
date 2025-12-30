@@ -1,8 +1,8 @@
-import TurnPhases from '../phases/TurnPhases.js';
-import GamePhases from '../GamePhases.js';
-import Settings from '../../elements/models/Settings.js';
-import SharedRandomNumberGenerator from '../../elements/models/SharedRandomNumberGenerator.js';
-import BaseGameState from './BaseGameState.js';
+import TurnPhases from './TurnPhases.js';
+import GamePhases from '../../GamePhases.js';
+import Settings from '../../../elements/models/Settings.js';
+import SharedRandomNumberGenerator from '../../../elements/models/SharedRandomNumberGenerator.js';
+import BaseGameState from '../../state/BaseGameState.js';
 
 export default class TurnBasedGameState extends BaseGameState {
     constructor(boardOrConfig, factoryManager, players = [], settings = new Settings(), randomGenerator = new SharedRandomNumberGenerator(Math.random().toString(36).slice(2, 11)), selectedMapId = 'default', selectedMapData = null) {

@@ -1,4 +1,4 @@
-import EventProcessor from '../../src/js/engines/components/EventProcessor.js';
+import EventProcessor from '../../src/js/game/engines/turn_based/components/EventProcessor.js';
 
 describe('EventProcessor', () => {
   let gameState;

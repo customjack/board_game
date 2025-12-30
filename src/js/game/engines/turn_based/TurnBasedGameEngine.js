@@ -7,18 +7,18 @@
  * - Events trigger based on space landings
  * - Effects are applied each turn
  */
-import AbstractTurnEngine from './AbstractTurnEngine.js';
-import TurnPhases from '../../game/phases/TurnPhases.js';
-import GamePhases from '../GamePhases.js';
-import { PlayerStates } from '../../elements/models/Player.js';
-import ApplyEffectAction from '../../elements/actions/ApplyEffectAction.js';
-import DisplacePlayerAction from '../../elements/actions/DisplacePlayerAction.js';
-import PromptAllPlayersAction from '../../elements/actions/PromptAllPlayersAction.js';
-import PromptCurrentPlayerAction from '../../elements/actions/PromptCurrentPlayerAction.js';
-import SetPlayerSpaceAction from '../../elements/actions/SetPlayerSpaceAction.js';
-import SetPlayerStateAction from '../../elements/actions/SetPlayerStateAction.js';
-import { getVisibleElementById } from '../../infrastructure/utils/helpers.js';
-import PromptModal from '../../ui/modals/prompts/PromptModal.js';
+import AbstractTurnEngine from '../AbstractTurnEngine.js';
+import TurnPhases from './TurnPhases.js';
+import GamePhases from '../../GamePhases.js';
+import { PlayerStates } from '../../../elements/models/Player.js';
+import ApplyEffectAction from '../../../elements/actions/ApplyEffectAction.js';
+import DisplacePlayerAction from '../../../elements/actions/DisplacePlayerAction.js';
+import PromptAllPlayersAction from '../../../elements/actions/PromptAllPlayersAction.js';
+import PromptCurrentPlayerAction from '../../../elements/actions/PromptCurrentPlayerAction.js';
+import SetPlayerSpaceAction from '../../../elements/actions/SetPlayerSpaceAction.js';
+import SetPlayerStateAction from '../../../elements/actions/SetPlayerStateAction.js';
+import { getVisibleElementById } from '../../../infrastructure/utils/helpers.js';
+import PromptModal from '../../../ui/modals/prompts/PromptModal.js';
 
 export default class TurnBasedGameEngine extends AbstractTurnEngine {
     /**

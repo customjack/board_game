@@ -1,4 +1,4 @@
-import TurnBasedGameState from '../../game/state/TurnBasedGameState.js';
+import TurnBasedGameState from '../../game/engines/turn_based/TurnBasedGameState.js';
 import BaseGameState from '../../game/state/BaseGameState.js';
 
 export default class GameStateFactory {

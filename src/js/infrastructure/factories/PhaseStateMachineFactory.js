@@ -3,7 +3,7 @@
  *
  * Allows plugins to register custom phase state machine implementations
  */
-import PhaseStateMachine from '../../game/components/PhaseStateMachine.js';
+import PhaseStateMachine from '../../game/engines/turn_based/components/PhaseStateMachine.js';
 
 export default class PhaseStateMachineFactory {
     constructor() {

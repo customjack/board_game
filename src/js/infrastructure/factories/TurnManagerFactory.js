@@ -3,7 +3,7 @@
  *
  * Allows plugins to register custom turn manager implementations
  */
-import TurnManager from '../../game/components/TurnManager.js';
+import TurnManager from '../../game/engines/turn_based/components/TurnManager.js';
 
 export default class TurnManagerFactory {
     constructor() {

@@ -10,7 +10,7 @@
  * This demonstrates how the modular architecture supports different game types.
  */
 import BaseGameEngine from '../../core/base/BaseGameEngine.js';
-import TurnPhases from '../../game/phases/TurnPhases.js';
+import TurnPhases from './turn_based/TurnPhases.js';
 import GamePhases from '../GamePhases.js';
 import { PlayerStates } from '../../elements/models/Player.js';
 

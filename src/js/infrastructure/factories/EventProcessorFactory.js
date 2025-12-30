@@ -3,7 +3,7 @@
  *
  * Allows plugins to register custom event processor implementations
  */
-import EventProcessor from '../../game/components/EventProcessor.js';
+import EventProcessor from '../../game/engines/turn_based/components/EventProcessor.js';
 
 export default class EventProcessorFactory {
     constructor() {

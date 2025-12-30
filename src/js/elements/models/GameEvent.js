@@ -1,6 +1,6 @@
 import { PriorityLevels } from '../../infrastructure/utils/PriorityLevels.js';
 import { processStringToEnum } from '../../infrastructure/utils/helpers.js';
-import TurnPhases from '../../game/phases/TurnPhases.js';
+import TurnPhases from '../../game/engines/turn_based/TurnPhases.js';
 
 export const GameEventState = Object.freeze({
     READY: 'READY',

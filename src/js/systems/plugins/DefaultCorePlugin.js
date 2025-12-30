@@ -26,14 +26,14 @@ import RepeatTurnsEffect from '../../elements/effects/RepeatTurnsEffect.js';
 import ScoreStat from '../../elements/stats/ScoreStat.js';
 
 // Import game engine and component classes
-import TurnBasedGameEngine from '../../game/engines/TurnBasedGameEngine.js';
+import TurnBasedGameEngine from '../../game/engines/turn_based/TurnBasedGameEngine.js';
 import GameEngineFactory from '../../infrastructure/factories/GameEngineFactory.js';
-import TurnBasedGameState from '../../game/state/TurnBasedGameState.js';
+import TurnBasedGameState from '../../game/engines/turn_based/TurnBasedGameState.js';
 import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
-import PhaseStateMachine from '../../game/components/PhaseStateMachine.js';
-import TurnManager from '../../game/components/TurnManager.js';
-import EventProcessor from '../../game/components/EventProcessor.js';
-import UIController from '../../game/components/UIController.js';
+import PhaseStateMachine from '../../game/engines/turn_based/components/PhaseStateMachine.js';
+import TurnManager from '../../game/engines/turn_based/components/TurnManager.js';
+import EventProcessor from '../../game/engines/turn_based/components/EventProcessor.js';
+import UIController from '../../game/engines/turn_based/components/UIController.js';
 import RemainingMovesComponent from '../../ui/components/RemainingMovesComponent.js';
 import PlayerListComponent from '../../ui/components/PlayerListComponent.js';
 import SpectatorListComponent from '../../ui/components/SpectatorListComponent.js';
