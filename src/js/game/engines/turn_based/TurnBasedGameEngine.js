@@ -7,7 +7,7 @@
  * - Events trigger based on space landings
  * - Effects are applied each turn
  */
-import AbstractTurnEngine from '../AbstractTurnEngine.js';
+import BaseTurnEngine from './BaseTurnEngine.js';
 import TurnPhases from './phases/TurnPhases.js';
 import GamePhases from '../../GamePhases.js';
 import { PlayerStates } from '../../../elements/models/Player.js';
@@ -20,7 +20,7 @@ import SetPlayerStateAction from '../../../elements/actions/SetPlayerStateAction
 import { getVisibleElementById } from '../../../infrastructure/utils/helpers.js';
 import PromptModal from '../../../ui/modals/prompts/PromptModal.js';
 
-export default class TurnBasedGameEngine extends AbstractTurnEngine {
+export default class TurnBasedGameEngine extends BaseTurnEngine {
     /**
      * Create a turn-based game engine
      * @param {Object} dependencies - Core dependencies from BaseGameEngine
