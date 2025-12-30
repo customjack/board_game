@@ -1,4 +1,4 @@
-import { getVisibleElementById } from '../../infrastructure/utils/helpers.js';
+import { getVisibleElementById } from '../../../infrastructure/utils/helpers.js';
 
 /**
  * UIController - Manages UI elements and their interactions
