@@ -9,29 +9,19 @@
 export default class BaseAction {
     /**
      * @param {Object} payload - Action-specific data
-     * @param {string} [explicitType] - Optional override for action type
      */
-    constructor(payload = null, explicitType = null) {
+    constructor(payload = null) {
         if (this.constructor === BaseAction) {
             throw new Error("BaseAction is an abstract class and cannot be instantiated directly");
         }
 
-        let resolvedPayload = payload;
-        let resolvedType = explicitType;
-
-        // Backward compatibility: allow constructor(type, payload)
-        if (typeof payload === 'string' && (explicitType === null || typeof explicitType === 'object')) {
-            resolvedType = payload;
-            resolvedPayload = explicitType;
-        }
-
         const ctorType = this.constructor.type || this.constructor.actionType || null;
-        this.type = resolvedType || ctorType;
-        if (!this.type) {
+        if (!ctorType) {
             throw new Error(`${this.constructor.name} must define a static "type" identifier`);
         }
 
-        this.payload = resolvedPayload;
+        this.type = ctorType;
+        this.payload = payload;
     }
 
     /**

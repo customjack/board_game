@@ -1,5 +1,5 @@
 import TurnBasedGameEngine from '../../src/js/game/engines/turn_based/TurnBasedGameEngine.js';
-import TurnPhases from '../../src/js/game/engines/turn_based/TurnPhases.js';
+import TurnPhases from '../../src/js/game/engines/turn_based/phases/TurnPhases.js';
 
 // Create a lightweight engine instance with mocked dependencies
 function createEngine({ players }) {

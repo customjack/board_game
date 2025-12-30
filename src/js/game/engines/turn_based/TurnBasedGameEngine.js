@@ -8,7 +8,7 @@
  * - Effects are applied each turn
  */
 import AbstractTurnEngine from '../AbstractTurnEngine.js';
-import TurnPhases from './TurnPhases.js';
+import TurnPhases from './phases/TurnPhases.js';
 import GamePhases from '../../GamePhases.js';
 import { PlayerStates } from '../../../elements/models/Player.js';
 import ApplyEffectAction from '../../../elements/actions/ApplyEffectAction.js';

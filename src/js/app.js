@@ -26,7 +26,7 @@ import BaseAction from './elements/actions/BaseAction.js';
 import BaseTrigger from './elements/triggers/BaseTrigger.js';
 import PlayerEffect from './elements/effects/PlayerEffect.js';
 import BaseStat from './elements/stats/BaseStat.js';
-import TurnPhases from './game/engines/turn_based/TurnPhases.js';
+import TurnPhases from './game/engines/turn_based/phases/TurnPhases.js';
 import GamePhases from './game/GamePhases.js';
 import PhaseStateMachine from './game/engines/turn_based/components/PhaseStateMachine.js';
 import BasePieceManager from './infrastructure/managers/BasePieceManager.js';
