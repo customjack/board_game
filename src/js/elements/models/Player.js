@@ -2,8 +2,17 @@ import { v4 as uuidv4 } from 'uuid';
 import ColorAssigner from '../../infrastructure/utils/ColorAssigner';
 import RollEngine from '../../infrastructure/utils/RollEngine';
 import PlayerMovementHistory from './PlayerMovementHistory';
-import PlayerStates from '../../game/phases/PlayerStates';
 import playerStateRegistry from '../../infrastructure/registries/PlayerStateRegistry.js';
+
+export const PlayerStates = Object.freeze({
+    SPECTATING: 'SPECTATING',
+    PLAYING: 'PLAYING',
+    COMPLETED_GAME: 'COMPLETED_GAME',
+    DISCONNECTED: 'DISCONNECTED',
+    SKIPPING_TURN: 'SKIPPING_TURN',
+    WAITING: 'WAITING', // For players waiting for their turn or game start
+    ELIMINATED: 'ELIMINATED' // For games with elimination mechanics
+});
 
 export default class Player {
     static allowedStates = new Set(Object.values(PlayerStates));

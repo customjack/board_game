@@ -1,5 +1,5 @@
 import TurnPhases from '../phases/TurnPhases.js';
-import GamePhases from '../phases/GamePhases.js';
+import GamePhases from '../GamePhases.js';
 import Settings from '../../elements/models/Settings.js';
 import SharedRandomNumberGenerator from '../../elements/models/SharedRandomNumberGenerator.js';
 import BaseGameState from './BaseGameState.js';

@@ -9,8 +9,8 @@
  */
 import AbstractTurnEngine from './AbstractTurnEngine.js';
 import TurnPhases from '../../game/phases/TurnPhases.js';
-import GamePhases from '../../game/phases/GamePhases.js';
-import PlayerStates from '../../game/phases/PlayerStates.js';
+import GamePhases from '../GamePhases.js';
+import { PlayerStates } from '../../elements/models/Player.js';
 import ApplyEffectAction from '../../elements/actions/ApplyEffectAction.js';
 import DisplacePlayerAction from '../../elements/actions/DisplacePlayerAction.js';
 import PromptAllPlayersAction from '../../elements/actions/PromptAllPlayersAction.js';

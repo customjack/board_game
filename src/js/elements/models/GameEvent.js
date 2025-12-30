@@ -1,7 +1,15 @@
 import { PriorityLevels } from '../../infrastructure/utils/PriorityLevels.js';
 import { processStringToEnum } from '../../infrastructure/utils/helpers.js';
 import TurnPhases from '../../game/phases/TurnPhases.js';
-import GameEventState from '../../game/phases/GameEventState.js';
+
+export const GameEventState = Object.freeze({
+    READY: 'READY',
+    CHECKING_TRIGGER: 'CHECKING_TRIGGER',
+    TRIGGERED: 'TRIGGERED',
+    PROCESSING_ACTION: 'PROCESSING_ACTION',
+    COMPLETED_ACTION: 'COMPLETED_ACTION',
+    INACTIVE: 'INACTIVE'
+});
 
 /**
  * GameEvent - Combines a trigger condition with an action to execute

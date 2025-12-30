@@ -2,8 +2,8 @@ import Player from '../../elements/models/Player.js';
 import Board from '../../elements/models/Board.js';
 import Settings from '../../elements/models/Settings.js';
 import SharedRandomNumberGenerator from '../../elements/models/SharedRandomNumberGenerator.js';
-import GamePhases from '../phases/GamePhases.js';
-import GameEventState from '../phases/GameEventState.js';
+import GamePhases from '../GamePhases.js';
+import { GameEventState } from '../../elements/models/GameEvent.js';
 
 export default class BaseGameState {
     constructor({

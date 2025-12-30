@@ -11,8 +11,8 @@
  */
 import BaseGameEngine from '../../core/base/BaseGameEngine.js';
 import TurnPhases from '../../game/phases/TurnPhases.js';
-import GamePhases from '../../game/phases/GamePhases.js';
-import PlayerStates from '../../game/phases/PlayerStates.js';
+import GamePhases from '../GamePhases.js';
+import { PlayerStates } from '../../elements/models/Player.js';
 
 export default class MultiPieceGameEngine extends BaseGameEngine {
     /**
