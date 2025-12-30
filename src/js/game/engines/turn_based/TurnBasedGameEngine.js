@@ -98,10 +98,7 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
     }
 
     // ===== UI Abstraction Methods =====
-    // These methods work with UIComponentRegistry, UISystem, and UIController
-
-        // UI Adapter is the single UI bridge
-    }
+    // These methods work with UIComponentRegistry, UISystem, and UIController via the adapter
 
     activateRollButton() { return this.uiAdapter.activateRollButton(); }
     deactivateRollButton() { return this.uiAdapter.deactivateRollButton(); }
