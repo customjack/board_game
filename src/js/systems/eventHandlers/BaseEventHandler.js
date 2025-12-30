@@ -29,7 +29,7 @@ export default class BaseEventHandler {
         this.isHost = isHost;
 
         this.inviteCode = document.getElementById('inviteCode');
-        this.copyMessage = document.getElementById('copyMessage');
+        this.copyButton = document.getElementById('copyInviteCodeButton');
 
         // UI System - replaces old manager pattern
         this.uiSystem = null;
@@ -338,17 +338,23 @@ export default class BaseEventHandler {
             navigator.clipboard
                 .writeText(inviteCode)
                 .then(() => {
-                    this.showCopyMessage();
+                    this.flashCopyButton();
                 })
                 .catch((err) => console.error('Failed to copy invite code:', err));
         }
     }
 
-    showCopyMessage() {
-        this.copyMessage.style.display = 'inline';
+    flashCopyButton() {
+        if (!this.copyButton) return;
+        const originalText = this.copyButton.dataset.originalText || this.copyButton.textContent;
+        this.copyButton.dataset.originalText = originalText;
+        this.copyButton.textContent = 'Copied!';
+        this.copyButton.classList.add('invite-copied');
+
         setTimeout(() => {
-            this.copyMessage.style.display = 'none';
-        }, 2000);
+            this.copyButton.textContent = this.copyButton.dataset.originalText || 'Copy Invite Code';
+            this.copyButton.classList.remove('invite-copied');
+        }, 1500);
     }
 
     async leaveGame() {
