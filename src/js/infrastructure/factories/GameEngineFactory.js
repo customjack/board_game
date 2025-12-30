@@ -4,7 +4,7 @@
  * This factory allows for pluggable game engines where different boards
  * can specify different engine types and configurations.
  */
-import TurnBasedGameEngine from '../../game/engines/turn_based/TurnBasedGameEngine.js';
+import TurnBasedGameEngine from '../../game/engine_types/turn_based/TurnBasedEngine.js';
 
 export default class GameEngineFactory {
     // Registry of available engine types

@@ -1,5 +1,5 @@
 import PlayerEffect from './PlayerEffect.js';
-import TurnPhases from '../../game/engines/turn_based/phases/TurnPhases.js';
+import TurnPhases from '../../game/engine_types/turn_based/phases/TurnPhases.js';
 import { PlayerStates } from '../../elements/models/Player.js';
 
 /**

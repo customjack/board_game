@@ -26,14 +26,14 @@ import BaseAction from './elements/actions/BaseAction.js';
 import BaseTrigger from './elements/triggers/BaseTrigger.js';
 import PlayerEffect from './elements/effects/PlayerEffect.js';
 import BaseStat from './elements/stats/BaseStat.js';
-import TurnPhases from './game/engines/turn_based/phases/TurnPhases.js';
+import TurnPhases from './game/engine_types/turn_based/phases/TurnPhases.js';
 import GamePhases from './game/GamePhases.js';
-import PhaseStateMachine from './game/engines/turn_based/components/PhaseStateMachine.js';
+import PhaseStateMachine from './game/engine_types/turn_based/components/PhaseStateMachine.js';
 import BasePieceManager from './infrastructure/managers/BasePieceManager.js';
 import MultiPieceManager from './infrastructure/managers/MultiPieceManager.js';
-import TurnManager from './game/engines/turn_based/components/TurnManager.js';
-import EventProcessor from './game/engines/turn_based/components/EventProcessor.js';
-import UIController from './game/engines/turn_based/components/UIController.js';
+import TurnManager from './game/engine_types/turn_based/components/TurnManager.js';
+import EventProcessor from './game/engine_types/turn_based/components/EventProcessor.js';
+import UIController from './game/engine_types/turn_based/components/UIController.js';
 import Animation from './animations/Animation.js';
 import MultiPieceGameEngine from './game/engines/MultiPieceGameEngine.js';
 import Player, { PlayerStates } from './elements/models/Player.js';
@@ -50,7 +50,7 @@ import UIControllerFactory from './infrastructure/factories/UIControllerFactory'
 import UIComponentFactory from './infrastructure/factories/UIComponentFactory';
 import AnimationFactory from './infrastructure/factories/AnimationFactory';
 import MapStorageManager from './systems/storage/MapStorageManager.js';
-import TurnBasedGameEngine from './game/engines/turn_based/TurnBasedGameEngine.js';
+import TurnBasedGameEngine from './game/engine_types/turn_based/TurnBasedEngine.js';
 import GameStateStorageManager from './systems/storage/GameStateStorageManager.js';
 import GameStateManagerModal from './ui/modals/managers/GameStateManagerModal.js';
 

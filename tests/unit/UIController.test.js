@@ -1,4 +1,4 @@
-import UIController from '../../src/js/game/engines/turn_based/components/UIController.js';
+import UIController from '../../src/js/game/engine_types/turn_based/components/UIController.js';
 
 describe('UIController', () => {
   let rollButtonManager;

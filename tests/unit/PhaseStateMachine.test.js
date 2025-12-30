@@ -1,4 +1,4 @@
-import PhaseStateMachine from '../../src/js/game/engines/turn_based/components/PhaseStateMachine.js';
+import PhaseStateMachine from '../../src/js/game/engine_types/turn_based/components/PhaseStateMachine.js';
 
 describe('PhaseStateMachine', () => {
   let config;

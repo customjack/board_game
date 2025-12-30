@@ -3,7 +3,7 @@
  *
  * Allows plugins to register custom UI controller implementations
  */
-import UIController from '../../game/engines/turn_based/components/UIController.js';
+import UIController from '../../game/engine_types/turn_based/components/UIController.js';
 
 export default class UIControllerFactory {
     constructor() {

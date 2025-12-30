@@ -1,4 +1,4 @@
-import TurnManager from '../../src/js/game/engines/turn_based/components/TurnManager.js';
+import TurnManager from '../../src/js/game/engine_types/turn_based/components/TurnManager.js';
 
 describe('TurnManager', () => {
   let gameState;
