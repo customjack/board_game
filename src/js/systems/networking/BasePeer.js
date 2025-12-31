@@ -69,9 +69,9 @@ export default class BasePeer {
         console.log("GameState initialized", this.gameState);
     }
 
-    addPlayer(peerId, nickname, isHost = false, playerId = null) {
+    addPlayer(peerId, nickname, isHost = false, playerId = null, options = {}) {
         // Add player to the gameState (now GameState handles the creation)
-        const newPlayer = this.gameState.addPlayer(peerId, nickname, isHost, playerId);
+        const newPlayer = this.gameState.addPlayer(peerId, nickname, isHost, playerId, options);
 
         // Remove spectator status once the peer owns a player (host stays in list but won't be counted if they own players)
         if (!this.isHost || this.peer?.id !== peerId) {

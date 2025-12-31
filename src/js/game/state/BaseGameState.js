@@ -4,6 +4,7 @@ import Settings from '../../elements/models/Settings.js';
 import SharedRandomNumberGenerator from '../../elements/models/SharedRandomNumberGenerator.js';
 import GamePhases from '../GamePhases.js';
 import { GameEventState } from '../../elements/models/GameEvent.js';
+import { normalizeToHexColor } from '../../infrastructure/utils/colorUtils.js';
 
 export default class BaseGameState {
     constructor({
@@ -89,7 +90,7 @@ export default class BaseGameState {
         return this._version;
     }
 
-    addPlayer(peerIdOrPlayer, nickname = null, isHost = false, playerId = null) {
+    addPlayer(peerIdOrPlayer, nickname = null, isHost = false, playerId = null, options = {}) {
         let player;
 
         if (peerIdOrPlayer instanceof Player) {
@@ -98,9 +99,23 @@ export default class BaseGameState {
             player = new Player(peerIdOrPlayer, nickname, this.factoryManager, isHost, playerId);
         }
 
+        const normalizedPlayerColor = options.playerColor
+            ? normalizeToHexColor(options.playerColor, player.playerColor)
+            : null;
+        const normalizedPeerColor = options.peerColor
+            ? normalizeToHexColor(options.peerColor, player.peerColor)
+            : null;
+
         const existingPeerPlayer = this.players.find(p => p.peerId === player.peerId);
         if (existingPeerPlayer && existingPeerPlayer.peerColor) {
             player.peerColor = existingPeerPlayer.peerColor;
+        }
+
+        if (normalizedPlayerColor) {
+            player.playerColor = normalizedPlayerColor;
+        }
+        if (normalizedPeerColor) {
+            player.peerColor = normalizedPeerColor;
         }
 
         player.setTurnsTaken?.(this.getTurnNumber?.() - 1 || 0);

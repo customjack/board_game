@@ -321,7 +321,10 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
             const sanitizedNickname = nicknameValidation.sanitized;
 
             // Add the player to the game state
-            peer.addPlayer(playerData.peerId, sanitizedNickname);
+            peer.addPlayer(playerData.peerId, sanitizedNickname, false, playerData.playerId || null, {
+                playerColor: playerData.playerColor,
+                peerColor: playerData.peerColor
+            });
         });
 
         if (!validationFailed) {

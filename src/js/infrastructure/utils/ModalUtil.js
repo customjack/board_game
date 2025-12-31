@@ -7,6 +7,7 @@
 
 export default class ModalUtil {
     static activeModal = null;
+    static HEX_COLOR_REGEX = /^#([0-9a-f]{6})$/i;
 
     /**
      * Show an alert modal
@@ -227,6 +228,197 @@ export default class ModalUtil {
         }
 
         return modal;
+    }
+
+    /**
+     * Prompt for new player details (name + optional colors).
+     * @param {Object} defaults - Optional default values
+     * @returns {Promise<{name:string, playerColor?:string, peerColor?:string}|null>}
+     */
+    static promptNewPlayer(defaults = {}) {
+        if (this.activeModal) {
+            return Promise.resolve(null);
+        }
+
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal custom-modal';
+            modal.style.display = 'block';
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+            modalContent.style.minWidth = '600px';
+
+            const titleEl = document.createElement('h2');
+            titleEl.textContent = 'Add Player';
+            modalContent.appendChild(titleEl);
+
+            const description = document.createElement('p');
+            description.textContent = 'Enter a name and optionally pick colors (leave blank for defaults).';
+            description.style.marginBottom = '12px';
+            modalContent.appendChild(description);
+
+            const errorEl = document.createElement('p');
+            errorEl.className = 'modal-error';
+            errorEl.style.display = 'none';
+            errorEl.style.color = '#e74c3c';
+            errorEl.style.fontWeight = 'bold';
+            errorEl.style.marginBottom = '8px';
+            modalContent.appendChild(errorEl);
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Player name';
+            nameInput.className = 'modal-input';
+            nameInput.value = defaults.name || '';
+            modalContent.appendChild(nameInput);
+
+            const formGrid = document.createElement('div');
+            formGrid.style.display = 'grid';
+            formGrid.style.gridTemplateColumns = '140px 1fr';
+            formGrid.style.rowGap = '12px';
+            formGrid.style.columnGap = '12px';
+            formGrid.style.alignItems = 'center';
+
+            const addRow = (labelText, inputEl, trailingContent) => {
+                const label = document.createElement('label');
+                label.textContent = labelText;
+                label.style.fontWeight = '600';
+                formGrid.appendChild(label);
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.gap = '10px';
+                row.appendChild(inputEl);
+                if (trailingContent) {
+                    row.appendChild(trailingContent);
+                }
+                formGrid.appendChild(row);
+            };
+
+            // Name row
+            addRow('Player name:', nameInput);
+
+            // Player color row
+            const playerColorInput = document.createElement('input');
+            playerColorInput.type = 'color';
+            playerColorInput.className = 'modal-input';
+            playerColorInput.style.width = '120px';
+            playerColorInput.style.height = '40px';
+            playerColorInput.value = defaults.playerColor || '#FFFFFF';
+
+            const playerColorDefaultToggle = document.createElement('input');
+            playerColorDefaultToggle.type = 'checkbox';
+            playerColorDefaultToggle.id = 'playerColorDefaultToggle';
+            playerColorDefaultToggle.checked = !defaults.playerColor;
+            const playerColorToggleLabel = document.createElement('label');
+            playerColorToggleLabel.htmlFor = 'playerColorDefaultToggle';
+            playerColorToggleLabel.textContent = 'Use random color';
+            playerColorToggleLabel.style.display = 'inline-flex';
+            playerColorToggleLabel.style.alignItems = 'center';
+            playerColorToggleLabel.style.gap = '6px';
+            playerColorToggleLabel.style.minWidth = '180px';
+
+            const syncPlayerColorState = () => {
+                playerColorInput.disabled = playerColorDefaultToggle.checked;
+            };
+            playerColorDefaultToggle.addEventListener('change', syncPlayerColorState);
+            syncPlayerColorState();
+            const playerTrailing = document.createElement('div');
+            playerTrailing.style.display = 'flex';
+            playerTrailing.style.alignItems = 'center';
+            playerTrailing.style.gap = '8px';
+            playerColorToggleLabel.insertBefore(playerColorDefaultToggle, playerColorToggleLabel.firstChild);
+            playerTrailing.appendChild(playerColorToggleLabel);
+            addRow('Player color:', playerColorInput, playerTrailing);
+
+            // Peer color row
+            const peerColorInput = document.createElement('input');
+            peerColorInput.type = 'color';
+            peerColorInput.className = 'modal-input';
+            peerColorInput.style.width = '120px';
+            peerColorInput.style.height = '40px';
+            peerColorInput.value = defaults.peerColor || '#FFFFFF';
+
+            const peerColorDefaultToggle = document.createElement('input');
+            peerColorDefaultToggle.type = 'checkbox';
+            peerColorDefaultToggle.id = 'peerColorDefaultToggle';
+            peerColorDefaultToggle.checked = !defaults.peerColor;
+            const peerColorToggleLabel = document.createElement('label');
+            peerColorToggleLabel.htmlFor = 'peerColorDefaultToggle';
+            peerColorToggleLabel.textContent = 'Use random color';
+            peerColorToggleLabel.style.display = 'inline-flex';
+            peerColorToggleLabel.style.alignItems = 'center';
+            peerColorToggleLabel.style.gap = '6px';
+            peerColorToggleLabel.style.minWidth = '180px';
+
+            const syncPeerColorState = () => {
+                peerColorInput.disabled = peerColorDefaultToggle.checked;
+            };
+            peerColorDefaultToggle.addEventListener('change', syncPeerColorState);
+            syncPeerColorState();
+            const peerTrailing = document.createElement('div');
+            peerTrailing.style.display = 'flex';
+            peerTrailing.style.alignItems = 'center';
+            peerTrailing.style.gap = '8px';
+            peerColorToggleLabel.insertBefore(peerColorDefaultToggle, peerColorToggleLabel.firstChild);
+            peerTrailing.appendChild(peerColorToggleLabel);
+            addRow('Peer color:', peerColorInput, peerTrailing);
+
+            modalContent.appendChild(formGrid);
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'modal-buttons';
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.className = 'button button-secondary';
+            cancelButton.addEventListener('click', () => {
+                this.closeModal(modal);
+                resolve(null);
+            });
+
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = 'Add Player';
+            confirmButton.className = 'button button-primary';
+            confirmButton.addEventListener('click', () => {
+                const name = nameInput.value?.trim() || '';
+                const playerColor = playerColorDefaultToggle.checked ? '' : (playerColorInput.value?.trim() || '');
+                const peerColor = peerColorDefaultToggle.checked ? '' : (peerColorInput.value?.trim() || '');
+
+                const errors = [];
+                if (!name) {
+                    errors.push('Name is required.');
+                }
+                if (playerColor && !this.HEX_COLOR_REGEX.test(playerColor)) {
+                    errors.push('Player color must be a hex value like #AABBCC.');
+                }
+                if (peerColor && !this.HEX_COLOR_REGEX.test(peerColor)) {
+                    errors.push('Peer color must be a hex value like #AABBCC.');
+                }
+
+                if (errors.length > 0) {
+                    errorEl.textContent = errors.join(' ');
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                this.closeModal(modal);
+                resolve({
+                    name,
+                    playerColor: playerColor || undefined,
+                    peerColor: peerColor || undefined
+                });
+            });
+
+            buttonContainer.appendChild(cancelButton);
+            buttonContainer.appendChild(confirmButton);
+            modalContent.appendChild(buttonContainer);
+            modal.appendChild(modalContent);
+
+            this.showModal(modal);
+            nameInput.focus();
+        });
     }
 
     /**

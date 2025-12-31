@@ -278,6 +278,20 @@ export default class InputValidator {
             errors.push('Invalid player ID format');
         }
 
+        // Validate optional colors
+        const hexPattern = /^#([0-9a-f]{6})$/i;
+        if (playerData.playerColor !== undefined && playerData.playerColor !== null && playerData.playerColor !== '') {
+            if (typeof playerData.playerColor !== 'string' || !hexPattern.test(playerData.playerColor.trim())) {
+                errors.push('Player color must be a hex value like #AABBCC');
+            }
+        }
+
+        if (playerData.peerColor !== undefined && playerData.peerColor !== null && playerData.peerColor !== '') {
+            if (typeof playerData.peerColor !== 'string' || !hexPattern.test(playerData.peerColor.trim())) {
+                errors.push('Peer color must be a hex value like #AABBCC');
+            }
+        }
+
         return {
             isValid: errors.length === 0,
             errors

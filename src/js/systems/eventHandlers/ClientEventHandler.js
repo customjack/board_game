@@ -487,10 +487,12 @@ export default class ClientEventHandler extends BaseEventHandler {
     }
 
     async addNewOwnedPlayer() {
-        const newName = await ModalUtil.prompt('Enter a new player name:', '', 'Add Player');
-        if (newName && newName.trim() !== "") {
-            this.peer.addNewOwnedPlayer(newName);
-        }
+        const details = await ModalUtil.promptNewPlayer();
+        if (!details || !details.name || details.name.trim() === '') return;
+        this.peer.addNewOwnedPlayer(details.name.trim(), {
+            playerColor: details.playerColor,
+            peerColor: details.peerColor
+        });
     }
 
     /**

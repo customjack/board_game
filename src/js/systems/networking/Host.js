@@ -305,7 +305,7 @@ export default class Host extends BasePeer {
         }
     }
 
-    async addNewOwnedPlayer(playerName) {
+    async addNewOwnedPlayer(playerName, { playerColor, peerColor } = {}) {
         const totalPlayers = this.gameState.players.length;
         if (totalPlayers >= this.gameState.settings.playerLimit) {
             await ModalUtil.alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimit} players has been reached.`);
@@ -318,7 +318,7 @@ export default class Host extends BasePeer {
             return;
         }
 
-        this.addPlayer(this.peer.id, playerName);
+        this.addPlayer(this.peer.id, playerName, false, null, { playerColor, peerColor });
         this.eventHandler.updateGameState();
         this.broadcastGameState();
     }

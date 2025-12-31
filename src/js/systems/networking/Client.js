@@ -117,7 +117,7 @@ export default class Client extends BasePeer {
         this.conn.on('error', (err) => this.handleConnectionError(err));
     }
 
-    async addNewOwnedPlayer(playerName) {
+    async addNewOwnedPlayer(playerName, { playerColor, peerColor } = {}) {
         const totalPlayers = this.gameState.players.length;
         if (totalPlayers >= this.gameState.settings.playerLimit) {
             await ModalUtil.alert(`Cannot add more players. The maximum limit of ${this.gameState.settings.playerLimit} players has been reached.`);
@@ -135,7 +135,9 @@ export default class Client extends BasePeer {
             type: MessageTypes.PROPOSE_ADD_PLAYER,
             player: {
                 peerId: this.peer.id,
-                nickname: playerName
+                nickname: playerName,
+                playerColor,
+                peerColor
             }
         });
     }

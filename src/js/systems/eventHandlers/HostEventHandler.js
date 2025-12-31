@@ -663,10 +663,12 @@ export default class HostEventHandler extends BaseEventHandler {
     }
 
     async addPlayer() {
-        const newName = await ModalUtil.prompt('Enter a new player name:', '', 'Add Player');
-        if (newName && newName.trim() !== "") {
-            this.peer.addNewOwnedPlayer(newName.trim());
-        }
+        const details = await ModalUtil.promptNewPlayer();
+        if (!details || !details.name || details.name.trim() === "") return;
+        this.peer.addNewOwnedPlayer(details.name.trim(), {
+            playerColor: details.playerColor,
+            peerColor: details.peerColor
+        });
     }
 
     onSettingsChanged() {

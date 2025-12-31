@@ -121,7 +121,16 @@ export default class PlayerHandler extends MessageHandlerPlugin {
 
         // Sanitize nickname before adding
         const nicknameValidation = InputValidator.validateNickname(newPlayerData.nickname);
-        const newPlayer = peer.addPlayer(newPlayerData.peerId, nicknameValidation.sanitized);
+        const newPlayer = peer.addPlayer(
+            newPlayerData.peerId,
+            nicknameValidation.sanitized,
+            false,
+            newPlayerData.playerId || null,
+            {
+                playerColor: newPlayerData.playerColor,
+                peerColor: newPlayerData.peerColor
+            }
+        );
         peer.broadcastGameState();
         console.log(`Player added successfully for peerId ${peerId}. Player ID: ${newPlayer.playerId}`);
     }
