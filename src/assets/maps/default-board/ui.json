@@ -1,0 +1,36 @@
+{
+  "layout": "standard-board",
+  "components": [
+    {
+      "id": "rollButton",
+      "enabled": true,
+      "position": {
+        "bottom": 20,
+        "centerX": true
+      },
+      "config": {
+        "label": "Roll",
+        "hotkey": "space"
+      }
+    },
+    {
+      "id": "timer",
+      "enabled": true,
+      "position": {
+        "top": 20,
+        "right": 20
+      },
+      "config": {}
+    },
+    {
+      "id": "remainingMoves",
+      "enabled": true,
+      "position": {
+        "top": 80,
+        "right": 20
+      },
+      "config": {}
+    }
+  ],
+  "theme": {}
+}

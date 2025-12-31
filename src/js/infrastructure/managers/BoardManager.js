@@ -36,8 +36,15 @@ export default class BoardManager {
      */
     async loadDefaultBoard() {
         console.log('Attempting to load the default board...');
-        const response = await fetch('assets/maps/defaultBoard.json');
-        const boardData = await response.json();
+        // Prefer the bundled default-board.zip (modular format)
+        const response = await fetch('assets/maps/default-board.zip');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch default board: ${response.status} ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const { default: BoardBundleLoader } = await import('../../systems/storage/BoardBundleLoader.js');
+        const boardData = await BoardBundleLoader.loadBundle(blob);
 
         const validation = BoardSchemaValidator.validateDetailed(boardData);
         if (!validation.valid) {

@@ -43,8 +43,10 @@ export default class MapManagerModal extends BaseManagerModal {
         this.selectedMapId = await MapStorageManager.getSelectedMapId();
     }
 
-    onOpen() {
-        this.loadMaps();
+    async onOpen() {
+        // Ensure maps are loaded before rendering so freshly-registered plugin maps
+        // show up on the first open instead of after a reopen.
+        await this.loadMaps();
         this.renderContent();
     }
 

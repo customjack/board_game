@@ -118,8 +118,13 @@ export default class BoardCanvasComponent extends BaseUIComponent {
         console.log('Loading default board...');
 
         try {
-            const response = await fetch('assets/maps/defaultBoard.json');
-            const boardData = await response.json();
+            const response = await fetch('assets/maps/default-board.zip');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch default board: ${response.status} ${response.statusText}`);
+            }
+            const blob = await response.blob();
+            const { default: BoardBundleLoader } = await import('../../systems/storage/BoardBundleLoader.js');
+            const boardData = await BoardBundleLoader.loadBundle(blob);
             console.log('Default board data loaded:', boardData);
 
             // Validate board data

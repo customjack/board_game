@@ -12,6 +12,10 @@ const path = require('path');
 const PORT = 8080;
 const PLUGINS_DIR = path.join(__dirname, '..', 'dist', 'plugins');
 const MAPS_DIR = path.join(__dirname, '..', 'dist', 'maps');
+const PLUGIN_FALLBACK_DIRS = [
+    path.join(__dirname, '..', 'plugins', 'example', 'dist', 'plugins'),
+    path.join(__dirname, '..', 'plugins', 'trouble', 'dist', 'plugins')
+];
 
 // MIME types
 const mimeTypes = {
@@ -43,17 +47,13 @@ const server = http.createServer((req, res) => {
     let filePath;
     if (urlPath.startsWith('/plugins/')) {
         const fileName = urlPath.replace('/plugins/', '');
-        // First check main dist/plugins, then check submodule dist/plugins
-        const mainPath = path.join(PLUGINS_DIR, fileName);
-        const submodulePath = path.join(__dirname, '..', 'plugins', 'trouble', 'dist', 'plugins', fileName);
-        
-        if (fs.existsSync(mainPath)) {
-            filePath = mainPath;
-        } else if (fs.existsSync(submodulePath)) {
-            filePath = submodulePath;
-        } else {
-            filePath = mainPath; // Will 404 if doesn't exist
-        }
+        const candidatePaths = [
+            path.join(PLUGINS_DIR, fileName),
+            ...PLUGIN_FALLBACK_DIRS.map((dir) => path.join(dir, fileName))
+        ];
+
+        const existing = candidatePaths.find((p) => fs.existsSync(p));
+        filePath = existing || candidatePaths[0];
     } else if (urlPath.startsWith('/maps/')) {
         const fileName = urlPath.replace('/maps/', '');
         filePath = path.join(MAPS_DIR, fileName);
@@ -126,4 +126,3 @@ server.on('error', (err) => {
     }
     process.exit(1);
 });
-

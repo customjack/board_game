@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "id": "defaultboard",
+  "paths": {
+    "metadata": "metadata.json",
+    "engine": "engine.json",
+    "rules": "rules.json",
+    "ui": "ui.json",
+    "topology": "topology.json",
+    "dependencies": "dependencies.json"
+  },
+  "assetsRoot": "assets/"
+}
