@@ -35,7 +35,7 @@ import TurnManager from './game/engine_types/turn_based/components/TurnManager.j
 import EventProcessor from './game/engine_types/turn_based/components/EventProcessor.js';
 import UIController from './game/engine_types/turn_based/components/UIController.js';
 import Animation from './animations/Animation.js';
-import MultiPieceGameEngine from './game/engines/MultiPieceGameEngine.js';
+import MultiPieceGameEngine from './game/engine_types/multi_piece/MultiPieceGameEngine.js';
 import Player, { PlayerStates } from './elements/models/Player.js';
 import { getVisibleElementById } from './infrastructure/utils/helpers.js';
 import ModalUtil from './infrastructure/utils/ModalUtil.js';

@@ -10,16 +10,22 @@
 import BaseTurnEngine from './BaseTurnEngine.js';
 import TurnPhases from './phases/TurnPhases.js';
 import GamePhases from '../../GamePhases.js';
-import { PlayerStates } from '../../../elements/models/Player.js';
 import ApplyEffectAction from '../../../elements/actions/ApplyEffectAction.js';
 import DisplacePlayerAction from '../../../elements/actions/DisplacePlayerAction.js';
 import PromptAllPlayersAction from '../../../elements/actions/PromptAllPlayersAction.js';
 import PromptCurrentPlayerAction from '../../../elements/actions/PromptCurrentPlayerAction.js';
 import SetPlayerSpaceAction from '../../../elements/actions/SetPlayerSpaceAction.js';
 import SetPlayerStateAction from '../../../elements/actions/SetPlayerStateAction.js';
-import { getVisibleElementById } from '../../../infrastructure/utils/helpers.js';
 import PromptModal from '../../../ui/modals/prompts/PromptModal.js';
 import TurnBasedUIAdapter from './ui/TurnBasedUIAdapter.js';
+import DefaultEffectScheduler from './effects/DefaultEffectScheduler.js';
+import EventResolutionPipeline from './pipelines/EventResolutionPipeline.js';
+import DiceMovementPolicy from './policies/DiceMovementPolicy.js';
+import PlayerActionRouter from './controllers/PlayerActionRouter.js';
+import SkipRepeatController from './controllers/SkipRepeatController.js';
+import TurnFlowController from './controllers/TurnFlowController.js';
+import MovementController from './controllers/MovementController.js';
+import ModalController from './controllers/ModalController.js';
 
 export default class TurnBasedGameEngine extends BaseTurnEngine {
     /**
@@ -29,10 +35,6 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      */
     constructor(dependencies, config = {}) {
         super(dependencies, config);
-
-        this.activeSpaceChoice = null;
-        this.modalAutoDismissTimer = null;
-        this.modalCountdownInterval = null;
 
         // Get factories from factoryManager
         const phaseStateMachineFactory = this.factoryManager.getFactory('PhaseStateMachineFactory');
@@ -90,8 +92,32 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
         // Will be replaced by UIComponentRegistry in the future
         this.uiController = this.uiAdapter.uiController || null;
 
-        // Register phase handlers
-        this.registerPhaseHandlers();
+        // Expose actions for controllers
+        this.actions = {
+            ApplyEffectAction,
+            DisplacePlayerAction,
+            PromptAllPlayersAction,
+            PromptCurrentPlayerAction,
+            SetPlayerSpaceAction,
+            SetPlayerStateAction
+        };
+
+        // Subsystem modules
+        this.effectScheduler = new DefaultEffectScheduler();
+        this.eventPipeline = new EventResolutionPipeline(this.eventBus, this.peerId);
+        this.movementPolicy = new DiceMovementPolicy();
+        this.actionRouter = new PlayerActionRouter(this);
+        this.skipRepeatController = new SkipRepeatController(this.eventBus);
+        this.modalController = new ModalController(this.promptModal, this);
+        this.movementController = new MovementController(this);
+        this.turnFlowController = new TurnFlowController(this, {
+            effectScheduler: this.effectScheduler,
+            eventPipeline: this.eventPipeline,
+            skipRepeatController: this.skipRepeatController
+        });
+
+        // Register phase handlers through controller
+        this.turnFlowController.registerPhaseHandlers();
 
         // Initialize state machine without committing to a phase so first update triggers transitions
         this.phaseStateMachine.init(null, null);
@@ -110,32 +136,11 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
     hideRemainingMoves() { return this.uiAdapter.hideRemainingMoves(); }
     updateRemainingMoves(moves) { return this.uiAdapter.updateRemainingMoves(moves); }
     hideAllModals() {
-        this.clearModalAutoDismissTimer();
+        this.modalController.clearAutoDismissTimer();
         return this.uiAdapter.hideAllModals();
     }
     updateUIFromGameState(gameState, peerId) {
         return this.uiAdapter.updateUIFromGameState(gameState, peerId);
-    }
-
-    /**
-     * Register handlers for all game and turn phases
-     */
-    registerPhaseHandlers() {
-        // Game phase handlers
-        this.phaseStateMachine.registerGamePhaseHandler(GamePhases.IN_LOBBY, () => this.handleInLobby());
-        this.phaseStateMachine.registerGamePhaseHandler(GamePhases.IN_GAME, () => this.handleInGame());
-        this.phaseStateMachine.registerGamePhaseHandler(GamePhases.PAUSED, () => this.handlePaused());
-        this.phaseStateMachine.registerGamePhaseHandler(GamePhases.GAME_ENDED, () => this.handleGameEnded());
-
-        // Turn phase handlers
-        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.CHANGE_TURN, () => this.handleChangeTurn());
-        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.BEGIN_TURN, () => this.handleBeginTurn());
-        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.WAITING_FOR_MOVE, () => this.handleWaitingForMove());
-        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.PROCESSING_EVENTS, () => this.handleProcessingEvents());
-        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.PROCESSING_EVENT, () => this.handleProcessingEvent());
-        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.PROCESSING_MOVE, () => this.handleProcessingMove());
-        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.PLAYER_CHOOSING_DESTINATION, () => this.handlePlayerChoosingDestination());
-        this.phaseStateMachine.registerTurnPhaseHandler(TurnPhases.END_TURN, () => this.handleEndTurn());
     }
 
     /**
@@ -219,16 +224,6 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
         if (shouldHandleTurnPhase && (gamePhaseChanged || turnPhaseChanged)) {
             this.phaseStateMachine.transitionTurnPhase(currentTurnPhase, { gameState: this.gameState });
         }
-    }
-
-    /**
-     * Handle player actions
-     * @param {string} actionType - Type of action
-     * @param {*} actionData - Action data
-     */
-    onPlayerAction(actionType, actionData) {
-        // Could be extended for different action types
-        console.log(`Turn-based engine received action: ${actionType}`, actionData);
     }
 
     /**
@@ -363,379 +358,28 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      * @returns {Promise<Object>} Action result
      */
     async onPlayerAction(playerId, actionType, actionData) {
-        // Check if it's this player's turn
-        const currentPlayer = this.gameState.getCurrentPlayer();
-        if (!currentPlayer || currentPlayer.playerId !== playerId) {
-            return {
-                success: false,
-                error: 'Not your turn'
-            };
-        }
-
-        switch (actionType) {
-            case 'ROLL_DICE':
-                return await this.handlePlayerRollDice(playerId, actionData);
-
-            case 'SELECT_SPACE':
-                return await this.handlePlayerSelectSpace(playerId, actionData);
-
-            case 'END_TURN':
-                return await this.handlePlayerEndTurn(playerId);
-
-            default:
-                return {
-                    success: false,
-                    error: `Unknown action type: ${actionType}`
-                };
-        }
-    }
-
-    /**
-     * Handle player roll dice action
-     */
-    async handlePlayerRollDice(playerId, actionData) {
-        if (this.gameState.turnPhase !== TurnPhases.WAITING_FOR_MOVE) {
-            return {
-                success: false,
-                error: 'Cannot roll dice at this phase'
-            };
-        }
-
-        const rollResult = this.rollDiceForCurrentPlayer();
-        return {
-            success: true,
-            data: { rollResult }
-        };
-    }
-
-    /**
-     * Handle player select space action
-     */
-    async handlePlayerSelectSpace(playerId, actionData) {
-        if (!actionData.spaceId) {
-            return {
-                success: false,
-                error: 'Space ID required'
-            };
-        }
-
-        if (this.gameState.turnPhase !== TurnPhases.PLAYER_CHOOSING_DESTINATION) {
-            return {
-                success: false,
-                error: 'Not in space selection phase'
-            };
-        }
-
-        // Move player to selected space
-        this.gameState.movePlayer(actionData.spaceId);
-        this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-
-        return {
-            success: true,
-            data: { spaceId: actionData.spaceId }
-        };
-    }
-
-    /**
-     * Handle player end turn action
-     */
-    async handlePlayerEndTurn(playerId) {
-        this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
-        return { success: true };
+        return this.actionRouter.route(playerId, actionType, actionData);
     }
 
     // ===== Game Phase Handlers =====
 
-    handleInLobby() {
-        console.log('Game is in the lobby phase.');
-        this.running = false;
-        this.hideRemainingMoves();
-    }
-
-    handleInGame() {
-        this.running = true;
-        // Enact all player effects before handling turn phases
-        this.enactAllEffects();
-        // Resume timer if paused
-        this.resumeTimer();
-        // Show remaining moves counter
-        this.showRemainingMoves();
-    }
-
-    handlePaused() {
-        this.pauseTimer();
-        this.deactivateRollButton();
-        console.log('Game is currently paused.');
-    }
-
-    handleGameEnded() {
-        this.running = false;
-        this.stopTimer();
-        this.deactivateRollButton();
-        this.hideRemainingMoves();
-        console.log('Game has ended.');
-    }
+    handleInLobby() { return this.turnFlowController.handleInLobby(); }
+    handleInGame() { return this.turnFlowController.handleInGame(); }
+    handlePaused() { return this.turnFlowController.handlePaused(); }
+    handleGameEnded() { return this.turnFlowController.handleGameEnded(); }
 
     // ===== Turn Phase Handlers =====
 
-    handleChangeTurn() {
-        this.emitEvent('changeTurn', { gameState: this.gameState });
-
-        // Enact all effects that trigger during CHANGE_TURN phase (e.g., SkipTurnsEffect)
-        this.enactAllEffects();
-
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-        if (!currentPlayer) {
-            console.warn('No current player available during handleChangeTurn.');
-            return;
-        }
-        const shouldSkipTurn = [PlayerStates.COMPLETED_GAME, PlayerStates.SKIPPING_TURN,
-            PlayerStates.SPECTATING, PlayerStates.DISCONNECTED].includes(currentPlayer.getState());
-
-        if (this.isClientTurn()) {
-            this.handleTurnChangeDecision({
-                shouldSkip: shouldSkipTurn,
-                onSkip: () => this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 }),
-                onProceed: () => this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 })
-            });
-        }
-    }
-
-    /**
-     * Handle players being removed mid-game (e.g., kicked/disconnected).
-     * If the active player was removed, immediately advance to the next turn.
-     * @param {Array} removedPlayers - Players that were removed from state
-     */
-    handlePlayersRemoved(removedPlayers = [], options = {}) {
-        if (!Array.isArray(removedPlayers) || removedPlayers.length === 0) return;
-
-        const removedIds = new Set(removedPlayers.map(p => p.playerId));
-        const current = this.turnManager?.getCurrentPlayer?.();
-        const wasCurrent = options.wasCurrent || (current && removedIds.has(current.playerId));
-        if (!current || !wasCurrent) return;
-
-        // Clear any remaining moves and advance turn immediately
-        this.gameState.setRemainingMoves?.(0);
-
-        // Advance turn order if there are players left
-        if (this.gameState.players.length > 0) {
-            this.turnManager?.nextTurn?.({ reason: 'playerRemoved' });
-            this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 });
-        } else {
-            // No players left; just ensure phase machine doesn't stay stuck
-            this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 });
-        }
-    }
-
-    handleBeginTurn() {
-        this.emitEvent('beginTurn', { gameState: this.gameState });
-
-        // Start timer for all players
-        this.startTimer();
-
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-
-        if (this.isClientTurn()) {
-            console.log(`It's your turn, ${currentPlayer.nickname}!`);
-            this.changePhase({ newTurnPhase: TurnPhases.WAITING_FOR_MOVE, delay: 0 });
-        }
-    }
-
-    handleWaitingForMove() {
-        this.emitEvent('waitingForMove', { gameState: this.gameState });
-
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-        if (this.isClientTurn()) {
-            this.activateRollButton();
-        } else {
-            console.log(`Waiting for ${currentPlayer?.nickname ?? 'player'} to take their turn.`);
-            this.deactivateRollButton();
-        }
-    }
-
-    handleProcessingEvents() {
-        this.cleanupActiveSpaceChoice();
-        // Close any open modals
-        this.hideAllModals();
-
-        // Re-determine triggered events each time (matches old GameEngine behavior)
-        // This automatically excludes completed events since their state changed
-        const triggeredEvents = this.gameState.determineTriggeredEvents(this.eventBus, this.peerId);
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-
-        this.processTriggeredEventsFlow(triggeredEvents, {
-            onEmpty: () => {
-                this.gameState.resetEvents();
-                if (this.isClientTurn()) {
-                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
-                }
-            },
-            onProcess: () => {
-                triggeredEvents.forEach(({ event, space }) => {
-                    const description = this.describeTriggeredEvent(event, space);
-                    this.logPlayerAction(currentPlayer, description, {
-                        type: 'event-processing',
-                        metadata: { spaceId: space?.id, actionType: event?.action?.type }
-                    });
-                });
-                if (this.isClientTurn()) {
-                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
-                }
-            }
-        });
-    }
-
-    handleProcessingEvent() {
-        // Re-determine triggered events (same as old GameEngine approach)
-        // This is called each time we process an event, and gets the current list
-        const triggeredEvents = this.gameState.determineTriggeredEvents(this.eventBus, this.peerId);
-
-        console.log("Remaining triggered events to process:", triggeredEvents.length);
-
-        if (triggeredEvents.length === 0) {
-            // No more events to process
-            console.log('No more events to process');
-            this.gameState.resetEvents();
-            this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
-            return;
-        }
-
-        // Get the first event (matches old GameEngine behavior)
-        const eventWithSpace = triggeredEvents[0];
-
-        // Store for Action.js compatibility (it expects gameEngine.gameEventWithSpace.space)
-        this.gameEventWithSpace = eventWithSpace;
-
-        const { event: gameEvent, space: eventSpace } = eventWithSpace;
-
-        // Emit event triggering
-        this.emitEvent('gameEventTriggered', {
-            gameEvent: gameEvent,
-            gameState: this.gameState,
-            eventSpace: eventSpace
-        });
-
-        // Execute the event action
-        gameEvent.executeAction(this, true);
-
-        // Note: The executed action's callback will call changePhase back to PROCESSING_EVENTS
-        // At that point, the event's state will be COMPLETED_ACTION and won't appear in triggered events anymore
-    }
-
-    handlePlayerChoosingDestination() {
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-        const currentSpaceId = currentPlayer.getCurrentSpaceId();
-        const currentSpace = this.gameState.board.getSpace(currentSpaceId);
-
-        if (!currentSpace) {
-            console.warn(`Player ${currentPlayer.nickname} is on unknown space ${currentSpaceId}. Resetting remaining moves.`);
-            this.gameState.setRemainingMoves(0);
-            this.updateRemainingMoves(0);
-            this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
-            return;
-        }
-
-        const connections = currentSpace.connections;
-        const targetSpaces = connections.map(conn => conn.target);
-
-        console.log(`${currentPlayer.nickname} is choosing a destination...`);
-        console.log(`${currentPlayer.nickname} has multiple choices to move to: ${targetSpaces.map(space => space.id).join(', ')}`);
-
-        if (this.isClientTurn()) {
-            this.waitForChoice(currentPlayer, targetSpaces);
-        }
-    }
-
-    handleProcessingMove() {
-        this.cleanupActiveSpaceChoice();
-        this.emitEvent('processingMove', { gameState: this.gameState });
-
-        if (this.isClientTurn()) {
-            if (this.gameState.hasMovesLeft()) {
-                this.processSingleMove();
-            } else {
-                this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
-            }
-        }
-    }
-
-    handleEndTurn() {
-        this.cleanupActiveSpaceChoice();
-        console.log(`Ending turn for ${this.turnManager.getCurrentPlayer().nickname}.`);
-        this.emitEvent('turnEnded', { gameState: this.gameState });
-
-        // Flag to track if a repeat turn was requested
-        let repeatTurnRequested = false;
-        const repeatTurnHandler = () => {
-            repeatTurnRequested = true;
-        };
-
-        // Temporarily listen for repeat turn event
-        this.eventBus.on('effect:repeat_turn', repeatTurnHandler);
-
-        // Enact all effects that trigger during END_TURN phase (e.g., RepeatTurnsEffect)
-        this.enactAllEffects();
-
-        // Remove the temporary listener
-        this.eventBus.off('effect:repeat_turn', repeatTurnHandler);
-
-        // Stop timer
-        this.stopTimer();
-
-        // Check if all players completed the game
-        const allCompletedGame = this.gameState.players.every(
-            player => player.getState() === PlayerStates.COMPLETED_GAME
-        );
-
-        if (allCompletedGame) {
-            console.log("All players completed the game. Ending the game.");
-            this.log('All players have completed the game.', { type: 'system' });
-            this.changePhase({ newGamePhase: GamePhases.GAME_ENDED, newTurnPhase: TurnPhases.CHANGE_TURN, delay: 0 });
-            return;
-        }
-
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-        if (currentPlayer) {
-            this.logPlayerAction(currentPlayer, 'ended their turn.', {
-                type: 'turn-end',
-                metadata: { remainingMoves: this.gameState.remainingMoves }
-            });
-        }
-
-        if (this.isClientTurn()) {
-            if (repeatTurnRequested) {
-                // Repeat the turn - go back to BEGIN_TURN phase without advancing player
-                console.log(`${currentPlayer.nickname} gets another turn!`);
-                this.changePhase({ newTurnPhase: TurnPhases.BEGIN_TURN, delay: 0 });
-            } else {
-                // Move to next player's turn
-                this.turnManager.nextTurn();
-                this.changePhase({ newTurnPhase: TurnPhases.CHANGE_TURN, delay: 0 });
-            }
-        }
-
-        this.requestAutoSave('turnEnded', {
-            turnNumber: this.gameState.getTurnNumber?.(),
-            currentPlayerId: currentPlayer?.playerId
-        });
-    }
-
-    handleTimerEnd() {
-        if (this.isClientTurn()) {
-            const player = this.turnManager.getCurrentPlayer();
-            console.log(`Time's up for ${player.nickname}! Ending turn.`);
-            this.emitEvent('timerEnded', { gameState: this.gameState });
-            if (player) {
-                this.logPlayerAction(player, 'ran out of time.', {
-                    type: 'timer',
-                    metadata: { turnTimer: this.gameState.settings.turnTimer }
-                });
-            }
-
-            this.deactivateRollButton();
-            this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
-        }
-    }
+    handleChangeTurn() { return this.turnFlowController.handleChangeTurn(); }
+    handlePlayersRemoved(removedPlayers = [], options = {}) { return this.turnFlowController.handlePlayersRemoved(removedPlayers, options); }
+    handleBeginTurn() { return this.turnFlowController.handleBeginTurn(); }
+    handleWaitingForMove() { return this.turnFlowController.handleWaitingForMove(); }
+    handleProcessingEvents() { return this.turnFlowController.handleProcessingEvents(); }
+    handleProcessingEvent() { return this.turnFlowController.handleProcessingEvent(); }
+    handlePlayerChoosingDestination() { return this.turnFlowController.handlePlayerChoosingDestination(); }
+    handleProcessingMove() { return this.turnFlowController.handleProcessingMove(); }
+    handleEndTurn() { return this.turnFlowController.handleEndTurn(); }
+    handleTimerEnd() { return this.turnFlowController.handleTimerEnd(); }
 
     // ===== Helper Methods =====
 
@@ -745,29 +389,7 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      */
     rollDiceForCurrentPlayer() {
         const currentPlayer = this.turnManager.getCurrentPlayer();
-        let rollResult = null;
-
-        // Dev helper: allow manual rolls when enabled via env flag
-        const manualRollEnabled =
-            (typeof DEV_CHOOSE_ROLL !== 'undefined' && DEV_CHOOSE_ROLL === true) ||
-            (typeof process !== 'undefined' && process?.env?.DEV_CHOOSE_ROLL === 'true') ||
-            (typeof window !== 'undefined' && window.DEV_CHOOSE_ROLL === true) ||
-            (typeof localStorage !== 'undefined' && localStorage.getItem('DEV_CHOOSE_ROLL') === 'true');
-        if (manualRollEnabled) {
-            console.debug('[DEV] Manual roll enabled');
-        }
-        if (manualRollEnabled) {
-            const input = window.prompt('Enter roll (1-6) or leave blank for random:', '');
-            const parsed = parseInt(input, 10);
-            if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= 6) {
-                rollResult = parsed;
-                console.log(`[DEV] Manual roll selected: ${rollResult}`);
-            }
-        }
-
-        if (rollResult === null) {
-            rollResult = currentPlayer.rollDice();
-        }
+        const rollResult = this.movementPolicy.rollForPlayer(currentPlayer);
 
         console.log(`${currentPlayer.nickname} rolled a ${rollResult}`);
         this.logPlayerAction(currentPlayer, `rolled a ${rollResult}.`, {
@@ -793,249 +415,11 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
     /**
      * Process a single move
      */
-    processSingleMove() {
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-        const currentSpaceId = currentPlayer.getCurrentSpaceId();
-        const currentSpace = this.gameState.board.getSpace(currentSpaceId);
-
-        if (!currentSpace) {
-            console.warn(`Player ${currentPlayer.nickname} is on unknown space ${currentSpaceId}. Resetting remaining moves.`);
-            this.gameState.setRemainingMoves(0);
-            this.updateRemainingMoves(0);
-            this.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
-            return;
-        }
-
-        const connections = currentSpace.connections;
-
-        if (connections.length === 0) {
-            // No where to move
-            this.gameState.setRemainingMoves(0);
-            this.updateRemainingMoves(0);
-            this.logPlayerAction(currentPlayer, 'cannot move from their current space.', {
-                type: 'movement',
-                metadata: { spaceId: currentSpaceId, reason: 'no-connections' }
-            });
-            this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-        } else if (connections.length === 1) {
-            // Auto-move to only connection
-            const targetSpace = connections[0].target;
-            this.gameState.movePlayer(targetSpace.id);
-            console.log(`${currentPlayer.nickname} moved to space ${targetSpace.id}`);
-            this.logPlayerAction(currentPlayer, `moved to ${targetSpace.name || targetSpace.id}.`, {
-                type: 'movement',
-                metadata: { spaceId: targetSpace.id }
-            });
-            this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-        } else {
-            // Multiple choices - let player choose
-            this.changePhase({ newTurnPhase: TurnPhases.PLAYER_CHOOSING_DESTINATION, delay: 0 });
-        }
-    }
-
-    /**
-     * Wait for player to choose movement destination
-     * @param {Player} currentPlayer - Current player
-     * @param {Array} targetSpaces - Available spaces to move to
-     */
-    waitForChoice(currentPlayer, targetSpaces) {
-        // Legacy UI controller path
-        if (this.uiController) {
-            this.uiController.highlightSpaces(targetSpaces);
-            this.uiController.setupSpaceClickHandlers(targetSpaces, (selectedSpace) => {
-                this.gameState.movePlayer(selectedSpace.id);
-                console.log(`${currentPlayer.nickname} chose to move to space ${selectedSpace.id}`);
-                this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
-                    type: 'movement',
-                    metadata: { spaceId: selectedSpace.id, selected: true }
-                });
-                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-            });
-            return;
-        }
-
-        // New component registry path
-        // Check if we have a board interaction component
-        const boardInteraction = this.getUIComponent('boardInteraction');
-        if (boardInteraction && boardInteraction.setupSpaceSelection) {
-            boardInteraction.setupSpaceSelection(targetSpaces, (selectedSpace) => {
-                this.gameState.movePlayer(selectedSpace.id);
-                console.log(`${currentPlayer.nickname} chose to move to space ${selectedSpace.id}`);
-                this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
-                    type: 'movement',
-                    metadata: { spaceId: selectedSpace.id, selected: true }
-                });
-                this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-            });
-            return;
-        }
-
-        // Direct DOM manipulation (current approach with UISystem or when no UI components)
-        // Check if we have any UI available (UISystem or UIComponentRegistry)
-        const hasUI = this.uiSystem || !this.isHeadless();
-
-        if (hasUI) {
-            this.cleanupActiveSpaceChoice();
-
-            const handlers = new Map();
-            const uniqueSpaces = Array.from(new Map(targetSpaces.map(space => [space.id, space])).values());
-
-            uniqueSpaces.forEach(space => {
-                const spaceElement = getVisibleElementById(`space-${space.id}`);
-                if (!spaceElement) {
-                    console.warn(`No visible element found for space ${space.id}`);
-                    return;
-                }
-
-                spaceElement.classList.add('highlight');
-
-                const handler = () => {
-                    this.cleanupActiveSpaceChoice();
-                    this.gameState.movePlayer(space.id);
-                    console.log(`${currentPlayer.nickname} chose to move to space ${space.id}`);
-                    this.logPlayerAction(currentPlayer, `moved to ${space.name || space.id}.`, {
-                        type: 'movement',
-                        metadata: { spaceId: space.id, selected: true }
-                    });
-                    this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-                };
-
-                spaceElement.addEventListener('click', handler);
-                handlers.set(space.id, { element: spaceElement, handler });
-            });
-
-            this.activeSpaceChoice = {
-                spaces: uniqueSpaces,
-                handlers
-            };
-            return;
-        }
-
-        // Headless mode - auto-select first space
-        console.log('[Headless] Auto-selecting first space');
-        if (targetSpaces.length > 0) {
-            const selectedSpace = targetSpaces[0];
-            this.gameState.movePlayer(selectedSpace.id);
-            this.logPlayerAction(currentPlayer, `moved to ${selectedSpace.name || selectedSpace.id}.`, {
-                type: 'movement',
-                metadata: { spaceId: selectedSpace.id, selected: true, autoSelected: true }
-            });
-            this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-        }
-    }
-
-    clearModalAutoDismissTimer() {
-        if (this.modalAutoDismissTimer) {
-            clearTimeout(this.modalAutoDismissTimer);
-            this.modalAutoDismissTimer = null;
-        }
-        if (this.modalCountdownInterval) {
-            clearInterval(this.modalCountdownInterval);
-            this.modalCountdownInterval = null;
-        }
-        const countdownEl = document.getElementById('gamePromptModalCountdown');
-        if (countdownEl) {
-            countdownEl.style.display = 'none';
-            countdownEl.textContent = '';
-        }
-    }
-
-    startModalCountdown(countdownEl, durationMs) {
-        if (!countdownEl) return;
-        const endTime = Date.now() + durationMs;
-        countdownEl.style.display = 'block';
-
-        const updateText = () => {
-            const remainingMs = Math.max(0, endTime - Date.now());
-            const remainingSeconds = Math.ceil(remainingMs / 1000);
-            countdownEl.textContent = remainingSeconds > 0
-                ? `Auto-closing in ${remainingSeconds}s`
-                : 'Closing...';
-
-            if (remainingMs <= 0) {
-                clearInterval(this.modalCountdownInterval);
-                this.modalCountdownInterval = null;
-            }
-        };
-
-        updateText();
-        this.modalCountdownInterval = setInterval(updateText, 250);
-    }
-
-    cleanupActiveSpaceChoice() {
-        if (!this.activeSpaceChoice) {
-            return;
-        }
-
-        const { spaces = [], handlers = new Map() } = this.activeSpaceChoice;
-
-        spaces.forEach(space => {
-            const entry = handlers.get(space.id);
-            if (entry?.element && entry.handler) {
-                entry.element.removeEventListener('click', entry.handler);
-            }
-
-            const element = getVisibleElementById(`space-${space.id}`);
-            if (element) {
-                element.classList.remove('highlight');
-            }
-        });
-
-        this.activeSpaceChoice = null;
-    }
-
-    describeTriggeredEvent(event, space) {
-        const spaceLabel = space?.name || space?.id || 'a space';
-        const action = event?.action;
-        if (!action) {
-            return `triggered an event on ${spaceLabel}`;
-        }
-
-        const actionType = action.type;
-        switch (actionType) {
-            case PromptAllPlayersAction.type:
-            case PromptCurrentPlayerAction.type: {
-                const message = action.payload?.message;
-                if (message) {
-                    return `triggered a prompt on ${spaceLabel}: "${this.truncateMessage(message)}"`;
-                }
-                return `triggered a prompt on ${spaceLabel}`;
-            }
-            case DisplacePlayerAction.type: {
-                const steps = action.payload?.steps;
-                if (typeof steps === 'number' && steps !== 0) {
-                    const absSteps = Math.abs(steps);
-                    const stepLabel = `space${absSteps === 1 ? '' : 's'}`;
-                    return steps > 0
-                        ? `triggered a move forward ${absSteps} ${stepLabel} on ${spaceLabel}`
-                        : `triggered a move back ${absSteps} ${stepLabel} on ${spaceLabel}`;
-                }
-                return `triggered a movement effect on ${spaceLabel}`;
-            }
-            case ApplyEffectAction.type:
-                return `triggered a player effect on ${spaceLabel}`;
-            case SetPlayerStateAction.type: {
-                const state = action.payload?.state;
-                return state
-                    ? `triggered a state change to ${state}`
-                    : `triggered a state change`;
-            }
-            case SetPlayerSpaceAction.type: {
-                const target = action.payload?.spaceId;
-                return target
-                    ? `triggered a teleport to ${target}`
-                    : `triggered a teleport event`;
-            }
-            default:
-                return `triggered an event (${actionType}) on ${spaceLabel}`;
-        }
-    }
-
-    truncateMessage(message, limit = 60) {
-        if (typeof message !== 'string') return '';
-        if (message.length <= limit) return message;
-        return `${message.slice(0, limit - 1)}…`;
-    }
+    processSingleMove() { return this.movementController.processSingleMove(); }
+    waitForChoice(currentPlayer, targetSpaces) { return this.movementController.waitForChoice(currentPlayer, targetSpaces); }
+    clearModalAutoDismissTimer() { return this.modalController.clearAutoDismissTimer(); }
+    startModalCountdown(countdownEl, durationMs) { return this.modalController.startModalCountdown(countdownEl, durationMs); }
+    cleanupActiveSpaceChoice() { return this.movementController.cleanupActiveSpaceChoice(); }
 
     /**
      * Toggle pause/resume game
@@ -1081,41 +465,13 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      * @param {Function} callback - Callback when dismissed
      */
     showPromptModal(message, callback) {
-        const timeoutSeconds = this.gameState?.settings?.getModalTimeoutSeconds?.() ?? 0;
-        const timeoutMs = timeoutSeconds > 0 ? timeoutSeconds * 1000 : 0;
-
-        this.promptModal.openWithMessage(message, { timeoutMs, trustedHtml: true }, () => {
-            if (typeof callback === 'function' && this.isClientTurn()) {
-                callback();
-            }
-        });
+        return this.modalController.showPromptModal(message, callback);
     }
 
     /**
      * Enact all player effects
      */
     enactAllEffects() {
-        this.gameState.players.forEach(player => {
-            // Remove effects marked for removal before enacting
-            const initialEffectCount = player.effects.length;
-            player.effects = player.effects.filter(effect => !effect.toRemove);
-            const removedBeforeCount = initialEffectCount - player.effects.length;
-
-            if (removedBeforeCount > 0) {
-                console.log(`Removed ${removedBeforeCount} effects before enacting for player ${player.nickname}`);
-            }
-
-            // Enact remaining effects
-            player.effects.forEach(effect => effect.enact(this));
-
-            // Remove effects marked for removal after enacting
-            const effectCountAfterEnact = player.effects.length;
-            player.effects = player.effects.filter(effect => !effect.toRemove);
-            const removedAfterCount = effectCountAfterEnact - player.effects.length;
-
-            if (removedAfterCount > 0) {
-                console.log(`Removed ${removedAfterCount} effects after enacting for player ${player.nickname}`);
-            }
-        });
+        return this.effectScheduler.enactAll(this.gameState, this);
     }
 }
