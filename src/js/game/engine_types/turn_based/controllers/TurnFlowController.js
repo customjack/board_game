@@ -7,12 +7,15 @@ import { PlayerStates } from '../../../../elements/models/Player.js';
  * TurnFlowController - orchestrates game/turn phase transitions
  */
 export default class TurnFlowController extends BaseTurnController {
-    constructor(engine, { effectScheduler, eventPipeline, skipRepeatController }) {
+    constructor(engine, { effectScheduler, eventPipeline, skipRepeatController, movementController, uiAdapter, modalController }) {
         super();
         this.engine = engine;
         this.effectScheduler = effectScheduler;
         this.eventPipeline = eventPipeline;
         this.skipRepeatController = skipRepeatController;
+        this.movementController = movementController;
+        this.uiAdapter = uiAdapter;
+        this.modalController = modalController;
     }
 
     registerPhaseHandlers() {
@@ -34,27 +37,27 @@ export default class TurnFlowController extends BaseTurnController {
 
     handleInLobby() {
         this.engine.running = false;
-        this.engine.hideRemainingMoves();
+        this.uiAdapter.hideRemainingMoves();
     }
 
     handleInGame() {
         this.engine.running = true;
         this.effectScheduler.enactAll(this.engine.gameState, this.engine);
-        this.engine.resumeTimer();
-        this.engine.showRemainingMoves();
+        this.uiAdapter.resumeTimer();
+        this.uiAdapter.showRemainingMoves();
     }
 
     handlePaused() {
-        this.engine.pauseTimer();
-        this.engine.deactivateRollButton();
+        this.uiAdapter.pauseTimer();
+        this.uiAdapter.deactivateRollButton();
         console.log('Game is currently paused.');
     }
 
     handleGameEnded() {
         this.engine.running = false;
-        this.engine.stopTimer();
-        this.engine.deactivateRollButton();
-        this.engine.hideRemainingMoves();
+        this.uiAdapter.stopTimer();
+        this.uiAdapter.deactivateRollButton();
+        this.uiAdapter.hideRemainingMoves();
         console.log('Game has ended.');
     }
 
@@ -100,7 +103,7 @@ export default class TurnFlowController extends BaseTurnController {
 
     handleBeginTurn() {
         this.engine.emitEvent('beginTurn', { gameState: this.engine.gameState });
-        this.engine.startTimer();
+        this.uiAdapter.startTimer();
 
         const currentPlayer = this.engine.turnManager.getCurrentPlayer();
 
@@ -115,16 +118,18 @@ export default class TurnFlowController extends BaseTurnController {
 
         const currentPlayer = this.engine.turnManager.getCurrentPlayer();
         if (this.engine.isClientTurn()) {
-            this.engine.activateRollButton();
+            this.uiAdapter.activateRollButton();
         } else {
             console.log(`Waiting for ${currentPlayer?.nickname ?? 'player'} to take their turn.`);
-            this.engine.deactivateRollButton();
+            this.uiAdapter.deactivateRollButton();
         }
     }
 
     handleProcessingEvents() {
-        this.engine.cleanupActiveSpaceChoice();
-        this.engine.hideAllModals();
+        this.movementController.cleanupActiveSpaceChoice();
+        this.modalController.clearAutoDismissTimer();
+        this.uiAdapter.hideAllModals();
+        this.engine.clearActiveEventContext();
 
         const triggeredEvents = this.eventPipeline.collect(this.engine.gameState, this.engine.eventBus, this.engine.peerId);
         const currentPlayer = this.engine.turnManager.getCurrentPlayer();
@@ -160,11 +165,12 @@ export default class TurnFlowController extends BaseTurnController {
             console.log('No more events to process');
             this.engine.gameState.resetEvents();
             this.engine.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
+            this.engine.clearActiveEventContext();
             return;
         }
 
         const eventWithSpace = triggeredEvents[0];
-        this.engine.gameEventWithSpace = eventWithSpace;
+        this.engine.setActiveEventContext(eventWithSpace);
 
         const { event: gameEvent, space: eventSpace } = eventWithSpace;
 
@@ -185,7 +191,7 @@ export default class TurnFlowController extends BaseTurnController {
         if (!currentSpace) {
             console.warn(`Player ${currentPlayer.nickname} is on unknown space ${currentSpaceId}. Resetting remaining moves.`);
             this.engine.gameState.setRemainingMoves(0);
-            this.engine.updateRemainingMoves(0);
+            this.uiAdapter.updateRemainingMoves(0);
             this.engine.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
             return;
         }
@@ -197,17 +203,17 @@ export default class TurnFlowController extends BaseTurnController {
         console.log(`${currentPlayer.nickname} has multiple choices to move to: ${targetSpaces.map(space => space.id).join(', ')}`);
 
         if (this.engine.isClientTurn()) {
-            this.engine.waitForChoice(currentPlayer, targetSpaces);
+            this.movementController.waitForChoice(currentPlayer, targetSpaces);
         }
     }
 
     handleProcessingMove() {
-        this.engine.cleanupActiveSpaceChoice();
+        this.movementController.cleanupActiveSpaceChoice();
         this.engine.emitEvent('processingMove', { gameState: this.engine.gameState });
 
         if (this.engine.isClientTurn()) {
             if (this.engine.gameState.hasMovesLeft()) {
-                this.engine.processSingleMove();
+                this.movementController.processSingleMove();
             } else {
                 this.engine.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
             }
@@ -215,7 +221,7 @@ export default class TurnFlowController extends BaseTurnController {
     }
 
     handleEndTurn() {
-        this.engine.cleanupActiveSpaceChoice();
+        this.movementController.cleanupActiveSpaceChoice();
         console.log(`Ending turn for ${this.engine.turnManager.getCurrentPlayer().nickname}.`);
         this.engine.emitEvent('turnEnded', { gameState: this.engine.gameState });
 
@@ -225,7 +231,8 @@ export default class TurnFlowController extends BaseTurnController {
             this.engine
         );
 
-        this.engine.stopTimer();
+        this.uiAdapter.stopTimer();
+        this.uiAdapter.deactivateRollButton();
 
         const allCompletedGame = this.engine.gameState.players.every(
             player => player.getState() === PlayerStates.COMPLETED_GAME
@@ -274,8 +281,25 @@ export default class TurnFlowController extends BaseTurnController {
                 });
             }
 
-            this.engine.deactivateRollButton();
+            this.uiAdapter.deactivateRollButton();
             this.engine.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
+        }
+    }
+
+    togglePauseGame() {
+        if (this.engine.gameState.gamePhase === GamePhases.IN_GAME) {
+            this.engine.changePhase({ newGamePhase: GamePhases.PAUSED, delay: 0 });
+            this.uiAdapter.pauseTimer();
+            this.uiAdapter.deactivateRollButton();
+            this.engine.emitEvent('gamePaused', { gameState: this.engine.gameState });
+            console.log('Game paused.');
+            this.engine.log('Game paused', { type: 'system' });
+        } else if (this.engine.gameState.gamePhase === GamePhases.PAUSED) {
+            this.engine.changePhase({ newGamePhase: GamePhases.IN_GAME, delay: 0 });
+            this.uiAdapter.resumeTimer();
+            this.engine.emitEvent('gameResumed', { gameState: this.engine.gameState });
+            console.log('Game resumed.');
+            this.engine.log('Game resumed', { type: 'system' });
         }
     }
 

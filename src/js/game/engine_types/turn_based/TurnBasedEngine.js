@@ -26,6 +26,7 @@ import SkipRepeatController from './controllers/SkipRepeatController.js';
 import TurnFlowController from './controllers/TurnFlowController.js';
 import MovementController from './controllers/MovementController.js';
 import ModalController from './controllers/ModalController.js';
+import RollController from './controllers/RollController.js';
 
 export default class TurnBasedGameEngine extends BaseTurnEngine {
     /**
@@ -106,14 +107,31 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
         this.effectScheduler = new DefaultEffectScheduler();
         this.eventPipeline = new EventResolutionPipeline(this.eventBus, this.peerId);
         this.movementPolicy = new DiceMovementPolicy();
-        this.actionRouter = new PlayerActionRouter(this);
+        this.rollController = new RollController({
+            turnManager: this.turnManager,
+            movementPolicy: this.movementPolicy,
+            uiAdapter: this.uiAdapter,
+            gameState: this.gameState,
+            emitEvent: this.emitEvent.bind(this),
+            logPlayerAction: this.logPlayerAction.bind(this),
+            changePhase: this.changePhase.bind(this)
+        });
         this.skipRepeatController = new SkipRepeatController(this.eventBus);
         this.modalController = new ModalController(this.promptModal, this);
         this.movementController = new MovementController(this);
         this.turnFlowController = new TurnFlowController(this, {
             effectScheduler: this.effectScheduler,
             eventPipeline: this.eventPipeline,
-            skipRepeatController: this.skipRepeatController
+            skipRepeatController: this.skipRepeatController,
+            movementController: this.movementController,
+            uiAdapter: this.uiAdapter,
+            modalController: this.modalController
+        });
+        this.actionRouter = new PlayerActionRouter({
+            turnManager: this.turnManager,
+            changePhase: this.changePhase.bind(this),
+            getGameState: () => this.gameState,
+            rollController: this.rollController
         });
 
         // Register phase handlers through controller
@@ -121,26 +139,6 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
 
         // Initialize state machine without committing to a phase so first update triggers transitions
         this.phaseStateMachine.init(null, null);
-    }
-
-    // ===== UI Abstraction Methods =====
-    // These methods work with UIComponentRegistry, UISystem, and UIController via the adapter
-
-    activateRollButton() { return this.uiAdapter.activateRollButton(); }
-    deactivateRollButton() { return this.uiAdapter.deactivateRollButton(); }
-    startTimer() { return this.uiAdapter.startTimer(); }
-    stopTimer() { return this.uiAdapter.stopTimer(); }
-    pauseTimer() { return this.uiAdapter.pauseTimer(); }
-    resumeTimer() { return this.uiAdapter.resumeTimer(); }
-    showRemainingMoves() { return this.uiAdapter.showRemainingMoves(); }
-    hideRemainingMoves() { return this.uiAdapter.hideRemainingMoves(); }
-    updateRemainingMoves(moves) { return this.uiAdapter.updateRemainingMoves(moves); }
-    hideAllModals() {
-        this.modalController.clearAutoDismissTimer();
-        return this.uiAdapter.hideAllModals();
-    }
-    updateUIFromGameState(gameState, peerId) {
-        return this.uiAdapter.updateUIFromGameState(gameState, peerId);
     }
 
     /**
@@ -166,16 +164,16 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
         // Initialize roll button
         if (rollButton && rollButton.init) {
             rollButton.init({
-                onRollDice: () => this.rollDiceForCurrentPlayer(),
-                onRollComplete: (result) => this.handleAfterDiceRoll(result)
+                onRollDice: () => this.rollController.rollForCurrentPlayer(),
+                onRollComplete: (result) => this.rollController.handleAfterDiceRoll(result)
             });
         }
 
         // Initialize timer
         if (timer && timer.init) {
             timer.init({
-                onTimerEnd: () => this.handleTimerEnd(),
-                onPauseToggle: () => this.togglePauseGame()
+                onTimerEnd: () => this.turnFlowController.handleTimerEnd(),
+                onPauseToggle: () => this.turnFlowController.togglePauseGame()
             });
         }
 
@@ -186,10 +184,10 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
 
         // Legacy UI controller path
         this.uiAdapter.initLegacyUI({
-            onRollDice: () => this.rollDiceForCurrentPlayer(),
-            onRollComplete: (result) => this.handleAfterDiceRoll(result),
-            onTimerEnd: () => this.handleTimerEnd(),
-            onPauseToggle: () => this.togglePauseGame()
+            onRollDice: () => this.rollController.rollForCurrentPlayer(),
+            onRollComplete: (result) => this.rollController.handleAfterDiceRoll(result),
+            onTimerEnd: () => this.turnFlowController.handleTimerEnd(),
+            onPauseToggle: () => this.turnFlowController.togglePauseGame()
         });
 
         this.initialized = true;
@@ -206,7 +204,8 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
         // Update components
         this.turnManager.gameState = gameState;
         this.eventProcessor.gameState = gameState;
-        this.updateUIFromGameState(gameState, this.peerId);
+        this.rollController.gameState = gameState;
+        this.uiAdapter.updateUIFromGameState(gameState, this.peerId);
 
         const currentGamePhase = this.gameState.gamePhase;
         const currentTurnPhase = this.gameState.turnPhase;
@@ -230,7 +229,8 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      * Clean up engine resources
      */
     cleanup() {
-        this.cleanupActiveSpaceChoice();
+        this.movementController.cleanupActiveSpaceChoice();
+        this.clearActiveEventContext();
 
         // UI components registered through UIComponentRegistry are cleaned up by the registry
         // No manual cleanup needed here for those components
@@ -250,6 +250,10 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      */
     getEngineType() {
         return 'turn-based';
+    }
+
+    getPieceManagerType() {
+        return 'standard';
     }
 
     // REMOVED: getCapabilities() - No longer using capability prediction system
@@ -361,84 +365,8 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
         return this.actionRouter.route(playerId, actionType, actionData);
     }
 
-    // ===== Game Phase Handlers =====
-
-    handleInLobby() { return this.turnFlowController.handleInLobby(); }
-    handleInGame() { return this.turnFlowController.handleInGame(); }
-    handlePaused() { return this.turnFlowController.handlePaused(); }
-    handleGameEnded() { return this.turnFlowController.handleGameEnded(); }
-
-    // ===== Turn Phase Handlers =====
-
-    handleChangeTurn() { return this.turnFlowController.handleChangeTurn(); }
-    handlePlayersRemoved(removedPlayers = [], options = {}) { return this.turnFlowController.handlePlayersRemoved(removedPlayers, options); }
-    handleBeginTurn() { return this.turnFlowController.handleBeginTurn(); }
-    handleWaitingForMove() { return this.turnFlowController.handleWaitingForMove(); }
-    handleProcessingEvents() { return this.turnFlowController.handleProcessingEvents(); }
-    handleProcessingEvent() { return this.turnFlowController.handleProcessingEvent(); }
-    handlePlayerChoosingDestination() { return this.turnFlowController.handlePlayerChoosingDestination(); }
-    handleProcessingMove() { return this.turnFlowController.handleProcessingMove(); }
-    handleEndTurn() { return this.turnFlowController.handleEndTurn(); }
-    handleTimerEnd() { return this.turnFlowController.handleTimerEnd(); }
-
-    // ===== Helper Methods =====
-
-    /**
-     * Roll dice for current player
-     * @returns {number} Roll result
-     */
-    rollDiceForCurrentPlayer() {
-        const currentPlayer = this.turnManager.getCurrentPlayer();
-        const rollResult = this.movementPolicy.rollForPlayer(currentPlayer);
-
-        console.log(`${currentPlayer.nickname} rolled a ${rollResult}`);
-        this.logPlayerAction(currentPlayer, `rolled a ${rollResult}.`, {
-            type: 'dice-roll',
-            metadata: { result: rollResult }
-        });
-
-        this.deactivateRollButton();
-        return rollResult;
-    }
-
-    /**
-     * Handle actions after dice roll animation
-     * @param {number} rollResult - Dice roll result
-     */
-    handleAfterDiceRoll(rollResult) {
-        this.gameState.setRemainingMoves(rollResult);
-        this.updateRemainingMoves(rollResult);
-        this.emitEvent('playerRoll', { gameState: this.gameState });
-        this.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
-    }
-
-    /**
-     * Process a single move
-     */
-    processSingleMove() { return this.movementController.processSingleMove(); }
-    waitForChoice(currentPlayer, targetSpaces) { return this.movementController.waitForChoice(currentPlayer, targetSpaces); }
-    clearModalAutoDismissTimer() { return this.modalController.clearAutoDismissTimer(); }
-    startModalCountdown(countdownEl, durationMs) { return this.modalController.startModalCountdown(countdownEl, durationMs); }
-    cleanupActiveSpaceChoice() { return this.movementController.cleanupActiveSpaceChoice(); }
-
-    /**
-     * Toggle pause/resume game
-     */
-    togglePauseGame() {
-        if (this.gameState.gamePhase === GamePhases.IN_GAME) {
-            this.changePhase({ newGamePhase: GamePhases.PAUSED, delay: 0 });
-            this.pauseTimer();
-            this.deactivateRollButton();
-            this.emitEvent('gamePaused', { gameState: this.gameState });
-            console.log('Game paused.');
-            this.log('Game paused', { type: 'system' });
-        } else if (this.gameState.gamePhase === GamePhases.PAUSED) {
-            this.changePhase({ newGamePhase: GamePhases.IN_GAME, delay: 0 });
-            this.resumeTimer();
-            this.emitEvent('gameResumed', { gameState: this.gameState });
-            console.log('Game resumed.');
-            this.log('Game resumed', { type: 'system' });
-        }
+    handlePlayersRemoved(removedPlayers = [], options = {}) {
+        return this.turnFlowController.handlePlayersRemoved(removedPlayers, options);
     }
 
     /**
@@ -446,17 +374,11 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      * @param {Object} options - Phase change options
      */
     changePhase({ newGamePhase, newTurnPhase, delay = -1 } = {}) {
-        if (newGamePhase) {
-            this.gameState.setGamePhase(newGamePhase);
-        }
-        if (newTurnPhase) {
-            this.gameState.setTurnPhase(newTurnPhase);
-        }
-
-        console.log("Changing Phase to:", this.gameState.turnPhase, this.gameState.gamePhase, delay);
-
-        const updateDelay = delay >= 0 ? delay : this.gameState.settings.getMoveDelay();
-        this.proposeStateChange(this.gameState, updateDelay);
+        const updateDelay = delay >= 0
+            ? delay
+            : this.gameState?.settings?.getMoveDelay?.() ?? 0;
+        super.changePhase({ newGamePhase, newTurnPhase, delay: updateDelay });
+        console.log("Changing Phase to:", this.gameState.turnPhase, this.gameState.gamePhase, updateDelay);
     }
 
     /**
@@ -466,12 +388,5 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      */
     showPromptModal(message, callback) {
         return this.modalController.showPromptModal(message, callback);
-    }
-
-    /**
-     * Enact all player effects
-     */
-    enactAllEffects() {
-        return this.effectScheduler.enactAll(this.gameState, this);
     }
 }

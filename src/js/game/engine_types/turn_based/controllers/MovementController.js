@@ -18,7 +18,7 @@ export default class MovementController {
         if (!currentSpace) {
             console.warn(`Player ${currentPlayer.nickname} is on unknown space ${currentSpaceId}. Resetting remaining moves.`);
             this.engine.gameState.setRemainingMoves(0);
-            this.engine.updateRemainingMoves(0);
+            this.engine.uiAdapter?.updateRemainingMoves?.(0);
             this.engine.changePhase({ newTurnPhase: TurnPhases.END_TURN, delay: 0 });
             return;
         }
@@ -27,7 +27,7 @@ export default class MovementController {
 
         if (connections.length === 0) {
             this.engine.gameState.setRemainingMoves(0);
-            this.engine.updateRemainingMoves(0);
+            this.engine.uiAdapter?.updateRemainingMoves?.(0);
             this.engine.logPlayerAction(currentPlayer, 'cannot move from their current space.', {
                 type: 'movement',
                 metadata: { spaceId: currentSpaceId, reason: 'no-connections' }

@@ -79,10 +79,13 @@ export default class BaseAction {
      */
     emitEvent(eventBus, eventType, gameEngine) {
         if (eventBus) {
+            const eventContext = typeof gameEngine.getActiveEventContext === 'function'
+                ? gameEngine.getActiveEventContext()
+                : gameEngine.gameEventWithSpace;
             eventBus.emit(eventType, {
                 action: this,
                 gameState: gameEngine.gameState,
-                space: gameEngine.gameEventWithSpace?.space,
+                space: eventContext?.space,
                 peerId: gameEngine.peerId,
             });
         }

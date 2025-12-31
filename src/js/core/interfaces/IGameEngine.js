@@ -10,6 +10,11 @@
  * - This allows for organic growth as new game types emerge
  * - No need to predict every possible game mechanic in advance
  * - Game engines implement what they need; the system adapts to them
+ *
+ * Core surface expected by systems outside game/engine_types:
+ * - Properties: gameState, eventBus, registryManager, factoryManager, peerId
+ * - Methods: lifecycle hooks, changePhase(), showPromptModal(), handlePlayersRemoved(),
+ *   set/get/clearActiveEventContext(), getPieceManagerType()
  */
 
 /**
@@ -203,5 +208,70 @@ export default class IGameEngine {
             errors: [],
             warnings: []
         };
+    }
+
+    // ===== Cross-system contract hooks =====
+
+    /**
+     * Change game/turn phases and propose the new state.
+     * Implementations should decide how to queue/apply the change.
+     * @param {Object} changeRequest
+     * @param {string} [changeRequest.newGamePhase] - New game-level phase
+     * @param {string} [changeRequest.newTurnPhase] - New turn-level phase
+     * @param {number} [changeRequest.delay] - Optional delay before proposing state
+     */
+    changePhase(changeRequest) { // eslint-disable-line no-unused-vars
+        throw new Error('changePhase() must be implemented by game engine');
+    }
+
+    /**
+     * Show a modal/prompt to one or more players.
+     * Engines should surface the modal in whatever UI system they support.
+     * @param {string} message - Message to display
+     * @param {Function} [callback] - Invoked once the modal is dismissed
+     */
+    showPromptModal(message, callback) { // eslint-disable-line no-unused-vars
+        throw new Error('showPromptModal() must be implemented by game engine');
+    }
+
+    /**
+     * Handle player removals so engines can clean up turn order or selections.
+     * @param {Array} removedPlayers - Players removed from the game state
+     * @param {Object} options - Context about the removal
+     */
+    handlePlayersRemoved(removedPlayers, options) { // eslint-disable-line no-unused-vars
+        throw new Error('handlePlayersRemoved() must be implemented by game engine');
+    }
+
+    /**
+     * Set the active event context for actions/triggers to consume.
+     * @param {Object|null} eventContext - Typically {event, space}
+     */
+    setActiveEventContext(eventContext) { // eslint-disable-line no-unused-vars
+        throw new Error('setActiveEventContext() must be implemented by game engine');
+    }
+
+    /**
+     * Get the current active event context.
+     * @returns {Object|null}
+     */
+    getActiveEventContext() {
+        throw new Error('getActiveEventContext() must be implemented by game engine');
+    }
+
+    /**
+     * Clear the current active event context.
+     */
+    clearActiveEventContext() {
+        throw new Error('clearActiveEventContext() must be implemented by game engine');
+    }
+
+    /**
+     * Identify which piece manager variant an engine prefers.
+     * Defaults to 'standard' for single-piece, turn-based play.
+     * @returns {string}
+     */
+    getPieceManagerType() {
+        return 'standard';
     }
 }

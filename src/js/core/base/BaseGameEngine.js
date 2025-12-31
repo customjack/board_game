@@ -52,6 +52,7 @@ export default class BaseGameEngine extends IGameEngine {
         this.initialized = false;
         this.running = false;
         this.paused = false;
+        this.gameEventWithSpace = null;
     }
 
     // ===== IGameEngine Implementation =====
@@ -223,7 +224,7 @@ export default class BaseGameEngine extends IGameEngine {
      * @param {string} actionType - Type of action
      * @param {*} actionData - Action data
      */
-    onPlayerAction(actionType, actionData) {
+    onPlayerAction(playerId, actionType, actionData) { // eslint-disable-line no-unused-vars
         throw new Error('onPlayerAction() must be implemented by subclass');
     }
 
@@ -250,6 +251,88 @@ export default class BaseGameEngine extends IGameEngine {
         } else {
             this.proposeGameState(newGameState);
         }
+    }
+
+    // ===== Cross-system contract hooks =====
+
+    /**
+     * Change game/turn phases and propose the new state.
+     * Subclasses can override to add domain-specific defaults.
+     * @param {Object} options
+     * @param {string} [options.newGamePhase] - New game-level phase
+     * @param {string} [options.newTurnPhase] - New turn-level phase
+     * @param {number} [options.delay] - Optional delay before proposing state
+     */
+    changePhase({ newGamePhase, newTurnPhase, delay = 0 } = {}) {
+        if (!this.gameState) {
+            throw new Error('Cannot change phase without an active game state');
+        }
+
+        if (newGamePhase !== undefined && newGamePhase !== null && typeof this.gameState.setGamePhase === 'function') {
+            this.gameState.setGamePhase(newGamePhase);
+        }
+
+        if (newTurnPhase !== undefined && newTurnPhase !== null && typeof this.gameState.setTurnPhase === 'function') {
+            this.gameState.setTurnPhase(newTurnPhase);
+        }
+
+        this.proposeStateChange(this.gameState, delay);
+    }
+
+    /**
+     * Default prompt handler for engines without UI wiring.
+     * Subclasses should override with UI-specific behaviour.
+     * @param {string} message
+     * @param {Function} [callback]
+     */
+    showPromptModal(message, callback) { // eslint-disable-line no-unused-vars
+        console.warn(`[${this.getEngineType()}] showPromptModal() not implemented for this engine.`);
+        if (typeof callback === 'function') {
+            callback();
+        }
+    }
+
+    /**
+     * React to players being removed from the game state.
+     * Engines with turn ordering should override this.
+     * @param {Array} removedPlayers
+     * @param {Object} options
+     */
+    handlePlayersRemoved(removedPlayers = [], options = {}) { // eslint-disable-line no-unused-vars
+        if (removedPlayers.length > 0) {
+            console.debug(`[${this.getEngineType()}] handlePlayersRemoved() not implemented; ignoring removal.`);
+        }
+    }
+
+    /**
+     * Store the active event context for downstream consumers.
+     * @param {Object|null} eventContext
+     */
+    setActiveEventContext(eventContext) {
+        this.gameEventWithSpace = eventContext || null;
+    }
+
+    /**
+     * Retrieve the active event context.
+     * @returns {Object|null}
+     */
+    getActiveEventContext() {
+        return this.gameEventWithSpace || null;
+    }
+
+    /**
+     * Clear the active event context.
+     */
+    clearActiveEventContext() {
+        this.gameEventWithSpace = null;
+    }
+
+    /**
+     * Identify which piece manager variant an engine prefers.
+     * @returns {string}
+     */
+    getPieceManagerType() {
+        return 'standard';
     }
 
     /**
