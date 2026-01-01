@@ -114,9 +114,9 @@ export default class MapEditorRenderer {
         if (this.viewport && this.onToggleGrid && !this.gridControlAdded) {
             const gridIcon = `
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"></rect>
-                    <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="2"></line>
-                    <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2"></line>
+                    <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"></rect>
+                    <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="3"></line>
+                    <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="3"></line>
                 </svg>
             `;
             this.viewport.addControl({
@@ -142,7 +142,7 @@ export default class MapEditorRenderer {
             this.gridLayer.className = 'map-editor-grid-layer';
         }
         if (this.gridLayer.parentElement !== this.boardSurface) {
-            this.boardSurface.appendChild(this.gridLayer);
+            this.boardSurface.prepend(this.gridLayer);
         }
     }
 
@@ -176,16 +176,21 @@ export default class MapEditorRenderer {
         if (!this.boardSurface) return;
         if (this.gridLayer) {
             if (gridEnabled) {
-                const gridColor = 'rgba(255, 255, 255, 0.3)';
+                const gridColor = 'rgba(255, 255, 255, 0.5)';
+                const lineWidth = 2;
                 const grid = [
-                    `repeating-linear-gradient(0deg, ${gridColor} 0, ${gridColor} 1px, transparent 1px, transparent ${gridSize}px)`,
-                    `repeating-linear-gradient(90deg, ${gridColor} 0, ${gridColor} 1px, transparent 1px, transparent ${gridSize}px)`
+                    `repeating-linear-gradient(0deg, ${gridColor} 0, ${gridColor} ${lineWidth}px, transparent ${lineWidth}px, transparent ${gridSize}px)`,
+                    `repeating-linear-gradient(90deg, ${gridColor} 0, ${gridColor} ${lineWidth}px, transparent ${lineWidth}px, transparent ${gridSize}px)`
                 ];
                 this.gridLayer.style.display = 'block';
                 this.gridLayer.style.backgroundImage = grid.join(', ');
+                this.gridLayer.style.backgroundSize = `${gridSize}px ${gridSize}px`;
+                this.gridLayer.style.backgroundPosition = '0 0';
             } else {
                 this.gridLayer.style.display = 'none';
                 this.gridLayer.style.backgroundImage = '';
+                this.gridLayer.style.backgroundSize = '';
+                this.gridLayer.style.backgroundPosition = '';
             }
         }
 
