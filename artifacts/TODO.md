@@ -25,14 +25,18 @@
    - TurnPhases.js belongs "with" TurnBasedGameEngine.js; really, under game/engines we should have a turn_based_engine FOLDER, this will split up everything turn based engine provides. One of these things is the TurnPhases.js. Another is TurnBasedGameState.js; we should view each "GameEngine" as it's own mini project really, impliemnting things where needed. 
    - Everything in game/components (EventProcessor.js, PhaseStateMachine.js, TurnManager.js, UIController.js) is basically unsued. These things clean up implimentation and should be attached to the turn based game engine, but they're more of helpers than anything
 
-4. **Turn Order Management**
+4. **Updating plugins**
+   - Make it so the images gets hosted properly in the dist/plugins/asset folder
+   - Make it so these get resolved and cached properly
+
+5. **Turn Order Management**
    - Host-only control panel for turn order
    - “Randomize turn order” button
    - Manual drag-to-reorder list
    - Sync changes across clients
    - Persist selection into gamestate
 
-5. **Map Creator Tool**
+6. **Map Creator Tool**
    - Runs in browser
    - Supports placing spaces, editing topology, triggers, visuals
    - Imports / exports board bundles

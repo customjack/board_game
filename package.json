@@ -8,7 +8,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build": "webpack --mode production",
-    "build:plugins": "npm --prefix plugins/example run build && npm --prefix plugins/trouble run build && npm run sync:plugins",
+    "build:plugins": "npm --prefix plugins/example run build && npm --prefix plugins/trouble run build",
     "start": "webpack serve --mode development --open",
     "cdn:start": "node scripts/start-cdn-server.js",
     "peerjs:start": "node scripts/start-peerjs-server.js",

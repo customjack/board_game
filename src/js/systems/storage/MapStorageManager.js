@@ -113,6 +113,15 @@ export default class MapStorageManager {
      * @returns {Object} The registered map object
      */
     static registerPluginMap(mapData, metadata = {}) {
+        console.debug('[MAP DEBUG] registerPluginMap:', {
+            pluginId: metadata.pluginId,
+            source: metadata.source,
+            hasThumbnail: Boolean(mapData?.metadata?.thumbnail || metadata.thumbnail),
+            thumbnailUrl: mapData?.metadata?.thumbnail || metadata.thumbnail,
+            hasSpaces: Boolean(mapData?.board?.topology?.spaces?.length),
+            firstSpaceImage: mapData?.board?.topology?.spaces?.[0]?.visual?.image
+        });
+
         // Validate the map data
         const validation = BoardSchemaValidator.validate(mapData);
         if (!validation.valid) {
@@ -123,6 +132,8 @@ export default class MapStorageManager {
         const sourceMetadata = mapData.metadata || {};
         const mergedMetadata = { ...sourceMetadata, ...metadata };
         const engineType = this.getEngineType(mapData, mergedMetadata);
+
+        const pluginId = mergedMetadata.pluginId;
 
         const mapObject = {
             id: mergedMetadata.id || `plugin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -135,7 +146,7 @@ export default class MapStorageManager {
             createdDate: mergedMetadata.created || mapData.created || new Date().toISOString(),
             metadata: mergedMetadata,
             engineType: engineType || 'turn-based',
-            pluginId: mergedMetadata.pluginId || null, // Track which plugin provided this map
+            pluginId: pluginId || null, // Track which plugin provided this map
             source: mergedMetadata.source || 'plugin-bundled' // Track source type
         };
 

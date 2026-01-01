@@ -236,12 +236,19 @@ export default class MapManagerModal extends BaseManagerModal {
         thumbnail.style.justifyContent = 'center';
 
         if (map.thumbnail) {
+            console.debug('[MapManager] rendering thumbnail', { id: map.id, thumbnail: map.thumbnail });
             const img = document.createElement('img');
             img.src = map.thumbnail;
             img.alt = map.name;
             img.style.width = '100%';
             img.style.height = '100%';
             img.style.objectFit = 'cover';
+            img.addEventListener('error', () => {
+                console.error('[MapManager] thumbnail failed to load', { id: map.id, url: map.thumbnail });
+            });
+            img.addEventListener('load', () => {
+                console.debug('[MapManager] thumbnail loaded', { id: map.id, url: map.thumbnail });
+            });
             thumbnail.appendChild(img);
         } else {
             thumbnail.textContent = '🗺️';

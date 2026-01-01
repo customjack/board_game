@@ -390,42 +390,10 @@ export default class PluginManager {
 
             // console.log(`[PluginManager] Loading plugin from ${pluginInfo.url}...`);
 
-            // Check for cached plugin code first
-            let pluginCode = this.getCachedPluginCode(pluginInfo.url);
-            let loadUrl = pluginInfo.url;
+            // Always import directly from the CDN URL to preserve import.meta.url for asset resolution.
+            // Do not fall back to blob/cached imports, since that breaks relative asset URLs.
             let fromCache = false;
-            let blobUrl = null;
-
-            if (pluginCode) {
-                // console.log(`[PluginManager] Using cached plugin code for ${pluginInfo.url}`);
-                // Create a blob URL from cached code for ES module import
-                const blob = new Blob([pluginCode], { type: 'application/javascript' });
-                blobUrl = URL.createObjectURL(blob);
-                loadUrl = blobUrl;
-                fromCache = true;
-            } else {
-                // Fetch from CDN and cache it
-                // console.log(`[PluginManager] Fetching plugin code from CDN...`);
-                const response = await fetch(pluginInfo.url);
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch plugin: ${response.status} ${response.statusText}`);
-                }
-                pluginCode = await response.text();
-                // Cache the plugin code for next time
-                this.cachePluginCode(pluginInfo.url, pluginCode);
-                // Use original URL for import (no need for blob URL when fetching fresh)
-                loadUrl = pluginInfo.url;
-            }
-
-            // For ES modules, use direct import
-            // Import the module - it may export a class or a factory function
-            const module = await import(/* webpackIgnore: true */ loadUrl);
-            
-            // Clean up blob URL after import (if we used one)
-            if (blobUrl) {
-                // Small delay to ensure module is fully loaded before revoking
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-            }
+            const module = await import(/* webpackIgnore: true */ pluginInfo.url);
             let PluginClass = module.default;
 
             // Check if it's a factory function (receives bundle, returns class)
@@ -516,12 +484,15 @@ export default class PluginManager {
 
             // Register the class
             if (this.registerPluginClass(PluginClass)) {
+                // Store the plugin URL BEFORE initializing so it's available when maps are registered
+                this.pluginUrls.set(metadata.id, pluginInfo.url);
+                this.remotePluginInfo.set(metadata.id, fullPluginInfo);
+                // Save to localStorage BEFORE initialization so MapStorageManager can find it
+                this.saveRemotePlugin(fullPluginInfo);
+                
                 // Initialize it
                 if (this.initializePlugin(metadata.id)) {
                     this.loadedPluginUrls.add(pluginInfo.url);
-                    this.pluginUrls.set(metadata.id, pluginInfo.url);
-                    this.remotePluginInfo.set(metadata.id, fullPluginInfo);
-                    this.saveRemotePlugin(fullPluginInfo);
                     return {
                         success: true,
                         pluginId: metadata.id

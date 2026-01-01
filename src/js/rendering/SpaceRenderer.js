@@ -56,6 +56,20 @@ export default class SpaceRenderer {
             // Create image element
             const img = document.createElement('img');
             img.src = imageUrl;
+            img.addEventListener('error', () => {
+                console.error('[SpaceRenderer] image failed to load', {
+                    id: space.id,
+                    name: space.name,
+                    url: imageUrl
+                });
+            });
+            img.addEventListener('load', () => {
+                console.debug('[SpaceRenderer] image loaded', {
+                    id: space.id,
+                    name: space.name,
+                    url: imageUrl
+                });
+            });
             img.alt = space.name;
             img.style.width = '100%';
             img.style.height = '100%';
