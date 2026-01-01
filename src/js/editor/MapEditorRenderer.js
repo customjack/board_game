@@ -97,7 +97,6 @@ export default class MapEditorRenderer {
         if (!this.viewport) {
             this.container.innerHTML = '';
             this.viewport = new BoardViewport(this.container);
-            this.viewport.setOnTransform(() => this.updateSurfaceSize(this.lastSpaces));
         }
         if (!this.boardSurface) {
             this.boardSurface = document.createElement('div');
@@ -145,13 +144,10 @@ export default class MapEditorRenderer {
             maxX = Math.max(maxX, x + size + padding);
             maxY = Math.max(maxY, y + size + padding);
         });
-        const scale = this.viewport?.scale || 1;
         const containerWidth = this.container?.clientWidth || 0;
         const containerHeight = this.container?.clientHeight || 0;
-        const minWidth = containerWidth ? Math.ceil(containerWidth / scale) : 0;
-        const minHeight = containerHeight ? Math.ceil(containerHeight / scale) : 0;
-        const width = Math.max(800, maxX, minWidth);
-        const height = Math.max(600, maxY, minHeight);
+        const width = Math.max(800, maxX, containerWidth);
+        const height = Math.max(600, maxY, containerHeight);
         const nextWidth = `${width}px`;
         const nextHeight = `${height}px`;
         if (this.boardSurface.style.width !== nextWidth) {
@@ -170,7 +166,7 @@ export default class MapEditorRenderer {
         const repeats = [];
 
         if (gridEnabled) {
-            const gridColor = 'rgba(255, 255, 255, 0.14)';
+            const gridColor = 'rgba(255, 255, 255, 0.22)';
             const grid = `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`;
             layers.push(grid);
             sizes.push(`${gridSize}px ${gridSize}px`);
