@@ -17,6 +17,14 @@
     border-radius: 10px;
     padding: 16px;
     background: var(--background-secondary, #141414);
+    text-align: left;
+}
+
+.map-editor-panel[data-tab="metadata"],
+.map-editor-panel[data-tab="rules"],
+.map-editor-panel[data-tab="engine"] {
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .map-editor-sidebar {
@@ -33,8 +41,16 @@
 }
 
 .map-editor-section h3 {
-    margin: 0 0 8px 0;
-    font-size: 1em;
+    margin: 0 0 12px 0;
+    font-size: 1.1em;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+    padding-bottom: 0;
+}
+
+.map-editor-section h3::after {
+    content: none;
 }
 
 .map-editor-tab-bar {
@@ -42,6 +58,7 @@
     gap: 8px;
     margin-bottom: 12px;
     flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 .map-editor-tab-button.active {
@@ -74,17 +91,17 @@
 .map-editor-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .map-editor-form-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color, #333);
-    background: var(--background-secondary, #141414);
+    padding: 2px 0;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
 }
 
 .map-editor-form-note {
@@ -96,13 +113,39 @@
     border: 1px solid var(--border-color, #333);
     border-radius: 8px;
     padding: 6px 10px 10px;
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.08);
 }
 
 .map-editor-collapsible summary {
     cursor: pointer;
     font-weight: 600;
     padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.map-editor-collapsible summary::-webkit-details-marker {
+    display: none;
+}
+
+.map-editor-collapsible summary::before {
+    content: '>';
+    font-size: 12px;
+    color: var(--text-color-secondary, #aaa);
+}
+
+.map-editor-collapsible[open] summary::before {
+    content: 'v';
+}
+
+.map-editor-collapsible .map-editor-collapsible {
+    margin-left: 12px;
+    border-left: 1px dashed var(--border-color, #333);
+    padding-left: 10px;
 }
 
 .map-editor-select-list {
@@ -131,8 +174,8 @@
 .map-editor-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-bottom: 8px;
+    gap: 2px;
+    margin-bottom: 6px;
 }
 
 .map-editor-list {
@@ -198,6 +241,24 @@
 .map-editor-preview-name {
     font-size: 12px;
     color: var(--text-color-secondary, #aaa);
+}
+
+.map-editor-panel label,
+.map-editor-modal label {
+    text-align: left;
+    margin-bottom: 4px;
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.map-editor-panel input,
+.map-editor-panel select,
+.map-editor-panel textarea,
+.map-editor-modal input,
+.map-editor-modal select,
+.map-editor-modal textarea {
+    text-align: left;
 }
 
 .map-editor-status {

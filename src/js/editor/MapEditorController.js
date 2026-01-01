@@ -26,6 +26,7 @@ const RULES_SCHEMA = {
         startingPositions: {
             type: 'object',
             description: 'Where players begin',
+            ui: { collapsed: true },
             properties: {
                 mode: {
                     type: 'string',
@@ -42,6 +43,7 @@ const RULES_SCHEMA = {
         recommendedPlayers: {
             type: 'object',
             description: 'Suggested player range',
+            ui: { collapsed: true },
             properties: {
                 min: { type: 'number', description: 'Recommended minimum players' },
                 max: { type: 'number', description: 'Recommended maximum players' }
@@ -50,6 +52,7 @@ const RULES_SCHEMA = {
         diceRolling: {
             type: 'object',
             description: 'Dice rolling behavior',
+            ui: { collapsed: true },
             properties: {
                 enabled: { type: 'boolean', description: 'Allow dice rolling' },
                 diceCount: { type: 'number', description: 'Number of dice', min: 1, integer: true },
@@ -64,6 +67,7 @@ const RULES_SCHEMA = {
         winCondition: {
             type: 'object',
             description: 'Victory configuration',
+            ui: { collapsed: true },
             properties: {
                 type: { type: 'string', description: 'Win condition type' },
                 config: { type: 'object', description: 'Win condition config', ui: { allowAdditional: true } }
@@ -78,7 +82,11 @@ const ENGINE_SCHEMA = {
     type: 'object',
     properties: {
         type: { type: 'string', description: 'Engine type', enum: [] },
-        config: { type: 'object', description: 'Engine configuration', ui: { allowAdditional: true } }
+        config: {
+            type: 'object',
+            description: 'Engine configuration',
+            ui: { allowAdditional: true, collapsed: true }
+        }
     }
 };
 
@@ -525,6 +533,10 @@ export default class MapEditorController {
         if (!container || !schema) return;
         const parsed = this.collectSchemaValue(schema, container);
         if (!parsed) return;
+        if (section === 'metadata') {
+            const existing = this.stateManager.state?.metadata || {};
+            parsed.created = existing.created || new Date().toISOString();
+        }
         this.updateStateSection(section, parsed);
         this.setStatus(`${section} updated`);
     }
