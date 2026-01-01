@@ -114,22 +114,6 @@
 
                 <aside class="map-editor-sidebar">
                     <section class="map-editor-section">
-                        <h3>View</h3>
-                        <div class="map-editor-row map-editor-toggle">
-                            <label for="mapEditorGridToggle">Show Grid</label>
-                            <input id="mapEditorGridToggle" type="checkbox">
-                        </div>
-                        <div class="map-editor-field">
-                            <label for="mapEditorBackgroundInput">Background Image</label>
-                            <input id="mapEditorBackgroundInput" type="file" accept="image/*">
-                            <div class="map-editor-row">
-                                <button id="mapEditorBackgroundClear" class="button button-secondary">Clear Background</button>
-                            </div>
-                            <div id="mapEditorBackgroundName" class="map-editor-preview-name"></div>
-                        </div>
-                    </section>
-
-                    <section class="map-editor-section">
                         <h3>Assets</h3>
                         <input id="mapEditorAssetsInput" type="file" accept="image/*" multiple>
                         <div id="mapEditorAssetsList" class="map-editor-list"></div>
@@ -138,6 +122,14 @@
                             <input id="mapEditorPreviewInput" type="file" accept="image/*">
                         </div>
                         <div id="mapEditorPreviewName" class="map-editor-preview-name"></div>
+                        <div class="map-editor-field">
+                            <label for="mapEditorBackgroundInput">Background Image</label>
+                            <input id="mapEditorBackgroundInput" type="file" accept="image/*">
+                        </div>
+                        <div class="map-editor-row">
+                            <button id="mapEditorBackgroundClear" class="button button-secondary">Clear Background</button>
+                        </div>
+                        <div id="mapEditorBackgroundName" class="map-editor-preview-name"></div>
                     </section>
                 </aside>
             </div>

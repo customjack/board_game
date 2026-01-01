@@ -35,6 +35,13 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+.board-control-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--button-text-color);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
 .board-control-btn:active {
     transform: scale(0.95);
 }
@@ -47,6 +54,12 @@
 
 .board-control-btn.recenter {
     font-size: 1rem;
+}
+
+.board-control-btn svg {
+    width: 18px;
+    height: 18px;
+    display: block;
 }
 
 /* Zoom level indicator */

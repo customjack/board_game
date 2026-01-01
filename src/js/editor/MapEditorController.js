@@ -126,7 +126,8 @@ export default class MapEditorController {
             container: this.elements.canvas,
             onSelectSpace: (spaceId) => this.selectSpace(spaceId),
             onMoveSpace: (spaceId, position) => this.updateSpacePosition(spaceId, position),
-            onContextSpace: (spaceId, position) => this.openSpaceEditor(spaceId, position)
+            onContextSpace: (spaceId, position) => this.openSpaceEditor(spaceId, position),
+            onToggleGrid: () => this.toggleGrid()
         });
 
         this.refreshAvailableTypes();
@@ -195,7 +196,6 @@ export default class MapEditorController {
             assetsList: document.getElementById('mapEditorAssetsList'),
             previewInput: document.getElementById('mapEditorPreviewInput'),
             previewName: document.getElementById('mapEditorPreviewName'),
-            gridToggle: document.getElementById('mapEditorGridToggle'),
             backgroundInput: document.getElementById('mapEditorBackgroundInput'),
             backgroundClear: document.getElementById('mapEditorBackgroundClear'),
             backgroundName: document.getElementById('mapEditorBackgroundName'),
@@ -266,9 +266,6 @@ export default class MapEditorController {
         }
         if (this.elements.previewInput) {
             this.elements.previewInput.addEventListener('change', (event) => this.handlePreviewUpload(event));
-        }
-        if (this.elements.gridToggle) {
-            this.elements.gridToggle.addEventListener('change', (event) => this.handleGridToggle(event));
         }
         if (this.elements.backgroundInput) {
             this.elements.backgroundInput.addEventListener('change', (event) => this.handleBackgroundUpload(event));
@@ -648,11 +645,6 @@ export default class MapEditorController {
         event.target.value = '';
     }
 
-    handleGridToggle(event) {
-        this.gridEnabled = Boolean(event.target.checked);
-        this.renderCanvas();
-    }
-
     handleBackgroundUpload(event) {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -673,6 +665,11 @@ export default class MapEditorController {
         };
         reader.readAsDataURL(file);
         event.target.value = '';
+    }
+
+    toggleGrid() {
+        this.gridEnabled = !this.gridEnabled;
+        this.renderCanvas();
     }
 
     clearBackground() {

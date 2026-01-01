@@ -29,6 +29,8 @@ export default class BoardViewport {
         // UI elements
         this.controls = null;
         this.zoomIndicator = null;
+        this.controlButtons = new Map();
+        this.onTransform = null;
 
         this.setupEventListeners();
         this.createControls();
@@ -78,9 +80,54 @@ export default class BoardViewport {
         this.container.appendChild(this.zoomIndicator);
 
         // Add event listeners
-        this.controls.querySelector('.zoom-in').addEventListener('click', () => this.zoomIn());
-        this.controls.querySelector('.zoom-out').addEventListener('click', () => this.zoomOut());
-        this.controls.querySelector('.recenter').addEventListener('click', () => this.recenter());
+        const zoomInButton = this.controls.querySelector('.zoom-in');
+        const zoomOutButton = this.controls.querySelector('.zoom-out');
+        const recenterButton = this.controls.querySelector('.recenter');
+
+        zoomInButton.addEventListener('click', () => this.zoomIn());
+        zoomOutButton.addEventListener('click', () => this.zoomOut());
+        recenterButton.addEventListener('click', () => this.recenter());
+
+        this.controlButtons.set('zoom-in', zoomInButton);
+        this.controlButtons.set('zoom-out', zoomOutButton);
+        this.controlButtons.set('recenter', recenterButton);
+    }
+
+    addControl({ id, title, html, className = '', onClick, afterSelector = '.zoom-out' } = {}) {
+        if (!this.controls || !id) return null;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `board-control-btn ${className}`.trim();
+        if (title) {
+            button.title = title;
+        }
+        if (html !== undefined) {
+            button.innerHTML = html;
+        } else {
+            button.textContent = title || id;
+        }
+        if (onClick) {
+            button.addEventListener('click', onClick);
+        }
+        const anchor = afterSelector ? this.controls.querySelector(afterSelector) : null;
+        if (anchor) {
+            anchor.insertAdjacentElement('afterend', button);
+        } else {
+            this.controls.appendChild(button);
+        }
+        this.controlButtons.set(id, button);
+        return button;
+    }
+
+    setControlActive(id, isActive) {
+        const button = this.controlButtons.get(id);
+        if (!button) return;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+
+    setOnTransform(callback) {
+        this.onTransform = callback;
     }
 
     onMouseDown(e) {
@@ -220,6 +267,13 @@ export default class BoardViewport {
             `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
         this.boardSurface.style.transformOrigin = '0 0';
         this.boardSurface.style.transition = 'none'; // Disable transition during pan
+        if (this.onTransform) {
+            this.onTransform({
+                scale: this.scale,
+                translateX: this.translateX,
+                translateY: this.translateY
+            });
+        }
     }
 
     updateZoomIndicator() {

@@ -1,26 +1,32 @@
 import BoardViewport from '../ui/BoardViewport.js';
 
 export default class MapEditorRenderer {
-    constructor({ container, onSelectSpace, onMoveSpace, onContextSpace } = {}) {
+    constructor({ container, onSelectSpace, onMoveSpace, onContextSpace, onToggleGrid } = {}) {
         this.container = container;
         this.onSelectSpace = onSelectSpace;
         this.onMoveSpace = onMoveSpace;
         this.onContextSpace = onContextSpace;
+        this.onToggleGrid = onToggleGrid;
         this.dragState = null;
         this.viewport = null;
         this.boardSurface = null;
+        this.lastSpaces = [];
+        this.gridControlAdded = false;
+        this.resizeObserver = null;
     }
 
     render(topology, assetsByPath = {}, selectedId = null, options = {}) {
         if (!this.container) return;
+        this.lastSpaces = topology?.spaces || [];
         this.ensureViewport();
         if (!this.boardSurface) return;
 
         this.boardSurface.innerHTML = '';
 
-        const spaces = topology?.spaces || [];
+        const spaces = this.lastSpaces;
         this.updateSurfaceSize(spaces);
         this.applyBackground(options);
+        this.syncGridControl(options.gridEnabled);
 
         spaces.forEach((space) => {
             const element = document.createElement('div');
@@ -91,6 +97,7 @@ export default class MapEditorRenderer {
         if (!this.viewport) {
             this.container.innerHTML = '';
             this.viewport = new BoardViewport(this.container);
+            this.viewport.setOnTransform(() => this.updateSurfaceSize(this.lastSpaces));
         }
         if (!this.boardSurface) {
             this.boardSurface = document.createElement('div');
@@ -101,6 +108,28 @@ export default class MapEditorRenderer {
                 this.container.appendChild(this.boardSurface);
             }
             this.viewport.setBoardSurface(this.boardSurface);
+        }
+        if (this.viewport && this.onToggleGrid && !this.gridControlAdded) {
+            const gridIcon = `
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"></rect>
+                    <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="2"></line>
+                    <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2"></line>
+                </svg>
+            `;
+            this.viewport.addControl({
+                id: 'grid-toggle',
+                title: 'Toggle grid',
+                html: gridIcon,
+                className: 'grid-toggle',
+                onClick: () => this.onToggleGrid(),
+                afterSelector: '.zoom-out'
+            });
+            this.gridControlAdded = true;
+        }
+        if (!this.resizeObserver && typeof ResizeObserver !== 'undefined') {
+            this.resizeObserver = new ResizeObserver(() => this.updateSurfaceSize(this.lastSpaces));
+            this.resizeObserver.observe(this.container);
         }
     }
 
@@ -116,8 +145,13 @@ export default class MapEditorRenderer {
             maxX = Math.max(maxX, x + size + padding);
             maxY = Math.max(maxY, y + size + padding);
         });
-        const width = Math.max(800, maxX);
-        const height = Math.max(600, maxY);
+        const scale = this.viewport?.scale || 1;
+        const containerWidth = this.container?.clientWidth || 0;
+        const containerHeight = this.container?.clientHeight || 0;
+        const minWidth = containerWidth ? Math.ceil(containerWidth / scale) : 0;
+        const minHeight = containerHeight ? Math.ceil(containerHeight / scale) : 0;
+        const width = Math.max(800, maxX, minWidth);
+        const height = Math.max(600, maxY, minHeight);
         this.boardSurface.style.width = `${width}px`;
         this.boardSurface.style.height = `${height}px`;
     }
@@ -149,7 +183,12 @@ export default class MapEditorRenderer {
         this.boardSurface.style.backgroundSize = sizes.join(', ');
         this.boardSurface.style.backgroundPosition = positions.join(', ');
         this.boardSurface.style.backgroundRepeat = repeats.join(', ');
-        this.boardSurface.style.backgroundColor = 'rgba(10, 10, 10, 0.9)';
+        this.boardSurface.style.backgroundColor = 'transparent';
+    }
+
+    syncGridControl(isEnabled) {
+        if (!this.viewport) return;
+        this.viewport.setControlActive('grid-toggle', Boolean(isEnabled));
     }
 
     handleMouseMove = (event) => {
