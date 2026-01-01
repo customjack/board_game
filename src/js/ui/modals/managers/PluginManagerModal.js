@@ -510,25 +510,32 @@ export default class PluginManagerModal extends BaseManagerModal {
         form.style.flexDirection = 'column';
         form.style.gap = '12px';
         form.style.padding = '16px';
+        form.style.alignItems = 'center';
 
         const urlLabel = document.createElement('label');
         urlLabel.textContent = 'Plugin CDN URL:';
         urlLabel.style.fontWeight = '600';
         urlLabel.style.display = 'block';
-        urlLabel.style.textAlign = 'left';
+        urlLabel.style.textAlign = 'center';
+        urlLabel.style.width = '100%';
+        urlLabel.style.maxWidth = '420px';
         
         const urlInput = document.createElement('input');
         urlInput.type = 'url';
         urlInput.className = 'input';
         urlInput.placeholder = 'https://cdn.example.com/plugin.js';
         urlInput.style.width = '100%';
+        urlInput.style.maxWidth = '420px';
         urlInput.style.boxSizing = 'border-box';
+        urlInput.style.textAlign = 'center';
 
         const infoText = document.createElement('p');
-        infoText.textContent = 'The plugin name and description will be loaded from the plugin\'s metadata.';
+        infoText.textContent = 'We download the plugin from this link. The plugin provides its own name and details.';
         infoText.style.fontSize = '0.85em';
         infoText.style.color = 'var(--text-color-secondary, #aaa)';
         infoText.style.margin = '0';
+        infoText.style.textAlign = 'center';
+        infoText.style.maxWidth = '420px';
 
         form.appendChild(urlLabel);
         form.appendChild(urlInput);

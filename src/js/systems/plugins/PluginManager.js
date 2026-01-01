@@ -231,6 +231,7 @@ export default class PluginManager {
             console.error(`[PluginManager] Error removing maps for plugin "${pluginId}":`, error);
             // Continue with plugin removal even if map removal fails
         }
+        MapStorageManager.clearCachedAssetsForPlugin(pluginId);
 
         // Call cleanup if plugin is initialized
         if (this.pluginInstances.has(pluginId)) {
@@ -674,6 +675,7 @@ export default class PluginManager {
                 // Clear cached plugin code
                 this.clearCachedPluginCode(pluginInfo.url);
             }
+            MapStorageManager.clearCachedAssetsForPlugin(pluginId);
             this.pluginUrls.delete(pluginId);
             this.remotePluginInfo.delete(pluginId);
         } catch (e) {

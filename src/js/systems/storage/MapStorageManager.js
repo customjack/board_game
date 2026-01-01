@@ -12,6 +12,8 @@ import JSZip from 'jszip';
 export default class MapStorageManager {
     static STORAGE_KEY = 'customMaps';
     static SELECTED_MAP_KEY = 'selectedMapId';
+    static PLUGIN_ASSET_CACHE_KEY = 'plugin_asset_cache_v1';
+    static PLUGIN_ASSET_INDEX_KEY = 'plugin_asset_index_v1';
 
     /**
      * Get all stored maps (built-in + custom)
@@ -106,6 +108,166 @@ export default class MapStorageManager {
         ];
     }
 
+    static getPluginAssetCache() {
+        try {
+            const stored = localStorage.getItem(this.PLUGIN_ASSET_CACHE_KEY);
+            return stored ? JSON.parse(stored) : {};
+        } catch (e) {
+            console.warn('[PluginAssetCache] Failed to load cache', e);
+            return {};
+        }
+    }
+
+    static savePluginAssetCache(cache) {
+        try {
+            localStorage.setItem(this.PLUGIN_ASSET_CACHE_KEY, JSON.stringify(cache));
+        } catch (e) {
+            console.warn('[PluginAssetCache] Failed to save cache', e);
+        }
+    }
+
+    static getPluginAssetIndex() {
+        try {
+            const stored = localStorage.getItem(this.PLUGIN_ASSET_INDEX_KEY);
+            return stored ? JSON.parse(stored) : {};
+        } catch (e) {
+            console.warn('[PluginAssetCache] Failed to load index', e);
+            return {};
+        }
+    }
+
+    static savePluginAssetIndex(index) {
+        try {
+            localStorage.setItem(this.PLUGIN_ASSET_INDEX_KEY, JSON.stringify(index));
+        } catch (e) {
+            console.warn('[PluginAssetCache] Failed to save index', e);
+        }
+    }
+
+    static recordPluginAsset(pluginId, url) {
+        if (!pluginId || !url) return;
+        const index = this.getPluginAssetIndex();
+        const existing = new Set(index[pluginId] || []);
+        if (!existing.has(url)) {
+            existing.add(url);
+            index[pluginId] = Array.from(existing);
+            this.savePluginAssetIndex(index);
+        }
+    }
+
+    static getCachedPluginAsset(url) {
+        if (!url) return null;
+        const cache = this.getPluginAssetCache();
+        return cache[url] || null;
+    }
+
+    static async cachePluginAsset(url, pluginId) {
+        if (!url) return;
+        const existing = this.getCachedPluginAsset(url);
+        if (existing) return;
+
+        try {
+            console.debug('[PluginAssetCache] Fetching asset', { pluginId, url });
+            const resp = await fetch(url, { mode: 'cors' });
+            if (!resp.ok) {
+                console.warn('[PluginAssetCache] Failed to fetch asset', { url, status: resp.status });
+                return;
+            }
+            const blob = await resp.blob();
+            const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+
+            const cache = this.getPluginAssetCache();
+            cache[url] = dataUrl;
+            this.savePluginAssetCache(cache);
+            this.recordPluginAsset(pluginId, url);
+            console.debug('[PluginAssetCache] Cached asset', { pluginId, url, size: dataUrl.length });
+        } catch (e) {
+            console.warn('[PluginAssetCache] Failed to cache asset', { url, error: e });
+        }
+    }
+
+    static clearCachedAssetsForPlugin(pluginId) {
+        if (!pluginId) return 0;
+        const index = this.getPluginAssetIndex();
+        const urls = index[pluginId] || [];
+        if (!urls.length) return 0;
+
+        const cache = this.getPluginAssetCache();
+        let removed = 0;
+        urls.forEach((url) => {
+            if (cache[url]) {
+                delete cache[url];
+                removed += 1;
+            }
+        });
+        delete index[pluginId];
+        this.savePluginAssetCache(cache);
+        this.savePluginAssetIndex(index);
+        console.debug('[PluginAssetCache] Cleared assets', { pluginId, removed });
+        return removed;
+    }
+
+    static applyCachedPluginAssets(boardData, pluginId) {
+        if (!boardData || !pluginId) return;
+        const cache = this.getPluginAssetCache();
+        const hits = new Set();
+        const misses = new Set();
+
+        const isCacheableAssetUrl = (value) => {
+            if (!value || typeof value !== 'string') return false;
+            if (value.startsWith('data:') || value.startsWith('blob:')) return false;
+            if (!value.startsWith('http://') && !value.startsWith('https://')) return false;
+            return /\.(png|jpe?g|gif|svg|webp)(\?|#|$)/i.test(value);
+        };
+
+        const replace = (obj) => {
+            if (Array.isArray(obj)) {
+                obj.forEach((item, index) => {
+                    obj[index] = replace(item);
+                });
+                return obj;
+            }
+            if (obj && typeof obj === 'object') {
+                Object.keys(obj).forEach((key) => {
+                    obj[key] = replace(obj[key]);
+                });
+                return obj;
+            }
+            if (typeof obj === 'string' && isCacheableAssetUrl(obj)) {
+                const cached = cache[obj];
+                if (cached) {
+                    hits.add(obj);
+                    return cached;
+                }
+                misses.add(obj);
+                return obj;
+            }
+            return obj;
+        };
+
+        replace(boardData);
+
+        if (hits.size || misses.size) {
+            console.debug('[PluginAssetCache] Applied cache', {
+                pluginId,
+                hits: hits.size,
+                misses: misses.size
+            });
+        }
+
+        if (misses.size) {
+            misses.forEach((url) => {
+                this.recordPluginAsset(pluginId, url);
+                this.cachePluginAsset(url, pluginId);
+            });
+        }
+    }
+
     /**
      * Register a map from a plugin
      * @param {Object} mapData - The board JSON data
@@ -128,12 +290,18 @@ export default class MapStorageManager {
             throw new Error(`Invalid map data: ${validation.errors.join(', ')}`);
         }
 
+        const pluginId = metadata.pluginId || mapData?.metadata?.pluginId;
+        if (pluginId) {
+            this.applyCachedPluginAssets(mapData, pluginId);
+        }
+
         // Extract metadata from the map data (v2.0 format) or use provided metadata
         const sourceMetadata = mapData.metadata || {};
         const mergedMetadata = { ...sourceMetadata, ...metadata };
+        if (sourceMetadata?.thumbnail?.startsWith('data:')) {
+            mergedMetadata.thumbnail = sourceMetadata.thumbnail;
+        }
         const engineType = this.getEngineType(mapData, mergedMetadata);
-
-        const pluginId = mergedMetadata.pluginId;
 
         const mapObject = {
             id: mergedMetadata.id || `plugin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
