@@ -253,6 +253,7 @@
     font-weight: 600;
     cursor: grab;
     user-select: none;
+    z-index: 1;
 }
 
 .map-editor-space:active {
@@ -290,6 +291,13 @@
     position: relative;
     min-width: 100%;
     min-height: 100%;
+}
+
+.map-editor-grid-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
 }
 
 .map-editor-status {

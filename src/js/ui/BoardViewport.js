@@ -132,6 +132,10 @@ export default class BoardViewport {
 
     onMouseDown(e) {
         // Only pan if clicking on board surface, not on spaces/buttons
+        if (e.target.closest('.board-controls') ||
+            e.target.closest('.board-zoom-indicator')) {
+            return;
+        }
         if (e.target.classList.contains('space') ||
             e.target.classList.contains('board-space') ||
             e.target.classList.contains('map-editor-space') ||

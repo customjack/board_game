@@ -10,6 +10,7 @@ export default class MapEditorRenderer {
         this.dragState = null;
         this.viewport = null;
         this.boardSurface = null;
+        this.gridLayer = null;
         this.lastSpaces = [];
         this.gridControlAdded = false;
         this.resizeHandlerAttached = false;
@@ -22,6 +23,7 @@ export default class MapEditorRenderer {
         if (!this.boardSurface) return;
 
         this.boardSurface.innerHTML = '';
+        this.ensureGridLayer();
 
         const spaces = this.lastSpaces;
         this.updateSurfaceSize(spaces);
@@ -108,6 +110,7 @@ export default class MapEditorRenderer {
             }
             this.viewport.setBoardSurface(this.boardSurface);
         }
+        this.ensureGridLayer();
         if (this.viewport && this.onToggleGrid && !this.gridControlAdded) {
             const gridIcon = `
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -129,6 +132,17 @@ export default class MapEditorRenderer {
         if (!this.resizeHandlerAttached && typeof window !== 'undefined') {
             this.resizeHandlerAttached = true;
             window.addEventListener('resize', () => this.updateSurfaceSize(this.lastSpaces));
+        }
+    }
+
+    ensureGridLayer() {
+        if (!this.boardSurface) return;
+        if (!this.gridLayer) {
+            this.gridLayer = document.createElement('div');
+            this.gridLayer.className = 'map-editor-grid-layer';
+        }
+        if (this.gridLayer.parentElement !== this.boardSurface) {
+            this.boardSurface.appendChild(this.gridLayer);
         }
     }
 
@@ -160,20 +174,25 @@ export default class MapEditorRenderer {
 
     applyBackground({ backgroundUrl, gridEnabled, gridSize = 50 } = {}) {
         if (!this.boardSurface) return;
+        if (this.gridLayer) {
+            if (gridEnabled) {
+                const gridColor = 'rgba(255, 255, 255, 0.3)';
+                const grid = [
+                    `repeating-linear-gradient(0deg, ${gridColor} 0, ${gridColor} 1px, transparent 1px, transparent ${gridSize}px)`,
+                    `repeating-linear-gradient(90deg, ${gridColor} 0, ${gridColor} 1px, transparent 1px, transparent ${gridSize}px)`
+                ];
+                this.gridLayer.style.display = 'block';
+                this.gridLayer.style.backgroundImage = grid.join(', ');
+            } else {
+                this.gridLayer.style.display = 'none';
+                this.gridLayer.style.backgroundImage = '';
+            }
+        }
+
         const layers = [];
         const sizes = [];
         const positions = [];
         const repeats = [];
-
-        if (gridEnabled) {
-            const gridColor = 'rgba(255, 255, 255, 0.22)';
-            const grid = `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`;
-            layers.push(grid);
-            sizes.push(`${gridSize}px ${gridSize}px`);
-            positions.push('0 0');
-            repeats.push('repeat');
-        }
-
         if (backgroundUrl) {
             layers.push(`url(${backgroundUrl})`);
             sizes.push('cover');
