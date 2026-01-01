@@ -592,6 +592,62 @@ export default class HostEventHandler extends BaseEventHandler {
                 this.peer.makePeerSpectator(player.peerId);
             }
         });
+
+        if (!this.reorderListenerRegistered && playerListComponent?.currentListElementId === 'lobbyPlayerList') {
+            this.reorderListenerRegistered = true;
+            playerListComponent.on('reorderPlayer', ({ playerId, direction }) => {
+                this.handlePlayerReorder(playerId, direction);
+            });
+        }
+    }
+
+    handlePlayerReorder(playerId, direction) {
+        if (!playerId || !this.peer?.gameState?.players) {
+            return;
+        }
+        if (this.peer.gameState.isGameStarted?.()) {
+            return;
+        }
+
+        const players = this.peer.gameState.players;
+        const eligibleIndices = players
+            .map((player, index) => (!player?.isUnclaimed && player?.peerId ? index : null))
+            .filter(index => index !== null);
+
+        if (eligibleIndices.length < 2) {
+            return;
+        }
+
+        const currentIndex = players.findIndex(player => player.playerId === playerId);
+        const eligiblePosition = eligibleIndices.indexOf(currentIndex);
+        if (eligiblePosition === -1) {
+            return;
+        }
+
+        const delta = direction === 'up' ? -1 : direction === 'down' ? 1 : 0;
+        if (!delta) {
+            return;
+        }
+
+        const targetPosition = eligiblePosition + delta;
+        if (targetPosition < 0 || targetPosition >= eligibleIndices.length) {
+            return;
+        }
+
+        const fromIndex = eligibleIndices[eligiblePosition];
+        const toIndex = eligibleIndices[targetPosition];
+        if (fromIndex === toIndex) {
+            return;
+        }
+
+        [players[fromIndex], players[toIndex]] = [players[toIndex], players[fromIndex]];
+
+        if (this.peer?.peer?.id) {
+            this.peer.ownedPlayers = this.peer.gameState.getPlayersByPeerId(this.peer.peer.id);
+        }
+
+        this.updateGameState();
+        this.peer.broadcastGameState();
     }
 
 

@@ -200,14 +200,7 @@ export default class Host extends BasePeer {
 
         if (this.previousGameStateJSON) {
             delta = StateDelta.createGameStateDelta(this.previousGameStateJSON, gameStateData, this.gameState);
-            const stats = StateDelta.getSizeStats(gameStateData, delta);
-
-            // Use delta only if it's significantly smaller (< 50% of full state)
-            useDelta = stats.worthIt;
-
-            if (useDelta) {
-                console.debug(`Using delta update (${stats.savingsPercent}% smaller): ${stats.deltaSize} bytes vs ${stats.fullSize} bytes`);
-            }
+            useDelta = true;
         }
 
         // Broadcast to all connections

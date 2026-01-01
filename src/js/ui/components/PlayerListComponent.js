@@ -6,7 +6,7 @@
  */
 import BaseUIComponent from '../BaseUIComponent.js';
 import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
-import { createInfoIcon, createGearIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
+import { createInfoIcon, createGearIcon, createChevronUpIcon, createChevronDownIcon, createIconButton } from '../../infrastructure/utils/IconUtils.js';
 import PlayerInfoModal from '../modals/settings/PlayerInfoModal.js';
 import PlayerControlModal from '../modals/settings/PlayerControlModal.js';
 import HostPlayerControlModal from '../modals/settings/HostPlayerControlModal.js';
@@ -250,6 +250,19 @@ export default class PlayerListComponent extends BaseUIComponent {
             return true;
         }
 
+        const oldOrder = oldPlayers
+            .filter(player => !player.isUnclaimed && player.peerId)
+            .map(player => player.playerId)
+            .join('|');
+        const newOrder = newPlayers
+            .filter(player => !player.isUnclaimed && player.peerId)
+            .map(player => player.playerId)
+            .join('|');
+
+        if (oldOrder !== newOrder) {
+            return true;
+        }
+
         // Create map for quick lookup
         const currentPlayersMap = new Map();
         oldPlayers.forEach(player => {
@@ -375,8 +388,8 @@ export default class PlayerListComponent extends BaseUIComponent {
         if (!gameState) return 'no-state';
 
         const playersSig = (gameState.players || [])
+            .filter(p => !p.isUnclaimed && p.peerId)
             .map(p => `${p.playerId}:${p.peerId}:${p.nickname}:${p.playerColor}:${p.peerColor}:${p.turnsTaken || 0}`)
-            .sort()
             .join('|');
 
         const readinessSig = Object.entries(gameState.pluginReadiness || {})
@@ -458,8 +471,8 @@ export default class PlayerListComponent extends BaseUIComponent {
 
         // Render each player that is claimed/connected
         const players = this.gameState.players.filter(p => !p.isUnclaimed && p.peerId);
-        players.forEach(player => {
-            const playerElement = this.createPlayerElement(player);
+        players.forEach((player, index) => {
+            const playerElement = this.createPlayerElement(player, index, players);
             if (playerElement) {
                 this.container.appendChild(playerElement);
             }
@@ -573,7 +586,7 @@ export default class PlayerListComponent extends BaseUIComponent {
      * @param {Player} player - Player object
      * @returns {HTMLElement} Player list item element
      */
-    createPlayerElement(player) {
+    createPlayerElement(player, index, players) {
         if (player.isUnclaimed || !player.peerId) {
             return null;
         }
@@ -623,6 +636,36 @@ export default class PlayerListComponent extends BaseUIComponent {
         // Player action buttons
         const playerButtons = document.createElement('div');
         playerButtons.className = 'player-buttons';
+
+        const isLobbyList = this.currentListElementId === 'lobbyPlayerList';
+        const canReorder = this.isHost && isLobbyList;
+        const totalPlayers = Array.isArray(players) ? players.length : 0;
+        const canMoveUp = index > 0;
+        const canMoveDown = index < totalPlayers - 1;
+
+        if (canReorder) {
+            const moveUpButton = createIconButton(
+                createChevronUpIcon(20),
+                'Move player up',
+                () => {
+                    if (!canMoveUp) return;
+                    this.emit('reorderPlayer', { playerId: player.playerId, direction: 'up' });
+                },
+                'icon-btn-settings'
+            );
+            playerButtons.appendChild(moveUpButton);
+
+            const moveDownButton = createIconButton(
+                createChevronDownIcon(20),
+                'Move player down',
+                () => {
+                    if (!canMoveDown) return;
+                    this.emit('reorderPlayer', { playerId: player.playerId, direction: 'down' });
+                },
+                'icon-btn-settings'
+            );
+            playerButtons.appendChild(moveDownButton);
+        }
 
         // Info button - shows stats/inventory for any player
         const infoButton = createIconButton(

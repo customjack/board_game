@@ -22,7 +22,9 @@ export default class BaseModal extends BaseUIComponent {
         this.modal = null;
         this.content = null;
         this.selectedTab = 'general';
-        this.disableBackdropClose = config.disableBackdropClose || false;
+        this.disableBackdropClose = config.disableBackdropClose !== undefined
+            ? config.disableBackdropClose
+            : true;
     }
 
     /**

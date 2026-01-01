@@ -118,5 +118,5 @@ coverage/
 !/plugins/trouble/
 !/plugins/example/
 
-#artifcats
+# Artifacts
 artifacts/

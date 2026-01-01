@@ -154,6 +154,12 @@ export default class UIComponentManager {
         for (const [id, component] of this.components) {
             try {
                 if (component.initialized) {
+                    if (typeof component.shouldUpdate === 'function') {
+                        const shouldUpdate = component.shouldUpdate(gameState, context);
+                        if (!shouldUpdate) {
+                            continue;
+                        }
+                    }
                     component.update(gameState, context);
                 }
             } catch (error) {

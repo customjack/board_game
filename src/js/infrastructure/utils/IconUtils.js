@@ -46,6 +46,30 @@ export function createGearIcon(size = 20, color = 'currentColor') {
 }
 
 /**
+ * Create an up chevron icon
+ * @param {number} size - Size of the icon in pixels
+ * @param {string} color - Color of the icon
+ * @returns {string} SVG HTML string
+ */
+export function createChevronUpIcon(size = 20, color = 'currentColor') {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>`;
+}
+
+/**
+ * Create a down chevron icon
+ * @param {number} size - Size of the icon in pixels
+ * @param {string} color - Color of the icon
+ * @returns {string} SVG HTML string
+ */
+export function createChevronDownIcon(size = 20, color = 'currentColor') {
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>`;
+}
+
+/**
  * Create a user icon
  * @param {number} size - Size of the icon in pixels
  * @param {string} color - Color of the icon

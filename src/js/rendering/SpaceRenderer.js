@@ -1,4 +1,5 @@
 import { getVisibleElementById } from '../infrastructure/utils/helpers.js';
+import MapStorageManager from '../systems/storage/MapStorageManager.js';
 
 /**
  * SpaceRenderer - Handles rendering of board spaces
@@ -40,7 +41,8 @@ export default class SpaceRenderer {
 
         // Check if space has an image
         const hasImage = space.visualDetails.image || space.visualDetails.sprite?.image;
-        const imageUrl = space.visualDetails.image || space.visualDetails.sprite?.image;
+        const rawImageUrl = space.visualDetails.image || space.visualDetails.sprite?.image;
+        const imageUrl = MapStorageManager.resolveCachedPluginAssetUrl(rawImageUrl);
 
         if (hasImage && imageUrl) {
             // Render space with image
@@ -60,14 +62,7 @@ export default class SpaceRenderer {
                 console.error('[SpaceRenderer] image failed to load', {
                     id: space.id,
                     name: space.name,
-                    url: imageUrl
-                });
-            });
-            img.addEventListener('load', () => {
-                console.debug('[SpaceRenderer] image loaded', {
-                    id: space.id,
-                    name: space.name,
-                    url: imageUrl
+                    url: MapStorageManager.summarizeUrl(imageUrl)
                 });
             });
             img.alt = space.name;

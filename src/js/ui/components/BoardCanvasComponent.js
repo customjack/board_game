@@ -10,6 +10,7 @@ import ConnectionRenderer from '../../rendering/ConnectionRenderer.js';
 import SpaceRenderer from '../../rendering/SpaceRenderer.js';
 import BoardSchemaValidator from '../../infrastructure/utils/BoardSchemaValidator.js';
 import BoardViewport from '../BoardViewport.js';
+import MapStorageManager from '../../systems/storage/MapStorageManager.js';
 
 export default class BoardCanvasComponent extends BaseUIComponent {
     /**
@@ -25,6 +26,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
 
         this.board = null;
         this.highlightedSpaceIds = new Set();
+        this.lastBoardSignature = null;
 
         // Rendering components
         this.renderConfig = new BoardRenderConfig();
@@ -67,8 +69,24 @@ export default class BoardCanvasComponent extends BaseUIComponent {
     setBoard(newBoard) {
         // Deep copy using toJSON/fromJSON
         this.board = Board.fromJSON(newBoard.toJSON(), this.factoryManager);
+        this.lastBoardSignature = this.getBoardSignature(this.board);
         this.updateRenderersFromBoard();
         this.emit('boardChanged', { board: this.board });
+    }
+
+    getBoardSignature(board) {
+        if (!board) return 'no-board';
+        const metadata = board.metadata || {};
+        const modified = metadata.modifiedDate || metadata.modified || metadata.createdDate || '';
+        const renderConfig = metadata.renderConfig || {};
+        return [
+            metadata.name || '',
+            metadata.version || '',
+            modified,
+            metadata.gameEngine?.type || '',
+            board.spaces?.length || 0,
+            JSON.stringify(renderConfig)
+        ].join('|');
     }
 
     /**
@@ -76,13 +94,29 @@ export default class BoardCanvasComponent extends BaseUIComponent {
      * @param {Board} newBoard - New board to compare
      * @returns {boolean} True if update needed
      */
-    shouldUpdate(newBoard) {
+    shouldUpdate(newStateOrBoard, context = {}) {
+        const board = newStateOrBoard?.board ? newStateOrBoard.board : newStateOrBoard;
+        if (!board) {
+            return false;
+        }
+        if (context?.page) {
+            const isLobbyBoard = this.currentContainerId === 'lobbyBoardContent';
+            const isActive = (context.page === 'lobby' && isLobbyBoard) ||
+                (context.page === 'game' && !isLobbyBoard);
+            if (!isActive) {
+                return false;
+            }
+        }
         if (!this.board) {
             return true;
         }
 
-        // Compare JSON representations
-        return JSON.stringify(this.board.toJSON()) !== JSON.stringify(newBoard.toJSON());
+        const signature = this.getBoardSignature(board);
+        const changed = signature !== this.lastBoardSignature;
+        if (changed) {
+            this.lastBoardSignature = signature;
+        }
+        return changed;
     }
 
     /**
@@ -103,8 +137,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
             return;
         }
 
-        // Check if board changed
-        if (gameState.board && this.shouldUpdate(gameState.board)) {
+        if (gameState.board) {
             this.setBoard(gameState.board);
             this.render();
         }
@@ -137,6 +170,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
 
             // Create board object
             this.board = Board.fromJSON(boardData, this.factoryManager);
+            this.lastBoardSignature = this.getBoardSignature(this.board);
             this.updateRenderersFromBoard();
             console.log('Board object created:', this.board);
 
@@ -175,6 +209,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
 
             // Create and set board
             this.board = Board.fromJSON(boardData, this.factoryManager);
+            this.lastBoardSignature = this.getBoardSignature(this.board);
             this.updateRenderersFromBoard();
             this.render();
             this.emit('boardLoaded', { board: this.board, source: 'file' });
@@ -239,7 +274,9 @@ export default class BoardCanvasComponent extends BaseUIComponent {
         renderSurface.style.pointerEvents = 'auto';
 
         // Add custom background if specified in board metadata
-        const bgImage = this.board.metadata?.renderConfig?.backgroundImage;
+        const bgImage = MapStorageManager.resolveCachedPluginAssetUrl(
+            this.board.metadata?.renderConfig?.backgroundImage
+        );
         const bgColor = this.board.metadata?.renderConfig?.backgroundColor;
 
         if (bgImage) {
@@ -364,6 +401,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
             this.container.innerHTML = '';
         }
         this.board = null;
+        this.lastBoardSignature = null;
         this.emit('boardCleared');
     }
 

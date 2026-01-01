@@ -224,7 +224,7 @@ export default class StateDelta {
         }
 
         // Board typically doesn't change during gameplay, only at game start
-        if (this.isDifferent(oldGameState.board, newGameState.board)) {
+        if (!this.isBoardSignatureEqual(oldGameState.board, newGameState.board)) {
             delta.board = newGameState.board;
         }
 
@@ -244,5 +244,25 @@ export default class StateDelta {
         }
 
         return delta;
+    }
+
+    static getBoardSignature(board) {
+        if (!board) return 'no-board';
+        const renderConfig = board.renderConfig || {};
+        const modified = board.modified || board.modifiedDate || board.created || '';
+        return [
+            board.version || '',
+            board.name || '',
+            modified,
+            board.gameEngine?.type || '',
+            board.spaces?.length || 0,
+            JSON.stringify(renderConfig)
+        ].join('|');
+    }
+
+    static isBoardSignatureEqual(oldBoard, newBoard) {
+        if (!oldBoard && !newBoard) return true;
+        if (!oldBoard || !newBoard) return false;
+        return this.getBoardSignature(oldBoard) === this.getBoardSignature(newBoard);
     }
 }
