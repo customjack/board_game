@@ -57,6 +57,8 @@
   --highlight-glow: rgba(144, 238, 144, 0.8);
   --highlight-glow-rgb: 144, 238, 144;
 
+  --map-editor-grid-color: rgba(0, 0, 0, 0.55);
+
   /* Board Rendering - Dark Theme */
   --board-connection-color: #888888;
   --board-arrow-color: #888888;

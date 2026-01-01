@@ -221,6 +221,19 @@
     min-height: 0;
 }
 
+.map-editor-assets-section {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 260px);
+    min-height: 0;
+}
+
+.map-editor-assets-list {
+    flex: 1;
+    max-height: none;
+    min-height: 0;
+}
+
 .map-editor-list-item {
     display: flex;
     justify-content: space-between;
@@ -310,7 +323,8 @@
 
 .map-editor-grid-layer {
     position: absolute;
-    inset: 0;
+    left: 0;
+    top: 0;
     pointer-events: none;
     z-index: 0;
 }

@@ -13,7 +13,10 @@ export default class MapEditorRenderer {
         this.gridLayer = null;
         this.lastSpaces = [];
         this.lastGridEnabled = null;
-        this.debugGrid = true;
+        this.lastGridSize = null;
+        this.surfaceWidth = 0;
+        this.surfaceHeight = 0;
+        this.debugGrid = false;
         this.gridControlAdded = false;
         this.resizeHandlerAttached = false;
     }
@@ -116,9 +119,9 @@ export default class MapEditorRenderer {
         if (this.viewport && this.onToggleGrid && !this.gridControlAdded) {
             const gridIcon = `
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"></rect>
-                    <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="3"></line>
-                    <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="3"></line>
+                    <rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"></rect>
+                    <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="2.5"></line>
+                    <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2.5"></line>
                 </svg>
             `;
             this.viewport.addControl({
@@ -172,13 +175,16 @@ export default class MapEditorRenderer {
         if (this.boardSurface.style.height !== nextHeight) {
             this.boardSurface.style.height = nextHeight;
         }
+        this.surfaceWidth = width;
+        this.surfaceHeight = height;
+        this.updateGridLayerSize();
     }
 
     applyBackground({ backgroundUrl, gridEnabled, gridSize = 50 } = {}) {
         if (!this.boardSurface) return;
         if (this.gridLayer) {
             if (gridEnabled) {
-                const gridColor = 'rgba(255, 255, 255, 0.5)';
+                const gridColor = 'var(--map-editor-grid-color, rgba(0, 0, 0, 0.35))';
                 const lineWidth = 2;
                 const grid = [
                     `repeating-linear-gradient(0deg, ${gridColor} 0, ${gridColor} ${lineWidth}px, transparent ${lineWidth}px, transparent ${gridSize}px)`,
@@ -189,6 +195,8 @@ export default class MapEditorRenderer {
                 this.gridLayer.style.backgroundSize = `${gridSize}px ${gridSize}px`;
                 this.gridLayer.style.backgroundPosition = '0 0';
                 this.gridLayer.style.outline = this.debugGrid ? '1px dashed rgba(255, 255, 255, 0.35)' : 'none';
+                this.lastGridSize = gridSize;
+                this.updateGridLayerSize();
             } else {
                 this.gridLayer.style.display = 'none';
                 this.gridLayer.style.backgroundImage = '';
@@ -225,6 +233,34 @@ export default class MapEditorRenderer {
                     height: this.boardSurface?.style.height
                 }
             });
+        }
+    }
+
+    updateGridLayerSize() {
+        if (!this.gridLayer) return;
+        const gridSize = this.lastGridSize || 50;
+        const buffer = gridSize * 200;
+        const containerWidth = this.container?.clientWidth || 0;
+        const containerHeight = this.container?.clientHeight || 0;
+        const baseWidth = Math.max(this.surfaceWidth || 0, containerWidth);
+        const baseHeight = Math.max(this.surfaceHeight || 0, containerHeight);
+        const width = baseWidth + buffer * 2;
+        const height = baseHeight + buffer * 2;
+        const nextWidth = `${width}px`;
+        const nextHeight = `${height}px`;
+        if (this.gridLayer.style.width !== nextWidth) {
+            this.gridLayer.style.width = nextWidth;
+        }
+        if (this.gridLayer.style.height !== nextHeight) {
+            this.gridLayer.style.height = nextHeight;
+        }
+        const nextLeft = `-${buffer}px`;
+        const nextTop = `-${buffer}px`;
+        if (this.gridLayer.style.left !== nextLeft) {
+            this.gridLayer.style.left = nextLeft;
+        }
+        if (this.gridLayer.style.top !== nextTop) {
+            this.gridLayer.style.top = nextTop;
         }
     }
 
