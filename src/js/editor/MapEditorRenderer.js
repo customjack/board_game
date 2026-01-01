@@ -12,7 +12,7 @@ export default class MapEditorRenderer {
         this.boardSurface = null;
         this.lastSpaces = [];
         this.gridControlAdded = false;
-        this.resizeObserver = null;
+        this.resizeHandlerAttached = false;
     }
 
     render(topology, assetsByPath = {}, selectedId = null, options = {}) {
@@ -127,9 +127,9 @@ export default class MapEditorRenderer {
             });
             this.gridControlAdded = true;
         }
-        if (!this.resizeObserver && typeof ResizeObserver !== 'undefined') {
-            this.resizeObserver = new ResizeObserver(() => this.updateSurfaceSize(this.lastSpaces));
-            this.resizeObserver.observe(this.container);
+        if (!this.resizeHandlerAttached && typeof window !== 'undefined') {
+            this.resizeHandlerAttached = true;
+            window.addEventListener('resize', () => this.updateSurfaceSize(this.lastSpaces));
         }
     }
 
@@ -152,8 +152,14 @@ export default class MapEditorRenderer {
         const minHeight = containerHeight ? Math.ceil(containerHeight / scale) : 0;
         const width = Math.max(800, maxX, minWidth);
         const height = Math.max(600, maxY, minHeight);
-        this.boardSurface.style.width = `${width}px`;
-        this.boardSurface.style.height = `${height}px`;
+        const nextWidth = `${width}px`;
+        const nextHeight = `${height}px`;
+        if (this.boardSurface.style.width !== nextWidth) {
+            this.boardSurface.style.width = nextWidth;
+        }
+        if (this.boardSurface.style.height !== nextHeight) {
+            this.boardSurface.style.height = nextHeight;
+        }
     }
 
     applyBackground({ backgroundUrl, gridEnabled, gridSize = 50 } = {}) {
@@ -164,7 +170,7 @@ export default class MapEditorRenderer {
         const repeats = [];
 
         if (gridEnabled) {
-            const gridColor = 'rgba(255, 255, 255, 0.08)';
+            const gridColor = 'rgba(255, 255, 255, 0.14)';
             const grid = `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`;
             layers.push(grid);
             sizes.push(`${gridSize}px ${gridSize}px`);
