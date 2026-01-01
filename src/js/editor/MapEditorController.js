@@ -11,9 +11,7 @@ const METADATA_SCHEMA = {
         author: { type: 'string', description: 'Creator or studio name' },
         version: { type: 'string', description: 'Semantic version, e.g. 1.0.0' },
         description: { type: 'string', description: 'Short description', ui: { widget: 'textarea' } },
-        tags: { type: 'array', description: 'Searchable tags', items: { type: 'string' } },
-        created: { type: 'string', description: 'ISO date string', ui: { widget: 'datetime' } },
-        modified: { type: 'string', description: 'ISO date string', ui: { widget: 'datetime' } }
+        tags: { type: 'array', description: 'Searchable tags', items: { type: 'string' } }
     }
 };
 
@@ -134,14 +132,15 @@ export default class MapEditorController {
 
     setupTabs(tabBar, defaultTab) {
         if (!tabBar) return;
+        const group = tabBar.dataset.tabGroup || 'default';
         const buttons = Array.from(tabBar.querySelectorAll('.map-editor-tab-button'));
         buttons.forEach((btn) => {
-            btn.addEventListener('click', () => this.activateTab(tabBar, btn.dataset.tab));
+            btn.addEventListener('click', () => this.activateTab(tabBar, btn.dataset.tab, group));
         });
-        this.activateTab(tabBar, defaultTab || buttons[0]?.dataset.tab);
+        this.activateTab(tabBar, defaultTab || buttons[0]?.dataset.tab, group);
     }
 
-    activateTab(tabBar, tabName) {
+    activateTab(tabBar, tabName, group = 'default') {
         if (!tabBar) return;
         const buttons = Array.from(tabBar.querySelectorAll('.map-editor-tab-button'));
         buttons.forEach((btn) => {
@@ -150,7 +149,9 @@ export default class MapEditorController {
         });
         const container = tabBar.parentElement;
         if (!container) return;
-        const panels = Array.from(container.querySelectorAll('.map-editor-tab-content'));
+        const panels = Array.from(container.querySelectorAll(
+            `.map-editor-tab-content[data-tab-group="${group}"]`
+        ));
         panels.forEach((panel) => {
             const isActive = panel.dataset.tab === tabName;
             panel.classList.toggle('active', isActive);
@@ -167,7 +168,7 @@ export default class MapEditorController {
             undoButton: document.getElementById('mapEditorUndoButton'),
             redoButton: document.getElementById('mapEditorRedoButton'),
             status: document.getElementById('mapEditorStatus'),
-            configTabs: document.getElementById('mapEditorConfigTabs'),
+            primaryTabs: document.getElementById('mapEditorPrimaryTabs'),
             spaceTabs: document.getElementById('mapEditorSpaceTabs'),
             metadataForm: document.getElementById('mapEditorMetadataForm'),
             metadataApply: document.getElementById('mapEditorMetadataApply'),
@@ -295,7 +296,7 @@ export default class MapEditorController {
         if (this.elements.canvas) {
             this.elements.canvas.addEventListener('click', () => this.clearSelection());
         }
-        this.setupTabs(this.elements.configTabs, 'metadata');
+        this.setupTabs(this.elements.primaryTabs, 'map');
         this.setupTabs(this.elements.spaceTabs, 'visual');
     }
 
@@ -310,6 +311,7 @@ export default class MapEditorController {
 
     async handleNewMap() {
         await this.loadDefaultTemplate();
+        this.resetMetadataTimestamps();
         this.setStatus('New map loaded');
     }
 
@@ -409,7 +411,38 @@ export default class MapEditorController {
     updateStateSection(key, value) {
         this.stateManager.updateSection(key, value);
         this.updateDependenciesFromUsage();
+        this.updateMetadataTimestamps();
         this.renderAll();
+    }
+
+    resetMetadataTimestamps() {
+        const state = this.stateManager.state;
+        if (!state?.metadata) return;
+        const now = new Date().toISOString();
+        const metadata = {
+            ...state.metadata,
+            created: now,
+            modified: now
+        };
+        this.stateManager.setState({ ...state, metadata }, { pushHistory: false });
+        this.renderAll();
+    }
+
+    updateMetadataTimestamps() {
+        const state = this.stateManager.state;
+        if (!state?.metadata) return;
+        const now = new Date().toISOString();
+        const created = state.metadata.created || now;
+        const modified = now;
+        if (state.metadata.created === created && state.metadata.modified === modified) {
+            return;
+        }
+        const metadata = {
+            ...state.metadata,
+            created,
+            modified
+        };
+        this.stateManager.setState({ ...state, metadata }, { pushHistory: false });
     }
 
     selectSpace(spaceId) {
@@ -1171,29 +1204,42 @@ export default class MapEditorController {
     createSchemaField(fieldName, fieldSchema, fieldValue) {
         const schema = this.normalizeSchema(fieldSchema);
         const wrapper = document.createElement('div');
-        wrapper.className = schema.type === 'object' ? 'map-editor-form-group' : 'map-editor-field';
         wrapper.dataset.fieldKey = fieldName;
 
-        const label = document.createElement('label');
-        label.textContent = this.formatLabel(fieldName);
-        wrapper.appendChild(label);
-
         if (schema.type === 'object') {
-            const body = document.createElement('div');
-            body.className = 'map-editor-form';
-            const properties = schema.properties || {};
-            if (Object.keys(properties).length) {
-                this.appendSchemaFields(body, properties, fieldValue || {});
-            } else if (schema.ui?.allowAdditional) {
-                this.renderKeyValueEditor(body, fieldValue || {});
+            wrapper.className = 'map-editor-form-group';
+            const collapsible = schema.ui?.collapsible !== false;
+            const labelText = this.formatLabel(fieldName);
+            if (collapsible) {
+                const details = document.createElement('details');
+                details.className = 'map-editor-collapsible';
+                if (schema.ui?.open || schema.ui?.collapsed === false) {
+                    details.open = true;
+                }
+                const summary = document.createElement('summary');
+                summary.textContent = labelText;
+                details.appendChild(summary);
+                const body = document.createElement('div');
+                body.className = 'map-editor-form';
+                body.dataset.fieldsContainer = 'true';
+                this.populateObjectFields(body, schema, fieldValue);
+                details.appendChild(body);
+                wrapper.appendChild(details);
             } else {
-                const note = document.createElement('div');
-                note.className = 'map-editor-form-note';
-                note.textContent = 'No fields defined for this object.';
-                body.appendChild(note);
+                const label = document.createElement('label');
+                label.textContent = labelText;
+                wrapper.appendChild(label);
+                const body = document.createElement('div');
+                body.className = 'map-editor-form';
+                body.dataset.fieldsContainer = 'true';
+                this.populateObjectFields(body, schema, fieldValue);
+                wrapper.appendChild(body);
             }
-            wrapper.appendChild(body);
         } else if (schema.type === 'array') {
+            wrapper.className = 'map-editor-field';
+            const label = document.createElement('label');
+            label.textContent = this.formatLabel(fieldName);
+            wrapper.appendChild(label);
             const list = document.createElement('div');
             list.className = 'map-editor-form';
             list.dataset.arrayItems = 'true';
@@ -1212,6 +1258,10 @@ export default class MapEditorController {
             wrapper.appendChild(list);
             wrapper.appendChild(addButton);
         } else {
+            wrapper.className = 'map-editor-field';
+            const label = document.createElement('label');
+            label.textContent = this.formatLabel(fieldName);
+            wrapper.appendChild(label);
             const input = this.createSchemaInput(schema, fieldName, fieldValue);
             if (input) {
                 wrapper.appendChild(input);
@@ -1226,6 +1276,22 @@ export default class MapEditorController {
         }
 
         return wrapper;
+    }
+
+    populateObjectFields(container, schema, fieldValue) {
+        const properties = schema.properties || {};
+        if (Object.keys(properties).length) {
+            this.appendSchemaFields(container, properties, fieldValue || {});
+            return;
+        }
+        if (schema.ui?.allowAdditional) {
+            this.renderKeyValueEditor(container, fieldValue || {});
+            return;
+        }
+        const note = document.createElement('div');
+        note.className = 'map-editor-form-note';
+        note.textContent = 'No fields defined for this object.';
+        container.appendChild(note);
     }
 
     createSchemaInput(schema, fieldName, fieldValue) {
@@ -1365,10 +1431,11 @@ export default class MapEditorController {
         const normalized = this.normalizeSchema(schema);
         if (normalized.type === 'object') {
             const result = {};
+            const fieldsRoot = container.querySelector('[data-fields-container="true"]') || container;
             const properties = normalized.properties || {};
             Object.entries(properties).forEach(([key, fieldSchema]) => {
                 if (key.startsWith('_')) return;
-                const fieldEl = container.querySelector(`:scope > [data-field-key="${key}"]`);
+                const fieldEl = fieldsRoot.querySelector(`:scope > [data-field-key="${key}"]`);
                 if (!fieldEl) return;
                 const value = this.collectSchemaValue(fieldSchema, fieldEl);
                 if (value !== undefined) {
@@ -1376,7 +1443,7 @@ export default class MapEditorController {
                 }
             });
             if (normalized.ui?.allowAdditional) {
-                const extra = this.collectKeyValuePairs(container);
+                const extra = this.collectKeyValuePairs(fieldsRoot);
                 return { ...result, ...extra };
             }
             return result;

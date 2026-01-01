@@ -12,6 +12,13 @@
     gap: 16px;
 }
 
+.map-editor-panel {
+    border: 1px solid var(--border-color, #444);
+    border-radius: 10px;
+    padding: 16px;
+    background: var(--background-secondary, #141414);
+}
+
 .map-editor-sidebar {
     display: flex;
     flex-direction: column;
@@ -83,6 +90,19 @@
 .map-editor-form-note {
     font-size: 12px;
     color: var(--text-color-secondary, #aaa);
+}
+
+.map-editor-collapsible {
+    border: 1px solid var(--border-color, #333);
+    border-radius: 8px;
+    padding: 6px 10px 10px;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.map-editor-collapsible summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
 }
 
 .map-editor-select-list {

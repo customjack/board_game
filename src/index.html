@@ -88,73 +88,81 @@
             <span id="mapEditorStatus" class="map-editor-status"></span>
         </div>
 
-        <div class="map-editor-layout">
-            <aside class="map-editor-sidebar">
-                <div class="map-editor-tab-bar" id="mapEditorConfigTabs">
-                    <button class="button button-secondary map-editor-tab-button" data-tab="metadata">Metadata</button>
-                    <button class="button button-secondary map-editor-tab-button" data-tab="rules">Rules</button>
-                    <button class="button button-secondary map-editor-tab-button" data-tab="engine">Engine</button>
-                </div>
-
-                <section class="map-editor-section map-editor-tab-content" data-tab="metadata">
-                    <h3>Metadata</h3>
-                    <div id="mapEditorMetadataForm" class="map-editor-form"></div>
-                    <button id="mapEditorMetadataApply" class="button button-secondary">Save Metadata</button>
-                </section>
-
-                <section class="map-editor-section map-editor-tab-content" data-tab="rules">
-                    <h3>Rules</h3>
-                    <div id="mapEditorRulesForm" class="map-editor-form"></div>
-                    <button id="mapEditorRulesApply" class="button button-secondary">Save Rules</button>
-                </section>
-
-                <section class="map-editor-section map-editor-tab-content" data-tab="engine">
-                    <h3>Engine</h3>
-                    <div id="mapEditorEngineForm" class="map-editor-form"></div>
-                    <button id="mapEditorEngineApply" class="button button-secondary">Save Engine</button>
-                </section>
-            </aside>
-
-            <main class="map-editor-canvas">
-                <div id="mapEditorCanvas" class="map-editor-canvas-surface"></div>
-            </main>
-
-            <aside class="map-editor-sidebar">
-                <section class="map-editor-section">
-                    <h3>Spaces</h3>
-                    <div class="map-editor-row">
-                        <button id="mapEditorAddSpaceButton" class="button button-secondary">Add Space</button>
-                        <button id="mapEditorDeleteSpaceButton" class="button button-secondary">Delete Space</button>
-                    </div>
-                    <ul id="mapEditorSpaceList" class="map-editor-list"></ul>
-                </section>
-
-                <section class="map-editor-section">
-                    <h3>Assets</h3>
-                    <input id="mapEditorAssetsInput" type="file" accept="image/*" multiple>
-                    <div id="mapEditorAssetsList" class="map-editor-list"></div>
-                    <div class="map-editor-row">
-                        <label for="mapEditorPreviewInput">Preview Image</label>
-                        <input id="mapEditorPreviewInput" type="file" accept="image/*">
-                    </div>
-                    <div id="mapEditorPreviewName" class="map-editor-preview-name"></div>
-                </section>
-
-            </aside>
+        <div class="map-editor-tab-bar" id="mapEditorPrimaryTabs" data-tab-group="editor">
+            <button class="button button-secondary map-editor-tab-button" data-tab="map">Map</button>
+            <button class="button button-secondary map-editor-tab-button" data-tab="metadata">Metadata</button>
+            <button class="button button-secondary map-editor-tab-button" data-tab="rules">Rules</button>
+            <button class="button button-secondary map-editor-tab-button" data-tab="engine">Engine</button>
         </div>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="map">
+            <div class="map-editor-layout">
+                <aside class="map-editor-sidebar">
+                    <section class="map-editor-section">
+                        <h3>Spaces</h3>
+                        <div class="map-editor-row">
+                            <button id="mapEditorAddSpaceButton" class="button button-secondary">Add Space</button>
+                            <button id="mapEditorDeleteSpaceButton" class="button button-secondary">Delete Space</button>
+                        </div>
+                        <ul id="mapEditorSpaceList" class="map-editor-list"></ul>
+                    </section>
+                </aside>
+
+                <main class="map-editor-canvas">
+                    <div id="mapEditorCanvas" class="map-editor-canvas-surface"></div>
+                </main>
+
+                <aside class="map-editor-sidebar">
+                    <section class="map-editor-section">
+                        <h3>Assets</h3>
+                        <input id="mapEditorAssetsInput" type="file" accept="image/*" multiple>
+                        <div id="mapEditorAssetsList" class="map-editor-list"></div>
+                        <div class="map-editor-row">
+                            <label for="mapEditorPreviewInput">Preview Image</label>
+                            <input id="mapEditorPreviewInput" type="file" accept="image/*">
+                        </div>
+                        <div id="mapEditorPreviewName" class="map-editor-preview-name"></div>
+                    </section>
+                </aside>
+            </div>
+        </section>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="metadata">
+            <div class="map-editor-section">
+                <h3>Metadata</h3>
+                <div id="mapEditorMetadataForm" class="map-editor-form"></div>
+                <button id="mapEditorMetadataApply" class="button button-secondary">Save Metadata</button>
+            </div>
+        </section>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="rules">
+            <div class="map-editor-section">
+                <h3>Rules</h3>
+                <div id="mapEditorRulesForm" class="map-editor-form"></div>
+                <button id="mapEditorRulesApply" class="button button-secondary">Save Rules</button>
+            </div>
+        </section>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="engine">
+            <div class="map-editor-section">
+                <h3>Engine</h3>
+                <div id="mapEditorEngineForm" class="map-editor-form"></div>
+                <button id="mapEditorEngineApply" class="button button-secondary">Save Engine</button>
+            </div>
+        </section>
 
         <div id="mapEditorSpaceEditor" class="map-editor-modal" style="display: none;">
             <div class="map-editor-modal-header">
                 <strong id="mapEditorSpaceTitle">Space</strong>
                 <button id="mapEditorSpaceClose" class="button button-secondary">Close</button>
             </div>
-            <div class="map-editor-tab-bar" id="mapEditorSpaceTabs">
+            <div class="map-editor-tab-bar" id="mapEditorSpaceTabs" data-tab-group="space">
                 <button class="button button-secondary map-editor-tab-button" data-tab="visual">Visual</button>
                 <button class="button button-secondary map-editor-tab-button" data-tab="events">Events</button>
                 <button class="button button-secondary map-editor-tab-button" data-tab="json">View JSON</button>
             </div>
 
-            <div class="map-editor-tab-content" data-tab="visual">
+            <div class="map-editor-tab-content" data-tab-group="space" data-tab="visual">
                 <div class="map-editor-field">
                     <label for="mapEditorVisualSize">Size</label>
                     <input id="mapEditorVisualSize" type="number" class="input" min="10" step="1">
@@ -184,7 +192,7 @@
                 <button id="mapEditorVisualApply" class="button button-secondary">Apply Visual</button>
             </div>
 
-            <div class="map-editor-tab-content" data-tab="events">
+            <div class="map-editor-tab-content" data-tab-group="space" data-tab="events">
                 <div class="map-editor-row">
                     <select id="mapEditorEventSelect" class="input"></select>
                     <button id="mapEditorEventAdd" class="button button-secondary">Add Event</button>
@@ -217,7 +225,7 @@
                 <button id="mapEditorEventApply" class="button button-secondary">Apply Event</button>
             </div>
 
-            <div class="map-editor-tab-content" data-tab="json">
+            <div class="map-editor-tab-content" data-tab-group="space" data-tab="json">
                 <textarea id="mapEditorSpaceJsonView" class="map-editor-textarea" rows="12" readonly></textarea>
             </div>
         </div>
