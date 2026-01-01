@@ -53,6 +53,7 @@ import MapStorageManager from './systems/storage/MapStorageManager.js';
 import TurnBasedGameEngine from './game/engine_types/turn_based/TurnBasedEngine.js';
 import GameStateStorageManager from './systems/storage/GameStateStorageManager.js';
 import GameStateManagerModal from './ui/modals/managers/GameStateManagerModal.js';
+import MapEditorController from './editor/MapEditorController.js';
 
 import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
 
@@ -101,6 +102,7 @@ function registerPages(pageRegistry) {
         'gamePage',
         'hostPage',
         'loadingPage',
+        'mapEditorPage',
     ];
     pages.forEach((page) => pageRegistry.registerPage(page));
 }
@@ -211,6 +213,7 @@ function registerListeners(
     const hostBackButton = document.getElementById('hostBackButton');
     const joinBackButton = document.getElementById('joinBackButton');
     const loadGameStateButton = document.getElementById('loadGameStateButton');
+    const mapEditorButton = document.getElementById('mapEditorButton');
 
     // Initialize Plugin Manager Modal
     const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager);
@@ -272,6 +275,24 @@ function registerListeners(
             resetHomePage();
         });
     }
+
+    let mapEditorController = null;
+    if (mapEditorButton) {
+        listenerRegistry.registerListener('mapEditorButton', 'click', async () => {
+            pageRegistry.showPage('mapEditorPage');
+            eventBus.emit('pageChanged', { pageId: 'mapEditorPage' });
+            if (!mapEditorController) {
+                mapEditorController = new MapEditorController({
+                    pageRegistry,
+                    eventBus,
+                    factoryManager,
+                    pluginManager
+                });
+                await mapEditorController.init();
+            }
+        });
+    }
+
 
     let hostEventHandlerInstance = null;
     const startHostFlow = async (loadSave = null) => {

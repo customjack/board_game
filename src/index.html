@@ -47,6 +47,7 @@
     <div id="homePage">
         <button id="hostButton" class="button">Host Game</button>
         <button id="joinButton" class="button">Join Game</button>
+        <button id="mapEditorButton" class="button button-secondary">Map Editor</button>
     </div>
 
     <!-- Host Game Page -->
@@ -71,6 +72,91 @@
         <div class="button-row">
             <button id="joinBackButton" class="button button-secondary">Back</button>
             <button id="startJoinButton" class="button">Join Game</button>
+        </div>
+    </div>
+
+    <!-- Map Editor Page -->
+    <div id="mapEditorPage" style="display: none;">
+        <div class="map-editor-header">
+            <button id="mapEditorBackButton" class="button button-secondary">Back</button>
+            <button id="mapEditorNewButton" class="button">New Map</button>
+            <button id="mapEditorLoadButton" class="button">Load Bundle</button>
+            <input id="mapEditorBundleInput" type="file" accept=".zip" style="display: none;">
+            <button id="mapEditorExportButton" class="button button-primary">Export Bundle</button>
+            <button id="mapEditorUndoButton" class="button button-secondary">Undo</button>
+            <button id="mapEditorRedoButton" class="button button-secondary">Redo</button>
+            <span id="mapEditorStatus" class="map-editor-status"></span>
+        </div>
+
+        <div class="map-editor-layout">
+            <aside class="map-editor-sidebar">
+                <section class="map-editor-section">
+                    <h3>Metadata</h3>
+                    <textarea id="mapEditorMetadataJson" class="map-editor-textarea" rows="8"></textarea>
+                    <button id="mapEditorMetadataApply" class="button button-secondary">Apply Metadata</button>
+                </section>
+
+                <section class="map-editor-section">
+                    <h3>Rules</h3>
+                    <textarea id="mapEditorRulesJson" class="map-editor-textarea" rows="8"></textarea>
+                    <button id="mapEditorRulesApply" class="button button-secondary">Apply Rules</button>
+                </section>
+
+                <section class="map-editor-section">
+                    <h3>Engine</h3>
+                    <textarea id="mapEditorEngineJson" class="map-editor-textarea" rows="6"></textarea>
+                    <button id="mapEditorEngineApply" class="button button-secondary">Apply Engine</button>
+                </section>
+
+                <section class="map-editor-section">
+                    <h3>UI</h3>
+                    <textarea id="mapEditorUiJson" class="map-editor-textarea" rows="6"></textarea>
+                    <button id="mapEditorUiApply" class="button button-secondary">Apply UI</button>
+                </section>
+
+                <section class="map-editor-section">
+                    <h3>Dependencies</h3>
+                    <div id="mapEditorDependenciesList" class="map-editor-list"></div>
+                </section>
+            </aside>
+
+            <main class="map-editor-canvas">
+                <div id="mapEditorCanvas" class="map-editor-canvas-surface"></div>
+            </main>
+
+            <aside class="map-editor-sidebar">
+                <section class="map-editor-section">
+                    <h3>Spaces</h3>
+                    <div class="map-editor-row">
+                        <button id="mapEditorAddSpaceButton" class="button button-secondary">Add Space</button>
+                        <button id="mapEditorDeleteSpaceButton" class="button button-secondary">Delete Space</button>
+                    </div>
+                    <ul id="mapEditorSpaceList" class="map-editor-list"></ul>
+                    <textarea id="mapEditorSpaceJson" class="map-editor-textarea" rows="10"></textarea>
+                    <button id="mapEditorSpaceApply" class="button button-secondary">Apply Space</button>
+                </section>
+
+                <section class="map-editor-section">
+                    <h3>Assets</h3>
+                    <input id="mapEditorAssetsInput" type="file" accept="image/*" multiple>
+                    <div id="mapEditorAssetsList" class="map-editor-list"></div>
+                    <div class="map-editor-row">
+                        <label for="mapEditorPreviewInput">Preview Image</label>
+                        <input id="mapEditorPreviewInput" type="file" accept="image/*">
+                    </div>
+                    <div id="mapEditorPreviewName" class="map-editor-preview-name"></div>
+                </section>
+
+                <section class="map-editor-section">
+                    <h3>Available Actions</h3>
+                    <div id="mapEditorActionList" class="map-editor-list"></div>
+                </section>
+
+                <section class="map-editor-section">
+                    <h3>Available Triggers</h3>
+                    <div id="mapEditorTriggerList" class="map-editor-list"></div>
+                </section>
+            </aside>
         </div>
     </div>
 

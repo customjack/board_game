@@ -27,6 +27,7 @@
 @import 'components/settings-modal.css';
 @import 'components/plugin-manager.css';
 @import 'components/player-modals.css';
+@import 'components/map-editor.css';
 
 @import 'animations.css';
 
@@ -75,6 +76,7 @@
 @import 'components/settings-modal.css';
 @import 'components/plugin-manager.css';
 @import 'components/player-modals.css';
+@import 'components/map-editor.css';
 
 @import 'animations.css';
 
