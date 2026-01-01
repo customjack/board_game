@@ -30,6 +30,26 @@
     font-size: 1em;
 }
 
+.map-editor-tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.map-editor-tab-button.active {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 0 0 1px var(--primary-color, #4a90e2);
+}
+
+.map-editor-tab-content {
+    display: none;
+}
+
+.map-editor-tab-content.active {
+    display: block;
+}
+
 .map-editor-textarea {
     width: 100%;
     min-height: 120px;
@@ -44,10 +64,54 @@
     font-size: 12px;
 }
 
+.map-editor-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.map-editor-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #333);
+    background: var(--background-secondary, #141414);
+}
+
+.map-editor-form-note {
+    font-size: 12px;
+    color: var(--text-color-secondary, #aaa);
+}
+
+.map-editor-select-list {
+    min-height: 120px;
+    padding: 6px;
+}
+
+.map-editor-array-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px dashed var(--border-color, #444);
+    background: rgba(0, 0, 0, 0.2);
+}
+
 .map-editor-row {
     display: flex;
     gap: 8px;
     align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.map-editor-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     margin-bottom: 8px;
 }
 
@@ -122,8 +186,36 @@
     margin-left: auto;
 }
 
+.map-editor-modal {
+    position: fixed;
+    left: 24px;
+    top: 120px;
+    width: 360px;
+    max-width: 90vw;
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    background: var(--background-box, #1f1f1f);
+    border: 1px solid var(--border-color, #444);
+    border-radius: 10px;
+    padding: 12px;
+    z-index: 1000;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.map-editor-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
 @media (max-width: 1100px) {
     .map-editor-layout {
         grid-template-columns: 1fr;
+    }
+
+    .map-editor-modal {
+        position: static;
+        width: auto;
     }
 }

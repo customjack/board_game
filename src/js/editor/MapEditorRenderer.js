@@ -1,8 +1,9 @@
 export default class MapEditorRenderer {
-    constructor({ container, onSelectSpace, onMoveSpace } = {}) {
+    constructor({ container, onSelectSpace, onMoveSpace, onContextSpace } = {}) {
         this.container = container;
         this.onSelectSpace = onSelectSpace;
         this.onMoveSpace = onMoveSpace;
+        this.onContextSpace = onContextSpace;
         this.dragState = null;
     }
 
@@ -46,6 +47,14 @@ export default class MapEditorRenderer {
                 event.stopPropagation();
                 if (this.onSelectSpace) {
                     this.onSelectSpace(space.id);
+                }
+            });
+
+            element.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (this.onContextSpace) {
+                    this.onContextSpace(space.id, { x: event.clientX, y: event.clientY });
                 }
             });
 
