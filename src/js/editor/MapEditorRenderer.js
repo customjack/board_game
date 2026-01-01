@@ -12,6 +12,8 @@ export default class MapEditorRenderer {
         this.boardSurface = null;
         this.gridLayer = null;
         this.lastSpaces = [];
+        this.lastGridEnabled = null;
+        this.debugGrid = true;
         this.gridControlAdded = false;
         this.resizeHandlerAttached = false;
     }
@@ -186,11 +188,13 @@ export default class MapEditorRenderer {
                 this.gridLayer.style.backgroundImage = grid.join(', ');
                 this.gridLayer.style.backgroundSize = `${gridSize}px ${gridSize}px`;
                 this.gridLayer.style.backgroundPosition = '0 0';
+                this.gridLayer.style.outline = this.debugGrid ? '1px dashed rgba(255, 255, 255, 0.35)' : 'none';
             } else {
                 this.gridLayer.style.display = 'none';
                 this.gridLayer.style.backgroundImage = '';
                 this.gridLayer.style.backgroundSize = '';
                 this.gridLayer.style.backgroundPosition = '';
+                this.gridLayer.style.outline = 'none';
             }
         }
 
@@ -210,6 +214,18 @@ export default class MapEditorRenderer {
         this.boardSurface.style.backgroundPosition = positions.join(', ');
         this.boardSurface.style.backgroundRepeat = repeats.join(', ');
         this.boardSurface.style.backgroundColor = 'transparent';
+
+        if (gridEnabled !== this.lastGridEnabled) {
+            this.lastGridEnabled = gridEnabled;
+            console.debug('[MapEditor] Grid state', {
+                enabled: gridEnabled,
+                gridSize,
+                surface: {
+                    width: this.boardSurface?.style.width,
+                    height: this.boardSurface?.style.height
+                }
+            });
+        }
     }
 
     syncGridControl(isEnabled) {

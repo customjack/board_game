@@ -204,6 +204,23 @@
     padding-right: 4px;
 }
 
+.map-editor-spaces-section {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 260px);
+    min-height: 0;
+}
+
+.map-editor-spaces-section .map-editor-row {
+    flex: 0 0 auto;
+}
+
+.map-editor-space-list {
+    flex: 1;
+    max-height: none;
+    min-height: 0;
+}
+
 .map-editor-list-item {
     display: flex;
     justify-content: space-between;
