@@ -87,8 +87,10 @@ export default class BoardViewport {
         // Only pan if clicking on board surface, not on spaces/buttons
         if (e.target.classList.contains('space') ||
             e.target.classList.contains('board-space') ||
+            e.target.classList.contains('map-editor-space') ||
             e.target.closest('.space') ||
-            e.target.closest('.board-space')) {
+            e.target.closest('.board-space') ||
+            e.target.closest('.map-editor-space')) {
             return; // Let spaces handle their own clicks
         }
 

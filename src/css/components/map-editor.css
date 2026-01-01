@@ -27,6 +27,19 @@
     margin: 0 auto;
 }
 
+.map-editor-panel h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.15em;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+    padding-bottom: 0;
+}
+
+.map-editor-panel h3::after {
+    content: none;
+}
+
 .map-editor-sidebar {
     display: flex;
     flex-direction: column;
@@ -171,6 +184,10 @@
     flex-wrap: wrap;
 }
 
+.map-editor-toggle {
+    justify-content: space-between;
+}
+
 .map-editor-field {
     display: flex;
     flex-direction: column;
@@ -217,7 +234,7 @@
     width: 100%;
     height: 100%;
     min-height: 560px;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .map-editor-space {
@@ -244,6 +261,7 @@
 }
 
 .map-editor-panel label,
+.map-editor-section label,
 .map-editor-modal label {
     text-align: left;
     margin-bottom: 4px;
@@ -255,10 +273,21 @@
 .map-editor-panel input,
 .map-editor-panel select,
 .map-editor-panel textarea,
+.map-editor-section input,
+.map-editor-section select,
+.map-editor-section textarea,
 .map-editor-modal input,
 .map-editor-modal select,
 .map-editor-modal textarea {
     text-align: left;
+}
+
+.map-editor-render-surface {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    min-width: 800px;
+    min-height: 600px;
 }
 
 .map-editor-status {

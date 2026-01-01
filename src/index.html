@@ -114,6 +114,22 @@
 
                 <aside class="map-editor-sidebar">
                     <section class="map-editor-section">
+                        <h3>View</h3>
+                        <div class="map-editor-row map-editor-toggle">
+                            <label for="mapEditorGridToggle">Show Grid</label>
+                            <input id="mapEditorGridToggle" type="checkbox">
+                        </div>
+                        <div class="map-editor-field">
+                            <label for="mapEditorBackgroundInput">Background Image</label>
+                            <input id="mapEditorBackgroundInput" type="file" accept="image/*">
+                            <div class="map-editor-row">
+                                <button id="mapEditorBackgroundClear" class="button button-secondary">Clear Background</button>
+                            </div>
+                            <div id="mapEditorBackgroundName" class="map-editor-preview-name"></div>
+                        </div>
+                    </section>
+
+                    <section class="map-editor-section">
                         <h3>Assets</h3>
                         <input id="mapEditorAssetsInput" type="file" accept="image/*" multiple>
                         <div id="mapEditorAssetsList" class="map-editor-list"></div>
@@ -128,27 +144,21 @@
         </section>
 
         <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="metadata">
-            <div class="map-editor-section">
-                <h3>Metadata</h3>
-                <div id="mapEditorMetadataForm" class="map-editor-form"></div>
-                <button id="mapEditorMetadataApply" class="button button-secondary">Save Metadata</button>
-            </div>
+            <h3>Metadata</h3>
+            <div id="mapEditorMetadataForm" class="map-editor-form"></div>
+            <button id="mapEditorMetadataApply" class="button button-secondary">Save Metadata</button>
         </section>
 
         <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="rules">
-            <div class="map-editor-section">
-                <h3>Rules</h3>
-                <div id="mapEditorRulesForm" class="map-editor-form"></div>
-                <button id="mapEditorRulesApply" class="button button-secondary">Save Rules</button>
-            </div>
+            <h3>Rules</h3>
+            <div id="mapEditorRulesForm" class="map-editor-form"></div>
+            <button id="mapEditorRulesApply" class="button button-secondary">Save Rules</button>
         </section>
 
         <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="engine">
-            <div class="map-editor-section">
-                <h3>Engine</h3>
-                <div id="mapEditorEngineForm" class="map-editor-form"></div>
-                <button id="mapEditorEngineApply" class="button button-secondary">Save Engine</button>
-            </div>
+            <h3>Engine</h3>
+            <div id="mapEditorEngineForm" class="map-editor-form"></div>
+            <button id="mapEditorEngineApply" class="button button-secondary">Save Engine</button>
         </section>
 
         <div id="mapEditorSpaceEditor" class="map-editor-modal" style="display: none;">

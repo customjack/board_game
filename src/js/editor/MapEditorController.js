@@ -4,6 +4,8 @@ import MapEditorBundleLoader from './MapEditorBundleLoader.js';
 import MapEditorRenderer from './MapEditorRenderer.js';
 import GameEngineFactory from '../infrastructure/factories/GameEngineFactory.js';
 
+const BACKGROUND_ASSET_NAME = '_background';
+
 const METADATA_SCHEMA = {
     type: 'object',
     properties: {
@@ -113,6 +115,8 @@ export default class MapEditorController {
         this.effectPayloadContainer = null;
         this.effectTypeSelect = null;
         this.formCache = {};
+        this.gridEnabled = true;
+        this.gridSize = 50;
     }
 
     async init() {
@@ -191,6 +195,10 @@ export default class MapEditorController {
             assetsList: document.getElementById('mapEditorAssetsList'),
             previewInput: document.getElementById('mapEditorPreviewInput'),
             previewName: document.getElementById('mapEditorPreviewName'),
+            gridToggle: document.getElementById('mapEditorGridToggle'),
+            backgroundInput: document.getElementById('mapEditorBackgroundInput'),
+            backgroundClear: document.getElementById('mapEditorBackgroundClear'),
+            backgroundName: document.getElementById('mapEditorBackgroundName'),
             spaceEditor: document.getElementById('mapEditorSpaceEditor'),
             spaceEditorTitle: document.getElementById('mapEditorSpaceTitle'),
             spaceEditorClose: document.getElementById('mapEditorSpaceClose'),
@@ -258,6 +266,15 @@ export default class MapEditorController {
         }
         if (this.elements.previewInput) {
             this.elements.previewInput.addEventListener('change', (event) => this.handlePreviewUpload(event));
+        }
+        if (this.elements.gridToggle) {
+            this.elements.gridToggle.addEventListener('change', (event) => this.handleGridToggle(event));
+        }
+        if (this.elements.backgroundInput) {
+            this.elements.backgroundInput.addEventListener('change', (event) => this.handleBackgroundUpload(event));
+        }
+        if (this.elements.backgroundClear) {
+            this.elements.backgroundClear.addEventListener('click', () => this.clearBackground());
         }
         if (this.elements.visualImageSearch) {
             this.elements.visualImageSearch.addEventListener('input', () => this.renderVisualAssetOptions());
@@ -381,7 +398,8 @@ export default class MapEditorController {
                 topology,
                 dependencies,
                 assets: [],
-                preview: preview ? { name: 'preview.png', path: 'preview.png', dataUrl: preview } : null
+                preview: preview ? { name: 'preview.png', path: 'preview.png', dataUrl: preview } : null,
+                background: null
             };
 
             this.setState(state, { pushHistory: false });
@@ -392,16 +410,48 @@ export default class MapEditorController {
     }
 
     buildStateFromBundle(bundle) {
+        const metadata = bundle.files.metadata || {};
+        const backgroundPath = metadata.renderConfig?.backgroundImage || null;
+        let assets = bundle.assets || [];
+        let background = null;
+
+        if (backgroundPath) {
+            const matchIndex = assets.findIndex((asset) => asset.path === backgroundPath);
+            if (matchIndex >= 0) {
+                background = assets[matchIndex];
+                assets = assets.filter((_, index) => index !== matchIndex);
+            }
+        }
+
+        if (!background) {
+            const reservedIndex = assets.findIndex((asset) => {
+                const name = asset.name?.toLowerCase() || '';
+                return name.startsWith(BACKGROUND_ASSET_NAME);
+            });
+            if (reservedIndex >= 0) {
+                background = assets[reservedIndex];
+                assets = assets.filter((_, index) => index !== reservedIndex);
+            }
+        }
+
+        if (background && !metadata.renderConfig?.backgroundImage) {
+            metadata.renderConfig = {
+                ...(metadata.renderConfig || {}),
+                backgroundImage: background.path
+            };
+        }
+
         return {
             manifest: bundle.manifest,
-            metadata: bundle.files.metadata,
+            metadata,
             engine: bundle.files.engine,
             rules: bundle.files.rules,
             ui: bundle.files.ui,
             topology: bundle.files.topology,
             dependencies: bundle.files.dependencies || { plugins: [] },
-            assets: bundle.assets || [],
-            preview: bundle.preview || null
+            assets,
+            preview: bundle.preview || null,
+            background
         };
     }
 
@@ -409,7 +459,8 @@ export default class MapEditorController {
         const normalized = {
             ...state,
             dependencies: state.dependencies || { plugins: [] },
-            assets: state.assets || []
+            assets: state.assets || [],
+            background: state.background || null
         };
         this.stateManager.setState(normalized, { pushHistory });
         this.updateDependenciesFromUsage();
@@ -533,11 +584,12 @@ export default class MapEditorController {
         if (!container || !schema) return;
         const parsed = this.collectSchemaValue(schema, container);
         if (!parsed) return;
+        const existing = this.stateManager.state?.[section] || {};
+        const merged = { ...existing, ...parsed };
         if (section === 'metadata') {
-            const existing = this.stateManager.state?.metadata || {};
-            parsed.created = existing.created || new Date().toISOString();
+            merged.created = existing.created || new Date().toISOString();
         }
-        this.updateStateSection(section, parsed);
+        this.updateStateSection(section, merged);
         this.setStatus(`${section} updated`);
     }
 
@@ -594,6 +646,65 @@ export default class MapEditorController {
         };
         reader.readAsDataURL(file);
         event.target.value = '';
+    }
+
+    handleGridToggle(event) {
+        this.gridEnabled = Boolean(event.target.checked);
+        this.renderCanvas();
+    }
+
+    handleBackgroundUpload(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const state = this.stateManager.state;
+            const assetsRoot = state?.manifest?.assetsRoot || this.assetsRootFallback;
+            const extension = file.name.split('.').pop() || 'png';
+            const path = `${assetsRoot}${BACKGROUND_ASSET_NAME}.${extension}`;
+            const background = {
+                name: file.name,
+                path,
+                dataUrl: reader.result,
+                contentType: file.type || 'application/octet-stream'
+            };
+            this.setBackground(background);
+            this.setStatus('Background updated');
+        };
+        reader.readAsDataURL(file);
+        event.target.value = '';
+    }
+
+    clearBackground() {
+        this.setBackground(null);
+        this.setStatus('Background cleared');
+    }
+
+    setBackground(background) {
+        const state = this.stateManager.state;
+        if (!state) return;
+        const renderConfig = {
+            ...(state.metadata?.renderConfig || {})
+        };
+        if (background?.path) {
+            renderConfig.backgroundImage = background.path;
+        } else {
+            delete renderConfig.backgroundImage;
+        }
+
+        const metadata = {
+            ...(state.metadata || {}),
+            renderConfig
+        };
+
+        this.stateManager.setState({
+            ...state,
+            metadata,
+            background
+        }, { pushHistory: true });
+
+        this.updateMetadataTimestamps();
+        this.renderAll();
     }
 
     applyAssetToSelectedSpace(assetPath) {
@@ -1079,7 +1190,7 @@ export default class MapEditorController {
         const state = this.stateManager.state;
         if (!state || !this.elements.assetsList) return;
         this.elements.assetsList.innerHTML = '';
-        (state.assets || []).forEach((asset) => {
+        (state.assets || []).filter((asset) => !this.isBackgroundAsset(asset)).forEach((asset) => {
             const row = document.createElement('div');
             row.className = 'map-editor-list-item';
             const name = document.createElement('span');
@@ -1121,13 +1232,14 @@ export default class MapEditorController {
                 ? `Preview: ${state.preview.name}`
                 : 'Preview: none';
         }
+        this.renderBackgroundInfo();
     }
 
     renderVisualAssetOptions() {
         const state = this.stateManager.state;
         if (!state || !this.elements.visualImageSelect) return;
         const search = this.elements.visualImageSearch?.value?.toLowerCase() || '';
-        const assets = state.assets || [];
+        const assets = (state.assets || []).filter((asset) => !this.isBackgroundAsset(asset));
         const filtered = assets.filter((asset) => {
             const name = asset.name?.toLowerCase() || '';
             const path = asset.path?.toLowerCase() || '';
@@ -1157,6 +1269,29 @@ export default class MapEditorController {
         }
 
         this.updateSelectedVisualImageDisplay();
+    }
+
+    renderBackgroundInfo() {
+        if (this.elements.gridToggle) {
+            this.elements.gridToggle.checked = this.gridEnabled;
+        }
+        if (!this.elements.backgroundName) return;
+        const state = this.stateManager.state;
+        if (!state?.background) {
+            const configured = state?.metadata?.renderConfig?.backgroundImage;
+            this.elements.backgroundName.textContent = configured
+                ? `Background: ${configured}`
+                : 'Background: none';
+            return;
+        }
+        this.elements.backgroundName.textContent = `Background: ${state.background.name}`;
+    }
+
+    isBackgroundAsset(asset) {
+        const state = this.stateManager.state;
+        if (!asset) return false;
+        if (state?.background?.path && asset.path === state.background.path) return true;
+        return (asset.name || '').toLowerCase().startsWith(BACKGROUND_ASSET_NAME);
     }
 
     updateSelectedVisualImage() {
@@ -1720,7 +1855,14 @@ export default class MapEditorController {
         const state = this.stateManager.state;
         if (!state || !this.renderer) return;
         const assetsByPath = this.buildAssetMap();
-        this.renderer.render(state.topology, assetsByPath, this.selectedSpaceId);
+        const backgroundUrl = state.background?.dataUrl
+            || assetsByPath[state.metadata?.renderConfig?.backgroundImage]
+            || null;
+        this.renderer.render(state.topology, assetsByPath, this.selectedSpaceId, {
+            backgroundUrl,
+            gridEnabled: this.gridEnabled,
+            gridSize: this.gridSize
+        });
     }
 
     updateUndoRedoButtons() {
@@ -1738,6 +1880,15 @@ export default class MapEditorController {
         try {
             const zip = new JSZip();
             const assetsRoot = state.manifest?.assetsRoot || this.assetsRootFallback;
+            const metadata = {
+                ...(state.metadata || {})
+            };
+            if (state.background?.path) {
+                metadata.renderConfig = {
+                    ...(metadata.renderConfig || {}),
+                    backgroundImage: state.background.path
+                };
+            }
             const manifest = {
                 schema_version: 2,
                 id: state.manifest?.id || state.metadata?.id || 'custom-map',
@@ -1753,7 +1904,7 @@ export default class MapEditorController {
             };
 
             zip.file('board.json', JSON.stringify(manifest, null, 2));
-            zip.file('metadata.json', JSON.stringify(state.metadata || {}, null, 2));
+            zip.file('metadata.json', JSON.stringify(metadata, null, 2));
             zip.file('engine.json', JSON.stringify(state.engine || {}, null, 2));
             zip.file('rules.json', JSON.stringify(state.rules || {}, null, 2));
             zip.file('ui.json', JSON.stringify(state.ui || {}, null, 2));
@@ -1766,6 +1917,13 @@ export default class MapEditorController {
                 if (!base64) return;
                 zip.file(path, base64, { base64: true });
             });
+
+            if (state.background?.dataUrl) {
+                const base64 = state.background.dataUrl.split(',')[1];
+                if (base64) {
+                    zip.file(state.background.path, base64, { base64: true });
+                }
+            }
 
             if (state.preview?.dataUrl) {
                 const base64 = state.preview.dataUrl.split(',')[1];
