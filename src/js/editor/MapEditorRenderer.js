@@ -118,10 +118,10 @@ export default class MapEditorRenderer {
         this.ensureGridLayer();
         if (this.viewport && this.onToggleGrid && !this.gridControlAdded) {
             const gridIcon = `
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"></rect>
-                    <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="2.5"></line>
-                    <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2.5"></line>
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                    <rect x="1" y="1" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"></rect>
+                    <line x1="10" y1="1" x2="10" y2="19" stroke="currentColor" stroke-width="2.5"></line>
+                    <line x1="1" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="2.5"></line>
                 </svg>
             `;
             this.viewport.addControl({
