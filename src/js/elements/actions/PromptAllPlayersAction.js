@@ -31,20 +31,11 @@ export default class PromptAllPlayersAction extends BaseAction {
             const placeholderRegistry = gameEngine.registryManager.getRegistry('placeholderRegistry');
 
             if (placeholderRegistry) {
-                // Temporarily add the CURRENT_PLAYER_NAME placeholder if needed
-                placeholderRegistry.register('CURRENT_PLAYER_NAME', (gameEngine) => {
-                    const currentPlayer = gameEngine.gameState.getCurrentPlayer();
-                    return currentPlayer ? currentPlayer.nickname : 'Unknown Player';
-                });
-
                 // Create a copy of payload.message for processing
                 let processed_message = payload.message;
 
                 // Replace placeholders in the message and pass gameEngine as context
                 processed_message = placeholderRegistry.replacePlaceholders(processed_message, gameEngine);
-
-                // After message editing, unregister CURRENT_PLAYER_NAME to prevent future use
-                placeholderRegistry.unregister('CURRENT_PLAYER_NAME');
 
                 processed_message = sanitizePromptMessage(processed_message, { trustedHtml: true });
 
@@ -94,8 +85,9 @@ export default class PromptAllPlayersAction extends BaseAction {
                 message: {
                     type: 'string',
                     required: true,
-                    description: 'The message to display. Supports placeholders like {CURRENT_PLAYER_NAME}',
-                    example: '{CURRENT_PLAYER_NAME} landed on a special space!'
+                    description: 'The message to display. Supports placeholders like {{CURRENT_PLAYER_NAME}}.',
+                    example: '{{CURRENT_PLAYER_NAME}} landed on a special space!',
+                    ui: { widget: 'textarea', placeholders: true }
                 }
             }
         };

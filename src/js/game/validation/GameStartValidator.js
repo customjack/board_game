@@ -46,6 +46,13 @@ export default class GameStartValidator {
             missing: []
         };
 
+        const requirements = this.gameState?.getEffectivePluginRequirements?.()
+            || this.gameState?.pluginRequirements
+            || [];
+        if (requirements.length === 0) {
+            return result;
+        }
+
         const players = this.gameState?.players || [];
         if (!players.length) {
             return result;

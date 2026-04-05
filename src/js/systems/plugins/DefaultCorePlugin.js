@@ -46,7 +46,11 @@ import DiceRollAnimation from '../../animations/DiceRollAnimation.js';
 import SlotMachineAnimation from '../../animations/SlotMachineAnimation.js';
 import TimerAnimation from '../../animations/TimerAnimation.js';
 import PieceManager from '../../infrastructure/managers/PieceManager.js';
-import { randomNumber, randomWord, randomColor, randomSong } from '../../infrastructure/utils/PlaceholderFunctions.js';
+import RandomNumberPlaceholder from '../../elements/placeholders/RandomNumberPlaceholder.js';
+import RandomWordPlaceholder from '../../elements/placeholders/RandomWordPlaceholder.js';
+import RandomColorPlaceholder from '../../elements/placeholders/RandomColorPlaceholder.js';
+import RandomSongPlaceholder from '../../elements/placeholders/RandomSongPlaceholder.js';
+import CurrentPlayerNamePlaceholder from '../../elements/placeholders/CurrentPlayerNamePlaceholder.js';
 
 /**
  * DefaultCorePlugin - Registers all core/default components as a single plugin
@@ -448,18 +452,19 @@ export default class DefaultCorePlugin extends Plugin {
         const placeholderRegistry = registryManager.getRegistry('placeholderRegistry');
         if (!placeholderRegistry) return 0;
 
-        const placeholders = {
-            RANDOM_NUMBER: randomNumber,
-            RANDOM_WORD: randomWord,
-            RANDOM_COLOR: randomColor,
-            RANDOM_SONG: randomSong,
-        };
+        const placeholders = [
+            RandomNumberPlaceholder,
+            RandomWordPlaceholder,
+            RandomColorPlaceholder,
+            RandomSongPlaceholder,
+            CurrentPlayerNamePlaceholder
+        ];
 
         try {
-            Object.entries(placeholders).forEach(([key, value]) => {
-                placeholderRegistry.register(key, value);
+            placeholders.forEach((placeholderClass) => {
+                placeholderRegistry.register(placeholderClass);
             });
-            return Object.keys(placeholders).length;
+            return placeholders.length;
         } catch (error) {
             console.error('[Plugin] Core: Failed to register placeholders', error);
             return 0;
@@ -513,7 +518,8 @@ export default class DefaultCorePlugin extends Plugin {
                     'RANDOM_NUMBER',
                     'RANDOM_WORD',
                     'RANDOM_COLOR',
-                    'RANDOM_SONG'
+                    'RANDOM_SONG',
+                    'CURRENT_PLAYER_NAME'
                 ],
                 components: [
                     'GameEngine (turn-based)',

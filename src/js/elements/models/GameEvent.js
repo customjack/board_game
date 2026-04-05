@@ -60,6 +60,21 @@ export default class GameEvent {
 
             const completeActionCallback = () => {
                 this.state = GameEventState.COMPLETED_ACTION; // Update state after execution
+
+                // Sync COMPLETED_ACTION to the canonical game state BEFORE advancing the
+                // queue. advanceToNextEvent may call finishProcessing() which sets
+                // isProcessing=false — after that, syncQueueToGameState skips the sync and
+                // the canonical event stays TRIGGERED, causing it to re-fire next turn.
+                if (gameEngine?.eventProcessor && gameEngine?.gameState) {
+                    gameEngine.eventProcessor.syncQueueToGameState(gameEngine.gameState);
+                }
+
+                if (gameEngine?.eventProcessor?.hasEventsToProcess?.()) {
+                    gameEngine.eventProcessor.advanceToNextEvent({
+                        actionType: this.action?.type,
+                        eventState: this.state
+                    });
+                }
                 gameEngine.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENTS, delay: 0 });
             };
             this.action.execute(gameEngine, completeActionCallback);        }

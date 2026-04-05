@@ -6,6 +6,18 @@
     margin-bottom: 16px;
 }
 
+.map-editor-header-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.map-editor-header-history {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
 .map-editor-layout {
     display: grid;
     grid-template-columns: 280px 1fr 320px;
@@ -77,6 +89,10 @@
 .map-editor-tab-button.active {
     border-color: var(--primary-color, #4a90e2);
     box-shadow: 0 0 0 1px var(--primary-color, #4a90e2);
+}
+
+.map-editor-tab-button-right {
+    margin-left: auto;
 }
 
 .map-editor-tab-content {
@@ -281,7 +297,11 @@
     font-weight: 600;
     cursor: grab;
     user-select: none;
-    z-index: 1;
+    z-index: 2;
+}
+
+.map-editor-space.selected {
+    box-shadow: 0 0 0 3px var(--primary-color, #4a90e2);
 }
 
 .map-editor-space:active {
@@ -329,10 +349,117 @@
     z-index: 0;
 }
 
+.map-editor-connection-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.map-editor-connection {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.map-editor-connection-hitbox {
+    position: absolute;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    transform-origin: left center;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.map-editor-connection-line {
+    position: absolute;
+    height: 3px;
+    transform-origin: left center;
+    background: var(--map-editor-grid-color, rgba(0, 0, 0, 0.55));
+    opacity: 0.95;
+}
+
+.map-editor-connection-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 12px solid var(--map-editor-grid-color, rgba(0, 0, 0, 0.75));
+    transform-origin: center center;
+}
+
+.map-editor-connection.selected .map-editor-connection-line {
+    background: var(--primary-color, #4a90e2);
+}
+
+.map-editor-connection.selected .map-editor-connection-arrow {
+    border-top-color: var(--primary-color, #4a90e2);
+}
+
+.map-editor-connection.editor-hidden .map-editor-connection-line {
+    opacity: 0.5;
+    background-image: repeating-linear-gradient(
+        90deg,
+        currentColor 0,
+        currentColor 10px,
+        transparent 10px,
+        transparent 18px
+    );
+    background-color: transparent;
+    color: var(--text-color-secondary, #777);
+}
+
+.map-editor-connection.editor-hidden .map-editor-connection-arrow {
+    opacity: 0.55;
+}
+
+.map-editor-connection.preview {
+    opacity: 0.7;
+}
+
+.map-editor-connection.preview .map-editor-connection-line {
+    background: var(--primary-color, #4a90e2);
+}
+
+.map-editor-connection.preview .map-editor-connection-arrow {
+    border-top-color: var(--primary-color, #4a90e2);
+}
+
+.map-editor-connection-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--border-color, #444);
+    border-radius: 8px;
+    background: var(--background-box, #1f1f1f);
+}
+
+.map-editor-connection-settings.selected {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 0 0 1px var(--primary-color, #4a90e2);
+}
+
+.map-editor-inline-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.map-editor-section .button.active {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 0 0 1px var(--primary-color, #4a90e2);
+}
+
 .map-editor-status {
     font-size: 12px;
     color: var(--text-color-secondary, #aaa);
-    margin-left: auto;
+    margin-left: 0;
+    flex: 1 1 220px;
+    min-width: 180px;
 }
 
 .map-editor-modal {
@@ -342,11 +469,17 @@
     width: 360px;
     max-width: 90vw;
     max-height: calc(100vh - 32px);
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+    resize: both;
     background: var(--background-box, #1f1f1f);
     border: 1px solid var(--border-color, #444);
     border-radius: 10px;
     padding: 12px;
+    min-width: 320px;
+    min-height: 320px;
     z-index: 1000;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
 }
@@ -355,7 +488,65 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    cursor: move;
+    user-select: none;
+}
+
+.map-editor-modal-header .settings-modal-close {
+    cursor: pointer;
+}
+
+.map-editor-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 4px;
+}
+
+.map-editor-color-input {
+    width: 100%;
+    max-width: 240px;
+    height: 36px;
+    padding: 0;
+    border-radius: 6px;
+    border: 1px solid var(--border-color, #444);
+    background: transparent;
+    cursor: pointer;
+}
+
+.map-editor-color-input::-webkit-color-swatch-wrapper {
+    padding: 4px;
+}
+
+.map-editor-color-input::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.map-editor-color-input::-moz-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.map-editor-input-with-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.map-editor-placeholder-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.map-editor-placeholder-select {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
 }
 
 @media (max-width: 1100px) {

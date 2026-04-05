@@ -213,13 +213,23 @@ export default class BaseGameState {
     getPluginReadiness(peerId) {
         return this.pluginReadiness?.[peerId] || null;
     }
+
+    getEffectivePluginRequirements(requirements = this.pluginRequirements) {
+        return (Array.isArray(requirements) ? requirements : []).filter((req) => {
+            if (!req) return false;
+            const id = req.id || req.pluginId || req.name || '';
+            const source = req.source || '';
+            return id !== 'core' && source !== 'builtin';
+        });
+    }
     
     /**
      * Check if all players have required plugins
      * @returns {boolean} True if all ready
      */
     allPlayersPluginsReady() {
-        if (!this.pluginRequirements || this.pluginRequirements.length === 0) {
+        const effectiveRequirements = this.getEffectivePluginRequirements();
+        if (effectiveRequirements.length === 0) {
             return true; // No plugins required
         }
         
@@ -290,11 +300,17 @@ export default class BaseGameState {
     resetEvents() {
         for (const space of this.board.spaces) {
             for (const event of space.events) {
-                if (event.state === GameEventState.COMPLETED_ACTION) {
+                if ([
+                    GameEventState.CHECKING_TRIGGER,
+                    GameEventState.TRIGGERED,
+                    GameEventState.PROCESSING_ACTION,
+                    GameEventState.COMPLETED_ACTION
+                ].includes(event.state)) {
                     event.state = GameEventState.READY;
                 }
             }
         }
+        this.triggeredEvents = [];
     }
 
     resetPlayerPositions() {

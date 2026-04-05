@@ -15,6 +15,30 @@ import GamePhases from '../../GamePhases.js';
 import { PlayerStates } from '../../../elements/models/Player.js';
 
 export default class MultiPieceGameEngine extends BaseGameEngine {
+    static getEditorConfigSchema() {
+        return {
+            type: 'object',
+            description: 'Multi-piece engine settings',
+            properties: {
+                piecesPerPlayer: {
+                    type: 'number',
+                    integer: true,
+                    min: 1,
+                    description: 'How many pieces each player controls'
+                },
+                allowCapture: {
+                    type: 'boolean',
+                    description: 'Whether pieces can capture each other'
+                },
+                safeSpaces: {
+                    type: 'array',
+                    description: 'Space IDs that cannot be captured on',
+                    items: { type: 'string' }
+                }
+            }
+        };
+    }
+
     /**
     * Create a multi-piece game engine
     * @param {Object} dependencies - Core dependencies from BaseGameEngine

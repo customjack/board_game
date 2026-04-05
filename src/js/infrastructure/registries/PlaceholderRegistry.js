@@ -1,18 +1,37 @@
 import BaseRegistry from '../../core/base/BaseRegistry';  // Import the base registry class
+import BasePlaceholder from '../../elements/placeholders/BasePlaceholder.js';
 
 export default class PlaceholderRegistry extends BaseRegistry {
     constructor() {
         super();  // Call the parent constructor to initialize the registry
     }
 
-    // Register a placeholder with a name and a generator function
-    register(name, generatorFunction) {
-        if (typeof generatorFunction !== 'function') {
-            throw new Error('Generator function must be a function.');
+    // Register a placeholder with a name and a generator function or class
+    register(name, placeholder) {
+        let resolvedName = name;
+        let resolvedPlaceholder = placeholder;
+
+        if (typeof name === 'function' && !placeholder) {
+            resolvedPlaceholder = name;
+            resolvedName = resolvedPlaceholder?.type || resolvedPlaceholder?.placeholderType || resolvedPlaceholder?.name;
         }
 
-        const upperCaseName = name.toUpperCase();  // Convert name to uppercase
-        super.register(upperCaseName, generatorFunction);  // Use the inherited method from BaseRegistry with the uppercase name
+        if (!resolvedName || typeof resolvedName !== 'string') {
+            throw new Error('Placeholder must have a valid type identifier.');
+        }
+
+        const upperCaseName = resolvedName.toUpperCase();  // Convert name to uppercase
+
+        if (resolvedPlaceholder?.prototype instanceof BasePlaceholder) {
+            super.register(upperCaseName, resolvedPlaceholder);
+            return;
+        }
+
+        if (typeof resolvedPlaceholder !== 'function') {
+            throw new Error('Placeholder must be a subclass of BasePlaceholder or a function.');
+        }
+
+        super.register(upperCaseName, resolvedPlaceholder);  // Use the inherited method from BaseRegistry with the uppercase name
     }
 
     // Unregister (remove) a placeholder by its name
@@ -24,6 +43,37 @@ export default class PlaceholderRegistry extends BaseRegistry {
         } else {
             console.warn(`Placeholder '${upperCaseName}' not found.`);
         }
+    }
+
+    getAllMetadata() {
+        const metadata = {};
+        Object.entries(this.registry).forEach(([type, entry]) => {
+            if (entry?.getMetadata) {
+                metadata[type] = entry.getMetadata();
+            } else {
+                metadata[type] = {
+                    type,
+                    displayName: type,
+                    description: 'No description provided.',
+                    args: [],
+                    template: `{{${type}}}`
+                };
+            }
+        });
+        return metadata;
+    }
+
+    getMetadata(type) {
+        if (!type) return null;
+        const entry = this.registry[type.toUpperCase()];
+        if (!entry) return null;
+        return entry.getMetadata ? entry.getMetadata() : {
+            type,
+            displayName: type,
+            description: 'No description provided.',
+            args: [],
+            template: `{{${type}}}`
+        };
     }
 
     // Replace placeholders in a given text
@@ -79,9 +129,9 @@ export default class PlaceholderRegistry extends BaseRegistry {
     _evaluatePlaceholder(expression, context, depth) {
         const [name, argsString] = this._parseExpression(expression);
         const upperCaseName = name.toUpperCase();  // Convert name to uppercase
-        const generator = this.registry[upperCaseName];  // Access the registry using the uppercase name
+        const placeholder = this.registry[upperCaseName];  // Access the registry using the uppercase name
 
-        if (!generator) {
+        if (!placeholder) {
             console.warn(`No generator found for placeholder: ${upperCaseName}`);
             return `{{${expression}}}`; // Keep the original placeholder if no generator is found
         }
@@ -95,13 +145,24 @@ export default class PlaceholderRegistry extends BaseRegistry {
         });
 
         try {
-            // Always pass context as the last argument so placeholders that rely on
-            // game state don't break when called without explicit args (e.g. RANDOM_COLOR()).
-            return generator(...args, context);
+            if (typeof placeholder === 'function' && placeholder.prototype instanceof BasePlaceholder) {
+                return placeholder.evaluate(args, context);
+            }
+            if (typeof placeholder?.evaluate === 'function') {
+                return placeholder.evaluate(args, context);
+            }
+            if (typeof placeholder === 'function') {
+                // Always pass context as the last argument so placeholders that rely on
+                // game state don't break when called without explicit args (e.g. RANDOM_COLOR()).
+                return placeholder(...args, context);
+            }
         } catch (error) {
             console.warn(`Error executing placeholder ${upperCaseName}`, error);
             return `{{${expression}}}`;
         }
+
+        console.warn(`Placeholder ${upperCaseName} is not callable`);
+        return `{{${expression}}}`;
     }
 
     // Find the next balanced placeholder, accounting for nested {{ }}

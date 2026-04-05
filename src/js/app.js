@@ -55,7 +55,11 @@ import GameStateStorageManager from './systems/storage/GameStateStorageManager.j
 import GameStateManagerModal from './ui/modals/managers/GameStateManagerModal.js';
 import MapEditorController from './editor/MapEditorController.js';
 
-import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
+import RandomNumberPlaceholder from './elements/placeholders/RandomNumberPlaceholder.js';
+import RandomWordPlaceholder from './elements/placeholders/RandomWordPlaceholder.js';
+import RandomColorPlaceholder from './elements/placeholders/RandomColorPlaceholder.js';
+import RandomSongPlaceholder from './elements/placeholders/RandomSongPlaceholder.js';
+import CurrentPlayerNamePlaceholder from './elements/placeholders/CurrentPlayerNamePlaceholder.js';
 
 // Initialize personal settings
 function initializePersonalSettings(factoryManager, pluginManager, localStorageManager) {
@@ -109,15 +113,16 @@ function registerPages(pageRegistry) {
 
 // Register placeholders
 function registerPlaceholders(placeholderRegistry) {
-    const placeholders = {
-        RANDOM_NUMBER: randomNumber,
-        RANDOM_WORD: randomWord,
-        RANDOM_COLOR: randomColor,
-        RANDOM_SONG: randomSong,
-    };
+    const placeholders = [
+        RandomNumberPlaceholder,
+        RandomWordPlaceholder,
+        RandomColorPlaceholder,
+        RandomSongPlaceholder,
+        CurrentPlayerNamePlaceholder
+    ];
 
-    Object.entries(placeholders).forEach(([key, value]) => {
-        placeholderRegistry.register(key, value);
+    placeholders.forEach((placeholderClass) => {
+        placeholderRegistry.register(placeholderClass);
     });
 }
 

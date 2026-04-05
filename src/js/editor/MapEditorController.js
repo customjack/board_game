@@ -2,6 +2,9 @@ import JSZip from 'jszip';
 import MapEditorStateManager from './MapEditorStateManager.js';
 import MapEditorBundleLoader from './MapEditorBundleLoader.js';
 import MapEditorRenderer from './MapEditorRenderer.js';
+import MapEditorSpaceModal from './MapEditorSpaceModal.js';
+import MapEditorConnectionModal from './MapEditorConnectionModal.js';
+import GameRules from '../game/rules/GameRules.js';
 import GameEngineFactory from '../infrastructure/factories/GameEngineFactory.js';
 
 const BACKGROUND_ASSET_NAME = '_background';
@@ -14,69 +17,6 @@ const METADATA_SCHEMA = {
         version: { type: 'string', description: 'Semantic version, e.g. 1.0.0' },
         description: { type: 'string', description: 'Short description', ui: { widget: 'textarea' } },
         tags: { type: 'array', description: 'Searchable tags', items: { type: 'string' } }
-    }
-};
-
-const RULES_SCHEMA = {
-    type: 'object',
-    properties: {
-        turnOrder: {
-            type: 'string',
-            enum: ['sequential', 'random', 'custom'],
-            description: 'How turns are ordered'
-        },
-        startingPositions: {
-            type: 'object',
-            description: 'Where players begin',
-            ui: { collapsed: true },
-            properties: {
-                mode: {
-                    type: 'string',
-                    enum: ['single', 'spread', 'random', 'custom', 'multiple'],
-                    description: 'How starting spaces are selected'
-                },
-                spaceIds: {
-                    type: 'array',
-                    description: 'Space IDs used for starting positions',
-                    items: { type: 'string' }
-                }
-            }
-        },
-        recommendedPlayers: {
-            type: 'object',
-            description: 'Suggested player range',
-            ui: { collapsed: true },
-            properties: {
-                min: { type: 'number', description: 'Recommended minimum players' },
-                max: { type: 'number', description: 'Recommended maximum players' }
-            }
-        },
-        diceRolling: {
-            type: 'object',
-            description: 'Dice rolling behavior',
-            ui: { collapsed: true },
-            properties: {
-                enabled: { type: 'boolean', description: 'Allow dice rolling' },
-                diceCount: { type: 'number', description: 'Number of dice', min: 1, integer: true },
-                diceSides: { type: 'number', description: 'Sides per die', min: 2, integer: true },
-                rollAgainOn: {
-                    type: 'array',
-                    description: 'Roll again when landing on these values',
-                    items: { type: 'number', integer: true }
-                }
-            }
-        },
-        winCondition: {
-            type: 'object',
-            description: 'Victory configuration',
-            ui: { collapsed: true },
-            properties: {
-                type: { type: 'string', description: 'Win condition type' },
-                config: { type: 'object', description: 'Win condition config', ui: { allowAdditional: true } }
-            }
-        },
-        minPlayers: { type: 'number', description: 'Minimum players' },
-        maxPlayers: { type: 'number', description: 'Maximum players' }
     }
 };
 
@@ -101,6 +41,7 @@ export default class MapEditorController {
         this.stateManager = new MapEditorStateManager();
         this.renderer = null;
         this.selectedSpaceId = null;
+        this.selectedConnection = null;
         this.currentEventIndex = null;
         this.availableActions = [];
         this.availableTriggers = [];
@@ -108,6 +49,8 @@ export default class MapEditorController {
         this.actionMetadataByType = {};
         this.triggerMetadataByType = {};
         this.effectMetadataByType = {};
+        this.placeholderRegistry = null;
+        this.placeholderMetadata = {};
         this.missingDependencies = [];
         this.assetsRootFallback = 'assets/';
         this.selectedVisualImagePath = null;
@@ -115,19 +58,37 @@ export default class MapEditorController {
         this.effectPayloadContainer = null;
         this.effectTypeSelect = null;
         this.formCache = {};
+        this.sectionAutoSaveTimers = {};
         this.gridEnabled = true;
         this.gridSize = 50;
+        this.snapToGridEnabled = false;
+        this.showHiddenConnections = false;
+        this.drawConnectionMode = false;
+        this.spaceEditorDragState = null;
+        this.spaceEditorModal = null;
+        this.connectionEditorDragState = null;
+        this.connectionModal = null;
     }
 
     async init() {
         this.cacheElements();
         this.bindEvents();
+        this.spaceEditorModal = new MapEditorSpaceModal({ id: 'mapEditorSpaceEditor' });
+        this.spaceEditorModal.init();
+        this.connectionModal = new MapEditorConnectionModal({ id: 'mapEditorConnectionEditor' });
+        this.connectionModal.init();
         this.renderer = new MapEditorRenderer({
             container: this.elements.canvas,
             onSelectSpace: (spaceId) => this.selectSpace(spaceId),
             onMoveSpace: (spaceId, position) => this.updateSpacePosition(spaceId, position),
             onContextSpace: (spaceId, position) => this.openSpaceEditor(spaceId, position),
-            onToggleGrid: () => this.toggleGrid()
+            onToggleGrid: () => this.toggleGrid(),
+            onToggleSnap: () => this.toggleSnapToGrid(),
+            onToggleConnections: () => this.toggleHiddenConnections(),
+            onToggleDrawConnectionMode: () => this.toggleDrawConnectionMode(),
+            onCreateConnection: (fromId, toId) => this.createConnection(fromId, toId),
+            onSelectConnection: (fromId, toId) => this.selectConnection(fromId, toId),
+            onEditConnection: (fromId, toId, position) => this.editConnection(fromId, toId, position)
         });
 
         this.refreshAvailableTypes();
@@ -200,8 +161,18 @@ export default class MapEditorController {
             backgroundClear: document.getElementById('mapEditorBackgroundClear'),
             backgroundName: document.getElementById('mapEditorBackgroundName'),
             spaceEditor: document.getElementById('mapEditorSpaceEditor'),
+            spaceEditorHeader: document.getElementById('mapEditorSpaceHeader'),
             spaceEditorTitle: document.getElementById('mapEditorSpaceTitle'),
             spaceEditorClose: document.getElementById('mapEditorSpaceClose'),
+            connectionEditor: document.getElementById('mapEditorConnectionEditor'),
+            connectionEditorHeader: document.getElementById('mapEditorConnectionHeader'),
+            connectionEditorTitle: document.getElementById('mapEditorConnectionTitle'),
+            connectionEditorClose: document.getElementById('mapEditorConnectionClose'),
+            connectionDirection: document.getElementById('mapEditorConnectionDirection'),
+            connectionColor: document.getElementById('mapEditorConnectionColor'),
+            connectionVisible: document.getElementById('mapEditorConnectionVisible'),
+            connectionApply: document.getElementById('mapEditorConnectionApply'),
+            connectionRemove: document.getElementById('mapEditorConnectionRemove'),
             visualSize: document.getElementById('mapEditorVisualSize'),
             visualColor: document.getElementById('mapEditorVisualColor'),
             visualTextColor: document.getElementById('mapEditorVisualTextColor'),
@@ -249,11 +220,22 @@ export default class MapEditorController {
         if (this.elements.metadataApply) {
             this.elements.metadataApply.addEventListener('click', () => this.applyFormSection('metadata'));
         }
+        if (this.elements.metadataForm) {
+            this.elements.metadataForm.addEventListener('change', () => this.queueSectionAutoSave('metadata'));
+        }
         if (this.elements.rulesApply) {
             this.elements.rulesApply.addEventListener('click', () => this.applyFormSection('rules'));
         }
+        if (this.elements.rulesForm) {
+            this.elements.rulesForm.addEventListener('change', () => this.queueSectionAutoSave('rules'));
+            this.elements.rulesForm.addEventListener('change', (event) => this.handleRulesFormChange(event));
+        }
         if (this.elements.engineApply) {
             this.elements.engineApply.addEventListener('click', () => this.applyFormSection('engine'));
+        }
+        if (this.elements.engineForm) {
+            this.elements.engineForm.addEventListener('change', () => this.queueSectionAutoSave('engine'));
+            this.elements.engineForm.addEventListener('change', (event) => this.handleEngineFormChange(event));
         }
         if (this.elements.addSpaceButton) {
             this.elements.addSpaceButton.addEventListener('click', () => this.addSpace());
@@ -288,6 +270,23 @@ export default class MapEditorController {
         if (this.elements.spaceEditorClose) {
             this.elements.spaceEditorClose.addEventListener('click', () => this.closeSpaceEditor());
         }
+        if (this.elements.spaceEditorHeader) {
+            this.elements.spaceEditorHeader.addEventListener('mousedown', this.handleSpaceEditorDragStart);
+            this.elements.spaceEditorHeader.addEventListener('touchstart', this.handleSpaceEditorDragStart, { passive: false });
+        }
+        if (this.elements.connectionEditorClose) {
+            this.elements.connectionEditorClose.addEventListener('click', () => this.closeConnectionEditor());
+        }
+        if (this.elements.connectionEditorHeader) {
+            this.elements.connectionEditorHeader.addEventListener('mousedown', this.handleConnectionEditorDragStart);
+            this.elements.connectionEditorHeader.addEventListener('touchstart', this.handleConnectionEditorDragStart, { passive: false });
+        }
+        if (this.elements.connectionApply) {
+            this.elements.connectionApply.addEventListener('click', () => this.applyConnectionEdits());
+        }
+        if (this.elements.connectionRemove) {
+            this.elements.connectionRemove.addEventListener('click', () => this.removeSelectedConnection());
+        }
         if (this.elements.visualApply) {
             this.elements.visualApply.addEventListener('click', () => this.applyVisualEdits());
         }
@@ -317,6 +316,12 @@ export default class MapEditorController {
         }
         if (this.elements.canvas) {
             this.elements.canvas.addEventListener('click', () => this.clearSelection());
+        }
+        if (typeof window !== 'undefined') {
+            window.addEventListener('resize', () => this.clampSpaceEditorPosition());
+            window.addEventListener('resize', () => this.clampConnectionEditorPosition());
+            window.addEventListener('keydown', this.handleWindowKeyDown);
+            window.addEventListener('keyup', this.handleWindowKeyUp);
         }
         this.setupTabs(this.elements.primaryTabs, 'map');
         this.setupTabs(this.elements.spaceTabs, 'visual');
@@ -459,6 +464,7 @@ export default class MapEditorController {
             assets: state.assets || [],
             background: state.background || null
         };
+        this.formCache = {};
         this.stateManager.setState(normalized, { pushHistory });
         this.updateDependenciesFromUsage();
         this.renderAll();
@@ -503,18 +509,33 @@ export default class MapEditorController {
 
     selectSpace(spaceId) {
         this.selectedSpaceId = spaceId;
+        this.selectedConnection = null;
         this.renderSpaceList();
         this.renderSpaceJsonView();
+        this.renderCanvas();
         if (this.elements.spaceEditor?.style.display === 'block') {
             this.populateSpaceEditor();
         }
+    }
+
+    selectConnection(fromId, toId) {
+        this.selectedConnection = { fromId: String(fromId), toId: String(toId) };
+        this.selectedSpaceId = null;
+        this.renderSpaceList();
+        this.renderSpaceJsonView();
+        this.renderCanvas();
+    }
+
+    editConnection(fromId, toId, position = null) {
+        this.selectConnection(fromId, toId);
+        this.openConnectionEditor(position);
     }
 
     updateSpacePosition(spaceId, position) {
         const state = this.stateManager.state;
         if (!state?.topology?.spaces) return;
         const updatedSpaces = state.topology.spaces.map((space) => {
-            if (space.id !== spaceId) return space;
+            if (String(space.id) !== String(spaceId)) return space;
             return {
                 ...space,
                 position: {
@@ -555,13 +576,14 @@ export default class MapEditorController {
     deleteSelectedSpace() {
         const state = this.stateManager.state;
         if (!state?.topology?.spaces || !this.selectedSpaceId) return;
-        const remaining = state.topology.spaces.filter((space) => space.id !== this.selectedSpaceId);
+        const remaining = state.topology.spaces.filter((space) => String(space.id) !== String(this.selectedSpaceId));
         const cleaned = remaining.map((space) => ({
             ...space,
-            connections: (space.connections || []).filter((conn) => conn.targetId !== this.selectedSpaceId)
+            connections: (space.connections || []).filter((conn) => String(conn.targetId) !== String(this.selectedSpaceId))
         }));
         this.updateStateSection('topology', { ...state.topology, spaces: cleaned });
         this.selectedSpaceId = cleaned[0]?.id || null;
+        this.selectedConnection = null;
         this.renderAll();
     }
 
@@ -573,7 +595,7 @@ export default class MapEditorController {
         };
         const schemaMap = {
             metadata: METADATA_SCHEMA,
-            rules: RULES_SCHEMA,
+            rules: this.getRulesSchema(),
             engine: this.getEngineSchema()
         };
         const container = formMap[section];
@@ -588,6 +610,16 @@ export default class MapEditorController {
         }
         this.updateStateSection(section, merged);
         this.setStatus(`${section} updated`);
+    }
+
+    queueSectionAutoSave(section) {
+        if (this.sectionAutoSaveTimers[section]) {
+            clearTimeout(this.sectionAutoSaveTimers[section]);
+        }
+        this.sectionAutoSaveTimers[section] = setTimeout(() => {
+            this.sectionAutoSaveTimers[section] = null;
+            this.applyFormSection(section);
+        }, 0);
     }
 
     handleAssetUpload(event) {
@@ -672,6 +704,24 @@ export default class MapEditorController {
         this.renderCanvas();
     }
 
+    toggleSnapToGrid() {
+        this.snapToGridEnabled = !this.snapToGridEnabled;
+        this.renderCanvas();
+        this.setStatus(this.snapToGridEnabled ? 'Grid lock enabled' : 'Grid lock disabled');
+    }
+
+    toggleHiddenConnections() {
+        this.showHiddenConnections = !this.showHiddenConnections;
+        this.renderCanvas();
+        this.setStatus(this.showHiddenConnections ? 'Hidden connections visible' : 'Hidden connections hidden');
+    }
+
+    toggleDrawConnectionMode() {
+        this.drawConnectionMode = !this.drawConnectionMode;
+        this.renderCanvas();
+        this.setStatus(this.drawConnectionMode ? 'Draw connection mode enabled' : 'Draw connection mode disabled');
+    }
+
     clearBackground() {
         this.setBackground(null);
         this.setStatus('Background cleared');
@@ -708,7 +758,7 @@ export default class MapEditorController {
         const state = this.stateManager.state;
         if (!state?.topology?.spaces || !this.selectedSpaceId) return;
         const updatedSpaces = state.topology.spaces.map((space) => {
-            if (space.id !== this.selectedSpaceId) return space;
+            if (String(space.id) !== String(this.selectedSpaceId)) return space;
             return {
                 ...space,
                 visual: {
@@ -860,6 +910,13 @@ export default class MapEditorController {
 
         this.fillSelect(this.elements.eventActionType, this.availableActions, actionLabels);
         this.fillSelect(this.elements.eventTriggerType, this.availableTriggers, triggerLabels);
+        this.refreshPlaceholderMetadata();
+    }
+
+    refreshPlaceholderMetadata() {
+        const registry = this.pluginManager?.registryManager?.getRegistry?.('placeholderRegistry');
+        this.placeholderRegistry = registry || null;
+        this.placeholderMetadata = registry?.getAllMetadata?.() || {};
     }
 
     fillSelect(select, options, labels = {}) {
@@ -876,27 +933,61 @@ export default class MapEditorController {
     openSpaceEditor(spaceId, position = null) {
         this.selectSpace(spaceId);
         if (!this.elements.spaceEditor) return;
-        this.elements.spaceEditor.style.display = 'block';
+        if (this.spaceEditorModal) {
+            this.spaceEditorModal.open();
+        } else {
+            this.elements.spaceEditor.style.display = 'flex';
+        }
         this.activateTab(this.elements.spaceTabs, 'visual');
         this.populateSpaceEditor();
 
         if (position) {
             this.positionSpaceEditor(position);
+        } else {
+            this.clampSpaceEditorPosition();
         }
     }
 
     closeSpaceEditor() {
-        if (this.elements.spaceEditor) {
+        if (this.spaceEditorModal) {
+            this.spaceEditorModal.close();
+        } else if (this.elements.spaceEditor) {
             this.elements.spaceEditor.style.display = 'none';
+        }
+    }
+
+    openConnectionEditor(position = null) {
+        if (!this.elements.connectionEditor) return;
+        if (this.connectionModal) {
+            this.connectionModal.open();
+        } else {
+            this.elements.connectionEditor.style.display = 'flex';
+        }
+        this.populateConnectionEditor();
+        if (position) {
+            this.positionConnectionEditor(position);
+        } else {
+            this.clampConnectionEditorPosition();
+        }
+    }
+
+    closeConnectionEditor() {
+        if (this.connectionModal) {
+            this.connectionModal.close();
+        } else if (this.elements.connectionEditor) {
+            this.elements.connectionEditor.style.display = 'none';
         }
     }
 
     clearSelection() {
         this.selectedSpaceId = null;
+        this.selectedConnection = null;
         this.currentEventIndex = null;
         this.closeSpaceEditor();
+        this.closeConnectionEditor();
         this.renderSpaceList();
         this.renderSpaceJsonView();
+        this.renderCanvas();
         this.updateUndoRedoButtons();
     }
 
@@ -915,6 +1006,143 @@ export default class MapEditorController {
             modal.style.left = `${left}px`;
             modal.style.top = `${top}px`;
         });
+    }
+
+    handleSpaceEditorDragStart = (event) => {
+        if (!this.elements.spaceEditor) return;
+        if (this.elements.spaceEditorClose?.contains(event.target)) return;
+        if (event.type === 'touchstart') {
+            event.preventDefault();
+        }
+        const point = event.touches?.[0] || event;
+        const rect = this.elements.spaceEditor.getBoundingClientRect();
+        this.spaceEditorDragState = {
+            offsetX: point.clientX - rect.left,
+            offsetY: point.clientY - rect.top
+        };
+        document.addEventListener('mousemove', this.handleSpaceEditorDragMove);
+        document.addEventListener('mouseup', this.handleSpaceEditorDragEnd);
+        document.addEventListener('touchmove', this.handleSpaceEditorDragMove, { passive: false });
+        document.addEventListener('touchend', this.handleSpaceEditorDragEnd);
+    };
+
+    handleSpaceEditorDragMove = (event) => {
+        if (!this.spaceEditorDragState || !this.elements.spaceEditor) return;
+        event.preventDefault();
+        const point = event.touches?.[0] || event;
+        const modal = this.elements.spaceEditor;
+        const padding = 12;
+        const width = modal.offsetWidth || 0;
+        const height = modal.offsetHeight || 0;
+        const maxLeft = Math.max(padding, window.innerWidth - width - padding);
+        const maxTop = Math.max(padding, window.innerHeight - height - padding);
+        const rawLeft = point.clientX - this.spaceEditorDragState.offsetX;
+        const rawTop = point.clientY - this.spaceEditorDragState.offsetY;
+        const left = Math.min(Math.max(padding, rawLeft), maxLeft);
+        const top = Math.min(Math.max(padding, rawTop), maxTop);
+        modal.style.left = `${left}px`;
+        modal.style.top = `${top}px`;
+        modal.style.right = 'auto';
+        modal.style.bottom = 'auto';
+    };
+
+    handleSpaceEditorDragEnd = () => {
+        this.spaceEditorDragState = null;
+        document.removeEventListener('mousemove', this.handleSpaceEditorDragMove);
+        document.removeEventListener('mouseup', this.handleSpaceEditorDragEnd);
+        document.removeEventListener('touchmove', this.handleSpaceEditorDragMove);
+        document.removeEventListener('touchend', this.handleSpaceEditorDragEnd);
+        this.clampSpaceEditorPosition();
+    };
+
+    clampSpaceEditorPosition() {
+        if (!this.elements.spaceEditor || this.elements.spaceEditor.style.display === 'none') return;
+        const modal = this.elements.spaceEditor;
+        const rect = modal.getBoundingClientRect();
+        const padding = 12;
+        const maxLeft = Math.max(padding, window.innerWidth - rect.width - padding);
+        const maxTop = Math.max(padding, window.innerHeight - rect.height - padding);
+        const left = Math.min(Math.max(padding, rect.left), maxLeft);
+        const top = Math.min(Math.max(padding, rect.top), maxTop);
+        modal.style.left = `${left}px`;
+        modal.style.top = `${top}px`;
+        modal.style.right = 'auto';
+        modal.style.bottom = 'auto';
+    }
+
+    positionConnectionEditor(position) {
+        if (!this.elements.connectionEditor) return;
+        const modal = this.elements.connectionEditor;
+        modal.style.right = 'auto';
+        modal.style.bottom = 'auto';
+        const padding = 16;
+        requestAnimationFrame(() => {
+            const rect = modal.getBoundingClientRect();
+            const maxLeft = Math.max(padding, window.innerWidth - rect.width - padding);
+            const maxTop = Math.max(padding, window.innerHeight - rect.height - padding);
+            const left = Math.min(Math.max(padding, position.x + 12), maxLeft);
+            const top = Math.min(Math.max(padding, position.y + 12), maxTop);
+            modal.style.left = `${left}px`;
+            modal.style.top = `${top}px`;
+        });
+    }
+
+    handleConnectionEditorDragStart = (event) => {
+        if (!this.elements.connectionEditor) return;
+        if (this.elements.connectionEditorClose?.contains(event.target)) return;
+        if (event.type === 'touchstart') {
+            event.preventDefault();
+        }
+        const point = event.touches?.[0] || event;
+        const rect = this.elements.connectionEditor.getBoundingClientRect();
+        this.connectionEditorDragState = {
+            offsetX: point.clientX - rect.left,
+            offsetY: point.clientY - rect.top
+        };
+        document.addEventListener('mousemove', this.handleConnectionEditorDragMove);
+        document.addEventListener('mouseup', this.handleConnectionEditorDragEnd);
+        document.addEventListener('touchmove', this.handleConnectionEditorDragMove, { passive: false });
+        document.addEventListener('touchend', this.handleConnectionEditorDragEnd);
+    };
+
+    handleConnectionEditorDragMove = (event) => {
+        if (!this.connectionEditorDragState || !this.elements.connectionEditor) return;
+        event.preventDefault();
+        const point = event.touches?.[0] || event;
+        const modal = this.elements.connectionEditor;
+        const padding = 12;
+        const width = modal.offsetWidth || 0;
+        const height = modal.offsetHeight || 0;
+        const maxLeft = Math.max(padding, window.innerWidth - width - padding);
+        const maxTop = Math.max(padding, window.innerHeight - height - padding);
+        const rawLeft = point.clientX - this.connectionEditorDragState.offsetX;
+        const rawTop = point.clientY - this.connectionEditorDragState.offsetY;
+        modal.style.left = `${Math.min(Math.max(padding, rawLeft), maxLeft)}px`;
+        modal.style.top = `${Math.min(Math.max(padding, rawTop), maxTop)}px`;
+        modal.style.right = 'auto';
+        modal.style.bottom = 'auto';
+    };
+
+    handleConnectionEditorDragEnd = () => {
+        this.connectionEditorDragState = null;
+        document.removeEventListener('mousemove', this.handleConnectionEditorDragMove);
+        document.removeEventListener('mouseup', this.handleConnectionEditorDragEnd);
+        document.removeEventListener('touchmove', this.handleConnectionEditorDragMove);
+        document.removeEventListener('touchend', this.handleConnectionEditorDragEnd);
+        this.clampConnectionEditorPosition();
+    };
+
+    clampConnectionEditorPosition() {
+        if (!this.elements.connectionEditor || this.elements.connectionEditor.style.display === 'none') return;
+        const modal = this.elements.connectionEditor;
+        const rect = modal.getBoundingClientRect();
+        const padding = 12;
+        const maxLeft = Math.max(padding, window.innerWidth - rect.width - padding);
+        const maxTop = Math.max(padding, window.innerHeight - rect.height - padding);
+        modal.style.left = `${Math.min(Math.max(padding, rect.left), maxLeft)}px`;
+        modal.style.top = `${Math.min(Math.max(padding, rect.top), maxTop)}px`;
+        modal.style.right = 'auto';
+        modal.style.bottom = 'auto';
     }
 
     populateSpaceEditor() {
@@ -944,10 +1172,34 @@ export default class MapEditorController {
         this.renderSpaceJsonView();
     }
 
+    populateConnectionEditor() {
+        const connection = this.getSelectedConnection();
+        if (!connection) return;
+        const { fromId, toId, reverseExists, config } = connection;
+        if (this.elements.connectionEditorTitle) {
+            this.elements.connectionEditorTitle.textContent = `${fromId} ↔ ${toId}`;
+        }
+        if (this.elements.connectionDirection) {
+            let direction = 'forward';
+            if (reverseExists) {
+                direction = 'bidirectional';
+            } else if (String(this.selectedConnection?.fromId) === String(toId) && String(this.selectedConnection?.toId) === String(fromId)) {
+                direction = 'reverse';
+            }
+            this.elements.connectionDirection.value = direction;
+        }
+        if (this.elements.connectionColor) {
+            this.elements.connectionColor.value = this.normalizeColor(config?.color, '#4a90e2');
+        }
+        if (this.elements.connectionVisible) {
+            this.elements.connectionVisible.checked = config?.draw !== false && config?.drawConnection !== false;
+        }
+    }
+
     getSelectedSpace() {
         const state = this.stateManager.state;
         if (!state?.topology?.spaces || !this.selectedSpaceId) return null;
-        return state.topology.spaces.find((space) => space.id === this.selectedSpaceId) || null;
+        return state.topology.spaces.find((space) => String(space.id) === String(this.selectedSpaceId)) || null;
     }
 
     applyVisualEdits() {
@@ -1095,7 +1347,7 @@ export default class MapEditorController {
         const triggerPayload = this.collectSchemaValue(triggerSchema, this.elements.triggerPayloadForm);
         if (triggerPayload === null) return;
         let actionPayload = null;
-        if (actionType === 'APPLY_EFFECT') {
+        if (this.schemaUsesEffectWidget(actionSchema)) {
             actionPayload = this.collectEffectPayload();
         } else {
             actionPayload = this.collectSchemaValue(actionSchema, this.elements.actionPayloadForm);
@@ -1124,7 +1376,7 @@ export default class MapEditorController {
         const state = this.stateManager.state;
         if (!state?.topology?.spaces) return;
         const updatedSpaces = state.topology.spaces.map((space) => (
-            space.id === updatedSpace.id ? updatedSpace : space
+            String(space.id) === String(updatedSpace.id) ? updatedSpace : space
         ));
         this.updateStateSection('topology', { ...state.topology, spaces: updatedSpaces });
     }
@@ -1142,17 +1394,19 @@ export default class MapEditorController {
         const state = this.stateManager.state;
         if (!state) return;
         this.renderSectionForm('metadata', METADATA_SCHEMA, state.metadata, this.elements.metadataForm);
-        this.renderSectionForm('rules', RULES_SCHEMA, state.rules, this.elements.rulesForm);
+        this.renderSectionForm('rules', this.getRulesSchema(), state.rules, this.elements.rulesForm);
         this.renderSectionForm('engine', this.getEngineSchema(), state.engine, this.elements.engineForm);
     }
 
     renderSectionForm(key, schema, value, container) {
         if (!container) return;
         const serialized = JSON.stringify(value || {});
-        if (this.formCache[key] === serialized && container.childElementCount) {
+        const schemaKey = JSON.stringify(schema || {});
+        const cacheKey = `${schemaKey}::${serialized}`;
+        if (this.formCache[key] === cacheKey && container.childElementCount) {
             return;
         }
-        this.formCache[key] = serialized;
+        this.formCache[key] = cacheKey;
         this.renderSchemaForm(container, schema, value);
     }
 
@@ -1163,7 +1417,7 @@ export default class MapEditorController {
         (state.topology?.spaces || []).forEach((space) => {
             const item = document.createElement('li');
             item.className = 'map-editor-list-item';
-            if (space.id === this.selectedSpaceId) {
+            if (String(space.id) === String(this.selectedSpaceId)) {
                 item.classList.add('selected');
             }
             item.textContent = `${space.name || 'Space'} (${space.id})`;
@@ -1175,7 +1429,7 @@ export default class MapEditorController {
     renderSpaceJsonView() {
         const state = this.stateManager.state;
         if (!state || !this.elements.spaceJsonView) return;
-        const space = (state.topology?.spaces || []).find((s) => s.id === this.selectedSpaceId);
+        const space = (state.topology?.spaces || []).find((s) => String(s.id) === String(this.selectedSpaceId));
         if (!space) {
             this.elements.spaceJsonView.value = '';
             return;
@@ -1269,9 +1523,6 @@ export default class MapEditorController {
     }
 
     renderBackgroundInfo() {
-        if (this.elements.gridToggle) {
-            this.elements.gridToggle.checked = this.gridEnabled;
-        }
         if (!this.elements.backgroundName) return;
         const state = this.stateManager.state;
         if (!state?.background) {
@@ -1320,6 +1571,7 @@ export default class MapEditorController {
         container.innerHTML = '';
         const group = document.createElement('div');
         group.className = 'map-editor-form';
+        group.dataset.fieldsContainer = 'true';
         if (normalized.type === 'object' && normalized.ui?.allowAdditional && !Object.keys(normalized.properties || {}).length) {
             this.renderKeyValueEditor(group, value || {});
         } else {
@@ -1384,6 +1636,24 @@ export default class MapEditorController {
             const label = document.createElement('label');
             label.textContent = this.formatLabel(fieldName);
             wrapper.appendChild(label);
+            if (schema.ui?.widget === 'multiselect' && Array.isArray(schema.items?.enum)) {
+                const select = document.createElement('select');
+                select.className = 'input map-editor-select-list';
+                select.dataset.fieldInput = 'true';
+                select.dataset.multiselect = 'true';
+                select.multiple = true;
+                const selectedValues = Array.isArray(fieldValue)
+                    ? fieldValue.map((entry) => String(entry))
+                    : Array.isArray(schema.default) ? schema.default.map((entry) => String(entry)) : [];
+                schema.items.enum.forEach((optionValue) => {
+                    const option = document.createElement('option');
+                    option.value = optionValue;
+                    option.textContent = schema.items.enumLabels?.[optionValue] || optionValue;
+                    option.selected = selectedValues.includes(String(optionValue));
+                    select.appendChild(option);
+                });
+                wrapper.appendChild(select);
+            } else {
             const list = document.createElement('div');
             list.className = 'map-editor-form';
             list.dataset.arrayItems = 'true';
@@ -1401,6 +1671,7 @@ export default class MapEditorController {
             });
             wrapper.appendChild(list);
             wrapper.appendChild(addButton);
+            }
         } else {
             wrapper.className = 'map-editor-field';
             const label = document.createElement('label');
@@ -1456,7 +1727,7 @@ export default class MapEditorController {
             schema.enum.forEach((option) => {
                 const entry = document.createElement('option');
                 entry.value = option;
-                entry.textContent = option;
+                entry.textContent = schema.enumLabels?.[option] || option;
                 select.appendChild(entry);
             });
             if (resolvedValue !== undefined) {
@@ -1468,7 +1739,7 @@ export default class MapEditorController {
         if (useTextarea) {
             input.rows = 4;
             input.value = resolvedValue ?? '';
-            return input;
+            return this.wrapInputWithPlaceholders(input, schema);
         }
 
         if (schema.type === 'number') {
@@ -1500,7 +1771,99 @@ export default class MapEditorController {
         input.type = 'text';
         input.placeholder = schema.example ? String(schema.example) : '';
         input.value = resolvedValue ?? '';
-        return input;
+        return this.wrapInputWithPlaceholders(input, schema);
+    }
+
+    wrapInputWithPlaceholders(input, schema) {
+        if (schema.type !== 'string' || !schema.ui?.placeholders) {
+            return input;
+        }
+        const placeholders = this.getPlaceholderOptions();
+        if (!placeholders.length) {
+            return input;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'map-editor-input-with-tools';
+        wrapper.appendChild(input);
+
+        const toolbar = document.createElement('div');
+        toolbar.className = 'map-editor-placeholder-toolbar';
+
+        const select = document.createElement('select');
+        select.className = 'input map-editor-placeholder-select';
+
+        const description = document.createElement('div');
+        description.className = 'map-editor-form-note';
+
+        placeholders.forEach((entry, index) => {
+            const option = document.createElement('option');
+            option.value = entry.type;
+            option.textContent = entry.label;
+            if (index === 0) {
+                description.textContent = entry.description || 'Insert a placeholder tag into this field.';
+            }
+            select.appendChild(option);
+        });
+
+        select.addEventListener('change', () => {
+            const entry = placeholders.find((item) => item.type === select.value);
+            description.textContent = entry?.description || 'Insert a placeholder tag into this field.';
+        });
+
+        const insertButton = document.createElement('button');
+        insertButton.type = 'button';
+        insertButton.className = 'button button-secondary';
+        insertButton.textContent = 'Insert Placeholder';
+        insertButton.addEventListener('click', () => {
+            const entry = placeholders.find((item) => item.type === select.value);
+            if (!entry) return;
+            this.insertTextAtCursor(input, entry.template);
+        });
+
+        toolbar.appendChild(select);
+        toolbar.appendChild(insertButton);
+        wrapper.appendChild(toolbar);
+        wrapper.appendChild(description);
+        return wrapper;
+    }
+
+    getPlaceholderOptions() {
+        const metadata = this.placeholderMetadata || {};
+        return Object.values(metadata)
+            .map((entry) => ({
+                type: entry.type,
+                label: entry.displayName || entry.type,
+                description: entry.description || '',
+                template: entry.template || entry.example || this.buildPlaceholderTemplate(entry)
+            }))
+            .filter((entry) => entry.type)
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }
+
+    buildPlaceholderTemplate(entry) {
+        const args = Array.isArray(entry.args) ? entry.args : [];
+        const renderedArgs = args.map((arg) => {
+            if (arg.example !== undefined) return String(arg.example);
+            if (arg.default !== undefined) return String(arg.default);
+            return arg.name || 'value';
+        });
+        const argList = renderedArgs.length ? `(${renderedArgs.join(', ')})` : '';
+        return `{{${entry.type}${argList}}}`;
+    }
+
+    insertTextAtCursor(input, text) {
+        const start = typeof input.selectionStart === 'number' ? input.selectionStart : input.value.length;
+        const end = typeof input.selectionEnd === 'number' ? input.selectionEnd : input.value.length;
+        const before = input.value.slice(0, start);
+        const after = input.value.slice(end);
+        input.value = `${before}${text}${after}`;
+        const nextPosition = start + text.length;
+        if (typeof input.setSelectionRange === 'function') {
+            input.setSelectionRange(nextPosition, nextPosition);
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
     }
 
     createArrayItem(itemSchema, itemValue) {
@@ -1575,7 +1938,9 @@ export default class MapEditorController {
         const normalized = this.normalizeSchema(schema);
         if (normalized.type === 'object') {
             const result = {};
-            const fieldsRoot = container.querySelector('[data-fields-container="true"]') || container;
+            const fieldsRoot = container.matches?.('[data-fields-container="true"]')
+                ? container
+                : container.querySelector(':scope > [data-fields-container="true"], :scope > details > [data-fields-container="true"]') || container;
             const properties = normalized.properties || {};
             Object.entries(properties).forEach(([key, fieldSchema]) => {
                 if (key.startsWith('_')) return;
@@ -1594,6 +1959,10 @@ export default class MapEditorController {
         }
 
         if (normalized.type === 'array') {
+            const multiSelect = container.querySelector('[data-multiselect="true"]');
+            if (multiSelect) {
+                return Array.from(multiSelect.selectedOptions || []).map((option) => option.value);
+            }
             const list = container.querySelector(':scope > [data-array-items="true"]');
             if (!list) return [];
             const itemSchema = normalized.items || { type: 'string' };
@@ -1646,14 +2015,33 @@ export default class MapEditorController {
     normalizeSchema(schema) {
         if (!schema) return { type: 'object', properties: {} };
         if (schema.type || schema.properties) {
-            return schema;
+            return this.resolveRegisteredEnums(schema);
         }
         const properties = {};
         Object.entries(schema).forEach(([key, value]) => {
             if (key.startsWith('_')) return;
             properties[key] = value;
         });
-        return { type: 'object', properties };
+        return this.resolveRegisteredEnums({ type: 'object', properties });
+    }
+
+    resolveRegisteredEnums(schema) {
+        if (!schema || typeof schema !== 'object') return schema;
+        const normalized = { ...schema };
+        const registryFactory = normalized.ui?.registryFactory;
+        if (registryFactory && !normalized.enum) {
+            const factory = this.factoryManager?.getFactory?.(registryFactory);
+            normalized.enum = (factory?.getRegisteredTypes?.() || []).slice().sort();
+        }
+        if (normalized.properties) {
+            normalized.properties = Object.fromEntries(
+                Object.entries(normalized.properties).map(([key, value]) => [key, this.resolveRegisteredEnums(value)])
+            );
+        }
+        if (normalized.items) {
+            normalized.items = this.resolveRegisteredEnums(normalized.items);
+        }
+        return normalized;
     }
 
     defaultForSchema(schema) {
@@ -1700,8 +2088,9 @@ export default class MapEditorController {
         return labels;
     }
 
-    getEngineSchema() {
+    getEngineSchema(typeOverride = null) {
         const engineTypes = GameEngineFactory.getRegisteredTypes().sort();
+        const selectedType = typeOverride || this.stateManager.state?.engine?.type || engineTypes[0] || 'turn-based';
         return {
             ...ENGINE_SCHEMA,
             properties: {
@@ -1709,9 +2098,66 @@ export default class MapEditorController {
                 type: {
                     ...ENGINE_SCHEMA.properties.type,
                     enum: engineTypes
+                },
+                config: {
+                    ...GameEngineFactory.getEditorConfigSchema(selectedType),
+                    description: 'Engine configuration'
                 }
             }
         };
+    }
+
+    handleEngineFormChange(event) {
+        const field = event.target?.closest?.('[data-field-key="type"]');
+        if (!field || !this.elements.engineForm) return;
+        const nextType = event.target.value;
+        const currentValue = this.collectSchemaValue(this.getEngineSchema(), this.elements.engineForm) || {};
+        const nextValue = {
+            ...currentValue,
+            type: nextType,
+            config: {}
+        };
+        this.formCache.engine = null;
+        this.renderSectionForm('engine', this.getEngineSchema(nextType), nextValue, this.elements.engineForm);
+    }
+
+    getRulesSchema() {
+        const spaces = this.stateManager.state?.topology?.spaces || [];
+        const spaceOptions = spaces.map((space) => ({
+            value: String(space.id),
+            label: space.name ? `${space.name} (${space.id})` : String(space.id)
+        }));
+        const selectedWinConditionType = this.stateManager.state?.rules?.winCondition?.type || 'REACH_SPACE';
+        return GameRules.getEditorSchema({ spaceOptions, selectedWinConditionType });
+    }
+
+    handleRulesFormChange(event) {
+        if (!this.elements.rulesForm) return;
+        const target = event.target;
+        const typeField = target?.closest?.('[data-field-key="type"]');
+        const winConditionField = target?.closest?.('[data-field-key="winCondition"]');
+        if (!typeField || !winConditionField) {
+            return;
+        }
+        const nextType = target.value;
+        const currentValue = this.collectSchemaValue(this.getRulesSchema(), this.elements.rulesForm) || {};
+        const nextSchema = GameRules.getEditorSchema({
+            spaceOptions: (this.stateManager.state?.topology?.spaces || []).map((space) => ({
+                value: String(space.id),
+                label: space.name ? `${space.name} (${space.id})` : String(space.id)
+            })),
+            selectedWinConditionType: nextType
+        });
+        const nextValue = {
+            ...currentValue,
+            winCondition: {
+                ...(currentValue.winCondition || {}),
+                type: nextType,
+                config: {}
+            }
+        };
+        this.formCache.rules = null;
+        this.renderSectionForm('rules', nextSchema, nextValue, this.elements.rulesForm);
     }
 
     getTriggerSchema(triggerType) {
@@ -1724,6 +2170,15 @@ export default class MapEditorController {
 
     getEffectSchema(effectType) {
         return this.effectMetadataByType?.[effectType]?.payloadSchema || {};
+    }
+
+    schemaUsesEffectWidget(schema) {
+        const normalized = this.normalizeSchema(schema);
+        if (normalized.ui?.widget === 'effect') {
+            return true;
+        }
+        const effectField = normalized.properties?.effect;
+        return effectField?.ui?.widget === 'effect';
     }
 
     renderPayloadForm(container, schema, payload, emptyMessage) {
@@ -1748,14 +2203,14 @@ export default class MapEditorController {
 
     renderActionPayloadForm(actionType, payload) {
         if (!this.elements.actionPayloadForm) return;
-        if (actionType === 'APPLY_EFFECT') {
+        const schema = this.getActionSchema(actionType);
+        if (this.schemaUsesEffectWidget(schema)) {
             this.renderEffectPayloadForm(payload);
             return;
         }
         this.effectTypeSelect = null;
         this.effectPayloadContainer = null;
         this.effectPayloadSchema = null;
-        const schema = this.getActionSchema(actionType);
         this.renderPayloadForm(this.elements.actionPayloadForm, schema, payload, 'No action payload required.');
     }
 
@@ -1858,9 +2313,176 @@ export default class MapEditorController {
         this.renderer.render(state.topology, assetsByPath, this.selectedSpaceId, {
             backgroundUrl,
             gridEnabled: this.gridEnabled,
-            gridSize: this.gridSize
+            gridSize: this.gridSize,
+            snapEnabled: this.snapToGridEnabled,
+            showHiddenConnections: this.showHiddenConnections,
+            drawConnectionMode: this.drawConnectionMode,
+            selectedConnection: this.selectedConnection
         });
     }
+
+    createConnection(fromId, toId) {
+        const state = this.stateManager.state;
+        const spaces = state?.topology?.spaces || [];
+        if (!spaces.length || !fromId || !toId || String(fromId) === String(toId)) {
+            return;
+        }
+        const fromSpace = spaces.find((space) => String(space.id) === String(fromId));
+        if (!fromSpace) return;
+        const alreadyExists = (fromSpace.connections || []).some((connection) => String(connection.targetId) === String(toId));
+        if (alreadyExists) {
+            this.setStatus('Connection already exists');
+            return;
+        }
+        const updatedSpaces = spaces.map((space) => {
+            if (String(space.id) !== String(fromId)) return space;
+            return {
+                ...space,
+                connections: [
+                    ...(space.connections || []),
+                    {
+                        targetId: toId,
+                        draw: true
+                    }
+                ]
+            };
+        });
+        this.updateStateSection('topology', {
+            ...state.topology,
+            spaces: updatedSpaces
+        });
+        this.selectedConnection = { fromId: String(fromId), toId: String(toId) };
+        this.renderCanvas();
+        this.setStatus(`Connected ${fromId} → ${toId}`);
+    }
+
+    getSelectedConnection() {
+        const selected = this.selectedConnection;
+        const spaces = this.stateManager.state?.topology?.spaces || [];
+        if (!selected) return null;
+        const fromSpace = spaces.find((space) => String(space.id) === String(selected.fromId));
+        if (!fromSpace) return null;
+        const config = (fromSpace.connections || []).find((connection) => String(connection.targetId) === String(selected.toId));
+        if (!config) return null;
+        return {
+            fromId: String(selected.fromId),
+            toId: String(selected.toId),
+            reverseExists: this.connectionExists(selected.toId, selected.fromId),
+            config
+        };
+    }
+
+    connectionExists(fromId, toId) {
+        const spaces = this.stateManager.state?.topology?.spaces || [];
+        const fromSpace = spaces.find((space) => String(space.id) === String(fromId));
+        return Boolean((fromSpace?.connections || []).some((connection) => String(connection.targetId) === String(toId)));
+    }
+
+    updateConnectionSettings(fromId, toId, updates = {}) {
+        const state = this.stateManager.state;
+        const spaces = state?.topology?.spaces || [];
+        const updatedSpaces = spaces.map((space) => {
+            if (String(space.id) !== String(fromId)) return space;
+            return {
+                ...space,
+                connections: (space.connections || []).map((connection) => (
+                    String(connection.targetId) === String(toId)
+                        ? { ...connection, ...updates }
+                        : connection
+                ))
+            };
+        });
+        this.updateStateSection('topology', { ...state.topology, spaces: updatedSpaces });
+        this.selectedConnection = { fromId: String(fromId), toId: String(toId) };
+        this.renderCanvas();
+    }
+
+    setBidirectionalConnection(fromId, toId, enabled) {
+        if (enabled) {
+            this.createConnection(toId, fromId);
+            this.selectedConnection = { fromId: String(fromId), toId: String(toId) };
+            return;
+        }
+        this.removeConnection(toId, fromId, { preserveSelection: true, silent: true });
+        this.selectedConnection = { fromId: String(fromId), toId: String(toId) };
+        this.renderCanvas();
+    }
+
+    removeConnection(fromId, toId, { preserveSelection = false, silent = false } = {}) {
+        const state = this.stateManager.state;
+        const spaces = state?.topology?.spaces || [];
+        const updatedSpaces = spaces.map((space) => {
+            if (String(space.id) !== String(fromId)) return space;
+            return {
+                ...space,
+                connections: (space.connections || []).filter((connection) => String(connection.targetId) !== String(toId))
+            };
+        });
+        this.updateStateSection('topology', { ...state.topology, spaces: updatedSpaces });
+        if (!preserveSelection) {
+            this.selectedConnection = null;
+        }
+        this.renderCanvas();
+        if (!silent) {
+            this.setStatus(`Removed connection ${fromId} → ${toId}`);
+        }
+    }
+
+    applyConnectionEdits() {
+        const selected = this.getSelectedConnection();
+        if (!selected) return;
+        const { fromId, toId } = selected;
+        const direction = this.elements.connectionDirection?.value || 'forward';
+        const color = this.elements.connectionColor?.value || '#4a90e2';
+        const draw = Boolean(this.elements.connectionVisible?.checked);
+
+        this.updateConnectionSettings(fromId, toId, { color, draw });
+
+        if (direction === 'forward') {
+            this.removeConnection(toId, fromId, { preserveSelection: true, silent: true });
+            this.selectedConnection = { fromId: String(fromId), toId: String(toId) };
+        } else if (direction === 'reverse') {
+            if (!this.connectionExists(toId, fromId)) {
+                this.createConnection(toId, fromId);
+            }
+            this.updateConnectionSettings(toId, fromId, { color, draw });
+            this.removeConnection(fromId, toId, { preserveSelection: true, silent: true });
+            this.selectedConnection = { fromId: String(toId), toId: String(fromId) };
+        } else if (direction === 'bidirectional') {
+            if (!this.connectionExists(toId, fromId)) {
+                this.createConnection(toId, fromId);
+            }
+            this.updateConnectionSettings(toId, fromId, { color, draw });
+            this.selectedConnection = { fromId: String(fromId), toId: String(toId) };
+        }
+
+        this.populateConnectionEditor();
+        this.renderCanvas();
+        this.setStatus('Connection updated');
+    }
+
+    removeSelectedConnection() {
+        const selected = this.getSelectedConnection();
+        if (!selected) return;
+        this.removeConnection(selected.fromId, selected.toId);
+        this.closeConnectionEditor();
+    }
+
+    handleWindowKeyDown = (event) => {
+        const tagName = event.target?.tagName;
+        const isEditable = event.target?.isContentEditable
+            || tagName === 'INPUT'
+            || tagName === 'TEXTAREA'
+            || tagName === 'SELECT';
+        if (isEditable) return;
+
+        if (event.key === 'Delete' && this.selectedSpaceId) {
+            event.preventDefault();
+            this.deleteSelectedSpace();
+        }
+    };
+
+    handleWindowKeyUp = () => {};
 
     updateUndoRedoButtons() {
         if (this.elements.undoButton) {
@@ -1875,20 +2497,22 @@ export default class MapEditorController {
         const state = this.stateManager.state;
         if (!state) return;
         try {
+            this.flushSectionForms();
+            const latestState = this.stateManager.state;
             const zip = new JSZip();
-            const assetsRoot = state.manifest?.assetsRoot || this.assetsRootFallback;
+            const assetsRoot = latestState.manifest?.assetsRoot || this.assetsRootFallback;
             const metadata = {
-                ...(state.metadata || {})
+                ...(latestState.metadata || {})
             };
-            if (state.background?.path) {
+            if (latestState.background?.path) {
                 metadata.renderConfig = {
                     ...(metadata.renderConfig || {}),
-                    backgroundImage: state.background.path
+                    backgroundImage: latestState.background.path
                 };
             }
             const manifest = {
                 schema_version: 2,
-                id: state.manifest?.id || state.metadata?.id || 'custom-map',
+                id: latestState.manifest?.id || latestState.metadata?.id || 'custom-map',
                 assetsRoot,
                 paths: {
                     metadata: 'metadata.json',
@@ -1902,28 +2526,28 @@ export default class MapEditorController {
 
             zip.file('board.json', JSON.stringify(manifest, null, 2));
             zip.file('metadata.json', JSON.stringify(metadata, null, 2));
-            zip.file('engine.json', JSON.stringify(state.engine || {}, null, 2));
-            zip.file('rules.json', JSON.stringify(state.rules || {}, null, 2));
-            zip.file('ui.json', JSON.stringify(state.ui || {}, null, 2));
-            zip.file('topology.json', JSON.stringify(state.topology || {}, null, 2));
-            zip.file('dependencies.json', JSON.stringify(state.dependencies || { plugins: [] }, null, 2));
+            zip.file('engine.json', JSON.stringify(latestState.engine || {}, null, 2));
+            zip.file('rules.json', JSON.stringify(latestState.rules || {}, null, 2));
+            zip.file('ui.json', JSON.stringify(latestState.ui || {}, null, 2));
+            zip.file('topology.json', JSON.stringify(latestState.topology || {}, null, 2));
+            zip.file('dependencies.json', JSON.stringify(latestState.dependencies || { plugins: [] }, null, 2));
 
-            (state.assets || []).forEach((asset) => {
+            (latestState.assets || []).forEach((asset) => {
                 const path = asset.path || `${assetsRoot}${asset.name}`;
                 const base64 = asset.dataUrl?.split(',')[1];
                 if (!base64) return;
                 zip.file(path, base64, { base64: true });
             });
 
-            if (state.background?.dataUrl) {
-                const base64 = state.background.dataUrl.split(',')[1];
+            if (latestState.background?.dataUrl) {
+                const base64 = latestState.background.dataUrl.split(',')[1];
                 if (base64) {
-                    zip.file(state.background.path, base64, { base64: true });
+                    zip.file(latestState.background.path, base64, { base64: true });
                 }
             }
 
-            if (state.preview?.dataUrl) {
-                const base64 = state.preview.dataUrl.split(',')[1];
+            if (latestState.preview?.dataUrl) {
+                const base64 = latestState.preview.dataUrl.split(',')[1];
                 if (base64) {
                     zip.file('preview.png', base64, { base64: true });
                 }
@@ -1943,6 +2567,19 @@ export default class MapEditorController {
             console.error('[MapEditor] Export failed', error);
             this.setStatus('Export failed');
         }
+    }
+
+    flushSectionForms() {
+        Object.keys(this.sectionAutoSaveTimers || {}).forEach((section) => {
+            const timer = this.sectionAutoSaveTimers[section];
+            if (timer) {
+                clearTimeout(timer);
+                this.sectionAutoSaveTimers[section] = null;
+            }
+        });
+        this.applyFormSection('metadata');
+        this.applyFormSection('rules');
+        this.applyFormSection('engine');
     }
 
     setTextareaValue(textarea, value) {

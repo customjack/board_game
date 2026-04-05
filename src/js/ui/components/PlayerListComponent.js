@@ -315,7 +315,10 @@ export default class PlayerListComponent extends BaseUIComponent {
         
         // Check plugin readiness changes
         // Only check if plugins are required
-        if (newGameState.pluginRequirements && newGameState.pluginRequirements.length > 0) {
+        const effectiveRequirements = newGameState.getEffectivePluginRequirements?.()
+            || newGameState.pluginRequirements
+            || [];
+        if (effectiveRequirements.length > 0) {
             const prevReadiness = this.gameState.pluginReadiness || {};
             const newReadiness = newGameState.pluginReadiness || {};
             
@@ -406,7 +409,7 @@ export default class PlayerListComponent extends BaseUIComponent {
             ? `${gameState.board.gameRules.players?.min || 'none'}:${gameState.board.gameRules.players?.max || 'none'}`
             : 'no-rules';
 
-        const requirementsSig = (gameState.pluginRequirements || [])
+        const requirementsSig = (gameState.getEffectivePluginRequirements?.() || gameState.pluginRequirements || [])
             .map(req => req?.id || req?.name || '')
             .sort()
             .join('|');
@@ -425,18 +428,33 @@ export default class PlayerListComponent extends BaseUIComponent {
      * Get readiness info for a player (status + missing list)
      */
     getPlayerReadiness(player, gameState = this.gameState) {
-        const requirements = gameState?.pluginRequirements || [];
+        const requirements = gameState?.getEffectivePluginRequirements?.()
+            || gameState?.pluginRequirements
+            || [];
         if (!requirements.length) {
             return { status: 'not_required', missing: [] };
         }
 
         const readiness = gameState?.pluginReadiness?.[player.peerId];
         if (!readiness) {
+            console.debug('[PlayerListComponent] Plugin readiness missing for player', {
+                playerId: player?.playerId,
+                nickname: player?.nickname,
+                peerId: player?.peerId,
+                requiredPlugins: requirements.map(req => req?.id || req?.name || req?.pluginId || 'unknown'),
+                knownReadinessPeers: Object.keys(gameState?.pluginReadiness || {})
+            });
             return { status: 'checking', missing: [] };
         }
         if (readiness.ready) {
             return { status: 'ready', missing: [] };
         }
+        console.debug('[PlayerListComponent] Plugin readiness not ready for player', {
+            playerId: player?.playerId,
+            nickname: player?.nickname,
+            peerId: player?.peerId,
+            missing: readiness.missingPlugins || []
+        });
         return {
             status: 'missing',
             missing: (readiness.missingPlugins || []).slice()
@@ -618,7 +636,10 @@ export default class PlayerListComponent extends BaseUIComponent {
         }
         
         // Plugin readiness badge (only in lobby, only if plugins are required)
-        if (this.gameState && !this.gameState.isGameStarted() && this.gameState.pluginRequirements && this.gameState.pluginRequirements.length > 0) {
+        const effectiveRequirements = this.gameState?.getEffectivePluginRequirements?.()
+            || this.gameState?.pluginRequirements
+            || [];
+        if (this.gameState && !this.gameState.isGameStarted() && effectiveRequirements.length > 0) {
             const readinessInfo = this.getPlayerReadiness(player, this.gameState);
             if (readinessInfo.status === 'ready') {
                 nameHtml += `<span class="plugin-ready-badge" style="background-color: var(--color-success); color: var(--text-color-light, white); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 4px;">Ready</span>`;

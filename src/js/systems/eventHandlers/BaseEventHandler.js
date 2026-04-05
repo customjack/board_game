@@ -409,6 +409,31 @@ export default class BaseEventHandler {
         this.updateAddPlayerButton();
     }
 
+    getEffectivePluginRequirements(requirements = []) {
+        return (Array.isArray(requirements) ? requirements : []).filter((req) => {
+            if (!req) return false;
+            const id = req.id || req.pluginId || req.name || '';
+            const source = req.source || '';
+            return id !== 'core' && source !== 'builtin';
+        });
+    }
+
+    getRequirementsHash(requirements = []) {
+        const effectiveRequirements = this.getEffectivePluginRequirements(requirements);
+        if (effectiveRequirements.length === 0) {
+            return 'none';
+        }
+
+        const normalized = effectiveRequirements.map(req => ({
+            id: req.id || req.pluginId || req.name || '',
+            version: req.version || '',
+            source: req.source || '',
+            cdn: req.cdn || req.url || ''
+        })).sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+
+        return JSON.stringify(normalized);
+    }
+
     updateAddPlayerButton() {
         const addPlayerButton = document.getElementById('addPlayerButton');
         const addPlayerButtonContainer = document.getElementById('addPlayerButtonContainer');

@@ -184,7 +184,7 @@ export default class Board {
             victory: rules.winCondition ? {
                 conditions: [{
                     type: rules.winCondition.type || 'CUSTOM',
-                    config: rules.winCondition.config || {}
+                    ...(rules.winCondition.config || {})
                 }]
             } : rules.victory,
             constraints: rules.constraints

@@ -137,6 +137,16 @@ export default class StateDelta {
      * @returns {boolean} True if delta can be applied
      */
     static canApplyDelta(baseState, delta) {
+        return this.getDeltaAction(baseState, delta) === 'apply';
+    }
+
+    /**
+     * Classify how a delta should be handled.
+     * @param {Object} baseState - The base state
+     * @param {Object} delta - The delta to classify
+     * @returns {'apply'|'skip'|'desync'} Recommended action
+     */
+    static getDeltaAction(baseState, delta) {
         // If delta has version info, check version compatibility
         if (delta._version !== undefined && baseState._version !== undefined) {
             // Delta should be ahead of current state (allows catching up after missed updates)
@@ -145,34 +155,34 @@ export default class StateDelta {
 
             if (versionDiff === 1) {
                 // Perfect - exactly one version ahead
-                return true;
+                return 'apply';
             } else if (versionDiff === 0) {
                 // Same version - this can happen during rapid phase transitions
                 // Check if delta has actual changes via timestamp
                 if (delta._timestamp && baseState._timestamp && delta._timestamp > baseState._timestamp) {
                     // Newer timestamp, apply it
-                    return true;
+                    return 'apply';
                 }
                 // Same version and timestamp - skip duplicate
                 console.log(`Skipping duplicate delta (version ${delta._version}, same timestamp)`);
-                return false;
+                return 'skip';
             } else if (versionDiff > 1 && versionDiff <= 10) {
                 // Client is behind but not too far - allow catch-up
                 console.log(`Delta version skip detected (${versionDiff} versions ahead), applying anyway`);
-                return true;
+                return 'apply';
             } else if (versionDiff < 0) {
                 // Old delta - skip it
                 console.log(`Skipping old delta (version ${delta._version} vs current ${baseState._version})`);
-                return false;
+                return 'skip';
             } else {
                 // Too far ahead - likely desync
                 console.warn(`Large version gap detected (${versionDiff} versions), requesting full state`);
-                return false;
+                return 'desync';
             }
         }
 
         // If no versioning, assume it's safe
-        return true;
+        return 'apply';
     }
 
     /**

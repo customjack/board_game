@@ -198,6 +198,18 @@ export default class GameEngineFactory {
         };
     }
 
+    static getEditorConfigSchema(type) {
+        const EngineClass = this.engineRegistry.get(type);
+        if (!EngineClass || typeof EngineClass.getEditorConfigSchema !== 'function') {
+            return {
+                type: 'object',
+                description: 'Engine configuration',
+                ui: { allowAdditional: true, collapsed: true }
+            };
+        }
+        return EngineClass.getEditorConfigSchema();
+    }
+
     /**
      * List all registered engines with their info
      * @returns {Array} Array of engine info objects

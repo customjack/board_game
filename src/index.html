@@ -78,14 +78,18 @@
     <!-- Map Editor Page -->
     <div id="mapEditorPage" style="display: none;">
         <div class="map-editor-header">
-            <button id="mapEditorBackButton" class="button button-secondary">Back</button>
-            <button id="mapEditorNewButton" class="button">New Map</button>
-            <button id="mapEditorLoadButton" class="button">Load Bundle</button>
-            <input id="mapEditorBundleInput" type="file" accept=".zip" style="display: none;">
-            <button id="mapEditorExportButton" class="button button-primary">Export Bundle</button>
-            <button id="mapEditorUndoButton" class="button button-secondary">Undo</button>
-            <button id="mapEditorRedoButton" class="button button-secondary">Redo</button>
+            <div class="map-editor-header-group">
+                <button id="mapEditorBackButton" class="button button-secondary">Back</button>
+                <button id="mapEditorNewButton" class="button">New Map</button>
+                <button id="mapEditorLoadButton" class="button">Load Map</button>
+                <input id="mapEditorBundleInput" type="file" accept=".zip" style="display: none;">
+                <button id="mapEditorExportButton" class="button button-primary">Export Map</button>
+            </div>
             <span id="mapEditorStatus" class="map-editor-status"></span>
+            <div class="map-editor-header-group map-editor-header-history">
+                <button id="mapEditorUndoButton" class="button button-secondary">Undo</button>
+                <button id="mapEditorRedoButton" class="button button-secondary">Redo</button>
+            </div>
         </div>
 
         <div class="map-editor-tab-bar" id="mapEditorPrimaryTabs" data-tab-group="editor">
@@ -93,6 +97,7 @@
             <button class="button button-secondary map-editor-tab-button" data-tab="metadata">Metadata</button>
             <button class="button button-secondary map-editor-tab-button" data-tab="rules">Rules</button>
             <button class="button button-secondary map-editor-tab-button" data-tab="engine">Engine</button>
+            <button class="button button-secondary map-editor-tab-button map-editor-tab-button-right" data-tab="tutorial">Tutorial</button>
         </div>
 
         <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="map">
@@ -133,6 +138,17 @@
             </div>
         </section>
 
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="tutorial">
+            <h3>How To Build A Map</h3>
+            <div class="map-editor-form">
+                <div class="map-editor-form-note">1. Use the Map tab to add spaces, upload assets, and position everything on the board.</div>
+                <div class="map-editor-form-note">2. Click a space to select it. Double-click a space to edit its visual settings and events.</div>
+                <div class="map-editor-form-note">3. Use the Draw Connections viewport button, or hold Ctrl while dragging from one space to another, to create movement links.</div>
+                <div class="map-editor-form-note">4. Click a connection to inspect it. Double-click a connection to edit its direction, color, visibility, or remove it.</div>
+                <div class="map-editor-form-note">5. Fill out Metadata, Rules, and Engine tabs, then export the map when you are done.</div>
+            </div>
+        </section>
+
         <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="metadata">
             <h3>Metadata</h3>
             <div id="mapEditorMetadataForm" class="map-editor-form"></div>
@@ -152,28 +168,29 @@
         </section>
 
         <div id="mapEditorSpaceEditor" class="map-editor-modal" style="display: none;">
-            <div class="map-editor-modal-header">
+            <div id="mapEditorSpaceHeader" class="map-editor-modal-header">
                 <strong id="mapEditorSpaceTitle">Space</strong>
-                <button id="mapEditorSpaceClose" class="button button-secondary">Close</button>
+                <button id="mapEditorSpaceClose" class="settings-modal-close" type="button" aria-label="Close">&times;</button>
             </div>
-            <div class="map-editor-tab-bar" id="mapEditorSpaceTabs" data-tab-group="space">
-                <button class="button button-secondary map-editor-tab-button" data-tab="visual">Visual</button>
-                <button class="button button-secondary map-editor-tab-button" data-tab="events">Events</button>
-                <button class="button button-secondary map-editor-tab-button" data-tab="json">View JSON</button>
-            </div>
+            <div class="map-editor-modal-body">
+                <div class="map-editor-tab-bar" id="mapEditorSpaceTabs" data-tab-group="space">
+                    <button class="button button-secondary map-editor-tab-button" data-tab="visual">Visual</button>
+                    <button class="button button-secondary map-editor-tab-button" data-tab="events">Events</button>
+                    <button class="button button-secondary map-editor-tab-button" data-tab="json">View JSON</button>
+                </div>
 
-            <div class="map-editor-tab-content" data-tab-group="space" data-tab="visual">
+                <div class="map-editor-tab-content" data-tab-group="space" data-tab="visual">
                 <div class="map-editor-field">
                     <label for="mapEditorVisualSize">Size</label>
                     <input id="mapEditorVisualSize" type="number" class="input" min="10" step="1">
                 </div>
                 <div class="map-editor-field">
                     <label for="mapEditorVisualColor">Color</label>
-                    <input id="mapEditorVisualColor" type="color" class="input">
+                    <input id="mapEditorVisualColor" type="color" class="map-editor-color-input">
                 </div>
                 <div class="map-editor-field">
                     <label for="mapEditorVisualTextColor">Text Color</label>
-                    <input id="mapEditorVisualTextColor" type="color" class="input">
+                    <input id="mapEditorVisualTextColor" type="color" class="map-editor-color-input">
                 </div>
                 <div class="map-editor-field">
                     <label for="mapEditorVisualFont">Font</label>
@@ -190,9 +207,9 @@
                     <div id="mapEditorVisualImageSelected" class="map-editor-preview-name"></div>
                 </div>
                 <button id="mapEditorVisualApply" class="button button-secondary">Apply Visual</button>
-            </div>
+                </div>
 
-            <div class="map-editor-tab-content" data-tab-group="space" data-tab="events">
+                <div class="map-editor-tab-content" data-tab-group="space" data-tab="events">
                 <div class="map-editor-row">
                     <select id="mapEditorEventSelect" class="input"></select>
                     <button id="mapEditorEventAdd" class="button button-secondary">Add Event</button>
@@ -223,10 +240,42 @@
                     </select>
                 </div>
                 <button id="mapEditorEventApply" class="button button-secondary">Apply Event</button>
-            </div>
+                </div>
 
-            <div class="map-editor-tab-content" data-tab-group="space" data-tab="json">
-                <textarea id="mapEditorSpaceJsonView" class="map-editor-textarea" rows="12" readonly></textarea>
+                <div class="map-editor-tab-content" data-tab-group="space" data-tab="json">
+                    <textarea id="mapEditorSpaceJsonView" class="map-editor-textarea" rows="12" readonly></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div id="mapEditorConnectionEditor" class="map-editor-modal" style="display: none;">
+            <div id="mapEditorConnectionHeader" class="map-editor-modal-header">
+                <strong id="mapEditorConnectionTitle">Connection</strong>
+                <button id="mapEditorConnectionClose" class="settings-modal-close" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="map-editor-modal-body">
+                <div class="map-editor-field">
+                    <label for="mapEditorConnectionDirection">Direction</label>
+                    <select id="mapEditorConnectionDirection" class="input">
+                        <option value="forward">Connect space A → space B</option>
+                        <option value="reverse">Connect space A ← space B</option>
+                        <option value="bidirectional">Connect space A ↔ space B</option>
+                    </select>
+                </div>
+                <div class="map-editor-field">
+                    <label for="mapEditorConnectionColor">Line Color</label>
+                    <input id="mapEditorConnectionColor" type="color" class="map-editor-color-input">
+                </div>
+                <div class="map-editor-field">
+                    <label class="map-editor-inline-checkbox">
+                        <input id="mapEditorConnectionVisible" type="checkbox">
+                        <span>Visible In Game</span>
+                    </label>
+                </div>
+                <div class="map-editor-row">
+                    <button id="mapEditorConnectionApply" class="button button-secondary">Apply Connection</button>
+                    <button id="mapEditorConnectionRemove" class="button button-secondary">Remove Connection</button>
+                </div>
             </div>
         </div>
     </div>
