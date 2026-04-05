@@ -9,8 +9,6 @@
 </head>
 
 <body>
-    <h1>Board Game</h1>
-
     <!-- Gear Icon for opening Personal Settings -->
     <button id="gearButton" class="button gear-button">
         <img src="assets/images/gear-icon.png" alt="Settings" width="30" height="30">
@@ -43,35 +41,102 @@
         </div>
     </div>
 
-    <!-- Home Page with Host and Join buttons -->
+    <!-- Home Page -->
     <div id="homePage">
-        <button id="hostButton" class="button">Host Game</button>
-        <button id="joinButton" class="button">Join Game</button>
-        <button id="mapEditorButton" class="button button-secondary">Map Editor</button>
+        <div class="home-inner">
+            <div class="home-hero">
+                <div class="home-logo">🎲</div>
+                <h1 class="home-title">Board Game</h1>
+                <p class="home-subtitle">Play custom board games with friends</p>
+            </div>
+            <nav class="home-actions">
+                <button id="hostButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+                    </span>
+                    <span class="home-action-label">Host Game</span>
+                    <span class="home-action-desc">Create a new game and invite friends</span>
+                </button>
+                <button id="joinButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    </span>
+                    <span class="home-action-label">Join Game</span>
+                    <span class="home-action-desc">Enter a code to join an existing game</span>
+                </button>
+                <button id="mapEditorButton" class="button home-action-btn home-action-secondary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+                    </span>
+                    <span class="home-action-label">Map Editor</span>
+                    <span class="home-action-desc">Create and edit custom game boards</span>
+                </button>
+            </nav>
+        </div>
     </div>
 
     <!-- Host Game Page -->
     <div id="hostPage" style="display: none;">
-        <h2>Host Game</h2>
-        <div class="button-row">
-            <button id="hostBackButton" class="button button-secondary">Back</button>
-            <button id="startHostButton" class="button">Start New Game</button>
-            <button id="loadGameStateButton" class="button">Load From Game State</button>
+        <div class="home-inner">
+            <div class="home-hero">
+                <div class="home-logo">🎲</div>
+                <h1 class="home-title">Host Game</h1>
+                <p class="home-subtitle">Set up a new session for your friends</p>
+            </div>
+            <nav class="home-actions">
+                <button id="startHostButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                    </span>
+                    <span class="home-action-label">Start New Game</span>
+                    <span class="home-action-desc">Create a fresh lobby with default settings</span>
+                </button>
+                <button id="loadGameStateButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </span>
+                    <span class="home-action-label">Load Saved Game</span>
+                    <span class="home-action-desc">Resume from a previously saved game state</span>
+                </button>
+                <button id="hostBackButton" class="button home-action-btn home-action-secondary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+                    <span class="home-action-label">Back</span>
+                    <span class="home-action-desc">Return to the main menu</span>
+                </button>
+            </nav>
         </div>
     </div>
 
     <!-- Join Game Page -->
     <div id="joinPage" style="display: none;">
-        <h2>Join Game</h2>
-        <div class="input-group">
-            <div class="input-field">
-                <label for="joinCodeInput">Enter Game Code:</label>
-                <input class="input" id="joinCodeInput" type="text" placeholder="Game Code">
+        <div class="home-inner">
+            <div class="home-hero">
+                <div class="home-logo">🎲</div>
+                <h1 class="home-title">Join Game</h1>
+                <p class="home-subtitle">Enter a code to connect to a session</p>
             </div>
-        </div>
-        <div class="button-row">
-            <button id="joinBackButton" class="button button-secondary">Back</button>
-            <button id="startJoinButton" class="button">Join Game</button>
+            <div class="home-actions">
+                <div class="home-input-card">
+                    <label for="joinCodeInput" class="home-input-label">Game Code</label>
+                    <input class="input home-code-input" id="joinCodeInput" type="text" placeholder="e.g. ABCD-1234" autocomplete="off" spellcheck="false">
+                </div>
+                <button id="startJoinButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    </span>
+                    <span class="home-action-label">Join Game</span>
+                    <span class="home-action-desc">Connect using the code above</span>
+                </button>
+                <button id="joinBackButton" class="button home-action-btn home-action-secondary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+                    <span class="home-action-label">Back</span>
+                    <span class="home-action-desc">Return to the main menu</span>
+                </button>
+            </div>
         </div>
     </div>
 

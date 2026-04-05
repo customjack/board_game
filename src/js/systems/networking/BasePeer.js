@@ -16,13 +16,26 @@ export default class BasePeer {
         this.isHost = false;
     }
 
-    async initPeer() {
+    /**
+     * Generate a short, human-friendly game code (e.g. "WXYZ-1234").
+     * Used as the PeerJS peer ID so it doubles as the invite code.
+     * 4 letters + 4 digits gives ~456k combinations — enough for casual play.
+     */
+    static generateGameCode() {
+        const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // omit I/O to avoid confusion
+        const digits  = '0123456789';
+        const pick = (pool, n) =>
+            Array.from({ length: n }, () => pool[Math.floor(Math.random() * pool.length)]).join('');
+        return `${pick(letters, 4)}-${pick(digits, 4)}`;
+    }
+
+    async initPeer(customId = null) {
         console.log('[Network] Initializing PeerJS connection...');
 
         const startTime = performance.now();
 
-        // Create peer with configuration
-        this.peer = new Peer(PEER_CONFIG);
+        // Create peer with configuration, optionally using a custom short ID
+        this.peer = customId ? new Peer(customId, PEER_CONFIG) : new Peer(PEER_CONFIG);
 
         return new Promise((resolve, reject) => {
             // Set up timeout to detect slow connections

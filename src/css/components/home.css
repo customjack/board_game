@@ -1,0 +1,228 @@
+/* home.css — Home, Host, and Join page layout */
+@import '../variables.css';
+
+/* ── Shared page wrapper ──────────────────────────────────────
+   The JS shows pages with display:block, so we use a full-height
+   inner wrapper for the flex centering instead. */
+
+#homePage,
+#hostPage,
+#joinPage {
+    /* block-level so display:block from the page switcher works */
+    min-height: calc(100vh - 50px);
+    margin: 0;
+    padding: 0;
+}
+
+.home-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 50px);
+    padding: calc(var(--spacing-unit) * 3);
+    gap: calc(var(--spacing-unit) * 5);
+}
+
+/* ── Hero ─────────────────────────────────────────────────── */
+
+.home-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--spacing-unit) * 1.5);
+    margin: 0;
+}
+
+.home-logo {
+    font-size: 4rem;
+    line-height: 1;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+    margin: 0;
+}
+
+.home-title {
+    font-size: 3rem;
+    letter-spacing: 4px;
+    margin: 0;
+    padding-bottom: 14px;
+    text-transform: uppercase;
+}
+
+.home-subtitle {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Actions column ───────────────────────────────────────── */
+
+.home-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: calc(var(--spacing-unit) * 1.5);
+    width: 100%;
+    max-width: 380px;
+    margin: 0;
+}
+
+/* ── Action card button ───────────────────────────────────── */
+
+.home-action-btn {
+    display: grid;
+    grid-template-columns: 2.75rem 1fr;
+    grid-template-rows: auto auto;
+    column-gap: calc(var(--spacing-unit) * 1.5);
+    align-items: center;
+    text-align: left;
+    padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 2.5);
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+    margin: 0;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.home-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.home-action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* SVG icon cell */
+.home-action-icon {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    font-size: 1.75rem; /* fallback for emoji */
+}
+
+.home-action-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+}
+
+.home-action-label {
+    grid-column: 2;
+    grid-row: 1;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+}
+
+.home-action-desc {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: calc(var(--spacing-unit) * 0.5);
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+/* ── Primary variant ──────────────────────────────────────── */
+
+.home-action-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--text-color-light);
+}
+
+.home-action-primary:hover {
+    background-color: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+}
+
+/* ── Secondary/ghost variant ──────────────────────────────── */
+
+.home-action-secondary {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-color);
+    box-shadow: none;
+}
+
+.home-action-secondary:hover {
+    background-color: var(--background-hover);
+    border-color: var(--color-secondary);
+    box-shadow: none;
+}
+
+/* ── Join page input card ─────────────────────────────────── */
+
+.home-input-card {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 2.5);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 1);
+    margin: 0;
+}
+
+.home-input-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-color-secondary);
+    margin: 0;
+    text-align: left;
+}
+
+.home-code-input {
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+    text-align: center;
+    text-transform: uppercase;
+    padding: calc(var(--spacing-unit) * 1.25);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--input-text-color);
+    width: 100%;
+    margin: 0;
+}
+
+.home-code-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary), 0.15);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+    .home-title {
+        font-size: 2rem;
+    }
+
+    .home-logo {
+        font-size: 3rem;
+    }
+
+    .home-actions {
+        max-width: 100%;
+    }
+
+    .home-inner {
+        gap: calc(var(--spacing-unit) * 3);
+    }
+}
