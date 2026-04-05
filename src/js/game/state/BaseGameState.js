@@ -290,7 +290,7 @@ export default class BaseGameState {
     resetEvents() {
         for (const space of this.board.spaces) {
             for (const event of space.events) {
-                if (event.state === GameEventState.COMPLETED_ACTION) {
+                if (event.state !== GameEventState.INACTIVE && event.state !== GameEventState.READY) {
                     event.state = GameEventState.READY;
                 }
             }
