@@ -459,11 +459,9 @@ export default class HostEventHandler extends BaseEventHandler {
                 newGameState.setPluginReadiness(hostPeerId, true, []);
             }
 
-            // Only reset to starting spaces if players have no positions yet
-            const allUnset = (newGameState.players || []).every(p => !p.currentSpaceId);
-            if (allUnset) {
-                newGameState.resetPlayerPositions?.();
-            }
+            // When loading a new map explicitly, always reset all players to the map's starting spaces 
+            // to prevent them from maintaining orphaned space IDs from a previous map.
+            newGameState.resetPlayerPositions?.();
 
             this.peer.gameState = newGameState;
             if (hostPeerId) {
