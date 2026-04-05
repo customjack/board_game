@@ -55,8 +55,6 @@
 
   --highlight-glow: rgba(255, 0, 255, 0.8); /* Pink glow for retro theme */
   --highlight-glow-rgb: 255, 0, 255;
-
-  --map-editor-grid-color: rgba(92, 91, 90, 0.4);
 }
 
 /* Additional styles for retro theme */

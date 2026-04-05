@@ -131,35 +131,24 @@ export default class TurnFlowController extends BaseTurnController {
         this.uiAdapter.hideAllModals();
         this.engine.clearActiveEventContext();
 
-        const eventProcessor = this.engine.eventProcessor;
-        const hasQueuedEvents = eventProcessor?.hasEventsToProcess?.() ?? false;
-        const triggeredEvents = hasQueuedEvents
-            ? [eventProcessor.getNextEvent?.()].filter(Boolean)
-            : this.eventPipeline.collect(this.engine.gameState, this.engine.eventBus, this.engine.peerId);
+        const triggeredEvents = this.eventPipeline.collect(this.engine.gameState, this.engine.eventBus, this.engine.peerId);
         const currentPlayer = this.engine.turnManager.getCurrentPlayer();
-
-        if (!hasQueuedEvents && triggeredEvents.length > 0) {
-            eventProcessor?.startProcessing?.(triggeredEvents);
-        }
 
         this.engine.processTriggeredEventsFlow(triggeredEvents, {
             onEmpty: () => {
-                eventProcessor?.resetAllEvents?.();
                 this.engine.gameState.resetEvents();
                 if (this.engine.isClientTurn()) {
                     this.engine.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
                 }
             },
             onProcess: () => {
-                if (!hasQueuedEvents) {
-                    triggeredEvents.forEach(({ event, space }) => {
-                        const description = this.describeTriggeredEvent(event, space);
-                        this.engine.logPlayerAction(currentPlayer, description, {
-                            type: 'event-processing',
-                            metadata: { spaceId: space?.id, actionType: event?.action?.type }
-                        });
+                triggeredEvents.forEach(({ event, space }) => {
+                    const description = this.describeTriggeredEvent(event, space);
+                    this.engine.logPlayerAction(currentPlayer, description, {
+                        type: 'event-processing',
+                        metadata: { spaceId: space?.id, actionType: event?.action?.type }
                     });
-                }
+                });
                 if (this.engine.isClientTurn()) {
                     this.engine.changePhase({ newTurnPhase: TurnPhases.PROCESSING_EVENT, delay: 0 });
                 }
@@ -168,21 +157,19 @@ export default class TurnFlowController extends BaseTurnController {
     }
 
     handleProcessingEvent() {
-        const eventProcessor = this.engine.eventProcessor;
-        const remainingEvents = eventProcessor?.getRemainingEventCount?.() ?? 0;
+        const triggeredEvents = this.eventPipeline.collect(this.engine.gameState, this.engine.eventBus, this.engine.peerId);
 
-        console.log('Remaining triggered events to process:', remainingEvents);
+        console.log('Remaining triggered events to process:', triggeredEvents.length);
 
-        const eventWithSpace = eventProcessor?.getNextEvent?.() || null;
-        if (!eventWithSpace) {
+        if (triggeredEvents.length === 0) {
             console.log('No more events to process');
-            eventProcessor?.resetAllEvents?.();
             this.engine.gameState.resetEvents();
             this.engine.changePhase({ newTurnPhase: TurnPhases.PROCESSING_MOVE });
             this.engine.clearActiveEventContext();
             return;
         }
 
+        const eventWithSpace = triggeredEvents[0];
         this.engine.setActiveEventContext(eventWithSpace);
 
         const { event: gameEvent, space: eventSpace } = eventWithSpace;

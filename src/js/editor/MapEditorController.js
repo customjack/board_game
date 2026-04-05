@@ -1747,6 +1747,7 @@ export default class MapEditorController {
             if (schema.min !== undefined) input.min = String(schema.min);
             if (schema.max !== undefined) input.max = String(schema.max);
             if (schema.integer) input.step = '1';
+            if (schema.ui?.placeholder) input.placeholder = schema.ui.placeholder;
             input.value = resolvedValue ?? '';
             return input;
         }
@@ -1977,7 +1978,7 @@ export default class MapEditorController {
         }
         if (normalized.type === 'number') {
             const value = input.value;
-            if (value === '') return undefined;
+            if (value === '') return normalized.ui?.placeholder ? null : undefined;
             const numberValue = Number(value);
             return Number.isNaN(numberValue) ? undefined : numberValue;
         }

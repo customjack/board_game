@@ -480,17 +480,11 @@ export default class HostEventHandler extends BaseEventHandler {
             activeBoard.setBoard(board);
             activeBoard.render();
 
-            // Force a full-state sync on map changes so clients always rebuild the
-            // board from authoritative map data instead of relying on deltas.
-            this.peer.previousGameStateJSON = null;
-
             // Broadcast the updated game state to all clients
             this.peer.broadcastGameState();
 
-            // Ask connected clients to re-check plugin readiness for the new map.
-            // Even when no plugins are required, this lets clients clear any stale
-            // "loading game data" status by re-announcing readiness.
-            if (Array.isArray(this.peer.connections)) {
+            // Ask connected clients to re-check plugin readiness for the new map
+            if (requiredPlugins.length > 0 && Array.isArray(this.peer.connections)) {
                 this.peer.connections.forEach(conn => {
                     if (conn?.open) {
                         conn.send({ type: MessageTypes.REQUEST_PLUGIN_READINESS });

@@ -1,4 +1,4 @@
-module.exports = {
+const sharedConfig = {
   testEnvironment: 'jsdom',
   moduleFileExtensions: ['js', 'json'],
   transform: {
@@ -10,10 +10,6 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': '<rootDir>/tests/__mocks__/styleMock.js',
   },
-  testMatch: [
-    '**/tests/**/*.test.js',
-    '**/__tests__/**/*.js',
-  ],
   collectCoverageFrom: [
     'src/js/**/*.js',
     '!src/js/index.js',
@@ -21,5 +17,27 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+};
+
+module.exports = {
+  projects: [
+    {
+      ...sharedConfig,
+      displayName: 'unit',
+      testMatch: [
+        '**/tests/**/*.test.js',
+        '**/__tests__/**/*.js',
+        '!**/tests/unit/MapEditorController*.test.js',
+      ],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+    },
+    {
+      ...sharedConfig,
+      displayName: 'map-editor',
+      testMatch: [
+        '**/tests/unit/MapEditorController*.test.js',
+      ],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.mapeditor.js'],
+    },
+  ],
 };

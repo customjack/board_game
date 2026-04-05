@@ -198,6 +198,11 @@ export default class GameEngineFactory {
         };
     }
 
+    /**
+     * Get editor config schema for a registered engine type
+     * @param {string} type - Engine type
+     * @returns {Object} JSON schema for the engine's config
+     */
     static getEditorConfigSchema(type) {
         const EngineClass = this.engineRegistry.get(type);
         if (!EngineClass || typeof EngineClass.getEditorConfigSchema !== 'function') {

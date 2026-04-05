@@ -147,11 +147,27 @@ export default class ClientEventHandler extends BaseEventHandler {
 
         // progressTracker completion happens when the connection to host opens
 
-        // Wait for the host's connection package before checking plugins.
-        // The local bootstrap state is just the client's default board and should
-        // never be treated as the authoritative selected map.
-        this.previousMapId = null;
-        this.previousPluginRequirementsHash = null;
+        // Set initial map ID to trigger plugin check
+        this.previousMapId = this.peer.gameState?.selectedMapId || null;
+        this.previousPluginRequirementsHash = this.getRequirementsHash(this.peer.gameState?.pluginRequirements || []);
+        
+        // Don't show lobby page yet - wait for connection package
+        // The connection package handler will show the appropriate page (lobby or game)
+        // after the connection is properly established
+        
+        // Check plugins for current map if one is already selected
+        // Wait for connection to be open before checking plugins
+        if (this.peer.gameState?.selectedMapId && this.peer.conn) {
+            if (this.peer.conn.open) {
+                // Connection is already open
+                this.checkAndLoadPlugins(this.peer.gameState);
+            } else {
+                // Wait for connection to open
+                this.peer.conn.once('open', () => {
+                    this.checkAndLoadPlugins(this.peer.gameState);
+                });
+            }
+        }
     }
 
     displayLobbyControls() {
@@ -238,14 +254,25 @@ export default class ClientEventHandler extends BaseEventHandler {
      * Normalize plugin requirements for hashing/comparison
      */
     getRequirementsHash(requirements = []) {
-        return super.getRequirementsHash(requirements);
+        if (!requirements || requirements.length === 0) {
+            return 'none';
+        }
+
+        const normalized = requirements.map(req => ({
+            id: req.id || req.pluginId || req.name || '',
+            version: req.version || '',
+            source: req.source || '',
+            cdn: req.cdn || req.url || ''
+        })).sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+
+        return JSON.stringify(normalized);
     }
     
     /**
      * Check if client has required plugins and load if needed
      */
     async checkAndLoadPlugins(gameState) {
-        const requiredPlugins = this.getEffectivePluginRequirements(gameState?.pluginRequirements || []);
+        const requiredPlugins = gameState?.pluginRequirements || [];
         const requirementsHash = this.getRequirementsHash(requiredPlugins);
 
         // Deduplicate concurrent checks for the same requirements
@@ -367,13 +394,6 @@ export default class ClientEventHandler extends BaseEventHandler {
      */
     sendPluginReadiness(ready, missingPlugins) {
         if (!this.peer?.conn) return;
-        console.debug('[ClientEventHandler] Sending plugin readiness', {
-            ready,
-            missingPlugins,
-            peerId: this.peer?.peer?.id,
-            selectedMapId: this.peer?.gameState?.selectedMapId,
-            pluginRequirements: (this.peer?.gameState?.pluginRequirements || []).map(req => req?.id || req?.name || req?.pluginId || 'unknown')
-        });
         
         // Wait for connection to be open before sending
         if (!this.peer.conn.open) {
@@ -382,9 +402,7 @@ export default class ClientEventHandler extends BaseEventHandler {
                 this.peer.conn.send({
                     type: MessageTypes.PLUGIN_READINESS,
                     ready,
-                    missingPlugins,
-                    mapId: this.peer?.gameState?.selectedMapId || null,
-                    requirementsHash: this.getRequirementsHash(this.peer?.gameState?.pluginRequirements || [])
+                    missingPlugins
                 });
             });
         } else {
@@ -392,9 +410,7 @@ export default class ClientEventHandler extends BaseEventHandler {
             this.peer.conn.send({
                 type: MessageTypes.PLUGIN_READINESS,
                 ready,
-                missingPlugins,
-                mapId: this.peer?.gameState?.selectedMapId || null,
-                requirementsHash: this.getRequirementsHash(this.peer?.gameState?.pluginRequirements || [])
+                missingPlugins
             });
         }
     }

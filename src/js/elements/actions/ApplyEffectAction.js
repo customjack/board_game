@@ -93,7 +93,6 @@ export default class ApplyEffectAction extends BaseAction {
                     type: 'object',
                     required: true,
                     description: 'Effect object with type and args',
-                    ui: { widget: 'effect' },
                     properties: {
                         type: {
                             type: 'string',

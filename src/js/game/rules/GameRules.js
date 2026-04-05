@@ -151,8 +151,8 @@ export default class GameRules {
                         }
                     }
                 },
-                minPlayers: { type: 'number', description: 'Minimum players' },
-                maxPlayers: { type: 'number', description: 'Maximum players' }
+                minPlayers: { type: 'number', description: 'Minimum players (leave blank for no limit)', ui: { placeholder: 'No limit' } },
+                maxPlayers: { type: 'number', description: 'Maximum players (leave blank for no limit)', ui: { placeholder: 'No limit' } }
             }
         };
     }

@@ -42,36 +42,23 @@ export default class PluginReadinessHandler extends MessageHandlerPlugin {
             return;
         }
         
-        const { ready, missingPlugins, mapId, requirementsHash } = message;
+        const { ready, missingPlugins } = message;
         const peerId = conn.peer;
-        const currentMapId = peer.gameState?.selectedMapId || null;
-        const currentRequirementsHash = peer.eventHandler?.getRequirementsHash?.(peer.gameState?.pluginRequirements || []) || 'none';
-
-        if (mapId && currentMapId && mapId !== currentMapId) {
-            console.warn(`[PluginReadinessHandler] Ignoring stale plugin readiness for peer ${peerId}: mapId=${mapId}, currentMapId=${currentMapId}`);
-            return;
-        }
-
-        if (requirementsHash && requirementsHash !== currentRequirementsHash) {
-            console.warn(`[PluginReadinessHandler] Ignoring stale plugin readiness for peer ${peerId}: requirementsHash=${requirementsHash}, currentRequirementsHash=${currentRequirementsHash}`);
-            return;
-        }
         
         // Update game state with plugin readiness
         if (peer.gameState) {
             peer.gameState.setPluginReadiness(peerId, ready, missingPlugins || []);
-
-            // Propagate through the full canonical state pipeline so the engine's
-            // gameState copy is also up-to-date. This prevents a race where a later
-            // changePhase snapshot would overwrite the readiness with a stale copy.
-            peer.updateAndBroadcastGameState(peer.gameState);
-
-            console.log(`[PluginReadinessHandler] Updated plugin readiness for peer ${peerId}: ready=${ready}, missing=${missingPlugins?.length || 0}`, {
-                mapId,
-                requirementsHash,
-                pluginRequirements: (peer.gameState.pluginRequirements || []).map(req => req?.id || req?.name || req?.pluginId || 'unknown'),
-                pluginReadiness: peer.gameState.pluginReadiness
-            });
+            
+            // Broadcast updated game state so all clients see readiness status
+            peer.broadcastGameState();
+            
+            // Force update to ensure UI components see the change
+            // Use setTimeout to ensure gameState is fully updated before UI update
+            setTimeout(() => {
+                peer.eventHandler.updateGameState(true); // Force update
+            }, 0);
+            
+            console.log(`[PluginReadinessHandler] Updated plugin readiness for peer ${peerId}: ready=${ready}, missing=${missingPlugins?.length || 0}`);
         }
     }
     
@@ -110,3 +97,4 @@ export default class PluginReadinessHandler extends MessageHandlerPlugin {
         }
     }
 }
+

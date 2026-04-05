@@ -114,38 +114,6 @@ export default class EventProcessor {
     }
 
     /**
-     * Sync the in-flight event queue to reference events in a new game state.
-     *
-     * When the canonical game state is rebuilt from JSON (via updateAndBroadcastGameState),
-     * the EventProcessor queue still holds references to events from the *previous* game state
-     * object. This method re-maps those references to the equivalent events in `newGameState`
-     * (matched by space ID and event index) and copies the in-memory event state across so
-     * that state transitions (TRIGGERED → PROCESSING_ACTION → COMPLETED_ACTION) are visible
-     * to the next snapshot, preventing already-triggered events from re-triggering.
-     *
-     * @param {GameState} newGameState - The freshly rebuilt canonical game state
-     */
-    syncQueueToGameState(newGameState) {
-        if (!this.isProcessing || !newGameState?.board?.spaces) return;
-
-        this.currentEventQueue = this.currentEventQueue.map(({ event, space }) => {
-            const newSpace = newGameState.board.getSpace(space.id);
-            if (!newSpace) return { event, space };
-
-            const eventIndex = space.events.indexOf(event);
-            if (eventIndex === -1) return { event, space };
-
-            const newEvent = newSpace.events[eventIndex];
-            if (!newEvent) return { event, space };
-
-            // Propagate in-memory state to the canonical event object
-            newEvent.state = event.state;
-
-            return { event: newEvent, space: newSpace };
-        });
-    }
-
-    /**
      * Get the next event to process
      * @returns {Object|null} Next {event, space} or null if none
      */
@@ -263,12 +231,7 @@ export default class EventProcessor {
         // Reset events on all spaces
         for (const space of this.gameState.board.spaces) {
             for (const event of space.events) {
-                if ([
-                    'CHECKING_TRIGGER',
-                    'TRIGGERED',
-                    'PROCESSING_ACTION',
-                    'COMPLETED_ACTION'
-                ].includes(event.getState())) {
+                if (event.getState() === 'COMPLETED_ACTION') {
                     event.setState('READY');
                 }
             }
@@ -276,11 +239,6 @@ export default class EventProcessor {
 
         // Clear triggered events
         this.gameState.triggeredEvents = [];
-        this.currentEventQueue = [];
-        this.currentEventIndex = 0;
-        this.isProcessing = false;
-        this.totalEventsCurrentRun = 0;
-        this.completedEventsCurrentRun = 0;
 
         // Clear history if requested
         if (resetHistory) {

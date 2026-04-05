@@ -244,11 +244,6 @@ export default class TurnBasedGameEngine extends BaseTurnEngine {
      * @param {GameState} gameState - New game state
      */
     updateGameState(gameState) {
-        // Sync any in-flight event queue entries to the new game state's event objects before
-        // replacing the reference, so that in-memory state transitions are not lost when the
-        // canonical state is rebuilt from JSON.
-        this.eventProcessor.syncQueueToGameState(gameState);
-
         this.gameState = gameState;
 
         // Update components

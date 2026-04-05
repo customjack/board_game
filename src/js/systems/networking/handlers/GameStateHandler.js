@@ -90,13 +90,8 @@ export default class GameStateHandler extends MessageHandlerPlugin {
             // Get current state as JSON
             const currentStateJSON = peer.gameState.toJSON();
 
-            const deltaAction = StateDelta.getDeltaAction(currentStateJSON, message.delta);
-            if (deltaAction === 'skip') {
-                return;
-            }
-
             // Check if delta can be safely applied
-            if (deltaAction === 'desync') {
+            if (!StateDelta.canApplyDelta(currentStateJSON, message.delta)) {
                 console.warn('Delta version mismatch. Requesting full state.');
                 this.requestFullState('version_mismatch');
                 return;

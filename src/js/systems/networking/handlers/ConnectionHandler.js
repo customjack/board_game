@@ -97,9 +97,7 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         const pluginManager = peer?.eventHandler?.pluginManager;
 
         // Load required plugins (with modal) before deserializing game state
-        const requirements = peer?.eventHandler?.getEffectivePluginRequirements?.(message.gameState?.pluginRequirements || [])
-            || message.gameState?.pluginRequirements
-            || [];
+        const requirements = message.gameState?.pluginRequirements || [];
         if (pluginManager && requirements.length > 0) {
             const ready = await this.loadRequiredPluginsWithModal(peer, pluginManager, requirements);
             if (!ready) {
@@ -233,7 +231,6 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         }
 
         const joiningAsSpectator = players.length === 0;
-        const effectiveRequirements = peer.gameState?.getEffectivePluginRequirements?.() || [];
 
         // Check if game has started and mid-game joins are not allowed
         const gameStarted = peer.gameState.isGameStarted();
@@ -264,12 +261,13 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
 
             peer.gameState.addSpectator(joiningPeerId);
 
-            const missingPluginIds = effectiveRequirements
-                .filter(req => req && req.id)
+            const requirements = peer.gameState?.pluginRequirements || [];
+            const missingPluginIds = requirements
+                .filter(req => req && req.id && req.id !== 'core' && req.source !== 'builtin')
                 .map(req => req.id);
 
             if (
-                effectiveRequirements.length > 0 &&
+                requirements.length > 0 &&
                 joiningPeerId &&
                 peer.gameState &&
                 typeof peer.gameState.getPluginReadiness === 'function' &&
@@ -330,13 +328,14 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         });
 
         if (!validationFailed) {
-            const missingPluginIds = effectiveRequirements
-                .filter(req => req && req.id)
+            const requirements = peer.gameState?.pluginRequirements || [];
+            const missingPluginIds = requirements
+                .filter(req => req && req.id && req.id !== 'core' && req.source !== 'builtin')
                 .map(req => req.id);
 
             // Mark new peer as not ready until they report readiness
             if (
-                effectiveRequirements.length > 0 &&
+                requirements.length > 0 &&
                 joiningPeerId &&
                 peer.gameState &&
                 typeof peer.gameState.getPluginReadiness === 'function' &&

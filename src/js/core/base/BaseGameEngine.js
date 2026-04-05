@@ -1,5 +1,4 @@
 import IGameEngine from '../interfaces/IGameEngine.js';
-import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js';
 
 /**
  * BaseGameEngine - Abstract base class for all game engines
@@ -10,14 +9,6 @@ import GameStateFactory from '../../infrastructure/factories/GameStateFactory.js
  * This engine is now UI-independent and can run in headless mode.
  */
 export default class BaseGameEngine extends IGameEngine {
-    static getEditorConfigSchema() {
-        return {
-            type: 'object',
-            description: 'Engine configuration',
-            ui: { allowAdditional: true, collapsed: true }
-        };
-    }
-
     /**
      * Create a base game engine
      * @param {Object} dependencies - Core dependencies
@@ -253,26 +244,12 @@ export default class BaseGameEngine extends IGameEngine {
      * @param {number} delay - Optional delay in ms
      */
     proposeStateChange(newGameState, delay = 0) {
-        const snapshotState = this.createProposedStateSnapshot(newGameState);
         if (delay > 0) {
             setTimeout(() => {
-                this.proposeGameState(snapshotState);
+                this.proposeGameState(newGameState);
             }, delay);
         } else {
-            this.proposeGameState(snapshotState);
-        }
-    }
-
-    createProposedStateSnapshot(gameState) {
-        if (!gameState || typeof gameState.toJSON !== 'function' || !this.factoryManager) {
-            return gameState;
-        }
-
-        try {
-            return GameStateFactory.fromJSON(gameState.toJSON(), this.factoryManager);
-        } catch (error) {
-            console.warn(`[${this.getEngineType()}] Failed to snapshot proposed state, using live object instead.`, error);
-            return gameState;
+            this.proposeGameState(newGameState);
         }
     }
 
