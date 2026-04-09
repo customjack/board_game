@@ -228,11 +228,30 @@ export default class GameStateStorageManager {
     }
 
     writeSaves(saves) {
-        try {
-            localStorage.setItem(GameStateStorageManager.STORAGE_KEY, JSON.stringify(saves));
-        } catch (error) {
-            console.error('[GameStateStorageManager] Failed to write saves:', error);
+        let currentSaves = [...saves];
+
+        while (currentSaves.length > 0) {
+            try {
+                localStorage.setItem(GameStateStorageManager.STORAGE_KEY, JSON.stringify(currentSaves));
+                return true; // Success
+            } catch (error) {
+                if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                    console.warn('[GameStateStorageManager] Quota exceeded. Evicting oldest save and retrying...');
+                    // Sort to ensure the oldest is at index 0, then remove it
+                    currentSaves.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                    currentSaves.shift(); // Evict oldest save
+                    
+                    if (currentSaves.length === 0) {
+                        console.error('[GameStateStorageManager] Could not save even the newest state due to quota limit!');
+                        return false;
+                    }
+                } else {
+                    console.error('[GameStateStorageManager] Failed to write saves:', error);
+                    return false;
+                }
+            }
         }
+        return false;
     }
 
     getStorageInfo() {

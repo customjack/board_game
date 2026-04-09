@@ -24,7 +24,33 @@ export default class MapEditorStateManager {
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(this.state));
         } catch (error) {
-            console.warn('[MapEditor] Failed to save draft', error);
+            if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                console.warn('[MapEditor] LocalStorage quota exceeded. Attempting to save draft by stripping heavy embedded assets...');
+                try {
+                    const strippedState = JSON.parse(JSON.stringify(this.state));
+                    if (strippedState.visual) {
+                        delete strippedState.visual.background;
+                    }
+                    if (strippedState.metadata) {
+                        delete strippedState.metadata.thumbnailUrl;
+                    }
+                    strippedState.preview = null;
+                    strippedState.background = null;
+                    strippedState.assets = [];
+
+                    localStorage.setItem(this.storageKey, JSON.stringify(strippedState));
+                    console.warn('[MapEditor] Saved structured draft successfully by dropping large embedded images.');
+                    
+                    // Fire global event so MapEditorController can capture it if needed
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('map-editor-quota-exceeded'));
+                    }
+                } catch (retryError) {
+                    console.error('[MapEditor] Failed to save draft even after stripping images:', retryError);
+                }
+            } else {
+                console.warn('[MapEditor] Failed to save draft', error);
+            }
         }
     }
 

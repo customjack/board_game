@@ -6,6 +6,7 @@ import MapEditorSpaceModal from './MapEditorSpaceModal.js';
 import MapEditorConnectionModal from './MapEditorConnectionModal.js';
 import GameRules from '../game/rules/GameRules.js';
 import GameEngineFactory from '../infrastructure/factories/GameEngineFactory.js';
+import ModalUtil from '../infrastructure/utils/ModalUtil.js';
 
 const BACKGROUND_ASSET_NAME = '_background';
 
@@ -322,6 +323,10 @@ export default class MapEditorController {
             window.addEventListener('resize', () => this.clampConnectionEditorPosition());
             window.addEventListener('keydown', this.handleWindowKeyDown);
             window.addEventListener('keyup', this.handleWindowKeyUp);
+            window.addEventListener('map-editor-quota-exceeded', () => {
+                this.setStatus('Draft saved (large assets dropped due to storage quota)');
+                ModalUtil.alert('Your map draft grew too large for browser local storage. The map structure is preserved, but heavy embedded images (such as previews, backgrounds, or assets) were dropped from the saved draft. Your current active session still contains the images, but exporting your map soon is highly recommended.');
+            });
         }
         this.setupTabs(this.elements.primaryTabs, 'map');
         this.setupTabs(this.elements.spaceTabs, 'visual');
