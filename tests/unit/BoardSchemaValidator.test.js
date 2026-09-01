@@ -1,4 +1,4 @@
-import BoardSchemaValidator from '../../src/js/utils/BoardSchemaValidator.js';
+import BoardSchemaValidator from '../../src/js/infrastructure/utils/BoardSchemaValidator.js';
 
 const baseGameDefinition = {
   type: 'game',

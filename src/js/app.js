@@ -53,8 +53,8 @@ import MapStorageManager from './systems/storage/MapStorageManager.js';
 import TurnBasedGameEngine from './game/engine_types/turn_based/TurnBasedEngine.js';
 import GameStateStorageManager from './systems/storage/GameStateStorageManager.js';
 import GameStateManagerModal from './ui/modals/managers/GameStateManagerModal.js';
-
-import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
+import { registerBuiltInPlaceholders } from './elements/placeholders/BuiltInPlaceholders.js';
+import MapEditorController from './editor/MapEditorController.js';
 
 // Initialize personal settings
 function initializePersonalSettings(factoryManager, pluginManager, localStorageManager) {
@@ -101,22 +101,14 @@ function registerPages(pageRegistry) {
         'gamePage',
         'hostPage',
         'loadingPage',
+        'mapEditorPage',
     ];
     pages.forEach((page) => pageRegistry.registerPage(page));
 }
 
 // Register placeholders
 function registerPlaceholders(placeholderRegistry) {
-    const placeholders = {
-        RANDOM_NUMBER: randomNumber,
-        RANDOM_WORD: randomWord,
-        RANDOM_COLOR: randomColor,
-        RANDOM_SONG: randomSong,
-    };
-
-    Object.entries(placeholders).forEach(([key, value]) => {
-        placeholderRegistry.register(key, value);
-    });
+    registerBuiltInPlaceholders(placeholderRegistry);
 }
 
 // Initialize the EventBus and PluginManager
@@ -211,6 +203,7 @@ function registerListeners(
     const hostBackButton = document.getElementById('hostBackButton');
     const joinBackButton = document.getElementById('joinBackButton');
     const loadGameStateButton = document.getElementById('loadGameStateButton');
+    const mapEditorButton = document.getElementById('mapEditorButton');
 
     // Initialize Plugin Manager Modal
     const pluginManagerModal = new PluginManagerModal('pluginManagerModal', pluginManager);
@@ -270,6 +263,23 @@ function registerListeners(
             const joinCodeInput = document.getElementById('joinCodeInput');
             if (joinCodeInput) joinCodeInput.value = '';
             resetHomePage();
+        });
+    }
+
+    let mapEditorController = null;
+    if (mapEditorButton) {
+        listenerRegistry.registerListener('mapEditorButton', 'click', async () => {
+            pageRegistry.showPage('mapEditorPage');
+            eventBus.emit('pageChanged', { pageId: 'mapEditorPage' });
+            if (!mapEditorController) {
+                mapEditorController = new MapEditorController({
+                    pageRegistry,
+                    eventBus,
+                    factoryManager,
+                    pluginManager
+                });
+                await mapEditorController.init();
+            }
         });
     }
 

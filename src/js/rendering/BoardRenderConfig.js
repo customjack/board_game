@@ -1,3 +1,30 @@
+export function applyColorAlpha(color, alpha) {
+    if (!color || alpha === undefined || alpha === null || alpha === '') return color;
+    const numericAlpha = Number(alpha);
+    const normalizedAlpha = Number.isFinite(numericAlpha)
+        ? Math.max(0, Math.min(1, numericAlpha))
+        : 1;
+
+    const hex = color.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i)?.[1];
+    if (hex) {
+        const expanded = hex.length === 3
+            ? hex.split('').map((character) => character + character).join('')
+            : hex;
+        const red = parseInt(expanded.slice(0, 2), 16);
+        const green = parseInt(expanded.slice(2, 4), 16);
+        const blue = parseInt(expanded.slice(4, 6), 16);
+        return `rgba(${red}, ${green}, ${blue}, ${normalizedAlpha})`;
+    }
+
+    const rgb = color.match(/^rgba?\(\s*([^,]+),\s*([^,]+),\s*([^,)]+)(?:,\s*[^)]+)?\)$/i);
+    if (rgb) {
+        return `rgba(${rgb[1].trim()}, ${rgb[2].trim()}, ${rgb[3].trim()}, ${normalizedAlpha})`;
+    }
+
+    if (normalizedAlpha === 1) return color;
+    return `color-mix(in srgb, ${color} ${normalizedAlpha * 100}%, transparent)`;
+}
+
 /**
  * BoardRenderConfig - Centralized configuration for board rendering
  *
@@ -52,8 +79,8 @@ export default class BoardRenderConfig {
         this.pieceArrangementRadius = overrides.pieceArrangementRadius || 10;
 
         // Space shape
-        this.spaceShape = overrides.spaceShape || 'circle';  // circle, square, hexagon, etc.
-        this.spaceBorderRadius = overrides.spaceBorderRadius || '50%';  // For circle
+        this.spaceShape = overrides.spaceShape || 'square';  // Default is square
+        this.spaceBorderRadius = overrides.spaceBorderRadius || '0';  // For square
     }
 
     /**
@@ -98,18 +125,68 @@ export default class BoardRenderConfig {
      * @returns {Object} CSS properties object
      */
     getSpaceStyle(visualDetails) {
+        let fontFamily = visualDetails.font || '';
+        let fontSize = visualDetails.fontSize;
+        
+        // Legacy support: "15px Arial"
+        if (fontFamily && fontFamily.includes('px ')) {
+            const parts = fontFamily.split('px ');
+            if (fontSize == null) {
+                fontSize = parseInt(parts[0].trim(), 10);
+            }
+            fontFamily = parts[1].trim();
+        }
+
+        let shape = visualDetails.shape;
+        if (!shape || shape === 'default') {
+            shape = visualDetails.image ? 'none' : this.spaceShape;
+        }
+
+        let borderRadius = this.spaceBorderRadius;
+        let clipPath = null;
+
+        if (shape === 'square') borderRadius = '0';
+        else if (shape === 'rounded') borderRadius = '10%';
+        else if (shape === 'circle') borderRadius = '50%';
+        else if (shape === 'hexagon') {
+            borderRadius = '0';
+            clipPath = 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)';
+        } else if (shape === 'none') {
+            borderRadius = '0';
+            clipPath = null;
+        }
+
+        const size = visualDetails.size || 50;
         const style = {
-            width: `${visualDetails.size}px`,
-            height: `${visualDetails.size}px`,
-            backgroundColor: visualDetails.color,
-            color: visualDetails.textColor || this.defaultTextColor,
-            borderRadius: this.spaceBorderRadius,
-            zIndex: this.zIndexSpace.toString()
+            width: `${size}px`,
+            height: `${size}px`,
+            backgroundColor: applyColorAlpha(visualDetails.color, visualDetails.colorAlpha),
+            color: applyColorAlpha(
+                visualDetails.textColor || this.defaultTextColor,
+                visualDetails.textColorAlpha
+            ),
+            borderRadius: borderRadius,
+            zIndex: this.zIndexSpace.toString(),
+            fontSize: fontSize ? `${fontSize}px` : '12px',
+            fontFamily: fontFamily,
+            fontWeight: 'bold',
+            textAlign: visualDetails.textAlign || 'center',
+            alignItems: visualDetails.verticalAlign || 'center',
+            justifyContent: visualDetails.textAlign === 'left' ? 'flex-start'
+                : visualDetails.textAlign === 'right' ? 'flex-end'
+                : 'center',
+            showLabel: visualDetails.showLabel !== false
         };
 
-        // Add border if configured
-        if (this.spaceBorderWidth > 0) {
-            style.border = `${this.spaceBorderWidth}px solid ${this.spaceBorderColor}`;
+        const bWidth = visualDetails.borderWidth !== null && visualDetails.borderWidth !== undefined ? visualDetails.borderWidth : this.spaceBorderWidth;
+        const bColor = visualDetails.borderColor || this.spaceBorderColor;
+
+        if (bWidth > 0) {
+            style.border = `${bWidth}px solid ${bColor}`;
+        }
+        
+        if (clipPath) {
+            style.clipPath = clipPath;
         }
 
         return style;

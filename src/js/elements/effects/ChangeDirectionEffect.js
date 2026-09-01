@@ -82,13 +82,15 @@ export default class ChangeDirectionEffect extends PlayerEffect {
                     type: 'string',
                     required: true,
                     description: 'Unique identifier for this effect instance',
-                    example: 'change_direction_1'
+                    example: 'change_direction_1',
+                    ui: { hidden: true }
                 },
                 duration: {
                     type: 'number',
                     required: true,
                     description: 'Number of turns to move in reverse',
                     example: 3,
+                    default: 1,
                     min: 1
                 },
                 toRemove: {
@@ -96,21 +98,24 @@ export default class ChangeDirectionEffect extends PlayerEffect {
                     required: false,
                     description: 'Whether this effect is marked for removal',
                     example: false,
-                    default: false
+                    default: false,
+                    ui: { hidden: true }
                 },
                 playerIdReversed: {
                     type: 'string',
                     required: false,
                     description: 'ID of the player moving in reverse (auto-populated when applied)',
                     example: 'player_123',
-                    default: null
+                    default: null,
+                    ui: { hidden: true }
                 },
                 isReversed: {
                     type: 'boolean',
                     required: false,
                     description: 'Whether the player is currently reversed',
                     example: true,
-                    default: false
+                    default: false,
+                    ui: { hidden: true }
                 }
             }
         };

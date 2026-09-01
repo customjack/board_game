@@ -22,4 +22,16 @@ describe('PlaceholderRegistry nested placeholders', () => {
         // After hitting the limit, it should leave the unresolved placeholder intact
         expect(output.includes('{{LOOP}}')).toBe(true);
     });
+
+    test('only replaces canonical double-brace placeholders', () => {
+        const registry = new PlaceholderRegistry();
+        registry.register('CURRENT_PLAYER_NAME', (context) => context.name);
+
+        expect(
+            registry.replacePlaceholders('{{CURRENT_PLAYER_NAME}} has reached the top!', { name: 'Jack' })
+        ).toBe('Jack has reached the top!');
+        expect(
+            registry.replacePlaceholders('{CURRENT_PLAYER_NAME} has reached the top!', { name: 'Jack' })
+        ).toBe('{CURRENT_PLAYER_NAME} has reached the top!');
+    });
 });

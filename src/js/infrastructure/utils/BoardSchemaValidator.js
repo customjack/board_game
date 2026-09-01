@@ -515,6 +515,16 @@ export default class BoardSchemaValidator {
             errors.push(`${prefix}.visual.textColor must be a valid CSS color`);
         }
 
+        ['colorAlpha', 'textColorAlpha'].forEach((field) => {
+            if (visual[field] !== undefined && (
+                typeof visual[field] !== 'number'
+                || visual[field] < 0
+                || visual[field] > 1
+            )) {
+                errors.push(`${prefix}.visual.${field} must be a number between 0 and 1`);
+            }
+        });
+
         if (visual.borderColor && !this.isValidColor(visual.borderColor)) {
             errors.push(`${prefix}.visual.borderColor must be a valid CSS color`);
         }

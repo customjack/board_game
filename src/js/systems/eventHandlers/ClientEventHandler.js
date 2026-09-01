@@ -100,7 +100,7 @@ export default class ClientEventHandler extends BaseEventHandler {
     async startJoinGame() {
         const gameCodeInput = document.getElementById('joinCodeInput');
 
-        const gameCode = gameCodeInput.value.trim();
+        const gameCode = gameCodeInput.value.trim().toUpperCase();
 
         if (!gameCode) {
             await ModalUtil.alert('Please enter a valid game code.');

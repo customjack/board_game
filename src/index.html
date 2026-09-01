@@ -9,8 +9,6 @@
 </head>
 
 <body>
-    <h1>Board Game</h1>
-
     <!-- Gear Icon for opening Personal Settings -->
     <button id="gearButton" class="button gear-button">
         <img src="assets/images/gear-icon.png" alt="Settings" width="30" height="30">
@@ -43,34 +41,446 @@
         </div>
     </div>
 
-    <!-- Home Page with Host and Join buttons -->
+    <!-- Home Page -->
     <div id="homePage">
-        <button id="hostButton" class="button">Host Game</button>
-        <button id="joinButton" class="button">Join Game</button>
+        <div class="home-inner">
+            <div class="home-hero">
+                <div class="home-logo">🎲</div>
+                <h1 class="home-title">Board Game</h1>
+                <p class="home-subtitle">Play custom board games with friends</p>
+            </div>
+            <nav class="home-actions">
+                <button id="hostButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+                    </span>
+                    <span class="home-action-label">Host Game</span>
+                    <span class="home-action-desc">Create a new game and invite friends</span>
+                </button>
+                <button id="joinButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    </span>
+                    <span class="home-action-label">Join Game</span>
+                    <span class="home-action-desc">Enter a code to join an existing game</span>
+                </button>
+                <button id="mapEditorButton" class="button home-action-btn home-action-secondary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+                    </span>
+                    <span class="home-action-label">Map Editor</span>
+                    <span class="home-action-desc">Create and edit custom game boards</span>
+                </button>
+            </nav>
+        </div>
     </div>
 
     <!-- Host Game Page -->
     <div id="hostPage" style="display: none;">
-        <h2>Host Game</h2>
-        <div class="button-row">
-            <button id="hostBackButton" class="button button-secondary">Back</button>
-            <button id="startHostButton" class="button">Start New Game</button>
-            <button id="loadGameStateButton" class="button">Load From Game State</button>
+        <div class="home-inner">
+            <div class="home-hero">
+                <div class="home-logo">🎲</div>
+                <h1 class="home-title">Host Game</h1>
+                <p class="home-subtitle">Set up a new session for your friends</p>
+            </div>
+            <nav class="home-actions">
+                <button id="startHostButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                    </span>
+                    <span class="home-action-label">Start New Game</span>
+                    <span class="home-action-desc">Create a fresh lobby with default settings</span>
+                </button>
+                <button id="loadGameStateButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </span>
+                    <span class="home-action-label">Load Saved Game</span>
+                    <span class="home-action-desc">Resume from a previously saved game state</span>
+                </button>
+                <button id="hostBackButton" class="button home-action-btn home-action-secondary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+                    <span class="home-action-label">Back</span>
+                    <span class="home-action-desc">Return to the main menu</span>
+                </button>
+            </nav>
         </div>
     </div>
 
     <!-- Join Game Page -->
     <div id="joinPage" style="display: none;">
-        <h2>Join Game</h2>
-        <div class="input-group">
-            <div class="input-field">
-                <label for="joinCodeInput">Enter Game Code:</label>
-                <input class="input" id="joinCodeInput" type="text" placeholder="Game Code">
+        <div class="home-inner">
+            <div class="home-hero">
+                <div class="home-logo">🎲</div>
+                <h1 class="home-title">Join Game</h1>
+                <p class="home-subtitle">Enter a code to connect to a session</p>
+            </div>
+            <div class="home-actions">
+                <div class="home-input-card">
+                    <label for="joinCodeInput" class="home-input-label">Game Code</label>
+                    <input class="input home-code-input" id="joinCodeInput" type="text" placeholder="e.g. ABCD-1234" autocomplete="off" spellcheck="false">
+                </div>
+                <button id="startJoinButton" class="button home-action-btn home-action-primary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    </span>
+                    <span class="home-action-label">Join Game</span>
+                    <span class="home-action-desc">Connect using the code above</span>
+                </button>
+                <button id="joinBackButton" class="button home-action-btn home-action-secondary">
+                    <span class="home-action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+                    <span class="home-action-label">Back</span>
+                    <span class="home-action-desc">Return to the main menu</span>
+                </button>
             </div>
         </div>
-        <div class="button-row">
-            <button id="joinBackButton" class="button button-secondary">Back</button>
-            <button id="startJoinButton" class="button">Join Game</button>
+    </div>
+
+    <!-- Map Editor Page -->
+    <div id="mapEditorPage" style="display: none;">
+        <div class="map-editor-header">
+            <div class="map-editor-header-group">
+                <button id="mapEditorBackButton" class="button button-secondary">Back</button>
+                <button id="mapEditorNewButton" class="button">New Map</button>
+                <button id="mapEditorLoadButton" class="button">Load Map</button>
+                <input id="mapEditorBundleInput" type="file" accept=".zip" style="display: none;">
+                <button id="mapEditorExportButton" class="button button-primary">Export Map</button>
+            </div>
+            <span id="mapEditorStatus" class="map-editor-status"></span>
+            <div class="map-editor-header-group map-editor-header-history">
+                <button id="mapEditorUndoButton" class="button button-secondary">Undo</button>
+                <button id="mapEditorRedoButton" class="button button-secondary">Redo</button>
+            </div>
+        </div>
+
+        <div class="map-editor-tab-bar" id="mapEditorPrimaryTabs" data-tab-group="editor">
+            <button class="button button-secondary map-editor-tab-button" data-tab="map">Map</button>
+            <button class="button button-secondary map-editor-tab-button" data-tab="metadata">Metadata</button>
+            <button class="button button-secondary map-editor-tab-button" data-tab="rules">Rules</button>
+            <button class="button button-secondary map-editor-tab-button" data-tab="engine">Engine</button>
+            <button class="button button-secondary map-editor-tab-button map-editor-tab-button-right" data-tab="tutorial">Tutorial</button>
+        </div>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="map">
+            <div class="map-editor-layout">
+                <aside class="map-editor-sidebar">
+                    <details class="map-editor-section map-editor-spaces-section" open>
+                        <summary class="map-editor-section-summary">Spaces</summary>
+                        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
+                            <button id="mapEditorAddSpaceButton" class="button button-secondary" style="margin: 0;">Add</button>
+                            <button id="mapEditorDuplicateSpaceButton" class="button button-secondary" title="Duplicate selected space without connections" style="margin: 0;">Copy</button>
+                            <button id="mapEditorDeleteSpaceButton" class="button button-secondary" style="margin: 0;">Delete</button>
+                        </div>
+                        <div class="map-editor-row" style="margin-bottom: 4px;">
+                            <input id="mapEditorSpaceSearch" type="text" class="input" placeholder="Search spaces..." style="flex: 1; min-width: 0;">
+                        </div>
+                        <ul id="mapEditorSpaceList" class="map-editor-list map-editor-space-list"></ul>
+                    </details>
+                </aside>
+
+                <main id="mapEditorCanvas" class="map-editor-canvas"></main>
+
+                <aside class="map-editor-sidebar">
+                    <details class="map-editor-section map-editor-assets-section" open>
+                        <summary class="map-editor-section-summary">Assets</summary>
+                        <input id="mapEditorAssetsInput" type="file" accept="image/*" multiple>
+                        <div id="mapEditorAssetsList" class="map-editor-assets-grid"></div>
+                    </details>
+                    <details class="map-editor-section map-editor-board-meta-section">
+                        <summary class="map-editor-section-summary">Preview &amp; Background</summary>
+                        <div class="map-editor-field">
+                            <label for="mapEditorPreviewInput">Preview Image</label>
+                            <input id="mapEditorPreviewInput" type="file" accept="image/*">
+                        </div>
+                        <div id="mapEditorPreviewName" class="map-editor-preview-name"></div>
+                        <div class="map-editor-field">
+                            <label for="mapEditorBackgroundInput">Background Image</label>
+                            <input id="mapEditorBackgroundInput" type="file" accept="image/*">
+                        </div>
+                        <div class="map-editor-field">
+                            <label for="mapEditorBackgroundFit">Background Fit</label>
+                            <select id="mapEditorBackgroundFit">
+                                <option value="contain">Contain (show all)</option>
+                                <option value="cover">Cover (crop to fill)</option>
+                                <option value="fill">Stretch</option>
+                                <option value="none">Original size</option>
+                            </select>
+                        </div>
+                        <div class="map-editor-row map-editor-compact-controls">
+                            <div class="map-editor-field">
+                                <label for="mapEditorBackgroundScale">Scale %</label>
+                                <input id="mapEditorBackgroundScale" type="number" min="10" max="400" step="5" value="100">
+                            </div>
+                            <div class="map-editor-field">
+                                <label for="mapEditorBackgroundPositionX">X %</label>
+                                <input id="mapEditorBackgroundPositionX" type="number" min="0" max="100" value="50">
+                            </div>
+                            <div class="map-editor-field">
+                                <label for="mapEditorBackgroundPositionY">Y %</label>
+                                <input id="mapEditorBackgroundPositionY" type="number" min="0" max="100" value="50">
+                            </div>
+                        </div>
+                        <div class="map-editor-row">
+                            <button id="mapEditorBackgroundClear" class="button button-secondary">Clear Background</button>
+                        </div>
+                        <div id="mapEditorBackgroundName" class="map-editor-preview-name"></div>
+                        <div id="mapEditorDecorationControls" class="map-editor-decoration-controls" hidden>
+                            <strong>Selected Board Image</strong>
+                            <div class="map-editor-row map-editor-compact-controls">
+                                <div class="map-editor-field"><label for="mapEditorDecorationX">X</label><input id="mapEditorDecorationX" type="number"></div>
+                                <div class="map-editor-field"><label for="mapEditorDecorationY">Y</label><input id="mapEditorDecorationY" type="number"></div>
+                            </div>
+                            <div class="map-editor-row map-editor-compact-controls">
+                                <div class="map-editor-field"><label for="mapEditorDecorationWidth">Width</label><input id="mapEditorDecorationWidth" type="number" min="10"></div>
+                                <div class="map-editor-field"><label for="mapEditorDecorationHeight">Height</label><input id="mapEditorDecorationHeight" type="number" min="10"></div>
+                            </div>
+                            <div class="map-editor-row map-editor-compact-controls">
+                                <div class="map-editor-field"><label for="mapEditorDecorationRotation">Rotation °</label><input id="mapEditorDecorationRotation" type="number" step="1"></div>
+                                <div class="map-editor-field"><label for="mapEditorDecorationOpacity">Opacity %</label><input id="mapEditorDecorationOpacity" type="number" min="0" max="100" value="100"></div>
+                            </div>
+                            <div class="map-editor-row map-editor-decoration-actions">
+                                <button id="mapEditorDecorationApply" class="button button-secondary">Apply</button>
+                                <button id="mapEditorDecorationBackward" class="button button-secondary">Send Back</button>
+                                <button id="mapEditorDecorationForward" class="button button-secondary">Bring Forward</button>
+                                <button id="mapEditorDecorationRemove" class="button button-danger">Remove</button>
+                            </div>
+                        </div>
+                    </details>
+                </aside>
+            </div>
+        </section>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="tutorial">
+            <h3>How To Build A Map</h3>
+            <div class="map-editor-form">
+                <div class="map-editor-form-note">1. Use the Map tab to add spaces, upload assets, and position everything on the board.</div>
+                <div class="map-editor-form-note">2. Click a space to select it. Double-click a space to edit its visual settings and events.</div>
+                <div class="map-editor-form-note">3. Use the Draw Connections viewport button, or hold Ctrl while dragging from one space to another, to create movement links.</div>
+                <div class="map-editor-form-note">4. Click a connection to inspect it. Double-click a connection to edit its direction, color, visibility, or remove it.</div>
+                <div class="map-editor-form-note">5. Fill out Metadata, Rules, and Engine tabs, then export the map when you are done.</div>
+            </div>
+        </section>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="metadata">
+            <h3>Metadata</h3>
+            <div id="mapEditorMetadataForm" class="map-editor-form"></div>
+            <button id="mapEditorMetadataApply" class="button button-secondary">Save Metadata</button>
+        </section>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="rules">
+            <h3>Rules</h3>
+            <div id="mapEditorRulesForm" class="map-editor-form"></div>
+            <button id="mapEditorRulesApply" class="button button-secondary">Save Rules</button>
+        </section>
+
+        <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="engine">
+            <h3>Engine</h3>
+            <div id="mapEditorEngineForm" class="map-editor-form"></div>
+            <button id="mapEditorEngineApply" class="button button-secondary">Save Engine</button>
+        </section>
+
+        <div id="mapEditorSpaceEditor" class="map-editor-modal" style="display: none;">
+            <div id="mapEditorSpaceHeader" class="map-editor-modal-header">
+                <strong id="mapEditorSpaceTitle">Space</strong>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="mapEditorSpaceApply" class="button button-primary" style="padding: 4px 12px; font-size: 14px; min-width: unset; margin: 0;">Apply</button>
+                    <button id="mapEditorSpaceClose" class="settings-modal-close" type="button" aria-label="Close" style="position: static; margin: 0; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; font-size: 20px;">&times;</button>
+                </div>
+            </div>
+            <div class="map-editor-modal-body">
+                <div class="map-editor-tab-bar" id="mapEditorSpaceTabs" data-tab-group="space">
+                    <button class="button button-secondary map-editor-tab-button" data-tab="visual">Visual</button>
+                    <button class="button button-secondary map-editor-tab-button" data-tab="events">Events</button>
+                    <button class="button button-secondary map-editor-tab-button" data-tab="json">View JSON</button>
+                </div>
+
+                <div class="map-editor-tab-content" data-tab-group="space" data-tab="visual">
+                <div class="map-editor-field">
+                    <label for="mapEditorSpaceNameInput">Name</label>
+                    <input id="mapEditorSpaceNameInput" type="text" class="input">
+                </div>
+                <div class="map-editor-field" style="flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; margin-top: 4px;">
+                    <input id="mapEditorVisualShowLabel" type="checkbox" checked style="width: auto; margin: 0;">
+                    <label for="mapEditorVisualShowLabel" style="margin: 0; flex: 1; text-align: left;">Show Label on Canvas</label>
+                </div>
+                <div class="map-editor-field">
+                    <label for="mapEditorVisualSize">Size</label>
+                    <input id="mapEditorVisualSize" type="number" class="input" min="10" step="1">
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualColor">Fill Color</label>
+                        <input id="mapEditorVisualColor" type="color" class="map-editor-color-input">
+                    </div>
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualColorAlpha">Fill Alpha %</label>
+                        <input id="mapEditorVisualColorAlpha" type="number" class="input" min="0" max="100" step="1" value="100">
+                    </div>
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualTextColor">Text Color</label>
+                        <input id="mapEditorVisualTextColor" type="color" class="map-editor-color-input">
+                    </div>
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualTextColorAlpha">Text Alpha %</label>
+                        <input id="mapEditorVisualTextColorAlpha" type="number" class="input" min="0" max="100" step="1" value="100">
+                    </div>
+                </div>
+                <div class="map-editor-field">
+                    <label for="mapEditorVisualFont">Font Family</label>
+                    <select id="mapEditorVisualFont" class="input">
+                        <option value="">Default</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Arial Black">Arial Black</option>
+                        <option value="Comic Sans MS">Comic Sans MS</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Lucida Console">Lucida Console</option>
+                        <option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+                        <option value="Palatino Linotype">Palatino Linotype</option>
+                        <option value="Tahoma">Tahoma</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Trebuchet MS">Trebuchet MS</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="monospace">monospace</option>
+                        <option value="sans-serif">sans-serif</option>
+                        <option value="serif">serif</option>
+                    </select>
+                </div>
+                <div class="map-editor-field">
+                    <label for="mapEditorVisualFontSize">Font Size (px)</label>
+                    <input id="mapEditorVisualFontSize" type="number" class="input" min="6" max="120" step="1" placeholder="11">
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualTextAlign">H-Align</label>
+                        <select id="mapEditorVisualTextAlign" class="input">
+                            <option value="">Default</option>
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualVerticalAlign">V-Align</label>
+                        <select id="mapEditorVisualVerticalAlign" class="input">
+                            <option value="">Default</option>
+                            <option value="flex-start">Top</option>
+                            <option value="center">Middle</option>
+                            <option value="flex-end">Bottom</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualShape">Shape</label>
+                        <select id="mapEditorVisualShape" class="input">
+                            <option value="">Default</option>
+                            <option value="none">None</option>
+                            <option value="circle">Circle</option>
+                            <option value="square">Square</option>
+                            <option value="rounded">Rounded</option>
+                            <option value="hexagon">Hexagon</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualBorderWidth">Border Width</label>
+                        <input id="mapEditorVisualBorderWidth" type="number" class="input" min="0" max="20" step="1" placeholder="Auto">
+                    </div>
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualBorderColor">Border Color</label>
+                        <input id="mapEditorVisualBorderColor" type="color" class="map-editor-color-input" value="#000000">
+                    </div>
+                </div>
+                <div class="map-editor-field">
+                    <label>Image Asset</label>
+                    <input id="mapEditorVisualImageSearch" type="text" class="input" placeholder="Search assets">
+                    <select id="mapEditorVisualImageSelect" class="input map-editor-select-list" size="5"></select>
+                    <div class="map-editor-row">
+                        <button id="mapEditorVisualImageUse" class="button button-secondary">Use Selected</button>
+                        <button id="mapEditorVisualImageClear" class="button button-secondary">Clear Image</button>
+                    </div>
+                    <div id="mapEditorVisualImageSelected" class="map-editor-preview-name"></div>
+                </div>
+                <!-- REMOVED Visual Apply Button -->
+                </div>
+
+                <div class="map-editor-tab-content" data-tab-group="space" data-tab="events">
+                <div class="map-editor-row">
+                    <select id="mapEditorEventSelect" class="input"></select>
+                    <button id="mapEditorEventAdd" class="button button-secondary">Add Event</button>
+                    <button id="mapEditorEventRemove" class="button button-secondary">Remove Event</button>
+                </div>
+                <div class="map-editor-field">
+                    <label for="mapEditorEventTriggerType">Trigger Type</label>
+                    <select id="mapEditorEventTriggerType" class="input"></select>
+                </div>
+                <div class="map-editor-field">
+                    <label>Trigger Payload</label>
+                    <div id="mapEditorTriggerPayloadForm" class="map-editor-form"></div>
+                </div>
+                <div class="map-editor-field">
+                    <label for="mapEditorEventActionType">Action Type</label>
+                    <select id="mapEditorEventActionType" class="input"></select>
+                </div>
+                <div class="map-editor-field">
+                    <label>Action Payload</label>
+                    <div id="mapEditorActionPayloadForm" class="map-editor-form"></div>
+                </div>
+                <div class="map-editor-field">
+                    <label for="mapEditorEventPriority">Priority</label>
+                    <select id="mapEditorEventPriority" class="input">
+                        <option value="LOW">LOW</option>
+                        <option value="MID" selected>MID</option>
+                        <option value="HIGH">HIGH</option>
+                    </select>
+                </div>
+                <!-- REMOVED Event Apply Button -->
+                </div>
+
+                <div class="map-editor-tab-content" data-tab-group="space" data-tab="json">
+                    <textarea id="mapEditorSpaceJsonView" class="map-editor-textarea" rows="12" readonly></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div id="mapEditorConnectionEditor" class="map-editor-modal" style="display: none;">
+            <div id="mapEditorConnectionHeader" class="map-editor-modal-header">
+                <strong id="mapEditorConnectionTitle">Connection</strong>
+                <button id="mapEditorConnectionClose" class="settings-modal-close" type="button" aria-label="Close">&times;</button>
+            </div>
+            <div class="map-editor-modal-body">
+                <div class="map-editor-field">
+                    <label for="mapEditorConnectionDirection">Direction</label>
+                    <select id="mapEditorConnectionDirection" class="input">
+                        <option value="forward">Connect space A → space B</option>
+                        <option value="reverse">Connect space A ← space B</option>
+                        <option value="bidirectional">Connect space A ↔ space B</option>
+                    </select>
+                </div>
+                <div class="map-editor-field">
+                    <label for="mapEditorConnectionColor">Line Color</label>
+                    <input id="mapEditorConnectionColor" type="color" class="map-editor-color-input">
+                </div>
+                <div class="map-editor-field">
+                    <label class="map-editor-inline-checkbox">
+                        <input id="mapEditorConnectionVisible" type="checkbox">
+                        <span>Visible In Game</span>
+                    </label>
+                </div>
+                <div class="map-editor-row">
+                    <button id="mapEditorConnectionApply" class="button button-secondary">Apply Connection</button>
+                    <button id="mapEditorConnectionRemove" class="button button-secondary">Remove Connection</button>
+                </div>
+            </div>
         </div>
     </div>
 

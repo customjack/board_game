@@ -72,13 +72,15 @@ export default class RepeatTurnsEffect extends PlayerEffect {
                     type: 'string',
                     required: true,
                     description: 'Unique identifier for this effect instance',
-                    example: 'repeat_turns_1'
+                    example: 'repeat_turns_1',
+                    ui: { hidden: true }
                 },
                 extraTurns: {
                     type: 'number',
                     required: true,
                     description: 'Number of extra consecutive turns to grant',
                     example: 1,
+                    default: 1,
                     min: 1
                 },
                 toRemove: {
@@ -86,21 +88,24 @@ export default class RepeatTurnsEffect extends PlayerEffect {
                     required: false,
                     description: 'Whether this effect is marked for removal',
                     example: false,
-                    default: false
+                    default: false,
+                    ui: { hidden: true }
                 },
                 playerIdToRepeat: {
                     type: 'string',
                     required: false,
                     description: 'ID of the player to grant extra turns (auto-populated when applied)',
                     example: 'player_123',
-                    default: null
+                    default: null,
+                    ui: { hidden: true }
                 },
                 turnsGranted: {
                     type: 'number',
                     required: false,
                     description: 'Number of extra turns granted so far (internal counter)',
                     example: 0,
-                    default: 0
+                    default: 0,
+                    ui: { hidden: true }
                 }
             }
         };

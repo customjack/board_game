@@ -1,0 +1,827 @@
+.map-editor-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.map-editor-header-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.map-editor-header-history {
+    margin-left: auto;
+    justify-content: flex-end;
+}
+
+.map-editor-layout {
+    display: grid;
+    grid-template-columns: 210px 1fr 270px;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+}
+
+.map-editor-panel {
+    border: 1px solid var(--border-color, #444);
+    border-radius: 10px;
+    padding: 16px;
+    background: var(--background-secondary, #141414);
+    text-align: left;
+}
+
+.map-editor-panel[data-tab="metadata"],
+.map-editor-panel[data-tab="rules"],
+.map-editor-panel[data-tab="engine"] {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.map-editor-panel h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.15em;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+    padding-bottom: 0;
+}
+
+.map-editor-panel h3::after {
+    content: none;
+}
+
+.map-editor-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+.map-editor-section {
+    background: var(--background-box, #1f1f1f);
+    border: 1px solid var(--border-color, #444);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.map-editor-section h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.05em;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+    padding-bottom: 0;
+}
+
+.map-editor-section h3::after {
+    content: none;
+}
+
+/* Collapsible section summary (replaces h3) */
+.map-editor-section-summary {
+    font-size: 1.05em;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    user-select: none;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.map-editor-section-summary::-webkit-details-marker {
+    display: none;
+}
+
+.map-editor-section-summary::before {
+    content: '▾';
+    font-size: 0.85em;
+    color: var(--text-color-secondary, #aaa);
+    transition: transform 0.15s ease;
+    display: inline-block;
+}
+
+details.map-editor-section:not([open]) > .map-editor-section-summary::before {
+    transform: rotate(-90deg);
+}
+
+details.map-editor-section:not([open]) > .map-editor-section-summary {
+    margin-bottom: 0;
+}
+
+.map-editor-tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.map-editor-tab-button.active {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 0 0 1px var(--primary-color, #4a90e2);
+}
+
+.map-editor-tab-button-right {
+    margin-left: auto;
+}
+
+.map-editor-tab-content {
+    display: none;
+}
+
+.map-editor-tab-content.active {
+    display: block;
+}
+
+/* Map tab: use flex so sidebars/canvas fill height properly */
+.map-editor-tab-content[data-tab="map"].active {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 130px);
+    min-height: 400px;
+}
+
+.map-editor-textarea {
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+    margin-bottom: 8px;
+    background: var(--background-secondary, #141414);
+    color: var(--text-color, #fff);
+    border: 1px solid var(--border-color, #444);
+    border-radius: 6px;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.map-editor-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.map-editor-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 2px 0;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+}
+
+.map-editor-form-note {
+    font-size: 12px;
+    color: var(--text-color-secondary, #aaa);
+}
+
+.map-editor-collapsible {
+    border: 1px solid var(--border-color, #333);
+    border-radius: 8px;
+    padding: 6px 10px 10px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.map-editor-collapsible summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.map-editor-collapsible summary::-webkit-details-marker {
+    display: none;
+}
+
+.map-editor-collapsible summary::before {
+    content: '>';
+    font-size: 12px;
+    color: var(--text-color-secondary, #aaa);
+}
+
+.map-editor-collapsible[open] summary::before {
+    content: 'v';
+}
+
+.map-editor-collapsible .map-editor-collapsible {
+    margin-left: 12px;
+    border-left: 1px dashed var(--border-color, #333);
+    padding-left: 10px;
+}
+
+.map-editor-select-list {
+    min-height: 120px;
+    padding: 6px;
+}
+
+.map-editor-array-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px dashed var(--border-color, #444);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.map-editor-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.map-editor-toggle {
+    justify-content: space-between;
+}
+
+.map-editor-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 6px;
+}
+
+.map-editor-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.map-editor-spaces-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* <details> needs explicit flex layout so children can fill it */
+details.map-editor-spaces-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.map-editor-spaces-section .map-editor-row {
+    flex: 0 0 auto;
+}
+
+.map-editor-space-list {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 48vh;
+    overflow-y: auto;
+}
+
+/* Compact space list items */
+.map-editor-space-list .map-editor-list-item {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-height: 28px;
+}
+
+.map-editor-assets-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
+    overflow: hidden;
+}
+
+details.map-editor-assets-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.map-editor-assets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    padding: 2px;
+}
+
+/* Asset card */
+.map-editor-asset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    border: 1px solid var(--border-color, #444);
+    border-radius: 6px;
+    background: var(--background-secondary, #141414);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.15s;
+    height: 126px;
+}
+
+.map-editor-asset-card:hover {
+    border-color: var(--primary-color, #4a90e2);
+}
+
+.map-editor-asset-card-thumb {
+    width: 100%;
+    height: 70px;
+    object-fit: contain;
+    display: block;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px 6px 0 0;
+    flex-shrink: 0;
+}
+
+.map-editor-asset-card-name {
+    font-size: 10px;
+    color: var(--text-color-secondary, #aaa);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    padding: 2px 4px;
+}
+
+/* Hover action buttons */
+.map-editor-asset-card-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: absolute;
+    bottom: 22px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 4px;
+}
+
+.map-editor-asset-card:hover .map-editor-asset-card-actions {
+    opacity: 1;
+}
+
+.map-editor-asset-card-btn {
+    padding: 2px 4px !important;
+    font-size: 9px !important;
+    min-width: 0 !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+}
+
+.map-editor-asset-card-btn-remove {
+    color: var(--color-danger, #e74c3c) !important;
+    border-color: var(--color-danger, #e74c3c) !important;
+}
+
+.map-editor-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color, #444);
+    background: var(--background-secondary, #141414);
+    cursor: pointer;
+}
+
+.map-editor-list-item.selected {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 0 0 1px var(--primary-color, #4a90e2);
+}
+
+.map-editor-canvas {
+    background: var(--background-secondary, #141414);
+    border: 1px solid var(--border-color, #444);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    /* height is driven by the grid row stretching */
+    align-self: stretch;
+}
+
+.map-editor-space {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: grab;
+    user-select: none;
+    z-index: 3;
+    overflow: visible;
+}
+
+.map-editor-space.selected {
+    filter: drop-shadow(0 0 10px var(--primary-color, #4a90e2));
+    z-index: 10;
+}
+
+.map-editor-space:active {
+    cursor: grabbing;
+}
+
+/* Full-image space: no circle clip, img fills the element */
+.map-editor-space-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    display: block;
+}
+
+.map-editor-space-label {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+    word-break: break-word;
+    padding: 2px 4px;
+}
+
+.map-editor-preview-name {
+    font-size: 12px;
+    color: var(--text-color-secondary, #aaa);
+}
+
+.map-editor-panel label,
+.map-editor-section label,
+.map-editor-modal label {
+    text-align: left;
+    margin-bottom: 4px;
+    font-size: 12px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.map-editor-panel input,
+.map-editor-panel select,
+.map-editor-panel textarea,
+.map-editor-section input,
+.map-editor-section select,
+.map-editor-section textarea,
+.map-editor-modal input,
+.map-editor-modal select,
+.map-editor-modal textarea {
+    text-align: left;
+}
+
+.map-editor-render-surface {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    flex: 0 0 auto;
+}
+
+.map-editor-grid-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.map-editor-background-image {
+    z-index: 0;
+}
+
+.map-editor-decoration-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    margin: 0;
+    pointer-events: none;
+}
+
+.map-editor-decoration {
+    box-sizing: border-box;
+    cursor: grab;
+    pointer-events: auto;
+}
+
+.map-editor-decoration:active {
+    cursor: grabbing;
+}
+
+.map-editor-decoration.selected {
+    outline: 2px solid var(--primary-color, #4a90e2);
+    outline-offset: 3px;
+    filter: drop-shadow(0 0 6px rgba(74, 144, 226, 0.75));
+}
+
+.map-editor-decoration-resize {
+    position: absolute;
+    right: -8px;
+    bottom: -8px;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--primary-color, #4a90e2);
+    cursor: nwse-resize;
+    pointer-events: auto;
+}
+
+.map-editor-decoration:not(.selected) .map-editor-decoration-resize {
+    display: none;
+}
+
+.map-editor-compact-controls {
+    align-items: end;
+}
+
+.map-editor-compact-controls .map-editor-field {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.map-editor-compact-controls input {
+    width: 100%;
+    min-width: 0;
+}
+
+.map-editor-decoration-controls {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color, #444);
+}
+
+.map-editor-decoration-actions {
+    flex-wrap: wrap;
+}
+
+.map-editor-decoration-actions .button {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    margin: 0;
+}
+
+.map-editor-connection-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.map-editor-connection-layer.draw-mode {
+    z-index: 20;
+}
+
+.map-editor-connection-layer.dragging-connection .map-editor-connection-hitbox {
+    pointer-events: none;
+}
+
+.map-editor-connection {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.map-editor-connection-hitbox {
+    position: absolute;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    transform-origin: left center;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.map-editor-connection-layer.draw-mode .map-editor-connection-hitbox {
+    height: 24px;
+}
+
+.map-editor-connection-layer.draw-mode .map-editor-connection-hitbox:hover + .map-editor-connection-line {
+    height: 5px !important;
+    filter: drop-shadow(0 0 4px var(--primary-color, #4a90e2));
+}
+
+.map-editor-connection-line {
+    position: absolute;
+    height: 3px;
+    transform-origin: left center;
+    background: var(--map-editor-grid-color, rgba(0, 0, 0, 0.55));
+    opacity: 0.95;
+}
+
+.map-editor-connection-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 12px solid var(--map-editor-grid-color, rgba(0, 0, 0, 0.75));
+    transform-origin: center center;
+}
+
+.map-editor-connection.selected .map-editor-connection-line {
+    background: var(--primary-color, #4a90e2);
+}
+
+.map-editor-connection.selected .map-editor-connection-arrow {
+    border-top-color: var(--primary-color, #4a90e2);
+}
+
+.map-editor-connection.editor-hidden .map-editor-connection-line {
+    opacity: 0.5;
+    background-image: repeating-linear-gradient(
+        90deg,
+        currentColor 0,
+        currentColor 10px,
+        transparent 10px,
+        transparent 18px
+    );
+    background-color: transparent;
+    color: var(--text-color-secondary, #777);
+}
+
+.map-editor-connection.editor-hidden .map-editor-connection-arrow {
+    opacity: 0.55;
+}
+
+.map-editor-connection.preview {
+    opacity: 0.7;
+}
+
+.map-editor-connection.preview .map-editor-connection-line {
+    background: var(--primary-color, #4a90e2);
+}
+
+.map-editor-connection.preview .map-editor-connection-arrow {
+    border-top-color: var(--primary-color, #4a90e2);
+}
+
+.map-editor-connection-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--border-color, #444);
+    border-radius: 8px;
+    background: var(--background-box, #1f1f1f);
+}
+
+.map-editor-connection-settings.selected {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 0 0 1px var(--primary-color, #4a90e2);
+}
+
+.map-editor-inline-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.map-editor-section .button.active {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 0 0 1px var(--primary-color, #4a90e2);
+}
+
+.map-editor-status {
+    font-size: 12px;
+    color: var(--text-color-secondary, #aaa);
+    margin-left: 0;
+    flex: 1 1 220px;
+    min-width: 180px;
+}
+
+.map-editor-modal {
+    position: fixed;
+    left: 24px;
+    top: 120px;
+    width: 360px;
+    max-width: 90vw;
+    max-height: calc(100vh - 32px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+    resize: both;
+    background: var(--background-box, #1f1f1f);
+    border: 1px solid var(--border-color, #444);
+    border-radius: 10px;
+    padding: 12px;
+    min-width: 320px;
+    min-height: 320px;
+    z-index: 1000;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.map-editor-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    user-select: none;
+}
+
+.map-editor-modal-header .settings-modal-close {
+    cursor: pointer;
+}
+
+.map-editor-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 4px;
+}
+
+.map-editor-color-input {
+    width: 100%;
+    max-width: 240px;
+    height: 36px;
+    padding: 0;
+    border-radius: 6px;
+    border: 1px solid var(--border-color, #444);
+    background: transparent;
+    cursor: pointer;
+}
+
+.map-editor-color-input::-webkit-color-swatch-wrapper {
+    padding: 4px;
+}
+
+.map-editor-color-input::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.map-editor-color-input::-moz-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.map-editor-input-with-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.map-editor-placeholder-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.map-editor-placeholder-select {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+}
+
+@media (max-width: 960px) {
+    .map-editor-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .map-editor-modal {
+        position: static;
+        width: auto;
+    }
+
+    .map-editor-spaces-section,
+    .map-editor-assets-section {
+        height: auto;
+        max-height: 240px;
+    }
+}

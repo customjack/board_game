@@ -1,0 +1,29 @@
+{
+  "turnOrder": "sequential",
+  "startingPositions": {
+    "mode": "single",
+    "spaceIds": [
+      "1"
+    ],
+    "distribution": "round-robin"
+  },
+  "recommendedPlayers": {
+    "min": 4,
+    "max": 10
+  },
+  "diceRolling": {
+    "enabled": true,
+    "diceCount": 1,
+    "diceSides": 6,
+    "rollAgainOn": []
+  },
+  "winCondition": {
+    "type": "TURN_LIMIT",
+    "config": {
+      "turns": 999,
+      "winner": "furthest"
+    }
+  },
+  "minPlayers": null,
+  "maxPlayers": null
+}

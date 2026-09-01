@@ -1,12 +1,15 @@
 /**
- * MapStorageManager - Manages custom map storage in localStorage
+ * MapStorageManager - Manages custom map storage in IndexedDB.
  *
  * Handles CRUD operations for user-uploaded board JSON files,
  * including built-in maps and custom uploads.
+ * Previously used localStorage (limited to ~5-10 MB). Now uses IndexedDB which
+ * supports hundreds of MB — important since map ZIPs can easily exceed localStorage quota.
  */
 
 import BoardSchemaValidator from '../../infrastructure/utils/BoardSchemaValidator.js';
 import BoardBundleLoader from './BoardBundleLoader.js';
+import IDBStorage from '../../infrastructure/storage/IDBStorage.js';
 import JSZip from 'jszip';
 
 export default class MapStorageManager {
@@ -18,6 +21,26 @@ export default class MapStorageManager {
     static pluginAssetCacheLoaded = false;
     static pluginAssetIndexMemory = null;
     static pluginAssetIndexLoaded = false;
+
+    /** @private — lazy singleton IDBStorage for custom maps */
+    static _idbInstance = null;
+    static _idbReady = null;
+    static _getIDB() {
+        if (!this._idbInstance) {
+            this._idbInstance = new IDBStorage('board-game-db', 'maps');
+        }
+        return this._idbInstance;
+    }
+    static async _ensureIDB() {
+        const idb = this._getIDB();
+        if (!this._idbReady) {
+            this._idbReady = idb.ready().then(async () => {
+                // One-time migration from localStorage
+                await idb.migrateFromLocalStorage([MapStorageManager.STORAGE_KEY]);
+            });
+        }
+        return this._idbReady.then(() => idb);
+    }
 
     /**
      * Get all stored maps (built-in + custom)
@@ -66,7 +89,7 @@ export default class MapStorageManager {
      * @returns {Promise<Array>} Array of custom map objects
      */
     static async getCustomMapsWithThumbnails() {
-        const customMaps = this.getCustomMaps();
+        const customMaps = await this.getCustomMaps();
         
         // Recreate preview thumbnails for bundle maps
         const mapsWithThumbnails = await Promise.all(customMaps.map(async (map) => {
@@ -96,20 +119,50 @@ export default class MapStorageManager {
     static pluginMaps = [];
 
     static getBuiltInMaps() {
-        return [
+        const maps = [
             {
                 id: 'default',
-                name: 'Default Board',
-                author: 'Jack Carlton',
-                description: 'Standard drinking board game',
+                name: 'Eels and Escalators',
+                author: 'Unknown',
+                description: 'Eels and Escalators (just chutes and ladders)',
                 isBuiltIn: true,
-                path: 'assets/maps/default-board.zip',
+                path: 'assets/maps/eels-and-escalators.zip',
+                thumbnail: null,
+                createdDate: '2026-08-31T23:08:58.778Z',
+                engineType: 'turn-based'
+            },
+            {
+                id: 'drinking-board-game',
+                name: 'Drinking Board Game',
+                author: 'Unknown',
+                description: 'A drinking board game to play with your friends (probably over voice and video chat)',
+                isBuiltIn: true,
+                path: 'assets/maps/drinking-board-game.zip',
+                thumbnail: null,
+                createdDate: '2026-09-01T01:15:21.141Z',
+                engineType: 'turn-based'
+            }
+        ];
+
+        const debugBoardEnabled =
+            (typeof ENABLE_DEBUG_BOARD !== 'undefined' && ENABLE_DEBUG_BOARD === true) ||
+            (typeof process !== 'undefined' && process?.env?.ENABLE_DEBUG_BOARD === 'true');
+
+        if (debugBoardEnabled) {
+            maps.push({
+                id: 'debug-board',
+                name: 'Debug Board',
+                author: 'Jack Carlton',
+                description: 'Small development board for testing spaces, events, and rendering',
+                isBuiltIn: true,
+                path: 'assets/maps/debug-board.zip',
                 thumbnail: null,
                 createdDate: '2024-10-28T12:00:00Z',
                 engineType: 'turn-based'
-            },
-            ...this.pluginMaps
-        ];
+            });
+        }
+
+        return [...maps, ...this.pluginMaps];
     }
 
     static getPluginAssetCache() {
@@ -414,16 +467,13 @@ export default class MapStorageManager {
     }
 
     /**
-     * Get custom maps from localStorage (synchronous, for listing)
-     * Blob URLs are recreated when map data is loaded
-     * @returns {Array} Array of custom map objects
+     * Get custom maps from IndexedDB.
+     * @returns {Promise<Array>} Array of custom map objects
      */
-    static getCustomMaps() {
-        const stored = localStorage.getItem(this.STORAGE_KEY);
-        if (!stored) return [];
-
+    static async getCustomMaps() {
         try {
-            const maps = JSON.parse(stored);
+            const idb = await this._ensureIDB();
+            const maps = await idb.getItem(this.STORAGE_KEY);
             if (!Array.isArray(maps)) return [];
             return maps.map(map => ({
                 ...map,
@@ -432,7 +482,7 @@ export default class MapStorageManager {
                     'turn-based'
             }));
         } catch (error) {
-            console.error('Error parsing custom maps from localStorage:', error);
+            console.error('[MapStorageManager] Error reading custom maps from IndexedDB:', error);
             return [];
         }
     }
@@ -569,17 +619,26 @@ export default class MapStorageManager {
         if (boardData.board?.topology) {
             boardData.board.topology = update(boardData.board.topology);
         }
+        
+        // Update background image paths
+        if (boardData.board?.metadata?.renderConfig) {
+            boardData.board.metadata.renderConfig = update(boardData.board.metadata.renderConfig);
+        }
+        if (boardData.metadata?.renderConfig) {
+            boardData.metadata.renderConfig = update(boardData.metadata.renderConfig);
+        }
     }
 
     /**
-     * Save custom maps to localStorage
+     * Save custom maps to IndexedDB.
      * @param {Array} maps - Array of map objects to save
      */
-    static saveCustomMaps(maps) {
+    static async saveCustomMaps(maps) {
         try {
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(maps));
+            const idb = await this._ensureIDB();
+            await idb.setItem(this.STORAGE_KEY, maps);
         } catch (error) {
-            console.error('Error saving custom maps to localStorage:', error);
+            console.error('[MapStorageManager] Error saving custom maps to IndexedDB:', error);
             throw new Error('Failed to save maps. Storage may be full.');
         }
     }
@@ -604,7 +663,7 @@ export default class MapStorageManager {
         const preview = await BoardBundleLoader.extractPreview(zipFileClone);
         
         // Store bundle data - we'll recreate blob URLs when loading from stored bundle
-        const customMaps = this.getCustomMaps();
+        const customMaps = await this.getCustomMaps();
         const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         
         const sourceMetadata = mapData.metadata || {};
@@ -632,11 +691,11 @@ export default class MapStorageManager {
         };
         
         customMaps.push(mapObject);
-        this.saveCustomMaps(customMaps);
-        
+        await this.saveCustomMaps(customMaps);
+
         return mapObject;
     }
-    
+
     /**
      * Convert ArrayBuffer to base64 string
      * @param {ArrayBuffer} buffer - ArrayBuffer to convert
@@ -671,14 +730,14 @@ export default class MapStorageManager {
      * @param {Object} metadata - Optional metadata override
      * @returns {Object} The saved map object with generated ID
      */
-    static addCustomMap(mapData, metadata = {}) {
+    static async addCustomMap(mapData, metadata = {}) {
         // Validate the map data
         const validation = BoardSchemaValidator.validate(mapData);
         if (!validation.valid) {
             throw new Error(`Invalid map data: ${validation.errors.join(', ')}`);
         }
 
-        const customMaps = this.getCustomMaps();
+        const customMaps = await this.getCustomMaps();
 
         // Generate unique ID
         const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -703,7 +762,7 @@ export default class MapStorageManager {
         };
 
         customMaps.push(mapObject);
-        this.saveCustomMaps(customMaps);
+        await this.saveCustomMaps(customMaps);
 
         return mapObject;
     }
@@ -722,13 +781,13 @@ export default class MapStorageManager {
      * @param {string} mapId - The ID of the map to delete
      * @returns {boolean} True if deleted, false if not found
      */
-    static deleteCustomMap(mapId) {
-        const customMaps = this.getCustomMaps();
+    static async deleteCustomMap(mapId) {
+        const customMaps = await this.getCustomMaps();
         const initialLength = customMaps.length;
         const filtered = customMaps.filter(map => map.id !== mapId);
 
         if (filtered.length < initialLength) {
-            this.saveCustomMaps(filtered);
+            await this.saveCustomMaps(filtered);
             return true;
         }
 

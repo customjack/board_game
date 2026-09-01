@@ -1,5 +1,5 @@
-import { getVisibleElementById } from '../infrastructure/utils/helpers.js';
 import MapStorageManager from '../systems/storage/MapStorageManager.js';
+import { getVisibleElementById } from '../infrastructure/utils/helpers.js';
 
 /**
  * SpaceRenderer - Handles rendering of board spaces
@@ -37,7 +37,40 @@ export default class SpaceRenderer {
         spaceElement.style.top = `${space.visualDetails.y - space.visualDetails.size / 2}px`;
         spaceElement.style.width = style.width;
         spaceElement.style.height = style.height;
+        spaceElement.style.margin = '0';
+        spaceElement.style.padding = '0';
         spaceElement.style.zIndex = style.zIndex;
+
+        // Common parent styles
+        spaceElement.style.display = 'flex';
+        spaceElement.style.alignItems = style.alignItems || 'center';
+        spaceElement.style.justifyContent = style.justifyContent || 'center';
+        spaceElement.style.cursor = 'pointer';
+        spaceElement.style.userSelect = 'none';
+        spaceElement.style.boxSizing = 'border-box';
+
+        // Background/Shape layer
+        const bgLayer = document.createElement('div');
+        bgLayer.className = 'board-space-background';
+        bgLayer.style.position = 'absolute';
+        bgLayer.style.inset = '0';
+        bgLayer.style.margin = '0';
+        bgLayer.style.boxSizing = 'border-box';
+        bgLayer.style.zIndex = '0';
+        bgLayer.style.borderRadius = style.borderRadius;
+        if (style.clipPath) bgLayer.style.clipPath = style.clipPath;
+        if (style.border) bgLayer.style.border = style.border;
+        bgLayer.style.overflow = 'hidden';
+        spaceElement.appendChild(bgLayer);
+
+        // A separate overlay provides selection feedback without transforming
+        // (and therefore visually moving) the space itself.
+        const highlightLayer = document.createElement('div');
+        highlightLayer.className = 'board-space-highlight';
+        highlightLayer.style.margin = '0';
+        highlightLayer.style.borderRadius = style.borderRadius;
+        if (style.clipPath) highlightLayer.style.clipPath = style.clipPath;
+        spaceElement.appendChild(highlightLayer);
 
         // Check if space has an image
         const hasImage = space.visualDetails.image || space.visualDetails.sprite?.image;
@@ -45,15 +78,7 @@ export default class SpaceRenderer {
         const imageUrl = MapStorageManager.resolveCachedPluginAssetUrl(rawImageUrl);
 
         if (hasImage && imageUrl) {
-            // Render space with image
-            spaceElement.style.backgroundColor = 'transparent';
-            spaceElement.style.borderRadius = style.borderRadius;
-            spaceElement.style.overflow = 'hidden';
-            spaceElement.style.display = 'flex';
-            spaceElement.style.alignItems = 'center';
-            spaceElement.style.justifyContent = 'center';
-            spaceElement.style.cursor = 'pointer';
-            spaceElement.style.userSelect = 'none';
+            bgLayer.style.backgroundColor = 'transparent';
 
             // Create image element
             const img = document.createElement('img');
@@ -69,13 +94,14 @@ export default class SpaceRenderer {
             img.style.width = '100%';
             img.style.height = '100%';
             img.style.objectFit = 'cover';
-            
+
             // Handle sprite region if specified
             if (space.visualDetails.sprite?.region) {
                 const region = space.visualDetails.sprite.region;
                 img.style.objectPosition = `-${region.x}px -${region.y}px`;
                 // Create a clipping container for sprite regions
                 const clipContainer = document.createElement('div');
+                clipContainer.style.margin = '0';
                 clipContainer.style.width = '100%';
                 clipContainer.style.height = '100%';
                 clipContainer.style.overflow = 'hidden';
@@ -83,52 +109,38 @@ export default class SpaceRenderer {
                 img.style.width = `${region.w || space.visualDetails.size}px`;
                 img.style.height = `${region.h || space.visualDetails.size}px`;
                 clipContainer.appendChild(img);
-                spaceElement.appendChild(clipContainer);
+                bgLayer.appendChild(clipContainer);
             } else {
-                spaceElement.appendChild(img);
-            }
-
-            // Add border if configured
-            if (style.border) {
-                spaceElement.style.border = style.border;
-            }
-
-            // Add space name as overlay (optional, can be hidden if image is used)
-            if (space.visualDetails.showLabel !== false) {
-                const label = document.createElement('div');
-                label.textContent = space.name;
-                label.style.position = 'absolute';
-                label.style.color = style.color;
-                label.style.fontSize = '12px';
-                label.style.fontWeight = 'bold';
-                label.style.textAlign = 'center';
-                label.style.pointerEvents = 'none';
-                label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
-                spaceElement.appendChild(label);
+                bgLayer.appendChild(img);
             }
         } else {
-            // Render space with background color (original behavior)
-            spaceElement.style.backgroundColor = style.backgroundColor;
-            spaceElement.style.color = style.color;
-            spaceElement.style.borderRadius = style.borderRadius;
+            // Render space with background color
+            bgLayer.style.backgroundColor = style.backgroundColor;
+        }
 
-            // Add border if configured
-            if (style.border) {
-                spaceElement.style.border = style.border;
+        // Add space name as overlay if needed
+        if (style.showLabel) {
+            const label = document.createElement('div');
+            label.className = 'board-space-label';
+            label.textContent = space.name;
+            label.style.margin = '0';
+            label.style.position = 'relative';
+            label.style.zIndex = '1';
+            label.style.color = style.color;
+            label.style.fontSize = style.fontSize || '12px';
+            label.style.fontWeight = 'bold';
+            // Apply text wrapping to prevent label from stretching space
+            label.style.wordBreak = 'break-word';
+            label.style.width = '100%';
+            label.style.minWidth = '0'; // Crucial flexbox fix
+            label.style.textAlign = style.textAlign || 'center';
+            label.style.boxSizing = 'border-box';
+            label.style.padding = '2px';
+            label.style.pointerEvents = 'none';
+            if (hasImage) {
+                label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
             }
-
-            // Center text
-            spaceElement.style.display = 'flex';
-            spaceElement.style.alignItems = 'center';
-            spaceElement.style.justifyContent = 'center';
-            spaceElement.style.textAlign = 'center';
-            spaceElement.style.fontSize = '12px';
-            spaceElement.style.fontWeight = 'bold';
-            spaceElement.style.cursor = 'pointer';
-            spaceElement.style.userSelect = 'none';
-
-            // Add space name
-            spaceElement.textContent = space.name;
+            spaceElement.appendChild(label);
         }
 
         // Add click handler if provided

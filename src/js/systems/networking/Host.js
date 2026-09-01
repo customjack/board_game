@@ -58,8 +58,9 @@ export default class Host extends BasePeer {
         console.log('[Performance] Starting parallel initialization...');
         const parallelStart = performance.now();
 
+        // Run board loading in parallel with peer init (peer init may retry on ID collision)
         const [id] = await Promise.all([
-            this.initPeer(),
+            this._initPeerWithRetry(),
             this.initializeGameState()
         ]);
 
@@ -85,6 +86,26 @@ export default class Host extends BasePeer {
 
         // Set up event listeners
         this.peer.on('connection', (conn) => this.handleConnection(conn));
+    }
+
+    /**
+     * Try to claim a short game code as the PeerJS peer ID.
+     * Retries up to 3 times on unavailable-id collisions.
+     */
+    async _initPeerWithRetry(maxAttempts = 3) {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            const code = Host.generateGameCode();
+            try {
+                return await this.initPeer(code);
+            } catch (err) {
+                const isConflict = err?.type === 'unavailable-id' || err?.message?.includes('unavailable-id');
+                if (isConflict && attempt < maxAttempts) {
+                    console.warn(`[Network] Game code ${code} already in use, retrying... (${attempt}/${maxAttempts})`);
+                    continue;
+                }
+                throw err;
+            }
+        }
     }
 
     setupUI() {

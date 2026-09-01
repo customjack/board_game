@@ -66,10 +66,12 @@ export default class Space {
             return GameEvent.fromJSON(eventData, factoryManager);
         });
 
-        // Merge position object with visual object to create visualDetails
+        // Position is authoritative. Some older/editor-produced maps can carry
+        // stale x/y values inside visual; those must not override position or
+        // runtime spaces will drift away from the editor/background alignment.
         const visualDetails = {
-            ...(json.position || {}),
-            ...(json.visual || {})
+            ...(json.visual || {}),
+            ...(json.position || {})
         };
 
         return new Space(

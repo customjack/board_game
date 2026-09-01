@@ -4,6 +4,159 @@
  * Defines player limits, starting positions, victory conditions, movement rules, etc.
  */
 export default class GameRules {
+    static getWinConditionDefinitions(spaceOptions = []) {
+        const defaultSpaceId = spaceOptions[0]?.value || '';
+        const spaceEnum = spaceOptions.map((option) => option.value);
+        const spaceLabels = Object.fromEntries(spaceOptions.map((option) => [option.value, option.label]));
+        return {
+            REACH_SPACE: {
+                label: 'Reach Space',
+                schema: {
+                    type: 'object',
+                    properties: {
+                        spaceId: {
+                            type: 'string',
+                            enum: spaceEnum,
+                            enumLabels: spaceLabels,
+                            default: defaultSpaceId,
+                            description: 'The space a player must reach to win'
+                        }
+                    }
+                }
+            },
+            TURN_LIMIT: {
+                label: 'Turn Limit',
+                schema: {
+                    type: 'object',
+                    properties: {
+                        turns: {
+                            type: 'number',
+                            integer: true,
+                            min: 1,
+                            default: 20,
+                            description: 'How many turns the game lasts'
+                        },
+                        winner: {
+                            type: 'string',
+                            enum: ['furthest', 'highest_score'],
+                            default: 'furthest',
+                            description: 'How to decide the winner when the turn limit is reached'
+                        }
+                    }
+                }
+            },
+            LAST_STANDING: {
+                label: 'Last Standing',
+                schema: {
+                    type: 'object',
+                    properties: {}
+                }
+            },
+            CUSTOM: {
+                label: 'Custom',
+                schema: {
+                    type: 'object',
+                    properties: {}
+                }
+            }
+        };
+    }
+
+    static getEditorSchema({ spaceOptions = [], selectedWinConditionType = 'REACH_SPACE' } = {}) {
+        const spaceEnum = spaceOptions.map((option) => option.value);
+        const spaceLabels = Object.fromEntries(spaceOptions.map((option) => [option.value, option.label]));
+        const defaultStartSpace = spaceOptions[0]?.value ? [spaceOptions[0].value] : [];
+        const winConditions = this.getWinConditionDefinitions(spaceOptions);
+        const winConditionTypes = Object.keys(winConditions);
+        const selectedType = winConditions[selectedWinConditionType] ? selectedWinConditionType : winConditionTypes[0];
+        const selectedWinCondition = winConditions[selectedType];
+        return {
+            type: 'object',
+            properties: {
+                turnOrder: {
+                    type: 'string',
+                    enum: ['sequential', 'random', 'custom'],
+                    description: 'How turns are ordered'
+                },
+                startingPositions: {
+                    type: 'object',
+                    description: 'Where players begin',
+                    ui: { collapsed: true },
+                    properties: {
+                        mode: {
+                            type: 'string',
+                            enum: ['single', 'spread', 'random', 'custom', 'multiple'],
+                            description: 'How starting spaces are selected'
+                        },
+                        spaceIds: {
+                            type: 'array',
+                            description: 'Space IDs used for starting positions',
+                            default: defaultStartSpace,
+                            ui: { widget: 'multiselect' },
+                            items: {
+                                type: 'string',
+                                enum: spaceEnum,
+                                enumLabels: spaceLabels
+                            }
+                        },
+                        distribution: {
+                            type: 'string',
+                            enum: ['round-robin', 'sequential'],
+                            description: 'How spread mode assigns players'
+                        }
+                    }
+                },
+                recommendedPlayers: {
+                    type: 'object',
+                    description: 'Suggested player range',
+                    ui: { collapsed: true },
+                    properties: {
+                        min: { type: 'number', description: 'Recommended minimum players' },
+                        max: { type: 'number', description: 'Recommended maximum players' }
+                    }
+                },
+                diceRolling: {
+                    type: 'object',
+                    description: 'Dice rolling behavior',
+                    ui: { collapsed: true },
+                    properties: {
+                        enabled: { type: 'boolean', description: 'Allow dice rolling' },
+                        diceCount: { type: 'number', description: 'Number of dice', min: 1, integer: true },
+                        diceSides: { type: 'number', description: 'Sides per die', min: 2, integer: true },
+                        rollAgainOn: {
+                            type: 'array',
+                            description: 'Roll again when landing on these totals',
+                            items: { type: 'number', integer: true }
+                        }
+                    }
+                },
+                winCondition: {
+                    type: 'object',
+                    description: 'Victory configuration',
+                    ui: { collapsed: true },
+                    properties: {
+                        type: {
+                            type: 'string',
+                            enum: winConditionTypes,
+                            enumLabels: Object.fromEntries(
+                                Object.entries(winConditions).map(([type, definition]) => [type, definition.label])
+                            ),
+                            default: selectedType,
+                            description: 'Win condition type'
+                        },
+                        config: {
+                            ...(selectedWinCondition?.schema || { type: 'object', properties: {} }),
+                            description: 'Win condition specific settings',
+                            ui: { collapsed: false, collapsible: false }
+                        }
+                    }
+                },
+                minPlayers: { type: 'number', description: 'Minimum players (leave blank for no limit)', ui: { placeholder: 'No limit' } },
+                maxPlayers: { type: 'number', description: 'Maximum players (leave blank for no limit)', ui: { placeholder: 'No limit' } }
+            }
+        };
+    }
+
     /**
      * Create a new GameRules instance
      * @param {Object} config - Game rules configuration
@@ -223,7 +376,10 @@ export default class GameRules {
     evaluateVictoryCondition(condition, gameState) {
         switch (condition.type) {
             case 'REACH_SPACE': {
-                const winner = gameState.players.find(p => p.currentSpaceId === condition.spaceId);
+                const targetSpaceId = condition.spaceId ?? condition.config?.spaceId;
+                const winner = gameState.players.find(
+                    p => String(p.currentSpaceId) === String(targetSpaceId)
+                );
                 if (winner) {
                     return {
                         type: 'REACH_SPACE',
@@ -235,13 +391,15 @@ export default class GameRules {
             }
 
             case 'TURN_LIMIT': {
-                if (gameState.turnNumber >= condition.turns) {
+                const turnLimit = condition.turns ?? condition.config?.turns;
+                const winnerStrategy = condition.winner ?? condition.config?.winner;
+                if (gameState.turnNumber >= turnLimit) {
                     // Determine winner based on condition.winner strategy
                     let winner = null;
-                    if (condition.winner === 'highest_score') {
+                    if (winnerStrategy === 'highest_score') {
                         // Future: implement scoring system
                         winner = gameState.players[0];
-                    } else if (condition.winner === 'furthest') {
+                    } else if (winnerStrategy === 'furthest') {
                         // Future: calculate who is furthest along the board
                         winner = gameState.players[0];
                     }

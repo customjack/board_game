@@ -38,29 +38,55 @@
     display: none;
   }
 
-  .highlight {
-    position: relative; /* Ensure the glow is positioned correctly */
-    z-index: 1; /* Bring the highlighted element above others */
-    transition: box-shadow 0.3s ease; /* Smooth transition for the glow effect */
+  @keyframes highlight-overlay-pulse {
+    0%, 100% {
+      opacity: 0.35;
+      filter: drop-shadow(0 0 4px var(--highlight-glow));
+    }
+    50% {
+      opacity: 0.8;
+      filter: drop-shadow(0 0 10px var(--highlight-glow))
+              drop-shadow(0 0 16px var(--highlight-glow));
+    }
   }
 
-  .highlight::after {
-      content: ''; /* Empty content for the pseudo-element */
-      position: absolute; /* Position it relative to the parent */
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: inherit; /* Match the parent's border-radius */
-      box-shadow: 0 0 20px var(--highlight-glow); /* Use the theme-dependent glow color */
-      opacity: 0.7; /* Semi-transparent glow */
-      pointer-events: none; /* Prevent interaction with the pseudo-element */
-      transition: opacity 0.3s ease; /* Smooth transition for the opacity */
+  .board-space-highlight {
+    position: absolute;
+    inset: -3px;
+    z-index: 4;
+    display: none;
+    margin: 0;
+    pointer-events: none;
+    background: var(--highlight-glow);
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform 120ms ease-out;
   }
 
-  /* Optional: Reduce opacity on hover to make it more dynamic */
-  .highlight:hover::after {
-      opacity: 1; /* Full glow on hover */
+  .board-space.highlight {
+    z-index: 10 !important;
+  }
+
+  .board-space.highlight > .board-space-highlight {
+    display: block;
+    animation: highlight-overlay-pulse 1.5s infinite ease-in-out;
+  }
+
+  .board-space.highlight:hover > .board-space-highlight {
+    animation-duration: 0.8s;
+    transform: scale(1.1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .board-space.highlight > .board-space-highlight {
+      animation: none;
+      opacity: 0.65;
+    }
+
+    .board-space.highlight:hover > .board-space-highlight {
+      transform: none;
+      opacity: 0.9;
+    }
   }
 
 

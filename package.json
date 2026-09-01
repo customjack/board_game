@@ -8,13 +8,15 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build": "webpack --mode production",
+    "build:example": "BUILD_ENV_FILE=.env.example BUILD_ENV_OVERRIDE=true webpack --mode production",
     "build:plugins": "npm --prefix plugins/example run build && npm --prefix plugins/trouble run build",
     "start": "webpack serve --mode development --open",
     "cdn:start": "node scripts/start-cdn-server.js",
     "peerjs:start": "node scripts/start-peerjs-server.js",
     "dev:full": "npm run peerjs:start & npm run cdn:start & npm start",
     "dev:peer": "npm run peerjs:start & npm start",
-    "sync:plugins": "node scripts/sync-plugin-dist.js"
+    "sync:plugins": "node scripts/sync-plugin-dist.js",
+    "update:pages": "bash scripts/update-pages.sh"
   },
   "keywords": [],
   "author": "",

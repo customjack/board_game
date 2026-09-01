@@ -1,6 +1,7 @@
 {
   "schema_version": 2,
-  "id": "defaultboard",
+  "id": "untitled-map",
+  "assetsRoot": "assets/",
   "paths": {
     "metadata": "metadata.json",
     "engine": "engine.json",
@@ -8,6 +9,5 @@
     "ui": "ui.json",
     "topology": "topology.json",
     "dependencies": "dependencies.json"
-  },
-  "assetsRoot": "assets/"
+  }
 }

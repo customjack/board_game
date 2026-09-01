@@ -29,6 +29,51 @@ import ModalController from './controllers/ModalController.js';
 import RollController from './controllers/RollController.js';
 
 export default class TurnBasedGameEngine extends BaseTurnEngine {
+    static getEditorConfigSchema() {
+        return {
+            type: 'object',
+            description: 'Turn-based engine settings',
+            properties: {
+                phaseStateMachine: {
+                    type: 'object',
+                    description: 'Phase state machine implementation',
+                    ui: { collapsed: true },
+                    properties: {
+                        type: {
+                            type: 'string',
+                            description: 'Registered phase state machine type',
+                            ui: { registryFactory: 'PhaseStateMachineFactory' }
+                        }
+                    }
+                },
+                turnManager: {
+                    type: 'object',
+                    description: 'Turn manager settings',
+                    ui: { collapsed: true },
+                    properties: {
+                        type: {
+                            type: 'string',
+                            description: 'Registered turn manager type',
+                            ui: { registryFactory: 'TurnManagerFactory' }
+                        }
+                    }
+                },
+                eventProcessor: {
+                    type: 'object',
+                    description: 'Event processor settings',
+                    ui: { collapsed: true },
+                    properties: {
+                        type: {
+                            type: 'string',
+                            description: 'Registered event processor type',
+                            ui: { registryFactory: 'EventProcessorFactory' }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     /**
      * Create a turn-based game engine
      * @param {Object} dependencies - Core dependencies from BaseGameEngine

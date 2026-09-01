@@ -273,6 +273,11 @@ export default class BoardBundleLoader {
         if (bundleData.settings) {
             bundleData.settings = rewrite(bundleData.settings);
         }
+
+        // Rewrite paths in metadata
+        if (bundleData.metadata) {
+            bundleData.metadata = rewrite(bundleData.metadata);
+        }
     }
 
     /**
@@ -331,7 +336,7 @@ export default class BoardBundleLoader {
                     spaces: topology.spaces || [], // Blob URLs should already be in these spaces from rewriteAssetPaths
                     connections: topology.connections || []
                 },
-                rendering: settings.renderConfig || {}
+                rendering: settings.renderConfig || metadata.renderConfig || {}
             }
         };
 
@@ -370,4 +375,3 @@ export default class BoardBundleLoader {
         return null;
     }
 }
-

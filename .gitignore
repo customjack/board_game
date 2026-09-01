@@ -78,6 +78,9 @@ temp/
 # Board working directories (unzipped boards for editing)
 boards/
 
+# Removed legacy plugin-template working directory
+plugin-template/
+
 # Mac OS files
 .DS_Store
 
@@ -89,6 +92,17 @@ plugins/example/
 .vscode/
 *.sublime-workspace
 *.sublime-project
+
+# Local AI-assistant configuration and generated indexes
+.claude/
+.claaude/
+.codex/
+.understand-anything/
+
+# Patch/conflict leftovers
+*.orig
+*.rej
+*.patch
 
 # Logs
 logs/

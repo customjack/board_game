@@ -11,6 +11,12 @@ import SpaceRenderer from '../../rendering/SpaceRenderer.js';
 import BoardSchemaValidator from '../../infrastructure/utils/BoardSchemaValidator.js';
 import BoardViewport from '../BoardViewport.js';
 import MapStorageManager from '../../systems/storage/MapStorageManager.js';
+import {
+    applyBoardSurfaceSize,
+    calculateBoardSurfaceSize,
+    createBoardBackground,
+    renderBoardDecorations
+} from '../../rendering/BoardVisualRenderer.js';
 
 export default class BoardCanvasComponent extends BaseUIComponent {
     /**
@@ -151,7 +157,7 @@ export default class BoardCanvasComponent extends BaseUIComponent {
         console.log('Loading default board...');
 
         try {
-            const response = await fetch('assets/maps/default-board.zip');
+            const response = await fetch('assets/maps/eels-and-escalators.zip');
             if (!response.ok) {
                 throw new Error(`Failed to fetch default board: ${response.status} ${response.statusText}`);
             }
@@ -265,12 +271,18 @@ export default class BoardCanvasComponent extends BaseUIComponent {
             this.viewport = new BoardViewport(this.container);
         }
 
+        // Editor and runtime must use identical bounds because background
+        // position/fit values are relative to this surface.
+        const { width: surfaceWidth, height: surfaceHeight } = calculateBoardSurfaceSize(
+            this.board.spaces,
+            this.board.metadata?.renderConfig?.decorations || []
+        );
+
         // Create HTML render surface so spaces remain interactive
         const renderSurface = document.createElement('div');
         renderSurface.classList.add('board-render-surface');
         renderSurface.style.position = 'relative';
-        renderSurface.style.width = 'fit-content';
-        renderSurface.style.height = 'fit-content';
+        applyBoardSurfaceSize(renderSurface, surfaceWidth, surfaceHeight);
         renderSurface.style.pointerEvents = 'auto';
 
         // Add custom background if specified in board metadata
@@ -280,14 +292,17 @@ export default class BoardCanvasComponent extends BaseUIComponent {
         const bgColor = this.board.metadata?.renderConfig?.backgroundColor;
 
         if (bgImage) {
-            renderSurface.style.backgroundImage = `url(${bgImage})`;
-            renderSurface.style.backgroundSize = 'cover';
-            renderSurface.style.backgroundPosition = 'center';
-            renderSurface.style.backgroundRepeat = 'no-repeat';
+            const background = createBoardBackground(bgImage, this.board.metadata?.renderConfig);
+            if (background) renderSurface.appendChild(background);
         }
         if (bgColor) {
             renderSurface.style.backgroundColor = bgColor;
         }
+
+        renderBoardDecorations(
+            renderSurface,
+            this.board.metadata?.renderConfig?.decorations || []
+        );
 
         this.container.appendChild(renderSurface);
         this.viewport.setBoardSurface(renderSurface);

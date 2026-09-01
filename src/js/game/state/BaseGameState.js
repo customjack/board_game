@@ -199,10 +199,17 @@ export default class BaseGameState {
         if (!this.pluginReadiness) {
             this.pluginReadiness = {};
         }
+
+        // Force a new object reference so StateDelta correctly detects differences
+        // without comparing identical memory wrappers statically.
+        this.pluginReadiness = { ...this.pluginReadiness };
         this.pluginReadiness[peerId] = {
             ready,
             missingPlugins: [...missingPlugins]
         };
+
+        // Ensure this pushes a new game state version for clients
+        this.incrementVersion();
     }
     
     /**
@@ -238,9 +245,10 @@ export default class BaseGameState {
      * @param {Array} requirements - Array of plugin requirement objects
      */
     setPluginRequirements(requirements) {
-        this.pluginRequirements = requirements || [];
-        // Reset all readiness when requirements change
+        this.pluginRequirements = requirements ? [...requirements] : [];
+        // Reset all readiness when requirements change (use new reference to bypass StateDelta caching)
         this.pluginReadiness = {};
+        this.incrementVersion();
     }
 
     getPlayerByPlayerId(playerId) {
@@ -290,7 +298,7 @@ export default class BaseGameState {
     resetEvents() {
         for (const space of this.board.spaces) {
             for (const event of space.events) {
-                if (event.state === GameEventState.COMPLETED_ACTION) {
+                if (event.state !== GameEventState.INACTIVE && event.state !== GameEventState.READY) {
                     event.state = GameEventState.READY;
                 }
             }

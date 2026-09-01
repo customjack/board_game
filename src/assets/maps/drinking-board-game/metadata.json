@@ -1,0 +1,15 @@
+{
+  "name": "Drinking Board Game",
+  "author": "Unknown",
+  "version": "1.0.0",
+  "description": "A drinking board game to play with your friends (probably over voice and video chat)",
+  "tags": [
+    "drink",
+    "drinking",
+    "friends",
+    "virtual"
+  ],
+  "created": "2026-09-01T01:15:21.141Z",
+  "modified": "2026-09-01T03:05:39.525Z",
+  "renderConfig": {}
+}

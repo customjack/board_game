@@ -230,6 +230,9 @@ export default class GameLogComponent extends BaseUIComponent {
      */
     show() {
         super.show();
+        if (this.container) {
+            this.container.classList.add('visible');
+        }
         this.render(); // Refresh display
         this.emit('gameLogShown');
     }
@@ -239,6 +242,9 @@ export default class GameLogComponent extends BaseUIComponent {
      */
     hide() {
         super.hide();
+        if (this.container) {
+            this.container.classList.remove('visible');
+        }
         this.emit('gameLogHidden');
     }
 

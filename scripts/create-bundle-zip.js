@@ -5,7 +5,7 @@
  *   node scripts/create-bundle-zip.js <board-dir> <output.zip>
  * 
  * Example:
- *   node scripts/create-bundle-zip.js dist/boards/default-board dist/boards/default-board.zip
+ *   node scripts/create-bundle-zip.js src/assets/maps/debug-board src/assets/maps/debug-board.zip
  */
 
 const fs = require('fs');
@@ -79,4 +79,3 @@ createBundle(boardDir, outputFile).catch(error => {
     console.error('Failed to create bundle:', error);
     process.exit(1);
 });
-

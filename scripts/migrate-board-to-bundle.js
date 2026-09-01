@@ -9,7 +9,7 @@
  *   node scripts/migrate-board-to-bundle.js <input.json> <output-dir>
  * 
  * Example:
- *   node scripts/migrate-board-to-bundle.js src/assets/maps/defaultBoard.json dist/boards/default-board
+ *   node scripts/migrate-board-to-bundle.js legacy-board.json src/assets/maps/debug-board
  */
 
 const fs = require('fs');
@@ -219,4 +219,3 @@ migrateBoard(inputFile, outputDir).catch(error => {
     console.error('Migration failed:', error);
     process.exit(1);
 });
-

@@ -1,0 +1,3115 @@
+{
+  "spaces": [
+    {
+      "id": "1",
+      "name": "START",
+      "type": "action",
+      "position": {
+        "x": 350,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#000000",
+        "colorAlpha": 1,
+        "textColor": "#ffffff",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": null,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "2",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "id": "2",
+      "name": "Greek Life",
+      "type": "action",
+      "position": {
+        "x": 400,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": null,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "3",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Anyone who was in a frat or a sorority, drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Knighthood",
+      "type": "action",
+      "position": {
+        "x": 450,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "4",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} gives another player a new name. Anyone who doesn't refer to them by this name must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "MOVIN' ON UP (Forward two spaces)",
+      "type": "action",
+      "position": {
+        "x": 500,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#a9da4e",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "5",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} moves up two spaces!"
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": 2
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Pick another player to drink",
+      "type": "action",
+      "position": {
+        "x": 550,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "6",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} picks another player to drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "name": "TRUTH OR DARE",
+      "type": "action",
+      "position": {
+        "x": 600,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#c01111",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "7",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "The person who goes next plays asks {{CURRENT_PLAYER_NAME}} truth or dare. If {{CURRENT_PLAYER_NAME}} doesn't comply, they must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "name": "MAKE A RULE",
+      "type": "action",
+      "position": {
+        "x": 650,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "8",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} gets to make a new rule. Anyone who breaks the rule must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "name": "F**k the Dealer",
+      "type": "action",
+      "position": {
+        "x": 700,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#c13333",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "9",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} takes a drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "name": "Confession",
+      "type": "action",
+      "position": {
+        "x": 750,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "10",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must reveal an embarrassing secret or drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "name": "EVERYONE DRINK!",
+      "type": "action",
+      "position": {
+        "x": 800,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "11",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Everyone take a drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "name": "Hand out three drinks",
+      "type": "action",
+      "position": {
+        "x": 850,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "12",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} gets to distribute 3 drinks among any number of players."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "name": "PICK A DRINKING MATE",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 150
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "13",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} picks a drinking buddy! Anytime {{CURRENT_PLAYER_NAME}} drinks, this player must also drink (but not vice versa)."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "name": "Compliment",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 200
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "14",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} gets to pick another player to give a compliment. Afterwards, both involved players take a drink <3."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "name": "YOUNGEST DRINKS",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "15",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "The youngest player drinks."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "name": "WALK OF SHAME (Back two spaces)",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 300
+      },
+      "visual": {
+        "size": 50,
+        "color": "#f55b5b",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "16",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} moves back two spaces!"
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": -2
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "name": "Take a shot",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "17",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} takes a shot! (Or equivalently, 4 drinks if they're lame)."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "name": "LADIES ONLY",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 400
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "18",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "All ladies drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "name": "THIS OR THAT?",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "19",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} picks this or that (write it down or something). Everyone else then picks this or that. Whoever disagrees with {{CURRENT_PLAYER_NAME}} must drink.\n\nChoices:\n{{RANDOM_THIS_OR_THAT}}"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "19",
+      "name": "NEVER HAVE I EVER",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 500
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#67c445",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "20",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} says something they've never done. Anyone who has done that must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "20",
+      "name": "Finish your drink BISH",
+      "type": "action",
+      "position": {
+        "x": 900,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#41d7e1",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "21",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must finish their drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "21",
+      "name": "WATERFALL",
+      "type": "action",
+      "position": {
+        "x": 850,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "22",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Waterfall! {{CURRENT_PLAYER_NAME}} will start things off. Go in the player order (or whatever order you want, why would I care?)."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "name": "JESTER",
+      "type": "action",
+      "position": {
+        "x": 800,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "23",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} tells a joke. Anyone who laughs must drink. If no one laughs, {{CURRENT_PLAYER_NAME}} must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "23",
+      "name": "PARTY FOUL (Back five spaces)",
+      "type": "action",
+      "position": {
+        "x": 750,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#f55b5b",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "24",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} moves back 5 spaces."
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": -5
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "24",
+      "name": "BUST A RHYME",
+      "type": "action",
+      "position": {
+        "x": 700,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "25",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Rhyme Time!\n\nPlayers must take turns saying words that rhyme with:\n{{RANDOM_WORD}}\n\nFirst person to fail drinks. Go in the player list order (or whatever order you want, why would I care?)."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "25",
+      "name": "SILENCE.",
+      "type": "action",
+      "position": {
+        "x": 650,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 9,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "26",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Everyone must be silent for 3 turns. Anyone who breaks the silence must drink. If you need to talk for your turn, get creative."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "26",
+      "name": "Slice N' Dice",
+      "type": "action",
+      "position": {
+        "x": 600,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "27",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} gets to distribute a random number of drinks among any number of people.\n\nThe random number is:\n{{RANDOM_NUMBER(1, 6)}}"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "27",
+      "name": "WALK OF SHAME (Back two spaces)",
+      "type": "action",
+      "position": {
+        "x": 550,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#f55b5b",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "28",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} moves back two spaces!"
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": -2
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "28",
+      "name": "Pick another player to drink",
+      "type": "action",
+      "position": {
+        "x": 500,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "29",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} picks another player to drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "29",
+      "name": "CATEGORIES",
+      "type": "action",
+      "position": {
+        "x": 450,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#e8ac2c",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "30",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Players must take turns saying things that fall in the following category:\n{{RANDOM_CATEGORY}}\n\nFirst person to fail drinks. Go in the player list order (or whatever order you want, why would I care?)."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "30",
+      "name": "FELLAS ONLY",
+      "type": "action",
+      "position": {
+        "x": 400,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "31",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "All guys drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "31",
+      "name": "JAIL",
+      "type": "action",
+      "position": {
+        "x": 350,
+        "y": 550
+      },
+      "visual": {
+        "size": 50,
+        "color": "#c60606",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "32",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} is jail next turn. They must stay sober while in jail."
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "APPLY_EFFECT",
+            "payload": {
+              "effect": {
+                "type": "SkipTurnsEffect",
+                "args": [
+                  {
+                    "id": "SkipTurnsEffect_mti21tzt_6"
+                  },
+                  {
+                    "turnsToSkip": 1
+                  },
+                  {
+                    "toRemove": false
+                  },
+                  {
+                    "playerIdToSkip": null
+                  },
+                  {
+                    "turnsSkipped": 0
+                  }
+                ]
+              }
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "name": "MAKE A RULE",
+      "type": "action",
+      "position": {
+        "x": 350,
+        "y": 500
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "33",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} gets to make a new rule. Anyone who breaks the rule must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "name": "SAFE ZONE",
+      "type": "action",
+      "position": {
+        "x": 350,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#f1e209",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "34",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} is safe from drinking until the start of their next turn."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "34",
+      "name": "CREEPER ALERT",
+      "type": "action",
+      "position": {
+        "x": 350,
+        "y": 400
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "35",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must open up any social media with public posts (instagram, facebook, etc.). Comment on the first post you see or drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "35",
+      "name": "WALK OF SHAME (Back two spaces)",
+      "type": "action",
+      "position": {
+        "x": 350,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#f55b5b",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "36",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} moves back two spaces!"
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": -2
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "36",
+      "name": "BANG MARRY KILL",
+      "type": "action",
+      "position": {
+        "x": 350,
+        "y": 300
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#67a451",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "40",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must play bang marry kill with the following people:\n{{RANDOM_FAMOUS_PERSON}},{{RANDOM_FAMOUS_PERSON}},{{RANDOM_FAMOUS_PERSON}}\n\n\nAfterwards they must take a drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "37",
+      "name": "FELLAS ONLY",
+      "type": "action",
+      "position": {
+        "x": 400,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "38",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "All guys drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "38",
+      "name": "MOVIN' ON UP (Forward two spaces)",
+      "type": "action",
+      "position": {
+        "x": 450,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#a9da4e",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "39",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} moves up two spaces!"
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": 2
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "39",
+      "name": "EVERYONE DRINKS BESIDES YOU",
+      "type": "action",
+      "position": {
+        "x": 500,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "41",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Everyone besides {{CURRENT_PLAYER_NAME}} take a drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "40",
+      "name": "Finish your drink BISH",
+      "type": "action",
+      "position": {
+        "x": 350,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#41d7e1",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "37",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must finish their drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "41",
+      "name": "Retail Therapy",
+      "type": "action",
+      "position": {
+        "x": 550,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "42",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must show their last online purchase or take a drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "42",
+      "name": "HI MOM.",
+      "type": "action",
+      "position": {
+        "x": 600,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "43",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must call a parent or previous legal guardian or drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "43",
+      "name": "VIRTUAL CHEERS!",
+      "type": "action",
+      "position": {
+        "x": 650,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 9,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "44",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must make a toast and everyone drinks!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "44",
+      "name": "THIS OR THAT?",
+      "type": "action",
+      "position": {
+        "x": 700,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "45",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} picks this or that (write it down or something). Everyone else then picks this or that. Whoever disagrees with {{CURRENT_PLAYER_NAME}} must drink.\n\nChoices:\n{{RANDOM_THIS_OR_THAT}}"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "45",
+      "name": "JAIL",
+      "type": "action",
+      "position": {
+        "x": 750,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#c60606",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "46",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} is jail next turn. They must stay sober while in jail."
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "APPLY_EFFECT",
+            "payload": {
+              "effect": {
+                "type": "SkipTurnsEffect",
+                "args": [
+                  {
+                    "id": "SkipTurnsEffect_mti21tzt_6"
+                  },
+                  {
+                    "turnsToSkip": 1
+                  },
+                  {
+                    "toRemove": false
+                  },
+                  {
+                    "playerIdToSkip": null
+                  },
+                  {
+                    "turnsSkipped": 0
+                  }
+                ]
+              }
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "46",
+      "name": "BUST A RHYME",
+      "type": "action",
+      "position": {
+        "x": 800,
+        "y": 250
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "47",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Rhyme Time!\n\nPlayers must take turns saying words that rhyme with:\n{{RANDOM_WORD}}\n\nFirst person to fail drinks. Go in the player list order (or whatever order you want, why would I care?)."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "47",
+      "name": "Camera Roll",
+      "type": "action",
+      "position": {
+        "x": 800,
+        "y": 300
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "48",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must share the most recent picture on their camera roll or take a drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "48",
+      "name": "NEVER HAVE I EVER",
+      "type": "action",
+      "position": {
+        "x": 800,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#67c445",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "49",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} says something they've never done. Anyone who has done that must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "49",
+      "name": "SAFE ZONE",
+      "type": "action",
+      "position": {
+        "x": 800,
+        "y": 400
+      },
+      "visual": {
+        "size": 50,
+        "color": "#f1e209",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "50",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} is safe from drinking until the start of their next turn."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "50",
+      "name": "EVERYONE DRINK!",
+      "type": "action",
+      "position": {
+        "x": 800,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "51",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Everyone take a drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "51",
+      "name": "Community Vote",
+      "type": "action",
+      "position": {
+        "x": 750,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "52",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Everyone votes on a player to finish their drink. In the event of a tie, all tied players finish their drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "52",
+      "name": "CATEGORIES",
+      "type": "action",
+      "position": {
+        "x": 700,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#e8ac2c",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "53",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "Players must take turns saying things that fall in the following category:\n{{RANDOM_CATEGORY}}\n\nFirst person to fail drinks. Go in the player list order (or whatever order you want, why would I care?)."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "53",
+      "name": "Virtual Selfie",
+      "type": "action",
+      "position": {
+        "x": 650,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 10,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "54",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must send a selfie of themselves to all other players or drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "54",
+      "name": "TRUTH OR DARE",
+      "type": "action",
+      "position": {
+        "x": 600,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#c01111",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "55",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "The person who goes next plays asks {{CURRENT_PLAYER_NAME}} truth or dare. If {{CURRENT_PLAYER_NAME}} doesn't comply, they must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "55",
+      "name": "LADIES ONLY",
+      "type": "action",
+      "position": {
+        "x": 550,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "56",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "All ladies drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "56",
+      "name": "OLDEST DRINKS",
+      "type": "action",
+      "position": {
+        "x": 500,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "57",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "The oldest player drinks."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "57",
+      "name": "Finish your drink BISH",
+      "type": "action",
+      "position": {
+        "x": 450,
+        "y": 450
+      },
+      "visual": {
+        "size": 50,
+        "color": "#41d7e1",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "58",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must finish their drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "58",
+      "name": "Confession",
+      "type": "action",
+      "position": {
+        "x": 450,
+        "y": 400
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 7,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "59",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must reveal an embarrassing secret or drink!"
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "59",
+      "name": "2 LIES AND A TRUTH",
+      "type": "action",
+      "position": {
+        "x": 450,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#e86711",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "60",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must state two lies and a truth. Everyone else then must guess the truth. Anyone who is wrong must drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "60",
+      "name": "READ YOUR LAST TEXT MESSAGE",
+      "type": "action",
+      "position": {
+        "x": 500,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "61",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must read their last received text message or drink."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "61",
+      "name": "PARTY FOUL (Back five spaces)",
+      "type": "action",
+      "position": {
+        "x": 550,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#f55b5b",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 8,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "62",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} moves back 5 spaces."
+            }
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "DISPLACE_PLAYER",
+            "payload": {
+              "steps": -5
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    },
+    {
+      "id": "62",
+      "name": "SAFE ZONE",
+      "type": "action",
+      "position": {
+        "x": 600,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#f1e209",
+        "colorAlpha": 1,
+        "textColor": "#000000",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 11,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "63",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} is safe from drinking until the start of their next turn."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "63",
+      "name": "FINISH LINE CHUG",
+      "type": "action",
+      "position": {
+        "x": 650,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#ffffff",
+        "colorAlpha": 1,
+        "textColor": "#1e80be",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": 9,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [
+        {
+          "targetId": "64",
+          "draw": false,
+          "color": "#4a90e2"
+        }
+      ],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_LAND"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} must chug their drink for 5 seconds."
+            }
+          },
+          "priority": "MID"
+        }
+      ]
+    },
+    {
+      "id": "64",
+      "name": "FINISH",
+      "type": "action",
+      "position": {
+        "x": 700,
+        "y": 350
+      },
+      "visual": {
+        "size": 50,
+        "color": "#000000",
+        "colorAlpha": 1,
+        "textColor": "#ffffff",
+        "textColorAlpha": 1,
+        "font": "",
+        "fontSize": null,
+        "textAlign": null,
+        "verticalAlign": null,
+        "borderWidth": null,
+        "borderColor": "#000000",
+        "shape": null,
+        "showLabel": true,
+        "image": null
+      },
+      "connections": [],
+      "triggers": [
+        {
+          "when": {
+            "type": "ON_ENTER"
+          },
+          "action": {
+            "type": "PROMPT_ALL_PLAYERS",
+            "payload": {
+              "message": "{{CURRENT_PLAYER_NAME}} has finished! The rest of you can keep playing if you want, what do I care?"
+            }
+          },
+          "priority": "HIGH"
+        },
+        {
+          "when": {
+            "type": "ON_ENTER"
+          },
+          "action": {
+            "type": "FORCE_STOP"
+          },
+          "priority": "MID"
+        },
+        {
+          "when": {
+            "type": "ON_ENTER"
+          },
+          "action": {
+            "type": "APPLY_EFFECT",
+            "payload": {
+              "effect": {
+                "type": "SkipTurnsEffect",
+                "args": [
+                  {
+                    "id": "SkipTurnsEffect_mti2th6k_18"
+                  },
+                  {
+                    "turnsToSkip": 999
+                  },
+                  {
+                    "toRemove": false
+                  },
+                  {
+                    "playerIdToSkip": null
+                  },
+                  {
+                    "turnsSkipped": 0
+                  }
+                ]
+              }
+            }
+          },
+          "priority": "LOW"
+        }
+      ]
+    }
+  ]
+}
