@@ -3,7 +3,18 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin'); // Import copy plugin
 const webpack = require('webpack');
 const path = require('path');
-require('dotenv').config(); // Load .env file
+const dotenv = require('dotenv');
+
+const configuredEnvFile = process.env.BUILD_ENV_FILE || '.env';
+const configuredEnvPath = path.resolve(__dirname, configuredEnvFile);
+const dotenvResult = dotenv.config({
+    path: configuredEnvPath,
+    override: process.env.BUILD_ENV_OVERRIDE === 'true'
+});
+
+if (dotenvResult.error && process.env.BUILD_ENV_FILE) {
+    throw new Error(`Unable to load requested build environment file: ${configuredEnvPath}`);
+}
 
 const DEV_SERVER_PORT = process.env.DEV_SERVER_PORT || 9001;
 
@@ -17,7 +28,9 @@ module.exports = (env, argv) => {
         'process.env.PEERJS_KEY': JSON.stringify(process.env.PEERJS_KEY || ''),
         'process.env.PEERJS_SECURE': JSON.stringify(process.env.PEERJS_SECURE || ''),
         'process.env.DEV_CHOOSE_ROLL': JSON.stringify(process.env.DEV_CHOOSE_ROLL || ''),
+        'process.env.ENABLE_DEBUG_BOARD': JSON.stringify(process.env.ENABLE_DEBUG_BOARD || ''),
         DEV_CHOOSE_ROLL: JSON.stringify(process.env.DEV_CHOOSE_ROLL === 'true'),
+        ENABLE_DEBUG_BOARD: JSON.stringify(process.env.ENABLE_DEBUG_BOARD === 'true'),
     };
 
     return {

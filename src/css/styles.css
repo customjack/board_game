@@ -58,3 +58,10 @@
     z-index: 20000 !important;
     /* Ensure it's above other modals (settings modal is 10000) */
 }
+
+/* Allow space text to inherit styling from parent */
+.board-space span, .map-editor-space-label {
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+}

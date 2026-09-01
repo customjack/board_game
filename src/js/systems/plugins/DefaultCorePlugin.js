@@ -46,7 +46,7 @@ import DiceRollAnimation from '../../animations/DiceRollAnimation.js';
 import SlotMachineAnimation from '../../animations/SlotMachineAnimation.js';
 import TimerAnimation from '../../animations/TimerAnimation.js';
 import PieceManager from '../../infrastructure/managers/PieceManager.js';
-import { randomNumber, randomWord, randomColor, randomSong } from '../../infrastructure/utils/PlaceholderFunctions.js';
+import { builtInPlaceholderTypes, registerBuiltInPlaceholders } from '../../elements/placeholders/BuiltInPlaceholders.js';
 
 /**
  * DefaultCorePlugin - Registers all core/default components as a single plugin
@@ -448,18 +448,8 @@ export default class DefaultCorePlugin extends Plugin {
         const placeholderRegistry = registryManager.getRegistry('placeholderRegistry');
         if (!placeholderRegistry) return 0;
 
-        const placeholders = {
-            RANDOM_NUMBER: randomNumber,
-            RANDOM_WORD: randomWord,
-            RANDOM_COLOR: randomColor,
-            RANDOM_SONG: randomSong,
-        };
-
         try {
-            Object.entries(placeholders).forEach(([key, value]) => {
-                placeholderRegistry.register(key, value);
-            });
-            return Object.keys(placeholders).length;
+            return registerBuiltInPlaceholders(placeholderRegistry);
         } catch (error) {
             console.error('[Plugin] Core: Failed to register placeholders', error);
             return 0;
@@ -510,10 +500,7 @@ export default class DefaultCorePlugin extends Plugin {
                     'RepeatTurnsEffect'
                 ],
                 placeholders: [
-                    'RANDOM_NUMBER',
-                    'RANDOM_WORD',
-                    'RANDOM_COLOR',
-                    'RANDOM_SONG'
+                    ...builtInPlaceholderTypes.map((PlaceholderType) => PlaceholderType.type)
                 ],
                 components: [
                     'GameEngine (turn-based)',

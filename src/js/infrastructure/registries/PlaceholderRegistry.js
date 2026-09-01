@@ -3,16 +3,33 @@ import BaseRegistry from '../../core/base/BaseRegistry';  // Import the base reg
 export default class PlaceholderRegistry extends BaseRegistry {
     constructor() {
         super();  // Call the parent constructor to initialize the registry
+        this.metadata = {};
     }
 
     // Register a placeholder with a name and a generator function
-    register(name, generatorFunction) {
+    register(name, generatorFunction, metadata = null) {
         if (typeof generatorFunction !== 'function') {
             throw new Error('Generator function must be a function.');
         }
 
         const upperCaseName = name.toUpperCase();  // Convert name to uppercase
         super.register(upperCaseName, generatorFunction);  // Use the inherited method from BaseRegistry with the uppercase name
+        if (metadata) {
+            this.metadata[upperCaseName] = { ...metadata, type: upperCaseName };
+        } else if (!this.metadata[upperCaseName]) {
+            const displayName = upperCaseName
+                .toLowerCase()
+                .split('_')
+                .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                .join(' ');
+            this.metadata[upperCaseName] = {
+                type: upperCaseName,
+                displayName,
+                description: '',
+                args: [],
+                template: `{{${upperCaseName}}}`
+            };
+        }
     }
 
     // Unregister (remove) a placeholder by its name
@@ -20,10 +37,20 @@ export default class PlaceholderRegistry extends BaseRegistry {
         const upperCaseName = name.toUpperCase();  // Convert name to uppercase
         if (this.registry[upperCaseName]) {
             super.unregister(upperCaseName);  // Use the inherited method from BaseRegistry
+            delete this.metadata[upperCaseName];
             //console.log(`Placeholder '${upperCaseName}' unregistered.`);
         } else {
             console.warn(`Placeholder '${upperCaseName}' not found.`);
         }
+    }
+
+    getAllMetadata() {
+        return { ...this.metadata };
+    }
+
+    clear() {
+        super.clear();
+        this.metadata = {};
     }
 
     // Replace placeholders in a given text

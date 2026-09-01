@@ -9,10 +9,10 @@
  * 
  * Examples:
  *   # Rebuild from working directory, output to maps folder
- *   node scripts/rebuild-board-bundle.js boards/default-board src/assets/maps/default-board.zip
+ *   node scripts/rebuild-board-bundle.js src/assets/maps/debug-board src/assets/maps/debug-board.zip
  * 
  *   # Rebuild and replace existing bundle
- *   node scripts/rebuild-board-bundle.js boards/default-board
+ *   node scripts/rebuild-board-bundle.js src/assets/maps/debug-board
  */
 
 const fs = require('fs');
@@ -25,8 +25,8 @@ function parseArgs() {
         console.error('Usage: node rebuild-board-bundle.js <board-dir> [output.zip]');
         console.error('');
         console.error('Examples:');
-        console.error('  node scripts/rebuild-board-bundle.js boards/default-board src/assets/maps/default-board.zip');
-        console.error('  node scripts/rebuild-board-bundle.js boards/default-board');
+        console.error('  node scripts/rebuild-board-bundle.js src/assets/maps/debug-board src/assets/maps/debug-board.zip');
+        console.error('  node scripts/rebuild-board-bundle.js src/assets/maps/debug-board');
         process.exit(1);
     }
     
@@ -107,4 +107,3 @@ rebuildBundle(boardDir, outputFile).catch(error => {
     console.error('Failed to rebuild bundle:', error);
     process.exit(1);
 });
-

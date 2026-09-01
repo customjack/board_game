@@ -225,6 +225,31 @@ export default class TurnFlowController extends BaseTurnController {
         console.log(`Ending turn for ${this.engine.turnManager.getCurrentPlayer().nickname}.`);
         this.engine.emitEvent('turnEnded', { gameState: this.engine.gameState });
 
+        const victory = this.engine.gameState.board?.gameRules?.checkVictoryConditions?.(
+            this.engine.gameState
+        );
+        if (victory) {
+            this.uiAdapter.stopTimer();
+            this.uiAdapter.deactivateRollButton();
+            this.engine.log(victory.message, {
+                type: 'victory',
+                metadata: {
+                    victoryType: victory.type,
+                    winnerId: victory.winner?.playerId || null
+                }
+            });
+            this.engine.emitEvent('gameWon', {
+                victory,
+                gameState: this.engine.gameState
+            });
+            this.engine.changePhase({
+                newGamePhase: GamePhases.GAME_ENDED,
+                newTurnPhase: TurnPhases.CHANGE_TURN,
+                delay: 0
+            });
+            return;
+        }
+
         const repeatTurnRequested = this.skipRepeatController.shouldRepeatTurn(
             this.effectScheduler,
             this.engine.gameState,

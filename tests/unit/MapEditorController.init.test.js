@@ -1,6 +1,7 @@
 import MapEditorController from '../../src/js/editor/MapEditorController.js';
 import GameEngineFactory from '../../src/js/infrastructure/factories/GameEngineFactory.js';
 import TurnBasedGameEngine from '../../src/js/game/engine_types/turn_based/TurnBasedEngine.js';
+import ModalUtil from '../../src/js/infrastructure/utils/ModalUtil.js';
 
 // Silence console noise
 beforeEach(() => {
@@ -145,5 +146,55 @@ describe('MapEditorController.init()', () => {
         await controller.init();
         const rulesForm = document.getElementById('mapEditorRulesForm');
         expect(rulesForm).not.toBeNull();
+    });
+});
+
+describe('MapEditorController new map', () => {
+    beforeEach(() => {
+        GameEngineFactory.engineRegistry = new Map();
+        GameEngineFactory.register('turn-based', TurnBasedGameEngine);
+    });
+
+    test('creates a blank map scaffold', () => {
+        const controller = makeController();
+        const state = controller.createBlankMapState();
+
+        expect(state.metadata.name).toBe('Untitled Map');
+        expect(state.topology.spaces).toEqual([]);
+        expect(state.assets).toEqual([]);
+        expect(state.background).toBeNull();
+        expect(state.preview).toBeNull();
+        expect(state.rules.startingPositions.spaceIds).toEqual([]);
+    });
+
+    test('keeps the current map when confirmation is canceled', async () => {
+        const controller = makeController();
+        const currentState = { topology: { spaces: [{ id: 'existing' }] } };
+        controller.stateManager.state = currentState;
+        jest.spyOn(ModalUtil, 'customConfirm').mockResolvedValue(false);
+
+        await controller.handleNewMap();
+
+        expect(controller.stateManager.state).toBe(currentState);
+    });
+
+    test('replaces the draft and clears history after confirmation', async () => {
+        const controller = makeController();
+        controller.elements = {};
+        controller.stateManager.state = { topology: { spaces: [{ id: 'existing' }] } };
+        controller.stateManager.undoStack = [{ previous: true }];
+        controller.stateManager.redoStack = [{ future: true }];
+        controller.stateManager.saveDraft = jest.fn();
+        controller.updateDependenciesFromUsage = jest.fn();
+        controller.renderAll = jest.fn();
+        controller.setStatus = jest.fn();
+        jest.spyOn(ModalUtil, 'customConfirm').mockResolvedValue(true);
+
+        await controller.handleNewMap();
+
+        expect(controller.stateManager.state.topology.spaces).toEqual([]);
+        expect(controller.stateManager.undoStack).toEqual([]);
+        expect(controller.stateManager.redoStack).toEqual([]);
+        expect(controller.setStatus).toHaveBeenCalledWith('Blank map created');
     });
 });

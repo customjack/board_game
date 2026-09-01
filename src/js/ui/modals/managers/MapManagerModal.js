@@ -382,7 +382,7 @@ export default class MapManagerModal extends BaseManagerModal {
             // Load from JSON file (legacy format)
             const text = await file.text();
             const mapData = JSON.parse(text);
-            mapObject = MapStorageManager.addCustomMap(mapData);
+            mapObject = await MapStorageManager.addCustomMap(mapData);
         }
 
         await this.loadMaps();

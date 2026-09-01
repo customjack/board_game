@@ -36,8 +36,8 @@ export default class BoardManager {
      */
     async loadDefaultBoard() {
         console.log('Attempting to load the default board...');
-        // Prefer the bundled default-board.zip (modular format)
-        const response = await fetch('assets/maps/default-board.zip');
+        // Eels and Escalators is the bundled default map.
+        const response = await fetch('assets/maps/eels-and-escalators.zip');
         if (!response.ok) {
             throw new Error(`Failed to fetch default board: ${response.status} ${response.statusText}`);
         }

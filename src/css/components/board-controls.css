@@ -11,7 +11,7 @@
 }
 
 .board-control-btn {
-    background: var(--background-color);
+    background: var(--background-secondary, #1f1f1f);
     border: 2px solid var(--border-color);
     border-radius: 4px;
     width: 40px;
@@ -26,7 +26,7 @@
     font-weight: bold;
     color: var(--text-color);
     user-select: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .board-control-btn:hover {
@@ -79,7 +79,7 @@
     position: absolute;
     top: calc(var(--spacing-unit) * 2);
     left: calc(var(--spacing-unit) * 2);
-    background: var(--background-color);
+    background: var(--background-secondary, #1f1f1f);
     border: 2px solid var(--border-color);
     border-radius: 4px;
     padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1);
@@ -87,7 +87,7 @@
     color: var(--label-color);
     font-family: monospace;
     z-index: 100;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
     pointer-events: none;
 }
 
@@ -97,7 +97,7 @@
     bottom: calc(var(--spacing-unit) * 2);
     left: 50%;
     transform: translateX(-50%);
-    background: var(--background-color);
+    background: var(--background-secondary, #1f1f1f);
     border: 2px solid var(--border-color);
     border-radius: 4px;
     padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1.5);

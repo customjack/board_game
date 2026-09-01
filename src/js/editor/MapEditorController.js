@@ -43,6 +43,7 @@ export default class MapEditorController {
         this.renderer = null;
         this.selectedSpaceId = null;
         this.selectedConnection = null;
+        this.selectedDecorationId = null;
         this.currentEventIndex = null;
         this.availableActions = [];
         this.availableTriggers = [];
@@ -58,6 +59,7 @@ export default class MapEditorController {
         this.effectPayloadSchema = null;
         this.effectPayloadContainer = null;
         this.effectTypeSelect = null;
+        this.effectIdSequence = 0;
         this.formCache = {};
         this.sectionAutoSaveTimers = {};
         this.gridEnabled = true;
@@ -89,12 +91,16 @@ export default class MapEditorController {
             onToggleDrawConnectionMode: () => this.toggleDrawConnectionMode(),
             onCreateConnection: (fromId, toId) => this.createConnection(fromId, toId),
             onSelectConnection: (fromId, toId) => this.selectConnection(fromId, toId),
-            onEditConnection: (fromId, toId, position) => this.editConnection(fromId, toId, position)
+            onEditConnection: (fromId, toId, position) => this.editConnection(fromId, toId, position),
+            onSelectDecoration: (id, options) => this.selectDecoration(id, options),
+            onMoveDecoration: (id, position) => this.updateDecoration(id, position),
+            onResizeDecoration: (id, size) => this.updateDecoration(id, size)
         });
 
         this.refreshAvailableTypes();
 
-        const draft = this.stateManager.loadDraft();
+        await this.stateManager.init();
+        const draft = await this.stateManager.loadDraft();
         if (draft) {
             this.setState(draft, { pushHistory: false });
             this.setStatus('Draft loaded');
@@ -153,6 +159,7 @@ export default class MapEditorController {
             engineApply: document.getElementById('mapEditorEngineApply'),
             spaceList: document.getElementById('mapEditorSpaceList'),
             addSpaceButton: document.getElementById('mapEditorAddSpaceButton'),
+            duplicateSpaceButton: document.getElementById('mapEditorDuplicateSpaceButton'),
             deleteSpaceButton: document.getElementById('mapEditorDeleteSpaceButton'),
             assetsInput: document.getElementById('mapEditorAssetsInput'),
             assetsList: document.getElementById('mapEditorAssetsList'),
@@ -161,10 +168,27 @@ export default class MapEditorController {
             backgroundInput: document.getElementById('mapEditorBackgroundInput'),
             backgroundClear: document.getElementById('mapEditorBackgroundClear'),
             backgroundName: document.getElementById('mapEditorBackgroundName'),
+            backgroundFit: document.getElementById('mapEditorBackgroundFit'),
+            backgroundScale: document.getElementById('mapEditorBackgroundScale'),
+            backgroundPositionX: document.getElementById('mapEditorBackgroundPositionX'),
+            backgroundPositionY: document.getElementById('mapEditorBackgroundPositionY'),
+            decorationControls: document.getElementById('mapEditorDecorationControls'),
+            decorationX: document.getElementById('mapEditorDecorationX'),
+            decorationY: document.getElementById('mapEditorDecorationY'),
+            decorationWidth: document.getElementById('mapEditorDecorationWidth'),
+            decorationHeight: document.getElementById('mapEditorDecorationHeight'),
+            decorationRotation: document.getElementById('mapEditorDecorationRotation'),
+            decorationOpacity: document.getElementById('mapEditorDecorationOpacity'),
+            decorationApply: document.getElementById('mapEditorDecorationApply'),
+            decorationBackward: document.getElementById('mapEditorDecorationBackward'),
+            decorationForward: document.getElementById('mapEditorDecorationForward'),
+            decorationRemove: document.getElementById('mapEditorDecorationRemove'),
             spaceEditor: document.getElementById('mapEditorSpaceEditor'),
             spaceEditorHeader: document.getElementById('mapEditorSpaceHeader'),
             spaceEditorTitle: document.getElementById('mapEditorSpaceTitle'),
             spaceEditorClose: document.getElementById('mapEditorSpaceClose'),
+            spaceNameInput: document.getElementById('mapEditorSpaceNameInput'),
+            visualShowLabel: document.getElementById('mapEditorVisualShowLabel'),
             connectionEditor: document.getElementById('mapEditorConnectionEditor'),
             connectionEditorHeader: document.getElementById('mapEditorConnectionHeader'),
             connectionEditorTitle: document.getElementById('mapEditorConnectionTitle'),
@@ -176,14 +200,22 @@ export default class MapEditorController {
             connectionRemove: document.getElementById('mapEditorConnectionRemove'),
             visualSize: document.getElementById('mapEditorVisualSize'),
             visualColor: document.getElementById('mapEditorVisualColor'),
+            visualColorAlpha: document.getElementById('mapEditorVisualColorAlpha'),
             visualTextColor: document.getElementById('mapEditorVisualTextColor'),
+            visualTextColorAlpha: document.getElementById('mapEditorVisualTextColorAlpha'),
             visualFont: document.getElementById('mapEditorVisualFont'),
+            visualFontSize: document.getElementById('mapEditorVisualFontSize'),
+            visualTextAlign: document.getElementById('mapEditorVisualTextAlign'),
+            visualVerticalAlign: document.getElementById('mapEditorVisualVerticalAlign'),
+            visualBorderWidth: document.getElementById('mapEditorVisualBorderWidth'),
+            visualBorderColor: document.getElementById('mapEditorVisualBorderColor'),
+            visualShape: document.getElementById('mapEditorVisualShape'),
             visualImageSearch: document.getElementById('mapEditorVisualImageSearch'),
             visualImageSelect: document.getElementById('mapEditorVisualImageSelect'),
             visualImageUse: document.getElementById('mapEditorVisualImageUse'),
             visualImageClear: document.getElementById('mapEditorVisualImageClear'),
             visualImageSelected: document.getElementById('mapEditorVisualImageSelected'),
-            visualApply: document.getElementById('mapEditorVisualApply'),
+            spaceApply: document.getElementById('mapEditorSpaceApply'),
             eventSelect: document.getElementById('mapEditorEventSelect'),
             eventAdd: document.getElementById('mapEditorEventAdd'),
             eventRemove: document.getElementById('mapEditorEventRemove'),
@@ -192,7 +224,6 @@ export default class MapEditorController {
             eventActionType: document.getElementById('mapEditorEventActionType'),
             actionPayloadForm: document.getElementById('mapEditorActionPayloadForm'),
             eventPriority: document.getElementById('mapEditorEventPriority'),
-            eventApply: document.getElementById('mapEditorEventApply'),
             spaceJsonView: document.getElementById('mapEditorSpaceJsonView'),
             canvas: document.getElementById('mapEditorCanvas')
         };
@@ -241,6 +272,9 @@ export default class MapEditorController {
         if (this.elements.addSpaceButton) {
             this.elements.addSpaceButton.addEventListener('click', () => this.addSpace());
         }
+        if (this.elements.duplicateSpaceButton) {
+            this.elements.duplicateSpaceButton.addEventListener('click', () => this.duplicateSelectedSpace());
+        }
         if (this.elements.deleteSpaceButton) {
             this.elements.deleteSpaceButton.addEventListener('click', () => this.deleteSelectedSpace());
         }
@@ -256,8 +290,35 @@ export default class MapEditorController {
         if (this.elements.backgroundClear) {
             this.elements.backgroundClear.addEventListener('click', () => this.clearBackground());
         }
+        [
+            this.elements.backgroundFit,
+            this.elements.backgroundScale,
+            this.elements.backgroundPositionX,
+            this.elements.backgroundPositionY
+        ].filter(Boolean).forEach((element) => {
+            element.addEventListener('change', () => this.applyBackgroundSettings());
+        });
+        this.elements.decorationApply?.addEventListener('click', () => this.applyDecorationControls());
+        this.elements.decorationBackward?.addEventListener('click', () => this.moveDecorationLayer(-1));
+        this.elements.decorationForward?.addEventListener('click', () => this.moveDecorationLayer(1));
+        this.elements.decorationRemove?.addEventListener('click', () => this.removeSelectedDecoration());
         if (this.elements.visualImageSearch) {
             this.elements.visualImageSearch.addEventListener('input', () => this.renderVisualAssetOptions());
+        }
+
+        const visualInputs = [
+            'visualSize', 'visualColor', 'visualTextColor', 'visualFont', 
+            'visualFontSize', 'visualTextAlign', 'visualVerticalAlign'
+        ];
+        visualInputs.forEach(id => {
+            if (this.elements[id]) {
+                // these listeners degraded performance; apply only using Visual Apply
+            }
+        });
+
+        const spaceSearch = document.getElementById('mapEditorSpaceSearch');
+        if (spaceSearch) {
+            spaceSearch.addEventListener('input', () => this.renderSpaceList());
         }
         if (this.elements.visualImageSelect) {
             this.elements.visualImageSelect.addEventListener('change', () => this.updateSelectedVisualImage());
@@ -288,8 +349,8 @@ export default class MapEditorController {
         if (this.elements.connectionRemove) {
             this.elements.connectionRemove.addEventListener('click', () => this.removeSelectedConnection());
         }
-        if (this.elements.visualApply) {
-            this.elements.visualApply.addEventListener('click', () => this.applyVisualEdits());
+        if (this.elements.spaceApply) {
+            this.elements.spaceApply.addEventListener('click', () => this.applySpaceEdits());
         }
         if (this.elements.eventAdd) {
             this.elements.eventAdd.addEventListener('click', () => this.addEvent());
@@ -297,9 +358,7 @@ export default class MapEditorController {
         if (this.elements.eventRemove) {
             this.elements.eventRemove.addEventListener('click', () => this.removeEvent());
         }
-        if (this.elements.eventApply) {
-            this.elements.eventApply.addEventListener('click', () => this.applyEventEdits());
-        }
+        /* REMOVED EVENT APPLY LISTENER */
         if (this.elements.eventSelect) {
             this.elements.eventSelect.addEventListener('change', () => this.loadSelectedEvent());
         }
@@ -307,14 +366,22 @@ export default class MapEditorController {
             this.elements.eventTriggerType.addEventListener('change', () => {
                 const triggerType = this.elements.eventTriggerType.value;
                 this.renderTriggerPayloadForm(triggerType, {});
+                this.applyEventEdits();
             });
         }
         if (this.elements.eventActionType) {
             this.elements.eventActionType.addEventListener('change', () => {
                 const actionType = this.elements.eventActionType.value;
                 this.renderActionPayloadForm(actionType, {});
+                this.applyEventEdits();
             });
         }
+        this.elements.eventPriority?.addEventListener('change', () => this.applyEventEdits());
+        [this.elements.triggerPayloadForm, this.elements.actionPayloadForm]
+            .filter(Boolean)
+            .forEach((container) => {
+                container.addEventListener('change', () => this.applyEventEdits());
+            });
         if (this.elements.canvas) {
             this.elements.canvas.addEventListener('click', () => this.clearSelection());
         }
@@ -342,9 +409,82 @@ export default class MapEditorController {
     }
 
     async handleNewMap() {
-        await this.loadDefaultTemplate();
-        this.resetMetadataTimestamps();
-        this.setStatus('New map loaded');
+        const confirmed = await ModalUtil.customConfirm(
+            'Creating a blank map will replace the current editor draft. Export the current map first if you want to keep it.',
+            'Discard Current Map?',
+            'Create Blank Map',
+            'Keep Editing'
+        );
+        if (!confirmed) return;
+
+        Object.values(this.sectionAutoSaveTimers).forEach((timerId) => clearTimeout(timerId));
+        this.sectionAutoSaveTimers = {};
+        this.selectedSpaceId = null;
+        this.selectedConnection = null;
+        this.selectedDecorationId = null;
+        this.currentEventIndex = null;
+        this.closeSpaceEditor();
+        this.closeConnectionEditor();
+        this.stateManager.clearHistory();
+        this.setState(this.createBlankMapState(), { pushHistory: false });
+        this.setStatus('Blank map created');
+    }
+
+    createBlankMapState() {
+        const now = new Date().toISOString();
+        return {
+            manifest: {
+                schema_version: 2,
+                id: 'untitled-map',
+                assetsRoot: 'assets/',
+                paths: {
+                    metadata: 'metadata.json',
+                    engine: 'engine.json',
+                    rules: 'rules.json',
+                    ui: 'ui.json',
+                    topology: 'topology.json',
+                    dependencies: 'dependencies.json'
+                }
+            },
+            metadata: {
+                name: 'Untitled Map',
+                author: '',
+                version: '1.0.0',
+                description: '',
+                tags: [],
+                created: now,
+                modified: now,
+                renderConfig: {}
+            },
+            engine: {
+                type: GameEngineFactory.isRegistered('turn-based')
+                    ? 'turn-based'
+                    : (GameEngineFactory.getRegisteredTypes()[0] || 'turn-based'),
+                config: {}
+            },
+            rules: {
+                turnOrder: 'sequential',
+                startingPositions: { mode: 'single', spaceIds: [] },
+                recommendedPlayers: {},
+                diceRolling: {
+                    enabled: true,
+                    diceCount: 1,
+                    diceSides: 6,
+                    rollAgainOn: []
+                },
+                winCondition: {}
+            },
+            ui: {
+                layout: 'standard-board',
+                components: [],
+                theme: {}
+            },
+            topology: { spaces: [] },
+            dependencies: { plugins: [] },
+            assets: [],
+            preview: null,
+            background: null
+        };
     }
 
     async handleBundleUpload(event) {
@@ -356,6 +496,7 @@ export default class MapEditorController {
             this.setState(state, { pushHistory: false });
             this.setStatus(`Loaded ${file.name}`);
             this.selectedSpaceId = state.topology?.spaces?.[0]?.id || null;
+            this.selectedDecorationId = null;
             this.renderAll();
         } catch (error) {
             console.error('[MapEditor] Failed to load bundle', error);
@@ -382,38 +523,9 @@ export default class MapEditorController {
     }
 
     async loadDefaultTemplate() {
-        try {
-            const manifest = await this.fetchJson('assets/maps/default-board/board.json');
-            const metadata = await this.fetchJson('assets/maps/default-board/metadata.json');
-            const engine = await this.fetchJson('assets/maps/default-board/engine.json');
-            const rules = await this.fetchJson('assets/maps/default-board/rules.json');
-            const ui = await this.fetchJson('assets/maps/default-board/ui.json');
-            const topology = await this.fetchJson('assets/maps/default-board/topology.json');
-            let dependencies = { plugins: [] };
-            try {
-                dependencies = await this.fetchJson('assets/maps/default-board/dependencies.json');
-            } catch (_) {}
-
-            const preview = await this.fetchDataUrl('assets/maps/default-board/preview.png');
-
-            const state = {
-                manifest,
-                metadata,
-                engine,
-                rules,
-                ui,
-                topology,
-                dependencies,
-                assets: [],
-                preview: preview ? { name: 'preview.png', path: 'preview.png', dataUrl: preview } : null,
-                background: null
-            };
-
-            this.setState(state, { pushHistory: false });
-            this.selectedSpaceId = topology?.spaces?.[0]?.id || null;
-        } catch (error) {
-            console.error('[MapEditor] Failed to load default template', error);
-        }
+        const state = this.createBlankMapState();
+        this.setState(state, { pushHistory: false });
+        this.selectedSpaceId = null;
     }
 
     buildStateFromBundle(bundle) {
@@ -515,6 +627,8 @@ export default class MapEditorController {
     selectSpace(spaceId) {
         this.selectedSpaceId = spaceId;
         this.selectedConnection = null;
+        this.selectedDecorationId = null;
+        this.renderDecorationControls();
         this.renderSpaceList();
         this.renderSpaceJsonView();
         this.renderCanvas();
@@ -526,6 +640,8 @@ export default class MapEditorController {
     selectConnection(fromId, toId) {
         this.selectedConnection = { fromId: String(fromId), toId: String(toId) };
         this.selectedSpaceId = null;
+        this.selectedDecorationId = null;
+        this.renderDecorationControls();
         this.renderSpaceList();
         this.renderSpaceJsonView();
         this.renderCanvas();
@@ -565,7 +681,9 @@ export default class MapEditorController {
             visual: {
                 size: 50,
                 color: '#ccccff',
-                textColor: '#000000'
+                colorAlpha: 1,
+                textColor: '#000000',
+                textColorAlpha: 1
             },
             connections: [],
             triggers: []
@@ -576,6 +694,36 @@ export default class MapEditorController {
         });
         this.selectedSpaceId = newId;
         this.renderAll();
+    }
+
+    duplicateSelectedSpace() {
+        if (!this.selectedSpaceId) return;
+        const state = this.stateManager.state;
+        if (!state?.topology?.spaces) return;
+
+        const sourceSpace = state.topology.spaces.find(s => String(s.id) === String(this.selectedSpaceId));
+        if (!sourceSpace) return;
+
+        // Generate a new unique ID
+        const maxId = state.topology.spaces.reduce((max, space) => {
+            const id = parseInt(space.id, 10);
+            return isNaN(id) ? max : Math.max(max, id);
+        }, 0);
+        const newSpaceId = String(maxId + 1);
+
+        // Deep copy the space, but omit connections
+        const newSpace = JSON.parse(JSON.stringify(sourceSpace));
+        newSpace.id = newSpaceId;
+        newSpace.name = `${sourceSpace.name} (Copy)`;
+        newSpace.position.x += 40; // Offset slightly
+        newSpace.position.y += 40;
+        newSpace.connections = []; // Omit connections
+
+        const spaces = [...state.topology.spaces, newSpace];
+
+        this.updateStateSection('topology', { ...state.topology, spaces });
+        this.selectSpace(newSpaceId);
+        this.setStatus(`Space duplicated as ${newSpace.name}`);
     }
 
     deleteSelectedSpace() {
@@ -740,6 +888,10 @@ export default class MapEditorController {
         };
         if (background?.path) {
             renderConfig.backgroundImage = background.path;
+            renderConfig.backgroundFit = renderConfig.backgroundFit || 'contain';
+            renderConfig.backgroundScale = renderConfig.backgroundScale || 100;
+            renderConfig.backgroundPositionX = renderConfig.backgroundPositionX ?? 50;
+            renderConfig.backgroundPositionY = renderConfig.backgroundPositionY ?? 50;
         } else {
             delete renderConfig.backgroundImage;
         }
@@ -759,6 +911,38 @@ export default class MapEditorController {
         this.renderAll();
     }
 
+    applyBackgroundSettings() {
+        const state = this.stateManager.state;
+        if (!state) return;
+        const clamp = (value, min, max, fallback) => {
+            const number = Number(value);
+            return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
+        };
+        const renderConfig = {
+            ...(state.metadata?.renderConfig || {}),
+            backgroundFit: this.elements.backgroundFit?.value || 'contain',
+            backgroundScale: clamp(this.elements.backgroundScale?.value, 10, 400, 100),
+            backgroundPositionX: clamp(this.elements.backgroundPositionX?.value, 0, 100, 50),
+            backgroundPositionY: clamp(this.elements.backgroundPositionY?.value, 0, 100, 50)
+        };
+        this.updateRenderConfig(renderConfig);
+        this.setStatus('Background layout updated');
+    }
+
+    updateRenderConfig(renderConfig, { pushHistory = true } = {}) {
+        const state = this.stateManager.state;
+        if (!state) return;
+        this.stateManager.setState({
+            ...state,
+            metadata: {
+                ...(state.metadata || {}),
+                renderConfig
+            }
+        }, { pushHistory });
+        this.updateMetadataTimestamps();
+        this.renderAll();
+    }
+
     applyAssetToSelectedSpace(assetPath) {
         const state = this.stateManager.state;
         if (!state?.topology?.spaces || !this.selectedSpaceId) return;
@@ -773,6 +957,124 @@ export default class MapEditorController {
             };
         });
         this.updateStateSection('topology', { ...state.topology, spaces: updatedSpaces });
+    }
+
+    async insertAssetOnBoard(asset) {
+        if (!asset?.path) return;
+        const center = this.renderer?.getViewportCenterBoardCoordinates?.() || { x: 400, y: 300 };
+        let width = 200;
+        let height = 200;
+        if (asset.dataUrl) {
+            try {
+                const dimensions = await new Promise((resolve) => {
+                    const image = new Image();
+                    image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+                    image.onerror = () => resolve(null);
+                    image.src = asset.dataUrl;
+                });
+                if (dimensions?.width && dimensions?.height) {
+                    const scale = Math.min(1, 240 / Math.max(dimensions.width, dimensions.height));
+                    width = Math.max(40, Math.round(dimensions.width * scale));
+                    height = Math.max(40, Math.round(dimensions.height * scale));
+                }
+            } catch (_) {}
+        }
+        const decoration = {
+            id: `image-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            name: asset.name || 'Board image',
+            image: asset.path,
+            x: Math.round(center.x),
+            y: Math.round(center.y),
+            width,
+            height,
+            rotation: 0,
+            opacity: 1,
+            fit: 'contain'
+        };
+        const state = this.stateManager.state;
+        const renderConfig = state?.metadata?.renderConfig || {};
+        this.selectedDecorationId = decoration.id;
+        this.selectedSpaceId = null;
+        this.updateRenderConfig({
+            ...renderConfig,
+            decorations: [...(renderConfig.decorations || []), decoration]
+        });
+        this.setStatus(`Placed ${asset.name || 'image'} on board`);
+    }
+
+    getDecorations() {
+        return this.stateManager.state?.metadata?.renderConfig?.decorations || [];
+    }
+
+    getSelectedDecoration() {
+        return this.getDecorations().find(
+            (decoration) => String(decoration.id) === String(this.selectedDecorationId)
+        ) || null;
+    }
+
+    selectDecoration(id, { renderCanvas = true } = {}) {
+        this.selectedDecorationId = id;
+        this.selectedSpaceId = null;
+        this.selectedConnection = null;
+        const details = this.elements.decorationControls?.closest('details');
+        if (details) details.open = true;
+        this.renderDecorationControls();
+        if (renderCanvas) this.renderCanvas();
+    }
+
+    updateDecoration(id, updates) {
+        const state = this.stateManager.state;
+        if (!state) return;
+        const renderConfig = state.metadata?.renderConfig || {};
+        const decorations = (renderConfig.decorations || []).map((decoration) => (
+            String(decoration.id) === String(id) ? { ...decoration, ...updates } : decoration
+        ));
+        this.updateRenderConfig({ ...renderConfig, decorations });
+    }
+
+    applyDecorationControls() {
+        const decoration = this.getSelectedDecoration();
+        if (!decoration) return;
+        const number = (element, fallback) => {
+            const value = Number(element?.value);
+            return Number.isFinite(value) ? value : fallback;
+        };
+        this.updateDecoration(decoration.id, {
+            x: number(this.elements.decorationX, decoration.x),
+            y: number(this.elements.decorationY, decoration.y),
+            width: Math.max(10, number(this.elements.decorationWidth, decoration.width)),
+            height: Math.max(10, number(this.elements.decorationHeight, decoration.height)),
+            rotation: number(this.elements.decorationRotation, decoration.rotation || 0),
+            opacity: Math.max(0, Math.min(1, number(this.elements.decorationOpacity, 100) / 100))
+        });
+        this.setStatus('Board image updated');
+    }
+
+    moveDecorationLayer(direction) {
+        const decoration = this.getSelectedDecoration();
+        if (!decoration) return;
+        const state = this.stateManager.state;
+        const renderConfig = state.metadata?.renderConfig || {};
+        const decorations = [...(renderConfig.decorations || [])];
+        const index = decorations.findIndex((entry) => String(entry.id) === String(decoration.id));
+        const nextIndex = Math.max(0, Math.min(decorations.length - 1, index + direction));
+        if (index < 0 || index === nextIndex) return;
+        const [moved] = decorations.splice(index, 1);
+        decorations.splice(nextIndex, 0, moved);
+        this.updateRenderConfig({ ...renderConfig, decorations });
+    }
+
+    removeSelectedDecoration() {
+        const decoration = this.getSelectedDecoration();
+        if (!decoration) return;
+        const state = this.stateManager.state;
+        const renderConfig = state.metadata?.renderConfig || {};
+        const decorations = (renderConfig.decorations || []).filter(
+            (entry) => String(entry.id) !== String(decoration.id)
+        );
+        this.selectedDecorationId = null;
+        this.updateRenderConfig({ ...renderConfig, decorations });
+        this.setStatus('Board image removed');
     }
 
     setPreviewFromAsset(asset) {
@@ -800,8 +1102,31 @@ export default class MapEditorController {
             }
             return space;
         });
-        this.updateStateSection('assets', assets);
-        this.updateStateSection('topology', { ...state.topology, spaces: cleanedSpaces });
+        const renderConfig = state.metadata?.renderConfig || {};
+        const removedDecorationIds = new Set(
+            (renderConfig.decorations || [])
+                .filter((decoration) => decoration.image === assetPath)
+                .map((decoration) => String(decoration.id))
+        );
+        if (removedDecorationIds.has(String(this.selectedDecorationId))) {
+            this.selectedDecorationId = null;
+        }
+        this.stateManager.setState({
+            ...state,
+            assets,
+            topology: { ...state.topology, spaces: cleanedSpaces },
+            metadata: {
+                ...(state.metadata || {}),
+                renderConfig: {
+                    ...renderConfig,
+                    decorations: (renderConfig.decorations || []).filter(
+                        (decoration) => decoration.image !== assetPath
+                    )
+                }
+            }
+        }, { pushHistory: true });
+        this.updateMetadataTimestamps();
+        this.renderAll();
     }
 
     buildAssetMap() {
@@ -987,11 +1312,13 @@ export default class MapEditorController {
     clearSelection() {
         this.selectedSpaceId = null;
         this.selectedConnection = null;
+        this.selectedDecorationId = null;
         this.currentEventIndex = null;
         this.closeSpaceEditor();
         this.closeConnectionEditor();
         this.renderSpaceList();
         this.renderSpaceJsonView();
+        this.renderDecorationControls();
         this.renderCanvas();
         this.updateUndoRedoButtons();
     }
@@ -1156,17 +1483,58 @@ export default class MapEditorController {
         if (this.elements.spaceEditorTitle) {
             this.elements.spaceEditorTitle.textContent = `${space.name || 'Space'} (${space.id})`;
         }
+        if (this.elements.spaceNameInput) {
+            this.elements.spaceNameInput.value = space.name || '';
+        }
+        if (this.elements.visualShowLabel) {
+            this.elements.visualShowLabel.checked = space.visual?.showLabel !== false;
+        }
         if (this.elements.visualSize) {
             this.elements.visualSize.value = space.visual?.size ?? '';
         }
         if (this.elements.visualColor) {
             this.elements.visualColor.value = this.normalizeColor(space.visual?.color, '#ffffff');
         }
+        if (this.elements.visualColorAlpha) {
+            this.elements.visualColorAlpha.value = this.alphaToPercent(space.visual?.colorAlpha);
+        }
         if (this.elements.visualTextColor) {
             this.elements.visualTextColor.value = this.normalizeColor(space.visual?.textColor, '#000000');
         }
+        if (this.elements.visualTextColorAlpha) {
+            this.elements.visualTextColorAlpha.value = this.alphaToPercent(space.visual?.textColorAlpha);
+        }
+        let fontFamily = space.visual?.font ?? '';
+        let fontSize = space.visual?.fontSize ?? '';
+
+        if (fontFamily && fontFamily.includes('px ')) {
+            const parts = fontFamily.split('px ');
+            if (!fontSize) {
+                fontSize = parseInt(parts[0].trim(), 10);
+            }
+            fontFamily = parts[1].trim();
+        }
+
         if (this.elements.visualFont) {
-            this.elements.visualFont.value = space.visual?.font ?? '';
+            this.elements.visualFont.value = fontFamily;
+        }
+        if (this.elements.visualFontSize) {
+            this.elements.visualFontSize.value = fontSize;
+        }
+        if (this.elements.visualTextAlign) {
+            this.elements.visualTextAlign.value = space.visual?.textAlign ?? '';
+        }
+        if (this.elements.visualVerticalAlign) {
+            this.elements.visualVerticalAlign.value = space.visual?.verticalAlign ?? '';
+        }
+        if (this.elements.visualBorderWidth) {
+            this.elements.visualBorderWidth.value = space.visual?.borderWidth ?? '';
+        }
+        if (this.elements.visualBorderColor) {
+            this.elements.visualBorderColor.value = this.normalizeColor(space.visual?.borderColor, '#000000');
+        }
+        if (this.elements.visualShape) {
+            this.elements.visualShape.value = space.visual?.shape ?? '';
         }
         this.selectedVisualImagePath = space.visual?.image ?? null;
         if (this.elements.visualImageSearch) {
@@ -1207,22 +1575,74 @@ export default class MapEditorController {
         return state.topology.spaces.find((space) => String(space.id) === String(this.selectedSpaceId)) || null;
     }
 
-    applyVisualEdits() {
+    applySpaceEdits() {
         const space = this.getSelectedSpace();
         if (!space) return;
-        const updated = {
+
+        // Visual / General Edits
+        const fontSize = this.elements.visualFontSize?.value ? Number(this.elements.visualFontSize.value) : null;
+        let updatedSpace = {
             ...space,
+            name: this.elements.spaceNameInput ? this.elements.spaceNameInput.value : space.name,
             visual: {
                 ...space.visual,
-                size: Number(this.elements.visualSize?.value) || space.visual?.size || 50,
-                color: this.elements.visualColor?.value || space.visual?.color || '#ffffff',
-                textColor: this.elements.visualTextColor?.value || space.visual?.textColor || '#000000',
-                font: this.elements.visualFont?.value || space.visual?.font || '12px Arial',
+                size: this.elements.visualSize?.value ? Number(this.elements.visualSize.value) : (space.visual?.size || 50),
+                color: this.elements.visualColor?.value || '#ffffff',
+                colorAlpha: this.percentToAlpha(this.elements.visualColorAlpha?.value),
+                textColor: this.elements.visualTextColor?.value || '#000000',
+                textColorAlpha: this.percentToAlpha(this.elements.visualTextColorAlpha?.value),
+                font: this.elements.visualFont ? this.elements.visualFont.value : (space.visual?.font || ''),
+                fontSize: fontSize,
+                textAlign: this.elements.visualTextAlign?.value || null,
+                verticalAlign: this.elements.visualVerticalAlign?.value || null,
+                borderWidth: (this.elements.visualBorderWidth && this.elements.visualBorderWidth.value !== '') ? Number(this.elements.visualBorderWidth.value) : null,
+                borderColor: this.elements.visualBorderColor?.value || null,
+                shape: this.elements.visualShape?.value || null,
+                showLabel: this.elements.visualShowLabel ? this.elements.visualShowLabel.checked : true,
                 image: this.selectedVisualImagePath || null
             }
         };
-        this.replaceSpace(updated);
-        this.setStatus('Visual updated');
+
+        // Event Edits (apply current loaded event)
+        const events = updatedSpace.triggers || [];
+        if (events.length > 0 && this.currentEventIndex !== null && this.currentEventIndex < events.length) {
+            const index = this.currentEventIndex;
+            const triggerType = this.elements.eventTriggerType?.value || events[index]?.when?.type;
+            const actionType = this.elements.eventActionType?.value || events[index]?.action?.type;
+            const triggerSchema = this.getTriggerSchema(triggerType);
+            const actionSchema = this.getActionSchema(actionType);
+
+            const triggerPayload = this.collectSchemaValue(triggerSchema, this.elements.triggerPayloadForm);
+            if (triggerPayload === null) return;
+            let actionPayload = null;
+            if (this.schemaUsesEffectWidget(actionSchema)) {
+                actionPayload = this.collectEffectPayload();
+            } else {
+                actionPayload = this.collectSchemaValue(actionSchema, this.elements.actionPayloadForm);
+            }
+            if (actionPayload === null) return;
+
+            const updatedEvent = {
+                ...events[index],
+                when: {
+                    type: triggerType,
+                    payload: Object.keys(triggerPayload || {}).length ? triggerPayload : undefined
+                },
+                action: {
+                    type: actionType,
+                    payload: Object.keys(actionPayload || {}).length ? actionPayload : undefined
+                },
+                priority: this.elements.eventPriority?.value || events[index]?.priority || 'MID'
+            };
+
+            const updatedEvents = [...events];
+            updatedEvents[index] = updatedEvent;
+            updatedSpace.triggers = updatedEvents;
+        }
+
+        this.replaceSpace(updatedSpace);
+        this.populateEventSelect(); // Refresh event select text
+        this.setStatus('Space properties applied');
     }
 
     populateEventSelect() {
@@ -1391,6 +1811,7 @@ export default class MapEditorController {
         this.renderSpaceList();
         this.renderSpaceJsonView();
         this.renderAssets();
+        this.renderDecorationControls();
         this.renderCanvas();
         this.updateUndoRedoButtons();
     }
@@ -1419,14 +1840,30 @@ export default class MapEditorController {
         const state = this.stateManager.state;
         if (!state || !this.elements.spaceList) return;
         this.elements.spaceList.innerHTML = '';
+        
+        const spaceSearchInput = document.getElementById('mapEditorSpaceSearch');
+        const filterText = spaceSearchInput ? spaceSearchInput.value.toLowerCase() : '';
+        
         (state.topology?.spaces || []).forEach((space) => {
+            const searchStr = `[${space.id}] ${space.name || 'Space'}`;
+            if (filterText && !searchStr.toLowerCase().includes(filterText)) {
+                return;
+            }
+            let truncatedName = space.name || 'Space';
+            if (truncatedName.length > 20) {
+                truncatedName = truncatedName.substring(0, 17) + '...';
+            }
+            const displayStr = `[${space.id}] ${truncatedName}`;
+            
             const item = document.createElement('li');
             item.className = 'map-editor-list-item';
             if (String(space.id) === String(this.selectedSpaceId)) {
                 item.classList.add('selected');
             }
-            item.textContent = `${space.name || 'Space'} (${space.id})`;
+            item.textContent = displayStr;
+            item.title = space.name; // Full name on hover
             item.addEventListener('click', () => this.selectSpace(space.id));
+            item.addEventListener('dblclick', () => this.openSpaceEditor(space.id));
             this.elements.spaceList.appendChild(item);
         });
     }
@@ -1446,47 +1883,80 @@ export default class MapEditorController {
         const state = this.stateManager.state;
         if (!state || !this.elements.assetsList) return;
         this.elements.assetsList.innerHTML = '';
+        const assetsByPath = this.buildAssetMap();
         (state.assets || []).filter((asset) => !this.isBackgroundAsset(asset)).forEach((asset) => {
-            const row = document.createElement('div');
-            row.className = 'map-editor-list-item';
-            const name = document.createElement('span');
-            name.textContent = asset.name;
-            const buttonRow = document.createElement('div');
-            buttonRow.className = 'map-editor-row';
-            const useButton = document.createElement('button');
-            useButton.className = 'button button-secondary';
-            useButton.textContent = 'Use on Space';
-            useButton.disabled = !this.selectedSpaceId;
-            useButton.addEventListener('click', (event) => {
+            const card = document.createElement('div');
+            card.className = 'map-editor-asset-card';
+            card.title = asset.name;
+
+            const thumb = document.createElement('img');
+            thumb.src = assetsByPath[asset.path] || '';
+            thumb.className = 'map-editor-asset-card-thumb';
+            thumb.alt = asset.name;
+            thumb.draggable = false;
+
+            const cardName = document.createElement('div');
+            cardName.className = 'map-editor-asset-card-name';
+            cardName.textContent = asset.name;
+
+            // Action buttons shown on hover
+            const actions = document.createElement('div');
+            actions.className = 'map-editor-asset-card-actions';
+
+            const applyButton = document.createElement('button');
+            applyButton.className = 'button button-secondary map-editor-asset-card-btn';
+            applyButton.textContent = 'Apply to Space';
+            applyButton.title = 'Use this image on the selected playable space';
+            applyButton.disabled = !this.selectedSpaceId;
+            applyButton.addEventListener('click', (event) => {
                 event.stopPropagation();
                 this.applyAssetToSelectedSpace(asset.path);
             });
-            const previewButton = document.createElement('button');
-            previewButton.className = 'button button-secondary';
-            previewButton.textContent = 'Set Preview';
-            previewButton.addEventListener('click', (event) => {
+
+            const insertButton = document.createElement('button');
+            insertButton.className = 'button button-secondary map-editor-asset-card-btn';
+            insertButton.textContent = 'Place on Board';
+            insertButton.title = 'Insert this image as a visual board decoration';
+            insertButton.addEventListener('click', (event) => {
                 event.stopPropagation();
-                this.setPreviewFromAsset(asset);
+                this.insertAssetOnBoard(asset);
             });
+
             const removeButton = document.createElement('button');
-            removeButton.className = 'button button-secondary';
-            removeButton.textContent = 'Remove';
+            removeButton.className = 'button button-secondary map-editor-asset-card-btn map-editor-asset-card-btn-remove';
+            removeButton.textContent = '✕';
+            removeButton.title = 'Remove asset';
             removeButton.addEventListener('click', (event) => {
                 event.stopPropagation();
                 this.removeAsset(asset.path);
             });
-            buttonRow.appendChild(useButton);
-            buttonRow.appendChild(previewButton);
-            buttonRow.appendChild(removeButton);
-            row.appendChild(name);
-            row.appendChild(buttonRow);
-            this.elements.assetsList.appendChild(row);
+
+            actions.appendChild(applyButton);
+            actions.appendChild(insertButton);
+            actions.appendChild(removeButton);
+            card.appendChild(thumb);
+            card.appendChild(cardName);
+            card.appendChild(actions);
+            this.elements.assetsList.appendChild(card);
         });
         this.renderVisualAssetOptions();
         if (this.elements.previewName) {
-            this.elements.previewName.textContent = state.preview?.name
-                ? `Preview: ${state.preview.name}`
-                : 'Preview: none';
+            this.elements.previewName.innerHTML = '';
+            if (state.preview?.dataUrl) {
+                const img = document.createElement('img');
+                img.src = state.preview.dataUrl;
+                img.className = 'map-editor-asset-card-thumb';
+                img.style.width = 'auto';
+                img.style.height = '40px';
+                img.style.marginRight = '8px';
+                this.elements.previewName.appendChild(img);
+            }
+            const text = document.createElement('span');
+            text.textContent = state.preview?.name ? `Preview: ${state.preview.name}` : 'Preview: none';
+            this.elements.previewName.appendChild(text);
+            this.elements.previewName.style.display = 'flex';
+            this.elements.previewName.style.alignItems = 'center';
+            this.elements.previewName.style.marginTop = '4px';
         }
         this.renderBackgroundInfo();
     }
@@ -1529,15 +1999,71 @@ export default class MapEditorController {
 
     renderBackgroundInfo() {
         if (!this.elements.backgroundName) return;
+        this.elements.backgroundName.innerHTML = '';
         const state = this.stateManager.state;
-        if (!state?.background) {
-            const configured = state?.metadata?.renderConfig?.backgroundImage;
-            this.elements.backgroundName.textContent = configured
-                ? `Background: ${configured}`
-                : 'Background: none';
-            return;
+        const renderConfig = state?.metadata?.renderConfig || {};
+        const hasBackground = Boolean(state?.background || renderConfig.backgroundImage);
+        if (this.elements.backgroundFit) {
+            this.elements.backgroundFit.value = renderConfig.backgroundFit || 'contain';
+            this.elements.backgroundFit.disabled = !hasBackground;
         }
-        this.elements.backgroundName.textContent = `Background: ${state.background.name}`;
+        if (this.elements.backgroundScale) {
+            this.elements.backgroundScale.value = renderConfig.backgroundScale ?? 100;
+            this.elements.backgroundScale.disabled = !hasBackground;
+        }
+        if (this.elements.backgroundPositionX) {
+            this.elements.backgroundPositionX.value = renderConfig.backgroundPositionX ?? 50;
+            this.elements.backgroundPositionX.disabled = !hasBackground;
+        }
+        if (this.elements.backgroundPositionY) {
+            this.elements.backgroundPositionY.value = renderConfig.backgroundPositionY ?? 50;
+            this.elements.backgroundPositionY.disabled = !hasBackground;
+        }
+        
+        let bgName = 'Background: none';
+        let bgSrc = null;
+
+        if (state?.background) {
+            bgName = `Background: ${state.background.name}`;
+            bgSrc = state.background.dataUrl;
+        } else if (state?.metadata?.renderConfig?.backgroundImage) {
+            bgName = `Background: ${state.metadata.renderConfig.backgroundImage}`;
+        }
+        
+        if (bgSrc) {
+            const img = document.createElement('img');
+            img.src = bgSrc;
+            img.className = 'map-editor-asset-card-thumb';
+            img.style.width = 'auto';
+            img.style.height = '40px';
+            img.style.marginRight = '8px';
+            this.elements.backgroundName.appendChild(img);
+        }
+        const text = document.createElement('span');
+        text.textContent = bgName;
+        this.elements.backgroundName.appendChild(text);
+        this.elements.backgroundName.style.display = 'flex';
+        this.elements.backgroundName.style.alignItems = 'center';
+        this.elements.backgroundName.style.marginTop = '4px';
+    }
+
+    renderDecorationControls() {
+        const container = this.elements.decorationControls;
+        if (!container) return;
+        const decoration = this.getSelectedDecoration();
+        container.hidden = !decoration;
+        if (!decoration) return;
+        const values = {
+            decorationX: decoration.x,
+            decorationY: decoration.y,
+            decorationWidth: decoration.width,
+            decorationHeight: decoration.height,
+            decorationRotation: decoration.rotation || 0,
+            decorationOpacity: Math.round((decoration.opacity ?? 1) * 100)
+        };
+        Object.entries(values).forEach(([key, value]) => {
+            if (this.elements[key]) this.elements[key].value = value;
+        });
     }
 
     isBackgroundAsset(asset) {
@@ -1607,6 +2133,13 @@ export default class MapEditorController {
         const wrapper = document.createElement('div');
         wrapper.dataset.fieldKey = fieldName;
 
+        if (schema.ui?.hidden) {
+            wrapper.hidden = true;
+            const input = this.createSchemaInput(schema, fieldName, fieldValue);
+            if (input) wrapper.appendChild(input);
+            return wrapper;
+        }
+
         if (schema.type === 'object') {
             wrapper.className = 'map-editor-form-group';
             const collapsible = schema.ui?.collapsible !== false;
@@ -1673,22 +2206,36 @@ export default class MapEditorController {
             addButton.textContent = 'Add Item';
             addButton.addEventListener('click', () => {
                 list.appendChild(this.createArrayItem(itemSchema, this.defaultForSchema(itemSchema)));
+                list.dispatchEvent(new Event('change', { bubbles: true }));
             });
             wrapper.appendChild(list);
             wrapper.appendChild(addButton);
             }
         } else {
             wrapper.className = 'map-editor-field';
-            const label = document.createElement('label');
-            label.textContent = this.formatLabel(fieldName);
-            wrapper.appendChild(label);
-            const input = this.createSchemaInput(schema, fieldName, fieldValue);
-            if (input) {
-                wrapper.appendChild(input);
+            if (schema.type === 'boolean') {
+                wrapper.style.flexDirection = 'row';
+                wrapper.style.alignItems = 'center';
+                wrapper.style.justifyContent = 'flex-start';
+                wrapper.style.gap = '8px';
+                const input = this.createSchemaInput(schema, fieldName, fieldValue);
+                if (input) wrapper.appendChild(input);
+                const label = document.createElement('label');
+                label.textContent = this.formatLabel(fieldName);
+                label.style.margin = '0';
+                wrapper.appendChild(label);
+            } else {
+                const label = document.createElement('label');
+                label.textContent = this.formatLabel(fieldName);
+                wrapper.appendChild(label);
+                const input = this.createSchemaInput(schema, fieldName, fieldValue);
+                if (input) {
+                    wrapper.appendChild(input);
+                }
             }
         }
 
-        if (schema.description) {
+        if (schema.description && !schema.ui?.placeholders) {
             const note = document.createElement('div');
             note.className = 'map-editor-form-note';
             note.textContent = schema.description;
@@ -1760,6 +2307,8 @@ export default class MapEditorController {
         if (schema.type === 'boolean') {
             input.type = 'checkbox';
             input.checked = Boolean(resolvedValue);
+            input.style.width = 'auto';
+            input.style.margin = '0';
             return input;
         }
 
@@ -1799,22 +2348,17 @@ export default class MapEditorController {
         const select = document.createElement('select');
         select.className = 'input map-editor-placeholder-select';
 
-        const description = document.createElement('div');
-        description.className = 'map-editor-form-note';
-
-        placeholders.forEach((entry, index) => {
+        placeholders.forEach((entry) => {
             const option = document.createElement('option');
             option.value = entry.type;
             option.textContent = entry.label;
-            if (index === 0) {
-                description.textContent = entry.description || 'Insert a placeholder tag into this field.';
-            }
             select.appendChild(option);
         });
 
-        select.addEventListener('change', () => {
-            const entry = placeholders.find((item) => item.type === select.value);
-            description.textContent = entry?.description || 'Insert a placeholder tag into this field.';
+        // This control chooses a tool; it is not part of the event payload.
+        // Prevent the payload form's autosave listener from rebuilding/resetting it.
+        select.addEventListener('change', (event) => {
+            event.stopPropagation();
         });
 
         const insertButton = document.createElement('button');
@@ -1830,11 +2374,17 @@ export default class MapEditorController {
         toolbar.appendChild(select);
         toolbar.appendChild(insertButton);
         wrapper.appendChild(toolbar);
-        wrapper.appendChild(description);
         return wrapper;
     }
 
     getPlaceholderOptions() {
+        // Plugins can register placeholders after the editor initializes, so use
+        // the live registry instead of relying on the initial metadata snapshot.
+        const liveRegistry = this.pluginManager?.registryManager?.getRegistry?.('placeholderRegistry');
+        if (liveRegistry) {
+            this.placeholderRegistry = liveRegistry;
+            this.placeholderMetadata = liveRegistry.getAllMetadata?.() || {};
+        }
         const metadata = this.placeholderMetadata || {};
         return Object.values(metadata)
             .map((entry) => ({
@@ -1889,7 +2439,11 @@ export default class MapEditorController {
         removeButton.type = 'button';
         removeButton.className = 'button button-secondary';
         removeButton.textContent = 'Remove';
-        removeButton.addEventListener('click', () => item.remove());
+        removeButton.addEventListener('click', () => {
+            const list = item.parentElement;
+            item.remove();
+            list?.dispatchEvent(new Event('change', { bubbles: true }));
+        });
         item.appendChild(removeButton);
         return item;
     }
@@ -1932,7 +2486,11 @@ export default class MapEditorController {
         removeButton.type = 'button';
         removeButton.className = 'button button-secondary';
         removeButton.textContent = 'Remove';
-        removeButton.addEventListener('click', () => row.remove());
+        removeButton.addEventListener('click', () => {
+            const list = row.parentElement;
+            row.remove();
+            list?.dispatchEvent(new Event('change', { bubbles: true }));
+        });
         row.appendChild(keyInput);
         row.appendChild(valueInput);
         row.appendChild(removeButton);
@@ -2086,6 +2644,17 @@ export default class MapEditorController {
         return fallback;
     }
 
+    alphaToPercent(value) {
+        const alpha = Number(value);
+        return Number.isFinite(alpha) ? Math.round(Math.max(0, Math.min(1, alpha)) * 100) : 100;
+    }
+
+    percentToAlpha(value) {
+        const percent = Number(value);
+        return Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) / 100 : 1;
+    }
+
+
     buildLabelMap(metadataByType) {
         const labels = {};
         Object.entries(metadataByType || {}).forEach(([type, metadata]) => {
@@ -2224,6 +2793,7 @@ export default class MapEditorController {
         const container = this.elements.actionPayloadForm;
         if (!container) return;
         container.innerHTML = '';
+        this.refreshEffectMetadata();
         if (!this.availableEffects.length) {
             const note = document.createElement('div');
             note.className = 'map-editor-form-note';
@@ -2233,7 +2803,10 @@ export default class MapEditorController {
         }
 
         const effectData = payload?.effect || {};
-        const effectType = effectData.type || this.availableEffects[0];
+        const requestedEffectType = effectData.type || this.availableEffects[0];
+        const effectType = this.availableEffects.includes(requestedEffectType)
+            ? requestedEffectType
+            : this.availableEffects[0];
         const effectLabels = this.buildLabelMap(this.effectMetadataByType);
 
         const typeField = document.createElement('div');
@@ -2257,14 +2830,41 @@ export default class MapEditorController {
         this.effectPayloadContainer = fieldsContainer;
         this.effectPayloadSchema = this.getEffectSchema(effectType);
 
-        const initialPayload = this.buildEffectPayloadFromArgs(effectData, this.effectPayloadSchema);
+        const initialPayload = {
+            ...this.buildDefaultEffectPayload(effectType, this.effectPayloadSchema),
+            ...this.buildEffectPayloadFromArgs(effectData, this.effectPayloadSchema)
+        };
         this.renderSchemaForm(fieldsContainer, this.effectPayloadSchema, initialPayload);
 
         select.addEventListener('change', () => {
             const nextType = select.value;
             this.effectPayloadSchema = this.getEffectSchema(nextType);
-            this.renderSchemaForm(fieldsContainer, this.effectPayloadSchema, {});
+            this.renderSchemaForm(
+                fieldsContainer,
+                this.effectPayloadSchema,
+                this.buildDefaultEffectPayload(nextType, this.effectPayloadSchema)
+            );
         });
+    }
+
+    refreshEffectMetadata() {
+        const effectFactory = this.factoryManager?.getFactory?.('EffectFactory');
+        if (!effectFactory) return;
+        this.effectMetadataByType = effectFactory.getAllMetadata?.() || {};
+        this.availableEffects = Object.keys(this.effectMetadataByType).sort();
+    }
+
+    buildDefaultEffectPayload(effectType, schema) {
+        const normalized = this.normalizeSchema(schema);
+        const payload = {};
+        Object.entries(normalized.properties || {}).forEach(([key, fieldSchema]) => {
+            payload[key] = this.defaultForSchema(fieldSchema);
+        });
+        if (normalized.properties?.id) {
+            this.effectIdSequence += 1;
+            payload.id = `${effectType}_${Date.now().toString(36)}_${this.effectIdSequence}`;
+        }
+        return payload;
     }
 
     collectEffectPayload() {
@@ -2318,6 +2918,9 @@ export default class MapEditorController {
             || null;
         this.renderer.render(state.topology, assetsByPath, this.selectedSpaceId, {
             backgroundUrl,
+            backgroundConfig: state.metadata?.renderConfig || {},
+            decorations: state.metadata?.renderConfig?.decorations || [],
+            selectedDecorationId: this.selectedDecorationId,
             gridEnabled: this.gridEnabled,
             gridSize: this.gridSize,
             snapEnabled: this.snapToGridEnabled,

@@ -53,9 +53,8 @@ import MapStorageManager from './systems/storage/MapStorageManager.js';
 import TurnBasedGameEngine from './game/engine_types/turn_based/TurnBasedEngine.js';
 import GameStateStorageManager from './systems/storage/GameStateStorageManager.js';
 import GameStateManagerModal from './ui/modals/managers/GameStateManagerModal.js';
+import { registerBuiltInPlaceholders } from './elements/placeholders/BuiltInPlaceholders.js';
 import MapEditorController from './editor/MapEditorController.js';
-
-import { randomNumber, randomWord, randomColor, randomSong } from './infrastructure/utils/PlaceholderFunctions';
 
 // Initialize personal settings
 function initializePersonalSettings(factoryManager, pluginManager, localStorageManager) {
@@ -109,16 +108,7 @@ function registerPages(pageRegistry) {
 
 // Register placeholders
 function registerPlaceholders(placeholderRegistry) {
-    const placeholders = {
-        RANDOM_NUMBER: randomNumber,
-        RANDOM_WORD: randomWord,
-        RANDOM_COLOR: randomColor,
-        RANDOM_SONG: randomSong,
-    };
-
-    Object.entries(placeholders).forEach(([key, value]) => {
-        placeholderRegistry.register(key, value);
-    });
+    registerBuiltInPlaceholders(placeholderRegistry);
 }
 
 // Initialize the EventBus and PluginManager

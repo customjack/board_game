@@ -1,0 +1,14 @@
+{
+  "type": "turn-based",
+  "config": {
+    "phaseStateMachine": {
+      "type": "default"
+    },
+    "turnManager": {
+      "type": "default"
+    },
+    "eventProcessor": {
+      "type": "default"
+    }
+  }
+}

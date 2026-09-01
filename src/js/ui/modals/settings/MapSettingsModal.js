@@ -245,7 +245,7 @@ export default class MapSettingsModal extends SettingsBaseModal {
                     deleted = MapStorageManager.unregisterPluginMap(this.map.id);
                 } else {
                     // Delete custom map
-                    deleted = MapStorageManager.deleteCustomMap(this.map.id);
+                    deleted = await MapStorageManager.deleteCustomMap(this.map.id);
                 }
                 
                 if (deleted) {

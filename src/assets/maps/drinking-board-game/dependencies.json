@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "id": "core",
+      "version": "^1.0.0",
+      "source": "builtin",
+      "description": "Core game functionality"
+    }
+  ]
+}

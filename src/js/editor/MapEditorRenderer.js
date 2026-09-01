@@ -1,5 +1,11 @@
 import BoardViewport from '../ui/BoardViewport.js';
 import BoardRenderConfig from '../rendering/BoardRenderConfig.js';
+import {
+    applyBoardSurfaceSize,
+    calculateBoardSurfaceSize,
+    createBoardBackground,
+    createBoardDecoration
+} from '../rendering/BoardVisualRenderer.js';
 
 export default class MapEditorRenderer {
     constructor({
@@ -13,7 +19,10 @@ export default class MapEditorRenderer {
         onToggleDrawConnectionMode,
         onCreateConnection,
         onSelectConnection,
-        onEditConnection
+        onEditConnection,
+        onSelectDecoration,
+        onMoveDecoration,
+        onResizeDecoration
     } = {}) {
         this.container = container;
         this.onSelectSpace = onSelectSpace;
@@ -26,10 +35,14 @@ export default class MapEditorRenderer {
         this.onCreateConnection = onCreateConnection;
         this.onSelectConnection = onSelectConnection;
         this.onEditConnection = onEditConnection;
+        this.onSelectDecoration = onSelectDecoration;
+        this.onMoveDecoration = onMoveDecoration;
+        this.onResizeDecoration = onResizeDecoration;
         this.dragState = null;
         this.viewport = null;
         this.boardSurface = null;
         this.gridLayer = null;
+        this.decorationLayer = null;
         this.connectionLayer = null;
         this.connectionPreview = null;
         this.lastSpaces = [];
@@ -63,9 +76,11 @@ export default class MapEditorRenderer {
         const spaces = this.lastSpaces;
         this.boardSurface.innerHTML = '';
         this.ensureGridLayer();
+        this.ensureDecorationLayer();
         this.ensureConnectionLayer();
-        this.updateSurfaceSize(spaces);
+        this.updateSurfaceSize(spaces, options.decorations || []);
         this.applyBackground(options);
+        this.renderDecorations(options.decorations || [], assetsByPath, options.selectedDecorationId);
         this.syncGridControl(options.gridEnabled);
         this.syncSnapControl(options.snapEnabled);
         this.syncConnectionControl(options.showHiddenConnections);
@@ -84,18 +99,66 @@ export default class MapEditorRenderer {
             element.style.height = `${size}px`;
             element.style.left = `${x - size / 2}px`;
             element.style.top = `${y - size / 2}px`;
-            element.style.backgroundColor = space.visual?.color || '#2a2a2a';
-            element.style.color = space.visual?.textColor || '#ffffff';
 
-            const imagePath = space.visual?.image;
-            const imageUrl = imagePath ? assetsByPath[imagePath] : null;
-            if (imageUrl) {
-                element.style.backgroundImage = `url(${imageUrl})`;
-                element.style.backgroundSize = 'cover';
-                element.style.backgroundPosition = 'center';
+            const visualDetails = {
+                size,
+                color: space.visual?.color || '#2a2a2a',
+                colorAlpha: space.visual?.colorAlpha ?? null,
+                textColor: space.visual?.textColor || '#ffffff',
+                textColorAlpha: space.visual?.textColorAlpha ?? null,
+                fontSize: space.visual?.fontSize || null,
+                font: space.visual?.font || '',
+                textAlign: space.visual?.textAlign || null,
+                verticalAlign: space.visual?.verticalAlign || null,
+                image: space.visual?.image || null,
+                shape: space.visual?.shape || null,
+                borderWidth: space.visual?.borderWidth ?? null,
+                borderColor: space.visual?.borderColor || null,
+                showLabel: space.visual?.showLabel !== false
+            };
+            const config = this.renderConfig || (window.BoardRenderConfig ? new window.BoardRenderConfig() : null);
+            let style = {};
+            if (config) {
+                style = config.getSpaceStyle(visualDetails);
+            } else {
+                style = {
+                    alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+                    fontSize: '11px', fontWeight: 'bold', fontFamily: '', color: visualDetails.textColor,
+                    borderRadius: '50%', clipPath: '', border: '1px solid #333', showLabel: visualDetails.showLabel
+                };
             }
 
-            element.textContent = space.name || space.id || 'Space';
+            element.style.display = 'flex';
+            element.style.alignItems = style.alignItems;
+            element.style.justifyContent = style.justifyContent;
+            element.style.textAlign = style.textAlign;
+            element.style.fontSize = style.fontSize;
+            element.style.fontWeight = style.fontWeight;
+            element.style.fontFamily = style.fontFamily || '';
+            element.style.color = style.color;
+            element.style.borderRadius = style.borderRadius || '0';
+            if (style.clipPath) element.style.clipPath = style.clipPath;
+            if (style.border) element.style.border = style.border;
+
+            const imagePath = visualDetails.image;
+            const imageUrl = imagePath ? assetsByPath[imagePath] : null;
+            if (imageUrl) {
+                element.style.backgroundColor = 'transparent';
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.className = 'map-editor-space-img';
+                img.draggable = false;
+                element.appendChild(img);
+            } else {
+                element.style.backgroundColor = style.backgroundColor;
+            }
+
+            if (style.showLabel) {
+                const label = document.createElement('span');
+                label.className = 'map-editor-space-label';
+                label.textContent = space.name || space.id || 'Space';
+                element.appendChild(label);
+            }
 
             element.addEventListener('click', (event) => {
                 event.stopPropagation();
@@ -263,7 +326,9 @@ export default class MapEditorRenderer {
         }
         if (!this.resizeHandlerAttached && typeof window !== 'undefined') {
             this.resizeHandlerAttached = true;
-            window.addEventListener('resize', () => this.updateSurfaceSize(this.lastSpaces));
+            window.addEventListener('resize', () => (
+                this.updateSurfaceSize(this.lastSpaces, this.lastOptions.decorations || [])
+            ));
         }
     }
 
@@ -289,36 +354,27 @@ export default class MapEditorRenderer {
         }
     }
 
-    updateSurfaceSize(spaces) {
+    ensureDecorationLayer() {
         if (!this.boardSurface) return;
-        const padding = 200;
-        let maxX = 0;
-        let maxY = 0;
-        spaces.forEach((space) => {
-            const size = space.visual?.size || 50;
-            const x = space.position?.x ?? 0;
-            const y = space.position?.y ?? 0;
-            maxX = Math.max(maxX, x + size + padding);
-            maxY = Math.max(maxY, y + size + padding);
-        });
-        const containerWidth = this.container?.clientWidth || 0;
-        const containerHeight = this.container?.clientHeight || 0;
-        const width = Math.max(800, maxX, containerWidth);
-        const height = Math.max(600, maxY, containerHeight);
-        const nextWidth = `${width}px`;
-        const nextHeight = `${height}px`;
-        if (this.boardSurface.style.width !== nextWidth) {
-            this.boardSurface.style.width = nextWidth;
+        if (!this.decorationLayer) {
+            this.decorationLayer = document.createElement('div');
+            this.decorationLayer.className = 'map-editor-decoration-layer';
         }
-        if (this.boardSurface.style.height !== nextHeight) {
-            this.boardSurface.style.height = nextHeight;
+        if (this.decorationLayer.parentElement !== this.boardSurface) {
+            this.boardSurface.appendChild(this.decorationLayer);
         }
+    }
+
+    updateSurfaceSize(spaces, decorations = []) {
+        if (!this.boardSurface) return;
+        const { width, height } = calculateBoardSurfaceSize(spaces, decorations);
+        applyBoardSurfaceSize(this.boardSurface, width, height);
         this.surfaceWidth = width;
         this.surfaceHeight = height;
         this.updateGridLayerSize();
     }
 
-    applyBackground({ backgroundUrl, gridEnabled, gridSize = 50 } = {}) {
+    applyBackground({ backgroundUrl, backgroundConfig = {}, gridEnabled, gridSize = 50 } = {}) {
         if (!this.boardSurface) return;
         if (this.gridLayer) {
             if (gridEnabled) {
@@ -344,21 +400,16 @@ export default class MapEditorRenderer {
             }
         }
 
-        const layers = [];
-        const sizes = [];
-        const positions = [];
-        const repeats = [];
         if (backgroundUrl) {
-            layers.push(`url(${backgroundUrl})`);
-            sizes.push('cover');
-            positions.push('center');
-            repeats.push('no-repeat');
+            const background = createBoardBackground(
+                backgroundUrl,
+                backgroundConfig,
+                'map-editor-background-image'
+            );
+            if (background) this.boardSurface.prepend(background);
         }
 
-        this.boardSurface.style.backgroundImage = layers.join(', ');
-        this.boardSurface.style.backgroundSize = sizes.join(', ');
-        this.boardSurface.style.backgroundPosition = positions.join(', ');
-        this.boardSurface.style.backgroundRepeat = repeats.join(', ');
+        this.boardSurface.style.backgroundImage = '';
         this.boardSurface.style.backgroundColor = 'transparent';
 
         if (gridEnabled !== this.lastGridEnabled) {
@@ -372,6 +423,118 @@ export default class MapEditorRenderer {
                 }
             });
         }
+    }
+
+    renderDecorations(decorations, assetsByPath, selectedId = null) {
+        if (!this.decorationLayer) return;
+        this.decorationLayer.innerHTML = '';
+        decorations.forEach((decoration) => {
+            const imageUrl = assetsByPath[decoration.image] || decoration.image;
+            const element = createBoardDecoration(
+                decoration,
+                imageUrl,
+                'map-editor-decoration'
+            );
+            if (!element) return;
+            element.style.pointerEvents = 'auto';
+            element.classList.toggle('selected', String(decoration.id) === String(selectedId));
+
+            const resizeHandle = document.createElement('button');
+            resizeHandle.type = 'button';
+            resizeHandle.className = 'map-editor-decoration-resize';
+            resizeHandle.title = 'Resize image';
+            resizeHandle.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                this.startDecorationResize(decoration, element, event);
+            });
+            element.appendChild(resizeHandle);
+
+            element.addEventListener('click', (event) => {
+                event.stopPropagation();
+                this.onSelectDecoration?.(decoration.id);
+            });
+            element.addEventListener('mousedown', (event) => {
+                if (event.target.closest('.map-editor-decoration-resize')) return;
+                event.preventDefault();
+                event.stopPropagation();
+                this.startDecorationMove(decoration, element, event);
+            });
+            this.decorationLayer.appendChild(element);
+        });
+    }
+
+    startDecorationMove(decoration, element, event) {
+        this.decorationLayer?.querySelectorAll('.map-editor-decoration.selected').forEach((entry) => {
+            entry.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        this.onSelectDecoration?.(decoration.id, { renderCanvas: false });
+        const scale = this.viewport?.scale || 1;
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const originX = Number(decoration.x) || 0;
+        const originY = Number(decoration.y) || 0;
+        let nextX = originX;
+        let nextY = originY;
+        const width = Number(decoration.width) || 200;
+        const height = Number(decoration.height) || 200;
+        const move = (moveEvent) => {
+            nextX = originX + (moveEvent.clientX - startX) / scale;
+            nextY = originY + (moveEvent.clientY - startY) / scale;
+            element.style.left = `${nextX - width / 2}px`;
+            element.style.top = `${nextY - height / 2}px`;
+        };
+        const up = () => {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+            this.onMoveDecoration?.(decoration.id, { x: Math.round(nextX), y: Math.round(nextY) });
+        };
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+    }
+
+    startDecorationResize(decoration, element, event) {
+        this.decorationLayer?.querySelectorAll('.map-editor-decoration.selected').forEach((entry) => {
+            entry.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        this.onSelectDecoration?.(decoration.id, { renderCanvas: false });
+        const scale = this.viewport?.scale || 1;
+        const startX = event.clientX;
+        const originWidth = Math.max(10, Number(decoration.width) || 200);
+        const originHeight = Math.max(10, Number(decoration.height) || 200);
+        const ratio = originHeight / originWidth;
+        let nextWidth = originWidth;
+        let nextHeight = originHeight;
+        const move = (moveEvent) => {
+            nextWidth = Math.max(10, originWidth + (moveEvent.clientX - startX) / scale);
+            nextHeight = Math.max(10, nextWidth * ratio);
+            element.style.width = `${nextWidth}px`;
+            element.style.height = `${nextHeight}px`;
+            element.style.left = `${(Number(decoration.x) || 0) - nextWidth / 2}px`;
+            element.style.top = `${(Number(decoration.y) || 0) - nextHeight / 2}px`;
+        };
+        const up = () => {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+            this.onResizeDecoration?.(decoration.id, {
+                width: Math.round(nextWidth),
+                height: Math.round(nextHeight)
+            });
+        };
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+    }
+
+    getViewportCenterBoardCoordinates() {
+        const width = this.container?.clientWidth || 800;
+        const height = this.container?.clientHeight || 600;
+        const scale = this.viewport?.scale || 1;
+        return {
+            x: (width / 2 - (this.viewport?.translateX || 0)) / scale,
+            y: (height / 2 - (this.viewport?.translateY || 0)) / scale
+        };
     }
 
     updateGridLayerSize() {
@@ -424,6 +587,7 @@ export default class MapEditorRenderer {
 
     renderConnections(spaces, selectedId, options = {}) {
         if (!this.connectionLayer) return;
+        this.connectionLayer.classList.toggle('draw-mode', Boolean(options.drawConnectionMode));
         this.connectionLayer.innerHTML = '';
 
         const spaceById = new Map(spaces.map((space) => [String(space.id), space]));
@@ -461,7 +625,10 @@ export default class MapEditorRenderer {
                     color: connection.color,
                     bidirectional: hasReverse,
                     fromId: space.id,
-                    toId: connection.targetId
+                    toId: connection.targetId,
+                    fromSize: space.visual?.size || 50,
+                    toSize: target.visual?.size || 50,
+                    interactiveOnTop: Boolean(options.drawConnectionMode)
                 });
                 if (element) {
                     this.connectionLayer.appendChild(element);
@@ -480,7 +647,10 @@ export default class MapEditorRenderer {
         color = null,
         bidirectional = false,
         fromId = null,
-        toId = null
+        toId = null,
+        fromSize = 0,
+        toSize = 0,
+        interactiveOnTop = false
     } = {}) {
         const length = Math.hypot(toX - fromX, toY - fromY);
         if (!length) return null;
@@ -501,9 +671,23 @@ export default class MapEditorRenderer {
         const hitbox = document.createElement('button');
         hitbox.type = 'button';
         hitbox.className = 'map-editor-connection-hitbox';
-        hitbox.style.width = `${length}px`;
-        hitbox.style.left = `${fromX}px`;
-        hitbox.style.top = `${fromY}px`;
+        let startPadding = 0;
+        let endPadding = 0;
+        if (interactiveOnTop) {
+            const minimumHitLength = Math.min(24, length);
+            startPadding = Math.min(Number(fromSize) * 0.35, Math.max(0, (length - minimumHitLength) / 2));
+            endPadding = Math.min(Number(toSize) * 0.35, Math.max(0, length - minimumHitLength - startPadding));
+            const availablePadding = Math.max(0, length - minimumHitLength);
+            if (startPadding + endPadding > availablePadding) {
+                const scale = availablePadding / (startPadding + endPadding);
+                startPadding *= scale;
+                endPadding *= scale;
+            }
+        }
+        const hitboxLength = Math.max(1, length - startPadding - endPadding);
+        hitbox.style.width = `${hitboxLength}px`;
+        hitbox.style.left = `${fromX + Math.cos(angle) * startPadding}px`;
+        hitbox.style.top = `${fromY + Math.sin(angle) * startPadding}px`;
         hitbox.style.transform = `translateY(-50%) rotate(${angle}rad)`;
         if (fromId !== null && toId !== null) {
             hitbox.addEventListener('click', (event) => {
@@ -566,6 +750,7 @@ export default class MapEditorRenderer {
             nextY: point.y,
             hoverTargetId: null
         };
+        this.connectionLayer?.classList.add('dragging-connection');
         this.updateSpaceHighlighting(space.id, [space.id]);
         this.updateConnectionPreview(this.dragState.originX, this.dragState.originY, point.x, point.y);
         document.addEventListener('mousemove', this.handleMouseMove);
@@ -668,6 +853,7 @@ export default class MapEditorRenderer {
                 this.onCreateConnection(this.dragState.spaceId, targetId);
             }
             this.dragState = null;
+            this.connectionLayer?.classList.remove('dragging-connection');
             this.clearConnectionPreview();
             return;
         }

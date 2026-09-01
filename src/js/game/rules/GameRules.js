@@ -376,7 +376,10 @@ export default class GameRules {
     evaluateVictoryCondition(condition, gameState) {
         switch (condition.type) {
             case 'REACH_SPACE': {
-                const winner = gameState.players.find(p => p.currentSpaceId === condition.spaceId);
+                const targetSpaceId = condition.spaceId ?? condition.config?.spaceId;
+                const winner = gameState.players.find(
+                    p => String(p.currentSpaceId) === String(targetSpaceId)
+                );
                 if (winner) {
                     return {
                         type: 'REACH_SPACE',
@@ -388,13 +391,15 @@ export default class GameRules {
             }
 
             case 'TURN_LIMIT': {
-                if (gameState.turnNumber >= condition.turns) {
+                const turnLimit = condition.turns ?? condition.config?.turns;
+                const winnerStrategy = condition.winner ?? condition.config?.winner;
+                if (gameState.turnNumber >= turnLimit) {
                     // Determine winner based on condition.winner strategy
                     let winner = null;
-                    if (condition.winner === 'highest_score') {
+                    if (winnerStrategy === 'highest_score') {
                         // Future: implement scoring system
                         winner = gameState.players[0];
-                    } else if (condition.winner === 'furthest') {
+                    } else if (winnerStrategy === 'furthest') {
                         // Future: calculate who is furthest along the board
                         winner = gameState.players[0];
                     }

@@ -168,24 +168,31 @@
         <section class="map-editor-tab-content map-editor-panel" data-tab-group="editor" data-tab="map">
             <div class="map-editor-layout">
                 <aside class="map-editor-sidebar">
-                    <section class="map-editor-section map-editor-spaces-section">
-                        <h3>Spaces</h3>
-                        <div class="map-editor-row">
-                            <button id="mapEditorAddSpaceButton" class="button button-secondary">Add Space</button>
-                            <button id="mapEditorDeleteSpaceButton" class="button button-secondary">Delete Space</button>
+                    <details class="map-editor-section map-editor-spaces-section" open>
+                        <summary class="map-editor-section-summary">Spaces</summary>
+                        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
+                            <button id="mapEditorAddSpaceButton" class="button button-secondary" style="margin: 0;">Add</button>
+                            <button id="mapEditorDuplicateSpaceButton" class="button button-secondary" title="Duplicate selected space without connections" style="margin: 0;">Copy</button>
+                            <button id="mapEditorDeleteSpaceButton" class="button button-secondary" style="margin: 0;">Delete</button>
+                        </div>
+                        <div class="map-editor-row" style="margin-bottom: 4px;">
+                            <input id="mapEditorSpaceSearch" type="text" class="input" placeholder="Search spaces..." style="flex: 1; min-width: 0;">
                         </div>
                         <ul id="mapEditorSpaceList" class="map-editor-list map-editor-space-list"></ul>
-                    </section>
+                    </details>
                 </aside>
 
                 <main id="mapEditorCanvas" class="map-editor-canvas"></main>
 
                 <aside class="map-editor-sidebar">
-                    <section class="map-editor-section map-editor-assets-section">
-                        <h3>Assets</h3>
+                    <details class="map-editor-section map-editor-assets-section" open>
+                        <summary class="map-editor-section-summary">Assets</summary>
                         <input id="mapEditorAssetsInput" type="file" accept="image/*" multiple>
-                        <div id="mapEditorAssetsList" class="map-editor-list map-editor-assets-list"></div>
-                        <div class="map-editor-row">
+                        <div id="mapEditorAssetsList" class="map-editor-assets-grid"></div>
+                    </details>
+                    <details class="map-editor-section map-editor-board-meta-section">
+                        <summary class="map-editor-section-summary">Preview &amp; Background</summary>
+                        <div class="map-editor-field">
                             <label for="mapEditorPreviewInput">Preview Image</label>
                             <input id="mapEditorPreviewInput" type="file" accept="image/*">
                         </div>
@@ -194,11 +201,55 @@
                             <label for="mapEditorBackgroundInput">Background Image</label>
                             <input id="mapEditorBackgroundInput" type="file" accept="image/*">
                         </div>
+                        <div class="map-editor-field">
+                            <label for="mapEditorBackgroundFit">Background Fit</label>
+                            <select id="mapEditorBackgroundFit">
+                                <option value="contain">Contain (show all)</option>
+                                <option value="cover">Cover (crop to fill)</option>
+                                <option value="fill">Stretch</option>
+                                <option value="none">Original size</option>
+                            </select>
+                        </div>
+                        <div class="map-editor-row map-editor-compact-controls">
+                            <div class="map-editor-field">
+                                <label for="mapEditorBackgroundScale">Scale %</label>
+                                <input id="mapEditorBackgroundScale" type="number" min="10" max="400" step="5" value="100">
+                            </div>
+                            <div class="map-editor-field">
+                                <label for="mapEditorBackgroundPositionX">X %</label>
+                                <input id="mapEditorBackgroundPositionX" type="number" min="0" max="100" value="50">
+                            </div>
+                            <div class="map-editor-field">
+                                <label for="mapEditorBackgroundPositionY">Y %</label>
+                                <input id="mapEditorBackgroundPositionY" type="number" min="0" max="100" value="50">
+                            </div>
+                        </div>
                         <div class="map-editor-row">
                             <button id="mapEditorBackgroundClear" class="button button-secondary">Clear Background</button>
                         </div>
                         <div id="mapEditorBackgroundName" class="map-editor-preview-name"></div>
-                    </section>
+                        <div id="mapEditorDecorationControls" class="map-editor-decoration-controls" hidden>
+                            <strong>Selected Board Image</strong>
+                            <div class="map-editor-row map-editor-compact-controls">
+                                <div class="map-editor-field"><label for="mapEditorDecorationX">X</label><input id="mapEditorDecorationX" type="number"></div>
+                                <div class="map-editor-field"><label for="mapEditorDecorationY">Y</label><input id="mapEditorDecorationY" type="number"></div>
+                            </div>
+                            <div class="map-editor-row map-editor-compact-controls">
+                                <div class="map-editor-field"><label for="mapEditorDecorationWidth">Width</label><input id="mapEditorDecorationWidth" type="number" min="10"></div>
+                                <div class="map-editor-field"><label for="mapEditorDecorationHeight">Height</label><input id="mapEditorDecorationHeight" type="number" min="10"></div>
+                            </div>
+                            <div class="map-editor-row map-editor-compact-controls">
+                                <div class="map-editor-field"><label for="mapEditorDecorationRotation">Rotation °</label><input id="mapEditorDecorationRotation" type="number" step="1"></div>
+                                <div class="map-editor-field"><label for="mapEditorDecorationOpacity">Opacity %</label><input id="mapEditorDecorationOpacity" type="number" min="0" max="100" value="100"></div>
+                            </div>
+                            <div class="map-editor-row map-editor-decoration-actions">
+                                <button id="mapEditorDecorationApply" class="button button-secondary">Apply</button>
+                                <button id="mapEditorDecorationBackward" class="button button-secondary">Send Back</button>
+                                <button id="mapEditorDecorationForward" class="button button-secondary">Bring Forward</button>
+                                <button id="mapEditorDecorationRemove" class="button button-danger">Remove</button>
+                            </div>
+                        </div>
+                    </details>
                 </aside>
             </div>
         </section>
@@ -235,7 +286,10 @@
         <div id="mapEditorSpaceEditor" class="map-editor-modal" style="display: none;">
             <div id="mapEditorSpaceHeader" class="map-editor-modal-header">
                 <strong id="mapEditorSpaceTitle">Space</strong>
-                <button id="mapEditorSpaceClose" class="settings-modal-close" type="button" aria-label="Close">&times;</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="mapEditorSpaceApply" class="button button-primary" style="padding: 4px 12px; font-size: 14px; min-width: unset; margin: 0;">Apply</button>
+                    <button id="mapEditorSpaceClose" class="settings-modal-close" type="button" aria-label="Close" style="position: static; margin: 0; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; font-size: 20px;">&times;</button>
+                </div>
             </div>
             <div class="map-editor-modal-body">
                 <div class="map-editor-tab-bar" id="mapEditorSpaceTabs" data-tab-group="space">
@@ -246,20 +300,105 @@
 
                 <div class="map-editor-tab-content" data-tab-group="space" data-tab="visual">
                 <div class="map-editor-field">
+                    <label for="mapEditorSpaceNameInput">Name</label>
+                    <input id="mapEditorSpaceNameInput" type="text" class="input">
+                </div>
+                <div class="map-editor-field" style="flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; margin-top: 4px;">
+                    <input id="mapEditorVisualShowLabel" type="checkbox" checked style="width: auto; margin: 0;">
+                    <label for="mapEditorVisualShowLabel" style="margin: 0; flex: 1; text-align: left;">Show Label on Canvas</label>
+                </div>
+                <div class="map-editor-field">
                     <label for="mapEditorVisualSize">Size</label>
                     <input id="mapEditorVisualSize" type="number" class="input" min="10" step="1">
                 </div>
-                <div class="map-editor-field">
-                    <label for="mapEditorVisualColor">Color</label>
-                    <input id="mapEditorVisualColor" type="color" class="map-editor-color-input">
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualColor">Fill Color</label>
+                        <input id="mapEditorVisualColor" type="color" class="map-editor-color-input">
+                    </div>
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualColorAlpha">Fill Alpha %</label>
+                        <input id="mapEditorVisualColorAlpha" type="number" class="input" min="0" max="100" step="1" value="100">
+                    </div>
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualTextColor">Text Color</label>
+                        <input id="mapEditorVisualTextColor" type="color" class="map-editor-color-input">
+                    </div>
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualTextColorAlpha">Text Alpha %</label>
+                        <input id="mapEditorVisualTextColorAlpha" type="number" class="input" min="0" max="100" step="1" value="100">
+                    </div>
                 </div>
                 <div class="map-editor-field">
-                    <label for="mapEditorVisualTextColor">Text Color</label>
-                    <input id="mapEditorVisualTextColor" type="color" class="map-editor-color-input">
+                    <label for="mapEditorVisualFont">Font Family</label>
+                    <select id="mapEditorVisualFont" class="input">
+                        <option value="">Default</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Arial Black">Arial Black</option>
+                        <option value="Comic Sans MS">Comic Sans MS</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Lucida Console">Lucida Console</option>
+                        <option value="Lucida Sans Unicode">Lucida Sans Unicode</option>
+                        <option value="Palatino Linotype">Palatino Linotype</option>
+                        <option value="Tahoma">Tahoma</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Trebuchet MS">Trebuchet MS</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="monospace">monospace</option>
+                        <option value="sans-serif">sans-serif</option>
+                        <option value="serif">serif</option>
+                    </select>
                 </div>
                 <div class="map-editor-field">
-                    <label for="mapEditorVisualFont">Font</label>
-                    <input id="mapEditorVisualFont" type="text" class="input" placeholder="12px Arial">
+                    <label for="mapEditorVisualFontSize">Font Size (px)</label>
+                    <input id="mapEditorVisualFontSize" type="number" class="input" min="6" max="120" step="1" placeholder="11">
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualTextAlign">H-Align</label>
+                        <select id="mapEditorVisualTextAlign" class="input">
+                            <option value="">Default</option>
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualVerticalAlign">V-Align</label>
+                        <select id="mapEditorVisualVerticalAlign" class="input">
+                            <option value="">Default</option>
+                            <option value="flex-start">Top</option>
+                            <option value="center">Middle</option>
+                            <option value="flex-end">Bottom</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualShape">Shape</label>
+                        <select id="mapEditorVisualShape" class="input">
+                            <option value="">Default</option>
+                            <option value="none">None</option>
+                            <option value="circle">Circle</option>
+                            <option value="square">Square</option>
+                            <option value="rounded">Rounded</option>
+                            <option value="hexagon">Hexagon</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="map-editor-row" style="gap: 8px; margin-bottom: 6px;">
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualBorderWidth">Border Width</label>
+                        <input id="mapEditorVisualBorderWidth" type="number" class="input" min="0" max="20" step="1" placeholder="Auto">
+                    </div>
+                    <div class="map-editor-field" style="flex: 1; margin: 0;">
+                        <label for="mapEditorVisualBorderColor">Border Color</label>
+                        <input id="mapEditorVisualBorderColor" type="color" class="map-editor-color-input" value="#000000">
+                    </div>
                 </div>
                 <div class="map-editor-field">
                     <label>Image Asset</label>
@@ -271,7 +410,7 @@
                     </div>
                     <div id="mapEditorVisualImageSelected" class="map-editor-preview-name"></div>
                 </div>
-                <button id="mapEditorVisualApply" class="button button-secondary">Apply Visual</button>
+                <!-- REMOVED Visual Apply Button -->
                 </div>
 
                 <div class="map-editor-tab-content" data-tab-group="space" data-tab="events">
@@ -304,7 +443,7 @@
                         <option value="HIGH">HIGH</option>
                     </select>
                 </div>
-                <button id="mapEditorEventApply" class="button button-secondary">Apply Event</button>
+                <!-- REMOVED Event Apply Button -->
                 </div>
 
                 <div class="map-editor-tab-content" data-tab-group="space" data-tab="json">

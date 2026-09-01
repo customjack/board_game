@@ -5,7 +5,7 @@
  *   node scripts/extract-board-bundle.js <bundle.zip> [output-dir]
  * 
  * Example:
- *   node scripts/extract-board-bundle.js src/assets/maps/default-board.zip boards/default-board
+ *   node scripts/extract-board-bundle.js src/assets/maps/debug-board.zip src/assets/maps/debug-board
  */
 
 const fs = require('fs');
@@ -79,4 +79,3 @@ extractBundle(zipFile, outputDir).catch(error => {
     console.error('Failed to extract bundle:', error);
     process.exit(1);
 });
-

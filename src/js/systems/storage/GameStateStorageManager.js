@@ -1,13 +1,26 @@
 /**
- * GameStateStorageManager - Persists game state history in localStorage.
+ * GameStateStorageManager - Persists game state history in IndexedDB.
  *
  * Manages per-game and global FIFO buffers using size limits from PersonalSettings.
+ * Previously used localStorage (limited to ~5-10 MB). Now uses IndexedDB which
+ * supports hundreds of MB without synchronous blocking.
  */
+import IDBStorage from '../../infrastructure/storage/IDBStorage.js';
+
 export default class GameStateStorageManager {
     static STORAGE_KEY = 'gameStateSaves';
 
     constructor(personalSettings) {
         this.personalSettings = personalSettings || null;
+        this._idb = new IDBStorage('board-game-db', 'game-states');
+        this._ready = false;
+    }
+
+    async init() {
+        await this._idb.ready();
+        // Migrate existing localStorage saves to IDB (one-time)
+        await this._idb.migrateFromLocalStorage([GameStateStorageManager.STORAGE_KEY]);
+        this._ready = true;
     }
 
     getLimits() {
@@ -25,81 +38,74 @@ export default class GameStateStorageManager {
         };
     }
 
-    getAllSaves() {
-        const stored = localStorage.getItem(GameStateStorageManager.STORAGE_KEY);
-        if (!stored) return [];
+    async getAllSaves() {
         try {
-            const parsed = JSON.parse(stored);
-            return Array.isArray(parsed) ? parsed : [];
+            const saved = await this._idb.getItem(GameStateStorageManager.STORAGE_KEY);
+            return Array.isArray(saved) ? saved : [];
         } catch (error) {
-            console.error('[GameStateStorageManager] Failed to parse saves:', error);
+            console.error('[GameStateStorageManager] Failed to read saves:', error);
             return [];
         }
     }
 
-    getSaveById(saveId) {
-        return this.getAllSaves().find(save => save.saveId === saveId) || null;
+    async getSaveById(saveId) {
+        const saves = await this.getAllSaves();
+        return saves.find(save => save.saveId === saveId) || null;
     }
 
-    getSavesByGameId(gameId) {
-        return this.getAllSaves().filter(save => save.gameId === gameId);
+    async getSavesByGameId(gameId) {
+        const saves = await this.getAllSaves();
+        return saves.filter(save => save.gameId === gameId);
     }
 
-    deleteSave(saveId) {
-        const saves = this.getAllSaves();
+    async deleteSave(saveId) {
+        const saves = await this.getAllSaves();
         const filtered = saves.filter(save => save.saveId !== saveId);
-        this.writeSaves(filtered);
+        await this.writeSaves(filtered);
         return filtered.length !== saves.length;
     }
 
-    clearGame(gameId) {
-        const saves = this.getAllSaves();
+    async clearGame(gameId) {
+        const saves = await this.getAllSaves();
         const filtered = saves.filter(save => save.gameId !== gameId);
-        this.writeSaves(filtered);
+        await this.writeSaves(filtered);
         return filtered.length !== saves.length;
     }
 
-    saveGameState(gameState, { source = 'auto', reason = 'auto', force = false } = {}) {
+    async saveGameState(gameState, { source = 'auto', reason = 'auto', force = false } = {}) {
         if (!gameState) return null;
 
         const { autoSaveEnabled } = this.getLimits();
-        if (!force && source === 'auto' && !autoSaveEnabled) {
-            return null;
-        }
+        if (!force && source === 'auto' && !autoSaveEnabled) return null;
 
         const save = this.buildSave(gameState, { source, reason });
-        const saves = this.getAllSaves();
+        const saves = await this.getAllSaves();
         saves.push(save);
 
         const trimmed = this.trimSaves(saves);
-        this.writeSaves(trimmed);
+        await this.writeSaves(trimmed);
 
         return save;
     }
 
-    exportSave(saveId) {
-        const save = this.getSaveById(saveId);
+    async exportSave(saveId) {
+        const save = await this.getSaveById(saveId);
         if (!save) return null;
         try {
-            return JSON.stringify({
-                format: 'gameStateSave',
-                version: 1,
-                save
-            }, null, 2);
+            return JSON.stringify({ format: 'gameStateSave', version: 1, save }, null, 2);
         } catch (error) {
             console.error('[GameStateStorageManager] Failed to export save:', error);
             return null;
         }
     }
 
-    importSave(rawData) {
+    async importSave(rawData) {
         if (!rawData) return null;
 
         let payload = rawData;
         if (typeof rawData === 'string') {
-            try {
-                payload = JSON.parse(rawData);
-            } catch (error) {
+            try { payload = JSON.parse(rawData); }
+            catch (error) {
                 console.error('[GameStateStorageManager] Failed to parse save import:', error);
                 return null;
             }
@@ -108,39 +114,32 @@ export default class GameStateStorageManager {
         const save = this.normalizeImportedSave(payload);
         if (!save) return null;
 
-        const saves = this.getAllSaves();
+        const saves = await this.getAllSaves();
         saves.push(save);
         const trimmed = this.trimSaves(saves);
-        this.writeSaves(trimmed);
+        await this.writeSaves(trimmed);
 
         return save;
     }
 
     normalizeImportedSave(payload) {
         if (!payload) return null;
-
         if (payload.format === 'gameStateSave' && payload.save) {
             return this.prepareImportedSave(payload.save, { source: 'imported' });
         }
-
         if (payload.state) {
             return this.prepareImportedSave(payload, { source: payload.source || 'imported' });
         }
-
         if (payload.gameState || payload.stateType) {
             const state = payload.gameState || payload;
             return this.prepareImportedSave({ state }, { source: 'imported' });
         }
-
         return null;
     }
 
     prepareImportedSave(save, { source = 'imported' } = {}) {
         const state = save.state || save.gameState || null;
-        if (!state || !state.stateType) {
-            return null;
-        }
-
+        if (!state || !state.stateType) return null;
         return {
             saveId: save.saveId || this.generateSaveId(),
             gameId: state.gameId || save.gameId || this.generateGameId(),
@@ -168,7 +167,7 @@ export default class GameStateStorageManager {
             mapId: state.selectedMapId || 'unknown',
             mapName: state.board?.metadata?.name
                 || state.board?.metadata?.displayName
-                || (state.selectedMapId === 'default' ? 'Default Board' : state.selectedMapId || 'Unknown Map'),
+                || (state.selectedMapId === 'default' ? 'Eels and Escalators' : state.selectedMapId || 'Unknown Map'),
             turnNumber: gameState.getTurnNumber?.() ?? null,
             gamePhase: state.gamePhase || 'IN_LOBBY',
             state
@@ -179,15 +178,14 @@ export default class GameStateStorageManager {
         const { totalLimitBytes, perGameLimitBytes } = this.getLimits();
         let trimmed = saves.filter(save => save && save.state);
 
-        const sortByCreatedAt = (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        const sortByCreatedAt = (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         trimmed.sort(sortByCreatedAt);
 
         if (perGameLimitBytes > 0) {
             const grouped = new Map();
             trimmed.forEach(save => {
-                if (!grouped.has(save.gameId)) {
-                    grouped.set(save.gameId, []);
-                }
+                if (!grouped.has(save.gameId)) grouped.set(save.gameId, []);
                 grouped.get(save.gameId).push(save);
             });
 
@@ -227,35 +225,18 @@ export default class GameStateStorageManager {
         return size;
     }
 
-    writeSaves(saves) {
-        let currentSaves = [...saves];
-
-        while (currentSaves.length > 0) {
-            try {
-                localStorage.setItem(GameStateStorageManager.STORAGE_KEY, JSON.stringify(currentSaves));
-                return true; // Success
-            } catch (error) {
-                if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-                    console.warn('[GameStateStorageManager] Quota exceeded. Evicting oldest save and retrying...');
-                    // Sort to ensure the oldest is at index 0, then remove it
-                    currentSaves.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                    currentSaves.shift(); // Evict oldest save
-                    
-                    if (currentSaves.length === 0) {
-                        console.error('[GameStateStorageManager] Could not save even the newest state due to quota limit!');
-                        return false;
-                    }
-                } else {
-                    console.error('[GameStateStorageManager] Failed to write saves:', error);
-                    return false;
-                }
-            }
+    async writeSaves(saves) {
+        try {
+            await this._idb.setItem(GameStateStorageManager.STORAGE_KEY, saves);
+            return true;
+        } catch (error) {
+            console.error('[GameStateStorageManager] Failed to write saves to IndexedDB:', error);
+            return false;
         }
-        return false;
     }
 
-    getStorageInfo() {
-        const saves = this.getAllSaves();
+    async getStorageInfo() {
+        const saves = await this.getAllSaves();
         const totalBytes = this.calculateTotalSize(saves);
         return {
             saveCount: saves.length,
@@ -265,12 +246,10 @@ export default class GameStateStorageManager {
     }
 
     generateSaveId() {
-        const seed = Math.random().toString(36).slice(2, 10);
-        return `save-${Date.now().toString(36)}-${seed}`;
+        return `save-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
     }
 
     generateGameId() {
-        const seed = Math.random().toString(36).slice(2, 10);
-        return `game-${Date.now().toString(36)}-${seed}`;
+        return `game-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
     }
 }
