@@ -14,6 +14,7 @@ export const MessageTypes = {
     JOIN: 'join',
     JOIN_REJECTED: 'joinRejected',
     KICK: 'kick',
+    GAME_CLOSED: 'gameClosed',
 
     // Game state synchronization
     GAME_STATE: 'gameState',
@@ -63,6 +64,10 @@ export const MessageSchemas = {
 
     [MessageTypes.JOIN_REJECTED]: {
         reason: { type: 'string', required: true }
+    },
+
+    [MessageTypes.GAME_CLOSED]: {
+        reason: { type: 'string', required: false }
     },
 
     [MessageTypes.GAME_STATE]: {

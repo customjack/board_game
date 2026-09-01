@@ -59,6 +59,7 @@ export default class MapEditorRenderer {
         this.resizeHandlerAttached = false;
         this.renderConfig = typeof document !== 'undefined' ? new BoardRenderConfig() : null;
         this.lastSpaceClick = null;
+        this.lastConnectionClick = null;
         this.singleClickTimer = null;
         this.dragThreshold = 4;
     }
@@ -693,11 +694,18 @@ export default class MapEditorRenderer {
             hitbox.addEventListener('click', (event) => {
                 event.preventDefault();
                 event.stopPropagation();
+                const connectionKey = [String(fromId), String(toId)].sort().join('::');
+                const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+                const isDoubleClick = this.lastConnectionClick
+                    && this.lastConnectionClick.key === connectionKey
+                    && (now - this.lastConnectionClick.timestamp) < 400;
+                this.lastConnectionClick = isDoubleClick
+                    ? null
+                    : { key: connectionKey, timestamp: now };
                 this.onSelectConnection?.(fromId, toId);
-            });
-            hitbox.addEventListener('dblclick', (event) => {
-                event.stopPropagation();
-                this.onEditConnection?.(fromId, toId, { x: event.clientX, y: event.clientY });
+                if (isDoubleClick) {
+                    this.onEditConnection?.(fromId, toId, { x: event.clientX, y: event.clientY });
+                }
             });
         }
         wrapper.appendChild(hitbox);

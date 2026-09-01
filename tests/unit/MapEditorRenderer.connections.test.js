@@ -42,4 +42,24 @@ describe('MapEditorRenderer connection selection mode', () => {
         expect(hitbox.style.left).toBe('0px');
         expect(hitbox.style.width).toBe('100px');
     });
+
+    test('opens the connection editor on two clicks even when the hitbox is recreated', () => {
+        const onEditConnection = jest.fn();
+        renderer.onEditConnection = onEditConnection;
+
+        const firstConnection = renderer.createConnectionElement(0, 0, 100, 0, {
+            fromId: 'a',
+            toId: 'b'
+        });
+        firstConnection.querySelector('.map-editor-connection-hitbox').click();
+
+        const rerenderedConnection = renderer.createConnectionElement(0, 0, 100, 0, {
+            fromId: 'a',
+            toId: 'b'
+        });
+        rerenderedConnection.querySelector('.map-editor-connection-hitbox').click();
+
+        expect(onEditConnection).toHaveBeenCalledTimes(1);
+        expect(onEditConnection).toHaveBeenCalledWith('a', 'b', expect.any(Object));
+    });
 });

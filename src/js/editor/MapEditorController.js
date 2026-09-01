@@ -943,22 +943,6 @@ export default class MapEditorController {
         this.renderAll();
     }
 
-    applyAssetToSelectedSpace(assetPath) {
-        const state = this.stateManager.state;
-        if (!state?.topology?.spaces || !this.selectedSpaceId) return;
-        const updatedSpaces = state.topology.spaces.map((space) => {
-            if (String(space.id) !== String(this.selectedSpaceId)) return space;
-            return {
-                ...space,
-                visual: {
-                    ...space.visual,
-                    image: assetPath
-                }
-            };
-        });
-        this.updateStateSection('topology', { ...state.topology, spaces: updatedSpaces });
-    }
-
     async insertAssetOnBoard(asset) {
         if (!asset?.path) return;
         const center = this.renderer?.getViewportCenterBoardCoordinates?.() || { x: 400, y: 300 };
@@ -1903,16 +1887,6 @@ export default class MapEditorController {
             const actions = document.createElement('div');
             actions.className = 'map-editor-asset-card-actions';
 
-            const applyButton = document.createElement('button');
-            applyButton.className = 'button button-secondary map-editor-asset-card-btn';
-            applyButton.textContent = 'Apply to Space';
-            applyButton.title = 'Use this image on the selected playable space';
-            applyButton.disabled = !this.selectedSpaceId;
-            applyButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                this.applyAssetToSelectedSpace(asset.path);
-            });
-
             const insertButton = document.createElement('button');
             insertButton.className = 'button button-secondary map-editor-asset-card-btn';
             insertButton.textContent = 'Place on Board';
@@ -1931,7 +1905,6 @@ export default class MapEditorController {
                 this.removeAsset(asset.path);
             });
 
-            actions.appendChild(applyButton);
             actions.appendChild(insertButton);
             actions.appendChild(removeButton);
             card.appendChild(thumb);

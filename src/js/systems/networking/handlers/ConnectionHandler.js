@@ -44,6 +44,12 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         );
 
         this.registerHandler(
+            MessageTypes.GAME_CLOSED,
+            this.handleGameClosed,
+            { description: 'Handle the host closing the game (client only)' }
+        );
+
+        this.registerHandler(
             MessageTypes.START_GAME,
             this.handleStartGame,
             { description: 'Handle game start signal (client only)' }
@@ -394,6 +400,30 @@ export default class ConnectionHandler extends MessageHandlerPlugin {
         peer?.eventHandler?.showPage?.('homePage');
         try {
             await ModalUtil.alert('You have been kicked from the game.');
+        } finally {
+            window.onbeforeunload = null;
+            window.location.replace(window.location.origin + window.location.pathname);
+        }
+    }
+
+    /**
+     * Handle the host intentionally closing the session (Client)
+     */
+    async handleGameClosed(message, context) {
+        const peer = this.getPeer();
+        if (peer) {
+            peer.isKicked = true;
+            peer.stopHeartbeat?.();
+            if (peer.connectionStatusManager) {
+                peer.connectionStatusManager.reconnectDisabled = true;
+            }
+            if (peer.conn) {
+                try { peer.conn.close(); } catch (_) {}
+            }
+        }
+        peer?.eventHandler?.showPage?.('homePage');
+        try {
+            await ModalUtil.alert(message.reason || 'The host closed the game.', 'Game Closed');
         } finally {
             window.onbeforeunload = null;
             window.location.replace(window.location.origin + window.location.pathname);

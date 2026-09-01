@@ -10,15 +10,18 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   height: 50px; /* Set a fixed height to ensure equal size */
   margin-bottom: calc(var(--spacing-unit) * 1); /* Add space between list items */
+  min-width: 0;
 }
 
 /* Player Name and Badges */
 .player-name-badges {
   display: flex;
   align-items: center; /* Vertically center the badges and name */
-  justify-content: center; /* Center horizontally */
+  justify-content: flex-start;
   gap: calc(var(--spacing-unit) * 0.5); /* Space between name and badges */
   flex-grow: 1; /* Allow this container to take up available space */
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Player Buttons */
@@ -27,6 +30,7 @@
   align-items: center; /* Ensure buttons are vertically centered */
   justify-content: flex-end; /* Align buttons to the right */
   gap: calc(var(--spacing-unit) * 0.5); /* Add space between buttons */
+  flex: 0 0 auto;
 }
 
 /* Reset margins and paddings */
@@ -41,6 +45,10 @@
 /* Ensure consistent line height */
 .player-name {
   line-height: 1; /* Set line height to reduce extra space */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Buttons */
@@ -198,6 +206,7 @@
   display: inline-flex;
   align-items: center; /* Ensure badge text is centered vertically */
   justify-content: center; /* Center the content horizontally */
+  flex-shrink: 0;
 }
 
 /* Specific colors for success badge */
@@ -215,6 +224,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.plugin-ready-badge,
+.plugin-not-ready-badge,
+.plugin-checking-badge {
+  flex-shrink: 0;
 }
 
 /* Box sizing */

@@ -160,6 +160,41 @@ export default class HostEventHandler extends BaseEventHandler {
         });
     }
 
+    async closeGame() {
+        const confirmed = await ModalUtil.confirm(
+            'Close this game for everyone and return to the home screen?',
+            'Close Game'
+        );
+        if (!confirmed) return;
+
+        const connections = Array.isArray(this.peer?.connections)
+            ? [...this.peer.connections]
+            : [];
+        connections.forEach((connection) => {
+            if (connection?.__heartbeatInterval) {
+                clearInterval(connection.__heartbeatInterval);
+                connection.__heartbeatInterval = null;
+            }
+            if (connection?.open) {
+                try {
+                    connection.send({
+                        type: MessageTypes.GAME_CLOSED,
+                        reason: 'The host closed the game.'
+                    });
+                } catch (_) {}
+            }
+            setTimeout(() => {
+                try { connection?.close?.(); } catch (_) {}
+            }, 50);
+        });
+
+        window.onbeforeunload = null;
+        setTimeout(() => {
+            try { this.peer?.peer?.destroy?.(); } catch (_) {}
+            window.location.replace(window.location.origin + window.location.pathname);
+        }, connections.length > 0 ? 75 : 0);
+    }
+
     /**
      * Open the plugin manager modal
      */
@@ -491,7 +526,7 @@ export default class HostEventHandler extends BaseEventHandler {
             }
 
             // Update host's UI components (including player list validation)
-            this.updateGameState();
+            this.updateGameState(true);
 
             console.log(`Map "${mapId}" loaded successfully`);
         } catch (error) {
