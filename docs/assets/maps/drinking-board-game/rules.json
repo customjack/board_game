@@ -24,6 +24,6 @@
       "winner": "furthest"
     }
   },
-  "minPlayers": null,
+  "minPlayers": 1,
   "maxPlayers": null
 }

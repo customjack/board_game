@@ -23,6 +23,6 @@
       "spaceId": "48"
     }
   },
-  "minPlayers": null,
+  "minPlayers": 1,
   "maxPlayers": null
 }
