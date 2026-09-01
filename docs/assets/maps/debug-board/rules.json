@@ -1,0 +1,21 @@
+{
+  "turnOrder": "sequential",
+  "startingPositions": {
+    "mode": "single",
+    "spaceIds": [
+      "1"
+    ]
+  },
+  "recommendedPlayers": {
+    "min": 3,
+    "max": 6
+  },
+  "diceRolling": {
+    "enabled": true,
+    "diceCount": 1,
+    "diceSides": 6,
+    "rollAgainOn": []
+  },
+  "winCondition": {},
+  "minPlayers": 1
+}

@@ -1,0 +1,28 @@
+{
+  "turnOrder": "sequential",
+  "startingPositions": {
+    "mode": "single",
+    "spaceIds": [
+      "space-1788219187472"
+    ],
+    "distribution": "round-robin"
+  },
+  "recommendedPlayers": {
+    "min": 2,
+    "max": 8
+  },
+  "diceRolling": {
+    "enabled": true,
+    "diceCount": 1,
+    "diceSides": 6,
+    "rollAgainOn": []
+  },
+  "winCondition": {
+    "type": "REACH_SPACE",
+    "config": {
+      "spaceId": "48"
+    }
+  },
+  "minPlayers": null,
+  "maxPlayers": null
+}

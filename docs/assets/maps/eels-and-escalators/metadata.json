@@ -1,0 +1,21 @@
+{
+  "name": "Eels and Escalators",
+  "author": "Unknown",
+  "version": "1.0.0",
+  "description": "Eels and Escalators (just shoots and ladders)",
+  "tags": [
+    "Eels",
+    "Escalators ",
+    "Shoots",
+    "Ladders"
+  ],
+  "created": "2026-08-31T23:08:58.778Z",
+  "modified": "2026-09-01T01:00:52.587Z",
+  "renderConfig": {
+    "backgroundImage": "assets/_background.png",
+    "backgroundFit": "contain",
+    "backgroundScale": 52,
+    "backgroundPositionX": 70,
+    "backgroundPositionY": 40
+  }
+}
